@@ -15,10 +15,12 @@ and the libraries:
 
 In addition, a certain number of other iscd softwares (https://github.com/ISCDtoolbox) must have been previously installed
 * medit to vizualize 3D mesh (see https://github.com/ISCDtoolbox/Medit)
-* mmg3d_03 to adapt 3D mesh (see https://github.com/Mmgtools)
 * mshdist to redistanciate level-set function (see https://github.com/ISCDtoolbox/Mshdist)
 * elastic to solve elasticity on 3D mesh (see https://github.com/ISCDtoolbox/LinearElasticity)
 * advect to advect a level-function function thanks to a vector field (see https://github.com/ISCDtoolbox/Advection)
+* mmg3d_03 to adapt 3D mesh (see https://github.com/Mmgtools)
+
+Important remark: the version of mmg3d we need for the mpdProgram is a modified version of the official one. Hence, when you have downloaded the git repositroy from mmgTools overwrite the src files with the ones given in mmg3d5modified/src then cmake the new files in order to get to good version of mmg3d 
 
 Then, open your terminal and locate yourself at the right position to download the files thanks to "ls" and "cd" command
 To clone the files, type
@@ -61,7 +63,7 @@ Then, you can go inside bin directory by typing
 
 and checks that mpdProgram has been created. In order to launch mpdProgram (cube.elas must exists in ../inputFiles/ directory) the line command syntax is the following
 
-./mpdProgram chemicalNameFile.wfn numberOfElectronsToSearch (optionallyMeshNameFile)
+	./mpdProgram chemicalNameFile.wfn numberOfElectronsToSearch (optionallyMeshNameFile)
 
 In our case, as an example one can simply type
 
