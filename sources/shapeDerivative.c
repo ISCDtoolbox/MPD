@@ -1440,8 +1440,8 @@ int writingShapeSolFile(char* fileLocation, Mesh* pMesh)
 	{
 		if (pMesh->pnorm[i-1].p>=pMesh->pnorm[i].p)
 		{
-		PRINT_ERROR();
-		printf("In writingShapeSolFile: the normals %d and %d were not stored in increasing order.\n",pMesh->pnorm[i-1].p,pMesh->pnorm[i].p);
+			PRINT_ERROR();
+			printf("In writingShapeSolFile: the normals %d and %d were not stored in increasing order.\n",pMesh->pnorm[i-1].p,pMesh->pnorm[i].p);
 			return 0;
 		}
 	}
