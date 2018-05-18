@@ -1,0 +1,10 @@
+<map id="Mesh" name="Mesh">
+<area shape="rect" id="node2" href="$struct_vector.html" title="It can contain the point reference and direction of a vector (only used if ls_mode=0). " alt="" coords="5,5,65,32"/>
+<area shape="rect" id="node3" href="$struct_triangle.html" title="It can contain the label and three point references of a triangle (only used if ls_mode=0). " alt="" coords="89,5,157,32"/>
+<area shape="rect" id="node4" href="$struct_hexahedron.html" title="It can contain the label and four point references of an hexahedron (only used if ls_mode=(+/&#45;)1)..." alt="" coords="181,5,273,32"/>
+<area shape="rect" id="node5" href="$struct_tetrahedron.html" title="It can contain the label and four point references of a tetrahedron (only used if ls_mode=0)..." alt="" coords="298,5,389,32"/>
+<area shape="rect" id="node6" href="$struct_edge.html" title="It can contain the label and two point references of an edge (only used if ls_mode=0). " alt="" coords="413,5,465,32"/>
+<area shape="rect" id="node7" href="$struct_point.html" title="It can contain the position, label and a value associated with a point. " alt="" coords="489,5,541,32"/>
+<area shape="rect" id="node8" href="$struct_quadrilateral.html" title="It can contain the label and four point references of a quadrilateral (only used if ls_mode=(+/&#45;)1)..." alt="" coords="565,5,660,32"/>
+<area shape="rect" id="node9" href="$struct_adjacency.html" title="It is used to locate fastly the two hexahedra sharing the same quadrilateral, which belongs to the bo..." alt="" coords="685,5,767,32"/>
+</map>
