@@ -104,8 +104,15 @@ Finally, in order to launch mpdProgram the line command syntax is the following 
 
 and checks if it works
 
+The documentation can be generated with doxygen and the Doxyfile in the documentation directory. Otherwise, an html version can be found at
 
+http://pelikano.free.fr/mpd/
 
+Informations required:
+
+mpdUser
+
+mpd2018*07jdalphin 
 
 
  
