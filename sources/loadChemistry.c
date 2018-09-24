@@ -1,1388 +1,2257 @@
-#include "loadChemistry.h"
-
-/*
-// Prototypes of non-static functions in loadChemistry.c
-void initializeChemicalStructure(ChemicalSystem* pChemicalSystem);
-void freeChemicalMemory(ChemicalSystem* pChemicalSystem);
-int loadChemistry(char* fileLocation, ChemicalSystem *pChemicalSystem, int nuElectrons);
+/**
+* \file loadChemistry.c
+* \brief It contains all the functions used to initially load the chemical
+*        informations from a *.wfn/ *.chem file in the MPD algorithm.
+* \author Jeremy DALPHIN
+* \version 2.0
+* \date September 1st, 2018
+*
+* The main function of this file is called \ref loadChemistry and many other
+* functions should be static but have been define as non-static for performing
+* unit-tests on them.
 */
 
-// Prototypes of static functions in loadChemistry.c
-static int getChemicalFormat(char* fileLocation);
-static int readAndConvertWfnFile(char* fileLocation, char charToRemove, char charToPutInstead);
-static int readWfnFileAndAllocateChemicalSystem(char* fileLocation, ChemicalSystem* pChemicalSystem);
-static int writingChemicalFile(char* fileLocation, ChemicalSystem* pChemicalSystem);
-static int readTxtFileAndAllocateChemicalSystem(char* fileLocation, ChemicalSystem* pChemicalSystem);
+#include "loadChemistry.h"
 
-/* ****************************************************************************************************************************** */
-// The function initializeChemicalStructure initializes the chemical structure to zero for variables and NULL for pointers. 
-// It has the pChemicalSystem structure (described in main.h) as input argument and it does not return any argument (void ouput)
-/* ****************************************************************************************************************************** */
+/* ************************************************************************** */
+// The function initializeChemicalStructure sets to zero all the variables of
+// the ChemicalSystem structure (and pointers to NULL). It has the
+// ChemicalSystem* variable (defined in main.h) as input argument and does not
+// return any value (void output)
+/* ************************************************************************** */
 void initializeChemicalStructure(ChemicalSystem* pChemicalSystem)
 {
-	if (pChemicalSystem!=NULL)
-	{
-		pChemicalSystem->nmorb=0;
-		pChemicalSystem->pmorb=NULL;
+    if (pChemicalSystem!=NULL)
+    {
+        pChemicalSystem->nnucl=0;
+        pChemicalSystem->pnucl=NULL;
 
-		pChemicalSystem->nnucl=0;
-		pChemicalSystem->pnucl=NULL;
-		
-		pChemicalSystem->ngauss=0;
-	}
+        pChemicalSystem->ngauss=0;
 
-	return;
+        pChemicalSystem->nmorb=0;
+        pChemicalSystem->pmorb=NULL;
+    }
+
+    return;
 }
 
-/* ****************************************************************************************************************************************************************************************** */
-// The function freeChemicalMemory free the pointers and memory allocated with calloc (malloc or realloc) for pChemicalSystem (but the all variables except pointers are not reset to zero)
-// It has the ChemicalSystem* variable (described in main.h) as input argument and it does not return any argument (void ouput)
-/* ****************************************************************************************************************************************************************************************** */
+/* ************************************************************************** */
+// The function freeChemicalMemory frees the memory dynamically allocated with
+// calloc/malloc/realloc for the ChemicalSystem structure (but other variables
+// than pointers are not reset to zero). It has the ChemicalSystem* variable
+// (defined in main.h) as input argument and it does not return any value
+/* ************************************************************************** */
 void freeChemicalMemory(ChemicalSystem* pChemicalSystem)
 {
-	int i=0, iMax=0;
-	
-	if (pChemicalSystem!=NULL)
-	{
-		if (pChemicalSystem->pmorb!=NULL)
-		{
-			iMax=pChemicalSystem->nmorb;
-			if (iMax<1)
-			{
-				printf("\nWarning in freeChemicalMemory function: %d molecular orbitals saved in pChemicalSystem. Some allocated pointers may not have been freed up correctly.\n",iMax);
-			}
-			for (i=0; i<iMax; i++)
-			{
-				free(pChemicalSystem->pmorb[i].coeff);	// free function does not return any value (void output)
-				pChemicalSystem->pmorb[i].coeff=NULL;
+    int i=0, iMax=0;
 
-				free(pChemicalSystem->pmorb[i].exp);
-				pChemicalSystem->pmorb[i].exp=NULL;
+    if (pChemicalSystem!=NULL)
+    {
+        free(pChemicalSystem->pnucl); // free function does not any return value
+        pChemicalSystem->pnucl=NULL;
 
-				free(pChemicalSystem->pmorb[i].nucl);
-				pChemicalSystem->pmorb[i].nucl=NULL;
+        if (pChemicalSystem->pmorb!=NULL)
+        {
+            iMax=pChemicalSystem->nmorb;
+            if (iMax<1)
+            {
+                fprintf(stdout,"\nWarning in freeChemicalMemory function: ");
+                fprintf(stdout,"%d molecular orbitals are saved in ",iMax);
+                fprintf(stdout,"pChemicalSystem (input) variable. Some ");
+                fprintf(stdout,"allocated pointers may not be freed up ");
+                fprintf(stdout,"correctly.\n");
+            }
+            for (i=0; i<iMax; i++)
+            {
+                free(pChemicalSystem->pmorb[i].coeff);
+                pChemicalSystem->pmorb[i].coeff=NULL;
 
-				free(pChemicalSystem->pmorb[i].type);
-				pChemicalSystem->pmorb[i].type=NULL;
-			}
-		}
+                free(pChemicalSystem->pmorb[i].exp);
+                pChemicalSystem->pmorb[i].exp=NULL;
 
-		free(pChemicalSystem->pmorb);
-		pChemicalSystem->pmorb=NULL;
+                free(pChemicalSystem->pmorb[i].nucl);
+                pChemicalSystem->pmorb[i].nucl=NULL;
 
-		free(pChemicalSystem->pnucl);
-		pChemicalSystem->pnucl=NULL;
-	}
+                free(pChemicalSystem->pmorb[i].type);
+                pChemicalSystem->pmorb[i].type=NULL;
+             }
+        }
 
-	return;
+        free(pChemicalSystem->pmorb);
+        pChemicalSystem->pmorb=NULL;
+    }
+
+    return;
 }
 
-/* ********************************************************************************************************************************************************************** */
-// The function getChemicalFormat determines if the file located at fileLocation has the *.wfn format or the *.txt format concerning the chemical data   
-// It has the char* fileLocation variable as input argument, and it return zero if an error occurs, otherwise one (resp. -1) is returned for *.txt (resp. *.wfn) format 
-/* ********************************************************************************************************************************************************************** */
-static int getChemicalFormat(char* fileLocation)
+/* ************************************************************************** */
+// The function getChemicalFormat determines if the file located at fileLocation
+// exists and if its name ends by the *.chem extension or the *.wfn one, with a
+// length (strictly) lower than the nameLength variable, and more than five (to
+// be able to store at least something more than the *.chem or *.wfn extension).
+// It has the char* fileLocation and int nameLength variables as input
+// arguments, and it return zero if an error occurs, otherwise 1 (resp. -1)
+// is returned for the *.chem (resp. *.wfn) format.
+/* ************************************************************************** */
+int getChemicalFormat(char* fileLocation, int nameLength)
 {
-	size_t nameLength=0;
-	int returnValue=0;
-	
-	// First test if the file exists at fileLocation
-	if (!initialFileExists(fileLocation))
-	{
-		PRINT_ERROR();
-		printf("In getChemicalFormat: initialFileExists function returned zero instead of one.\n");
-		return returnValue;	
-	}
+    size_t length=0;
+    int returnValue=0;
 
-	// Get the length of the name and check its size
-	nameLength=strlen(fileLocation);	// strlen function returns the length of the string fileLocation, but not including the terminating nul character '\0'
-	if (nameLength<=5)
-	{
-		PRINT_ERROR();
-		printf("In getChemicalFormat: the input FileLocation variable (%s) should be at least of size 4 ",fileLocation);
-		printf("instead of %d since it must end at least with .wfn or .txt format.\n",(int)nameLength);
-		return returnValue;
-	}
+    // Check that nameLength is (strictly) greater than six
+    if (nameLength<7)
+    {
+        PRINT_ERROR("In getChemicalFormat: the input nameLength ");
+        fprintf(stderr,"(=%d) variable should be an integer ",nameLength);
+        fprintf(stderr,"(strictly) greater than six.\n");
+        return 0;
+    }
 
-	// Distinguish the *.wfn from *.txt format
-	if (fileLocation[nameLength-4]=='.' && fileLocation[nameLength-3]=='w' &&fileLocation[nameLength-2]=='f' && fileLocation[nameLength-1]=='n' && fileLocation[nameLength]=='\0')
-	{
-		returnValue=-1;	
-	}
-	else if (fileLocation[nameLength-4]=='.' && fileLocation[nameLength-3]=='t' &&fileLocation[nameLength-2]=='x' && fileLocation[nameLength-1]=='t' && fileLocation[nameLength]=='\0')
-	{
-		returnValue=1;	
-	}
-	else
-	{
-		PRINT_ERROR();
-		printf("In getChemicalFormat: the input FileLocation variable (%s) does not end with .wfn or .txt format.\n", fileLocation);
-		returnValue=0;
-	}
+    // Check if the file exists at fileLocation
+    if (initialFileExists(fileLocation,nameLength)!=1)
+    {
+        PRINT_ERROR("In getChemicalFormat: the initialFileExists function ");
+        fprintf(stderr,"did not returned one, which was the expected value ");
+        fprintf(stderr,"here.\n");
+        return 0;
+    }
 
-	return returnValue;
+    // Check that its size can at least contain the *.chem or *.wfn extension
+    // strlen returns the length of the string, but not including the char '\0'
+    length=strlen(fileLocation);
+    if (length<6)
+    {
+        PRINT_ERROR("In getChemicalFormat: the input fileLocation variable ");
+        fprintf(stderr,"(=%s) should have a length that at ",fileLocation);
+        fprintf(stderr,"least equals six in order to end with something more ");
+        fprintf(stderr,"than the '.chem' or '.wfn' extension.\n");
+        return 0;
+    }
+
+    // Distinguish the *.chem from *.wfn format
+    if (fileLocation[length-4]=='.' && fileLocation[length-3]=='w' &&
+                   fileLocation[length-2]=='f' && fileLocation[length-1]=='n' &&
+                                                     fileLocation[length]=='\0')
+    {
+        returnValue=-1;
+    }
+    else if (fileLocation[length-5]=='.' && fileLocation[length-4]=='c' &&
+                   fileLocation[length-3]=='h' && fileLocation[length-2]=='e' &&
+                      fileLocation[length-1]=='m' && fileLocation[length]=='\0')
+    {
+        returnValue=1;
+    }
+    else
+    {
+        PRINT_ERROR("In getChemicalFormat: the input fileLocation variable ");
+        fprintf(stderr,"(=%s) does not end with the '.chem' ",fileLocation);
+        fprintf(stderr,"or '.wfn' extension.\n");
+        returnValue=0;
+    }
+
+    return returnValue;
 }
 
-/* ****************************************************************************************************************************************************************************************************** */
-// The function readAndConvertWfnFile reads a *.wfn file at fileLocation (file must have been previously created), except the first line, and converts all charToRemove encountered into charToPutInstead
-// It has a char* variable (fileLocation) and two char variables (charToRemove, charToPutInstead) as input arguments and it returns zero if an error occurred, otherwise one
-/* ****************************************************************************************************************************************************************************************************** */
-static int readAndConvertWfnFile(char* fileLocation, char charToRemove, char charToPutInstead)
+/* ************************************************************************** */
+// The function readChemFileandAllocateChemicalSystem reads the file at
+// fileLocation (file must exist with length (strictly) lower than nameLength),
+// checks *.chem syntax, allocates memory, and fills the values in the variables
+// of the structure pointed by pChemicalSystem. It has the char* fileLocation
+// and ChemicalSystem* variable (defined in main.h) as input arguments and it
+// returns zero if an error is encountered, one (respectively minus one) if the
+// chemical data are successfully loaded and correspond to an restricted (resp.
+// unrestricted) Hartree-Fock chemical structure
+/* ************************************************************************** */
+int readChemFileandAllocateChemicalSystem(char* fileLocation, int nameLength,
+                                                ChemicalSystem* pChemicalSystem)
 {
-	int readChar=0;
-	FILE *wfnFile=NULL;
+    size_t length=0;
+    char readStringIn[33]={'\0'}, *readStringOut=NULL;
+    int readIntegerIn=0, readIntegerOut=0, i=0, iMax=0, j=0, jMax=0;
+    int returnValue=0;
+    double readDouble=0.;
+    MolecularOrbital *pMolecularOrbital=NULL, *pMolecularOrbital2=NULL;
+    FILE *chemicalFile=NULL;
 
-	// Since the file must have been previously created, we check if it is the case 
-	if(!initialFileExists(fileLocation))
-	{
-		PRINT_ERROR();
-		printf("In readAndConvertWfnFile: initialFileExists function returned zero instead of one.\n");
-		return 0;
-	}
+    // Check if the input pChemicalSystem variable is pointing to NULL
+    if (pChemicalSystem==NULL)
+    {
+        PRINT_ERROR("In readChemFileandAllocateChemicalSystem: the input ");
+        fprintf(stderr,"pChemicalSystem variable is pointing to the ");
+        fprintf(stderr,"%p adress.\n",(void*)pChemicalSystem);
+        return 0;
+    }
 
-	// Testing if the file is well opened (warning: file must have been previously created)
-	printf("\nOpening %s file. ",fileLocation);
-	wfnFile=fopen(fileLocation,"r+");	// fopen function returns a FILE pointer on success, otherwise a NULL pointer is returned
-	if (wfnFile==NULL)
-	{
-		PRINT_ERROR();
-		printf("In readAndConvertWfnFile: could not read and/or write in %s file.\n",fileLocation);
-		return 0;
-	}
-	printf("Converting data (any '%c' into '%c'). ",charToRemove,charToPutInstead);
-	// Skip the first line
-	do {
-		readChar=fgetc(wfnFile);	// fgetc function returns the character read as an unsigned char cast to an int or EOF on end of file or error (because EOF can't be stored as char)
-	} while (readChar!='\n' && readChar!=EOF);
-	if (readChar==EOF)
-	{
-		PRINT_ERROR();
-		printf("In readAndConvertWfnFile: problem with fgetc or end-of-file reached without any data written in %s file.\n",fileLocation);
-		closeTheFile(&wfnFile);
-		return 0;
-	}
-	// Remark:'D' symbol now only appears in *.wfn at fileLocation either for scientific notation (Fortran 1.0D+01) or for the END DATA keyword so it can be easily converted into C syntax (1.0e+01)
-	do {
-		readChar=fgetc(wfnFile);	
-		if (readChar==(int)charToRemove)
-		{
-			if(fseek(wfnFile,-1,SEEK_CUR)) // fseek function returns zero on success, otherwise a non-zero value
-			{
-				PRINT_ERROR();
-				printf("In readAndConvertWfnFile: wrong return of fseek function in %s file.\n",fileLocation);
-				closeTheFile(&wfnFile);
-				return 0;
-			}
-			if(fputc(charToPutInstead,wfnFile)==EOF) // fputc function returns the same character on success, otherwise EOF value (end of file)
-			{
-				PRINT_ERROR();
-				printf("In readAndConvertWfnFile: wrong return of fputc function in %s file.\n",fileLocation);
-				closeTheFile(&wfnFile);
-				return 0;
-			}
-		}
-	} while (readChar!=EOF);
-	// Testing if file is well closed
-	if(fclose(wfnFile))	// fclose function returns zero if the input FILE* variable is successfully closed, otherwise EOF is returned (pointer to the end of the file)
-	{
-		PRINT_ERROR();
-		printf("In readAndConvertWfnFile: could not close %s file properly.\n",fileLocation);
-		wfnFile=NULL;
-		return 0;
-	}
-	wfnFile=NULL;
-	printf("Closing file.\n");
+    // Initialize the structure to zero for variables and NULL for pointers
+    initializeChemicalStructure(pChemicalSystem);
 
-	return 1;
+    // Check that fileLocation points to a valid existing file
+    if (getChemicalFormat(fileLocation,nameLength)!=1)
+    {
+        PRINT_ERROR("In readChemFileandAllocateChemicalSystem: ");
+        fprintf(stderr,"getChemicalFormat function did not returned one, ");
+        fprintf(stderr,"which was the expected value here, after having ");
+        fprintf(stderr,"checked that the char* input variable fileLocation ");
+        fprintf(stderr,"does not point to the name of an existing and valid ");
+        fprintf(stderr,"*.chem file.\n");
+        return 0;
+    }
+
+    // Check if the *.chem file is well opened: fopen function returns a FILE
+    // pointer on success, otherwise NULL is returned
+    fprintf(stdout,"\nOpening %s file. ",fileLocation);
+    chemicalFile=fopen(fileLocation,"r");
+    if (chemicalFile==NULL)
+    {
+        PRINT_ERROR("In readChemFileandAllocateChemicalSystem: could not ");
+        fprintf(stderr,"read the content of %s file.\n",fileLocation);
+        return 0;
+    }
+    fprintf(stdout,"Reading chemical data. ");
+
+    // fscanf function returns the number of input items successfully matched
+    // and assigned, which can be fewer than provided for. Important remark:
+    // white space characters, such as blanks and newline characters, causes
+    // fscanf (scanf and sscanf) to read, but not to store, all consecutive
+    // white space characters in the input up to the next character that is not
+    // white space. One white space character in format-string matches any
+    // combination of white space characters in the input
+    fscanf(chemicalFile," ");
+
+    // Read number of molecular orbitals and store it in pChemicalSystem->nmorb
+    // fgets returns NULL if it fails, otherwise the same (char*) input address
+    readStringOut=fgets(readStringIn,18,chemicalFile);
+    readIntegerOut=fscanf(chemicalFile," %d ",&readIntegerIn);
+    if (readStringOut==NULL || readIntegerOut!=1)
+    {
+        PRINT_ERROR("In readChemFileandAllocateChemicalSystem: wrong return ");
+        fprintf(stderr,"of the fgets %p or fscanf ",(void*)readStringOut);
+        fprintf(stderr,"(=%d) function while attempting to ",readIntegerOut);
+        fprintf(stderr,"read the number of molecular orbitals.\n");
+        closeTheFile(&chemicalFile);
+        return 0;
+    }
+
+    // strcmp returns 0 if the two strings are equal, otherwise <0 (resp. >0)
+    // if the 1st string argument is shorter (resp. longer) than the 2nd one
+    if (strcmp(readStringIn,"MolecularOrbitals") || readIntegerIn<1)
+    {
+        PRINT_ERROR("In readChemFileandAllocateChemicalSystem: expecting ");
+        fprintf(stderr,"MolecularOrbitals Nmorb instead of %s ",readStringIn);
+        fprintf(stderr,"%d (positive value).\n",readIntegerIn);
+        closeTheFile(&chemicalFile);
+        return 0;
+    }
+    pChemicalSystem->nmorb=readIntegerIn;
+
+    // Allocate memory for each MolecularOrbital and check if it worked
+    // calloc function returns a pointer to the allocated memory, otherwise NULL
+    length=readIntegerIn;
+    pChemicalSystem->pmorb=(MolecularOrbital*)calloc(length,
+                                                      sizeof(MolecularOrbital));
+    if (pChemicalSystem->pmorb==NULL)
+    {
+        PRINT_ERROR("In readChemFileandAllocateChemicalSystem: could not ");
+        fprintf(stderr,"allocate memory for the (MolecularOrbital*) ");
+        fprintf(stderr,"pChemicalSystem->pmorb variable.\n");
+        closeTheFile(&chemicalFile);
+        return 0;
+    }
+
+    // Read number of primitives and store it in pChemicalSystem->ngauss
+    readStringOut=fgets(readStringIn,11,chemicalFile);
+    readIntegerOut=fscanf(chemicalFile," %d ",&readIntegerIn);
+    if (readStringOut==NULL || readIntegerOut!=1)
+    {
+        PRINT_ERROR("In readChemFileandAllocateChemicalSystem: wrong return ");
+        fprintf(stderr,"of the fgets %p or fscanf ",(void*)readStringOut);
+        fprintf(stderr,"(=%d) function while attempting to ",readIntegerOut);
+        fprintf(stderr,"read the number of primitives.\n");
+        closeTheFile(&chemicalFile);
+        return 0;
+    }
+
+    if (strcmp(readStringIn,"Primitives") || readIntegerIn<1)
+    {
+        PRINT_ERROR("In readChemFileandAllocateChemicalSystem: expecting ");
+        fprintf(stderr,"Primitives Ngauss instead of %s ",readStringIn);
+        fprintf(stderr,"%d (positive value).\n",readIntegerIn);
+        closeTheFile(&chemicalFile);
+        return 0;
+    }
+    pChemicalSystem->ngauss=readIntegerIn;
+
+    // Dynamically allocate the memory in each MolecularOrbital structure
+    iMax=pChemicalSystem->nmorb;
+    for (i=0; i<iMax; i++)
+    {
+        // Initializing to zero the (i+1)-th MolecularOrbital structure
+        pMolecularOrbital=&pChemicalSystem->pmorb[i];
+        pMolecularOrbital->spin=0;
+        pMolecularOrbital->coeff=NULL;
+        pMolecularOrbital->exp=NULL;
+        pMolecularOrbital->nucl=NULL;
+        pMolecularOrbital->type=NULL;
+
+        // Dynamically allocate memory for primitives and check if it worked
+        length=readIntegerIn;
+        pMolecularOrbital->coeff=(double*)calloc(length,sizeof(double));
+        pMolecularOrbital->exp=(double*)calloc(length,sizeof(double));
+        pMolecularOrbital->nucl=(int*)calloc(length,sizeof(int));
+        pMolecularOrbital->type=(int*)calloc(length,sizeof(int));
+        if (pMolecularOrbital->coeff==NULL || pMolecularOrbital->exp==NULL ||
+                 pMolecularOrbital->nucl==NULL || pMolecularOrbital->type==NULL)
+        {
+            PRINT_ERROR("In readChemFileandAllocateChemicalSystem: could not ");
+            fprintf(stderr,"allocate memory for %d primitives ",readIntegerIn);
+            fprintf(stderr,"in the %d-th MolecularOrbital structure.\n",i+1);
+            closeTheFile(&chemicalFile);
+            return 0;
+        }
+    }
+
+    // Read the number of nuclei and store it in pChemicalSystem->nnucl
+    readStringOut=fgets(readStringIn,7,chemicalFile);
+    readIntegerOut=fscanf(chemicalFile," %d ",&readIntegerIn);
+    if (readStringOut==NULL || readIntegerOut!=1)
+    {
+        PRINT_ERROR("In readChemFileandAllocateChemicalSystem: wrong return ");
+        fprintf(stderr,"of the fgets %p or fscanf ",(void*)readStringOut);
+        fprintf(stderr,"(=%d) function while attempting to ",readIntegerOut);
+        fprintf(stderr,"read the number of nuclei.\n");
+        closeTheFile(&chemicalFile);
+        return 0;
+    }
+
+    if (strcmp(readStringIn,"Nuclei") || readIntegerIn<1)
+    {
+        PRINT_ERROR("In readChemFileandAllocateChemicalSystem: expecting ");
+        fprintf(stderr,"Nuclei Nnucl instead of %s ",readStringIn);
+        fprintf(stderr,"%d (positive value).\n",readIntegerIn);
+        closeTheFile(&chemicalFile);
+        return 0;
+    }
+    pChemicalSystem->nnucl=readIntegerIn;
+
+    // Dynamically allocate memory for nuclei and check if it worked
+    length=readIntegerIn;
+    pChemicalSystem->pnucl=(Nucleus*)calloc(length,sizeof(Nucleus));
+    if (pChemicalSystem->pnucl==NULL)
+    {
+        PRINT_ERROR("In readChemFileandAllocateChemicalSystem: could not ");
+        fprintf(stderr,"allocate memory for the (Nucleus*) ");
+        fprintf(stderr,"pChemicalSystem->pnucl variable.\n");
+        closeTheFile(&chemicalFile);
+        return 0;
+    }
+
+    // Saving the Nucleus data in pMesh->pnucl and check if it worked
+    iMax=readIntegerIn;
+    for (i=0; i<iMax; i++)
+    {
+        j=0;
+        j+=fscanf(chemicalFile,"%lf ",&readDouble);
+        pChemicalSystem->pnucl[i].x=readDouble;
+
+        j+=fscanf(chemicalFile,"%lf ",&readDouble);
+        pChemicalSystem->pnucl[i].y=readDouble;
+
+        j+=fscanf(chemicalFile,"%lf ",&readDouble);
+        pChemicalSystem->pnucl[i].z=readDouble;
+
+        if (j!=3)
+        {
+            PRINT_ERROR("In readChemFileandAllocateChemicalSystem: we were ");
+            fprintf(stderr,"not able to properly save the three-coordinate ");
+            fprintf(stderr,"positions of the %d-th Nucleus (only %d ",i+1,j);
+            fprintf(stderr,"values properly saved instead of three).\n");
+            closeTheFile(&chemicalFile);
+            return 0;
+        }
+
+        readIntegerOut=fscanf(chemicalFile,"%d ",&readIntegerIn);
+        if (readIntegerOut!=1)
+        {
+            PRINT_ERROR("In readChemFileandAllocateChemicalSystem: wrong ");
+            fprintf(stderr,"(=%d) return of the fscanf ",readIntegerOut);
+            fprintf(stderr,"function while attempting to read the charge of ");
+            fprintf(stderr,"the %d-th Nucleus structure.\n",i+1);
+            closeTheFile(&chemicalFile);
+            return 0;
+        }
+
+        if (readIntegerIn<1 || readIntegerIn>100)
+        {
+            PRINT_ERROR("In readChemFileandAllocateChemicalSystem: the ");
+            fprintf(stderr,"charge (=%d) of the %d-th ",readIntegerIn,i+1);
+            fprintf(stderr,"Nucleus must be a positive integer that is not ");
+            fprintf(stderr,"(strictly) greater than one hundred.\n");
+            closeTheFile(&chemicalFile);
+            return 0;
+        }
+        pChemicalSystem->pnucl[i].charge=readIntegerIn;
+    }
+
+    // Read the line containing the keywords Coefficient Exponent Center Type
+    readStringOut=fgets(readStringIn,33,chemicalFile);
+    if (readStringOut==NULL)
+    {
+        PRINT_ERROR("In readChemFileandAllocateChemicalSystem: wrong return ");
+        fprintf(stderr,"%p of the fgets function ",(void*)readStringOut);
+        fprintf(stderr,"while attempting to read the keywords Coefficient, ");
+        fprintf(stderr,"Exponent, Center, and Type.\n");
+        closeTheFile(&chemicalFile);
+        return 0;
+    }
+
+    if (strcmp(readStringIn,"Coefficient Exponent Center Type"))
+    {
+        PRINT_ERROR("In readChemFileandAllocateChemicalSystem: expecting ");
+        fprintf(stderr,"'Coefficient Exponent Center Type' instead of ");
+        fprintf(stderr,"'%s' at this line.\n",readStringIn);
+        closeTheFile(&chemicalFile);
+        return 0;
+    }
+
+    // For each MocularOrbital, read and save successively the spin followed
+    // by the enumeration of the gaussian coefficients, exponents, center
+    // references, and associated types
+    fscanf(chemicalFile," ");
+    iMax=pChemicalSystem->nmorb;
+    for (i=0; i<iMax; i++)
+    {
+        readIntegerOut=fscanf(chemicalFile,"%d ",&readIntegerIn);
+        if (readIntegerOut!=1)
+        {
+            PRINT_ERROR("In readChemFileandAllocateChemicalSystem: wrong ");
+            fprintf(stderr,"(=%d) return of the fscanf ",readIntegerOut);
+            fprintf(stderr,"function while attempting to read the ");
+            fprintf(stderr,"description of the %d-th MolecularOrbital ",i+1);
+            fprintf(stderr,"structure.\n");
+            closeTheFile(&chemicalFile);
+            return 0;
+        }
+
+        if (readIntegerIn!=i+1)
+        {
+            PRINT_ERROR("In readChemFileandAllocateChemicalSystem: expecting ");
+            fprintf(stderr,"to read the %d-th MolecularOrbital structure ",i+1);
+            fprintf(stderr,"instead of the %d-th one.\n",readIntegerIn);
+            closeTheFile(&chemicalFile);
+            return 0;
+        }
+
+        // Read and check the spin of the (i+1)-th MolecularOrbital structure
+        readStringOut=fgets(readStringIn,5,chemicalFile);
+        readIntegerOut=fscanf(chemicalFile," %d ",&readIntegerIn);
+        if (readStringOut==NULL || readIntegerOut!=1)
+        {
+            PRINT_ERROR("In readChemFileandAllocateChemicalSystem: wrong ");
+            fprintf(stderr,"return of the fgets %p or ",(void*)readStringOut);
+            fprintf(stderr,"fscanf (=%d) function while ",readIntegerOut);
+            fprintf(stderr,"attempting to read the spin of the %d-th ",i+1);
+            fprintf(stderr,"MolecularOrbital structure.\n");
+            closeTheFile(&chemicalFile);
+            return 0;
+        }
+
+        if (strcmp(readStringIn,"Spin") || abs(readIntegerIn)!=1)
+        {
+            PRINT_ERROR("In readChemFileandAllocateChemicalSystem: expecting ");
+            fprintf(stderr,"Spin (+/-)1 instead of %s ",readStringIn);
+            fprintf(stderr,"%d (unitary value).\n",readIntegerIn);
+            closeTheFile(&chemicalFile);
+            return 0;
+        }
+        pChemicalSystem->pmorb[i].spin=readIntegerIn;
+
+        // Read the next informations of the (i+1)-th MolecularOrbital structure
+        jMax=pChemicalSystem->ngauss;
+        pMolecularOrbital=&pChemicalSystem->pmorb[i];
+        for (j=0; j<jMax; j++)
+        {
+            // Read coefficient
+            readIntegerOut=fscanf(chemicalFile,"%lf ",&readDouble);
+            if (readIntegerOut!=1)
+            {
+                PRINT_ERROR("In readChemFileandAllocateChemicalSystem: ");
+                fprintf(stderr,"wrong return (=%d) of the ",readIntegerOut);
+                fprintf(stderr,"fscanf function while attempting to read the ");
+                fprintf(stderr,"%d-th coefficient of the %d-th ",j+1,i+1);
+                fprintf(stderr,"MolecularOrbital structure.\n");
+                closeTheFile(&chemicalFile);
+                return 0;
+            }
+            pMolecularOrbital->coeff[j]=readDouble;
+
+            // Read and check exponent
+            readIntegerOut=fscanf(chemicalFile,"%lf ",&readDouble);
+            if (readIntegerOut!=1)
+            {
+                PRINT_ERROR("In readChemFileandAllocateChemicalSystem: ");
+                fprintf(stderr,"wrong return (=%d) of the ",readIntegerOut);
+                fprintf(stderr,"fscanf function while attempting to read the ");
+                fprintf(stderr,"%d-th Gaussian exponent of the %d-th ",j+1,i+1);
+                fprintf(stderr,"MolecularOrbital structure.\n");
+                closeTheFile(&chemicalFile);
+                return 0;
+            }
+
+            if (readDouble<=0.)
+            {
+                PRINT_ERROR("In readChemFileandAllocateChemicalSystem: the ");
+                fprintf(stderr,"%d-th Gaussian exponent of the %d-th ",j+1,i+1);
+                fprintf(stderr,"MolecularOrbital structure should be a ");
+                fprintf(stderr,"positive double value (instead of ");
+                fprintf(stderr,"%lf).\n",readDouble);
+                closeTheFile(&chemicalFile);
+                return 0;
+            }
+            pMolecularOrbital->exp[j]=readDouble;
+
+            // Read and check center assignments
+            readIntegerOut=fscanf(chemicalFile,"%d ",&readIntegerIn);
+            if (readIntegerOut!=1)
+            {
+                PRINT_ERROR("In readChemFileandAllocateChemicalSystem: ");
+                fprintf(stderr,"wrong return (=%d) of the ",readIntegerOut);
+                fprintf(stderr,"fscanf function while attempting to read the ");
+                fprintf(stderr,"%d-th center assignment of the %d-th ",j+1,i+1);
+                fprintf(stderr,"MolecularOrbital structure.\n");
+                closeTheFile(&chemicalFile);
+                return 0;
+            }
+
+            if (readIntegerIn<1 || readIntegerIn>pChemicalSystem->nnucl)
+            {
+                PRINT_ERROR("In readChemFileandAllocateChemicalSystem: the ");
+                fprintf(stderr,"%d-th center assignment of the %d-th ",j+1,i+1);
+                fprintf(stderr,"MolecularOrbital structure should be a ");
+                fprintf(stderr,"positive integer less than the total number ");
+                fprintf(stderr,"of nuclei %d ",pChemicalSystem->nnucl);
+                fprintf(stderr,"(instead of %d).\n",readIntegerIn);
+                closeTheFile(&chemicalFile);
+                return 0;
+            }
+            pMolecularOrbital->nucl[j]=readIntegerIn;
+
+            // Read and check type assignments
+            readIntegerOut=fscanf(chemicalFile,"%d ",&readIntegerIn);
+            if (readIntegerOut!=1)
+            {
+                PRINT_ERROR("In readChemFileandAllocateChemicalSystem: ");
+                fprintf(stderr,"wrong return (=%d) of the ",readIntegerOut);
+                fprintf(stderr,"fscanf function while attempting to read the ");
+                fprintf(stderr,"%d-th type assignment of the %d-th ",j+1,i+1);
+                fprintf(stderr,"MolecularOrbital structure.\n");
+                closeTheFile(&chemicalFile);
+                return 0;
+            }
+
+            if (readIntegerIn<1 || readIntegerIn>20)
+            {
+                PRINT_ERROR("In readChemFileandAllocateChemicalSystem: the ");
+                fprintf(stderr,"%d-th type assignment of the %d-th ",j+1,i+1);
+                fprintf(stderr,"MolecularOrbital structure should be a ");
+                fprintf(stderr,"positive integer less than 20 (instead of ");
+                fprintf(stderr,"%d).\n",readIntegerIn);
+                closeTheFile(&chemicalFile);
+                return 0;
+            }
+            pMolecularOrbital->type[j]=readIntegerIn;
+        }
+    }
+
+    // Check that the "End" keyword is ending the file (everything after that
+    // is considered as a comment)
+    readStringOut=fgets(readStringIn,4,chemicalFile);
+    if (readStringOut==NULL)
+    {
+        PRINT_ERROR("In readChemFileandAllocateChemicalSystem: wrong return ");
+        fprintf(stderr,"%p of the fgets function ",(void*)readStringOut);
+        fprintf(stderr,"while attempting to read the End keyword.\n");
+        closeTheFile(&chemicalFile);
+        return 0;
+    }
+
+    if (strcmp(readStringIn,"End"))
+    {
+        PRINT_ERROR("In readChemFileandAllocateChemicalSystem: expecting ");
+        fprintf(stderr,"the 'End' keyword instead of '%s' at ",readStringIn);
+        fprintf(stderr,"this line.\n");
+        closeTheFile(&chemicalFile);
+        return 0;
+    }
+
+    // Closing the *.chem file: fclose function returns zero if the input FILE*
+    // variable is successfully closed, otherwise EOF (end-of-file) is returned
+    if (fclose(chemicalFile))
+    {
+        PRINT_ERROR("In readChemFileandAllocateChemicalSystem: the ");
+        fprintf(stderr,"%s file has not been closed properly.\n",fileLocation);
+        chemicalFile=NULL;
+        return 0;
+    }
+    fprintf(stdout,"Closing file.\n");
+    chemicalFile=NULL;
+
+    // Check if the loaded chemical data are restricted Hartree-Fock ones or not
+    returnValue=1;
+    if (pChemicalSystem->nmorb%2)
+    {
+        returnValue=-1;
+    }
+    else
+    {
+        j=0;
+        iMax=pChemicalSystem->nmorb;
+        for (i=0; i<iMax; i++)
+        {
+            if (pChemicalSystem->pmorb[i].spin==1)
+            {
+                j++;
+            }
+        }
+
+        iMax=pChemicalSystem->nmorb/2;
+        if (j!=iMax)
+        {
+            returnValue=-1;
+        }
+        else
+        {
+            jMax=pChemicalSystem->ngauss;
+            for (i=0; i<iMax; i++)
+            {
+                pMolecularOrbital=&pChemicalSystem->pmorb[i];
+                pMolecularOrbital2=&pChemicalSystem->pmorb[iMax+i];
+                for (j=0; j<jMax; j++)
+                {
+                    if (pMolecularOrbital->coeff[j]!=
+                                                   pMolecularOrbital2->coeff[j])
+                    {
+                        returnValue=-1;
+                        break;
+                    }
+                    else if (pMolecularOrbital->exp[j]!=
+                                                     pMolecularOrbital2->exp[j])
+                    {
+                        returnValue=-1;
+                        break;
+                    }
+                    else if (pMolecularOrbital->nucl[j]!=
+                                                    pMolecularOrbital2->nucl[j])
+                    {
+                        returnValue=-1;
+                        break;
+                    }
+                    else if (pMolecularOrbital->type[j]!=
+                                                    pMolecularOrbital2->type[j])
+                    {
+                        returnValue=-1;
+                        break;
+                    }
+                }
+                if (returnValue==-1)
+                {
+                    break;
+                }
+            }
+        }
+    }
+
+    return returnValue;
 }
 
-/* ************************************************************************************************************************************************************************************************** */
-// The function readWfnFileAndAllocateChemicalSystem reads file at fileLocation (file must have been previously created), checks wfn syntax, allocates and fills memory in pChemicalSystem structure
-// It has the char* fileLocation and ChemicalSystem* variable (described in main.h) as input arguments and it returns zero if an error occurred, otherwise one
-/* ************************************************************************************************************************************************************************************************** */
-static int readWfnFileAndAllocateChemicalSystem(char* fileLocation, ChemicalSystem* pChemicalSystem)
+/* ************************************************************************** */
+// The function readAndConvertWfnFile reads a *.temp file (which is intended
+// to be the copy of a *.wfn file) at fileLocation (such a file must have been
+// previously created), except the first line, and converts all charToRemove
+// encountered into charToPutInstead. It has a char* variable (fileLocation)
+// and two char variables (charToRemove, charToPutInstead) as input arguments
+// and it returns zero if an error occurred, otherwise one in case of success
+/* ************************************************************************** */
+int readAndConvertWfnFile(char* fileLocation, char charToRemove,
+                                          char charToPutInstead, int nameLength)
 {
-	char readStringIn[18]={'\0'}, *readStringOut=NULL;
-	int readIntegerIn=0, readIntegerOut=0, readChar=0, i=0, iMax=0, j=0, k=0, kMax=0;
-	double readDouble=0.;
-	MolecularOrbital *pMolecularOrbital=NULL, *pMolecularOrbitalI=NULL;
-	FILE *wfnFile=NULL;
+    int readChar=0;
+    FILE *wfnFile=NULL;
 
-	// Testing if the input pChemicalSystem variable is pointing to NULL otherwise initialize its structure to zero for variables and NULL for pointers
-	if (pChemicalSystem==NULL)
-	{
-		PRINT_ERROR();
-		printf("In readWfnFileAndAllocateChemicalSystem: the input pChemicalSystem variable is pointing to %p adress.\n",pChemicalSystem);
-		return 0;	
-	}
-	initializeChemicalStructure(pChemicalSystem);
+    // Check if the file have been previously created
+    if (initialFileExists(fileLocation,nameLength)!=1)
+    {
+        PRINT_ERROR("In readAndConvertWfnFile: initialFileExists function ");
+        fprintf(stderr,"did not return one, which was the expected value ");
+        fprintf(stderr,"here, after having checked that the (char*) ");
+        fprintf(stderr,"fileLocation variable is not storing the name of an ");
+        fprintf(stderr,"existing and valid wfn-format file.\n");
+        return 0;
+    }
 
-	// Since the file must have been previously created, we check if it is the case 
-	if(!initialFileExists(fileLocation))
-	{
-		PRINT_ERROR();
-		printf("In readWfnFileAndAllocateChemicalSystem: initialFileExists function returned zero instead of one.\n");
-		return 0;
-	}
+    // Check if the file is well opened (file must have been previously created)
+    // fopen returns a FILE pointer on success, otherwise NULL is returned
+    fprintf(stdout,"Opening %s file. ",fileLocation);
+    wfnFile=fopen(fileLocation,"r+");
+    if (wfnFile==NULL)
+    {
+        PRINT_ERROR("In readAndConvertWfnFile: could not open and write into ");
+        fprintf(stderr,"the %s file.\n",fileLocation);
+        return 0;
+    }
+    fprintf(stdout,"Converting data (any '%c' ",charToRemove);
+    fprintf(stdout,"into '%c'). ",charToPutInstead);
 
-	// Testing if the file is well opened (warning: file must have been previously created)
-	printf("\nOpening %s file. ",fileLocation);
-	wfnFile=fopen(fileLocation,"r");	// fopen function returns a FILE pointer on success, otherwise a NULL pointer is returned
-	if (wfnFile==NULL)
-	{
-		PRINT_ERROR();
-		printf("In readWfnFileAndAllocateChemicalSystem: could not read %s file.\n",fileLocation);
-		return 0;
-	}
-	printf("Reading and saving chemical data. ");		
+    // Skip the first line: fgetc function returns the character read as an
+    // unsigned char cast to an int or EOF on the end of file or error (because
+    // EOF can't be stored as a char)
+    do {
+        readChar=fgetc(wfnFile);
+    } while (readChar!='\n' && readChar!=EOF);
+    if (readChar==EOF)
+    {
+        PRINT_ERROR("In readAndConvertWfnFile: problem encountered with the ");
+        fprintf(stderr,"fgetc function or end-of-file reached without any ");
+        fprintf(stderr,"data written in the %s file.\n",fileLocation);
+        closeTheFile(&wfnFile);
+        return 0;
+    }
 
-	// Skip the first line of the file
-	do {
-		readChar=fgetc(wfnFile);	// fgetc function returns the character read as an unsigned char cast to an int or EOF on end of file or error (because EOF can't be stored as char)	
-	} while (readChar!='\n' && readChar!=EOF);
-	if (readChar==EOF)
-	{
-		PRINT_ERROR();
-		printf("In readWfnFileAndAllocateChemicalSystem: problem with fgetc or end-of-file reached without any data entered in %s file.\n",fileLocation);
-		closeTheFile(&wfnFile);
-		return 0;
-	}
+    // Remark: the 'D' symbol now only appears in *.wfn at fileLocation either
+    // for scientific notation (Fortran 1.0D+01) or for the END DATA keyword so
+    // it can now be easily converted into the C syntax (1.0e+01)
+    do {
+        readChar=fgetc(wfnFile);
+        if (readChar==(int)charToRemove)
+        {
+            // fseek returns zero on success, otherwise a non-zero value
+            if (fseek(wfnFile,-1,SEEK_CUR))
+            {
+                PRINT_ERROR("In readAndConvertWfnFile: wrong return of the ");
+                fprintf(stderr,"fseek function in the %s file.\n",fileLocation);
+                closeTheFile(&wfnFile);
+                return 0;
+            }
 
-	// Read the expected world GAUSSIAN in the second line
-	readStringOut=fgets(readStringIn,9,wfnFile);	// fgets function returns a null pointer if it failed, otherwise it returns the same readStringIn parameters
-	if (readStringOut==NULL || strcmp(readStringIn,"GAUSSIAN")) // strcmp function returns 0 if the two strings are equal, otherwise >0 (resp. <0) if In is greater (resp. less) than Out
-	{
-		PRINT_ERROR();
-		printf("In readWfnFileAndAllocateChemicalSystem: expecting GAUSSIAN instead of %s (and fgets returns %p adress).\n",readStringIn,readStringOut);
-		closeTheFile(&wfnFile);
-		return 0;
-	}
+            // fputc returns the same character on success, otherwise EOF value
+            if (fputc(charToPutInstead,wfnFile)==EOF)
+            {
+                PRINT_ERROR("In readAndConvertWfnFile: wrong return of the ");
+                fprintf(stderr,"fputc function in the %s file.\n",fileLocation);
+                closeTheFile(&wfnFile);
+                return 0;
+            }
+        }
+    } while (readChar!=EOF);
 
-	// Reading number of MolecularOrbitals and store it in pChemicalSystem->nmorb
-	readIntegerOut=fscanf(wfnFile," %d ",&readIntegerIn);	// fscanf function returns the number of input items successfully matched and assigned, which can be fewer than provided for
-	readStringOut=fgets(readStringIn,13,wfnFile);
+    // Testing if the file is well closed: close returns zero if the input
+    // FILE* variable is successfully closed, otherwise EOF is returned
+    if (fclose(wfnFile))
+    {
+        PRINT_ERROR("In readAndConvertWfnFile: we were not able to close the ");
+        fprintf(stderr,"%s file properly.\n",fileLocation);
+        wfnFile=NULL;
+        return 0;
+    }
+    wfnFile=NULL;
+    fprintf(stdout,"Closing file.");
 
-	// Important remark: white space characters, such as blanks and newline characters, causes fscanf (scanf and sscanf) to read, but not to store, all consecutive white space characters in 
-	//                   the input up to the next character that is not white space. One white space character in format-string matches any combination of white space characters in the input.
-
-	if(readIntegerOut!=1 || readStringOut==NULL)
-	{
-		PRINT_ERROR();
-		printf("In readWfnFileAndAllocateChemicalSystem: wrong return of fscanf (=%d) and/or fgets (=%p) in Molecular Orbitals.\n",readIntegerOut,readStringOut);
-		closeTheFile(&wfnFile);
-		return 0;
-	}
-	if (readIntegerIn<1 || strcmp(readStringIn,"MOL ORBITALS"))
-	{
-		PRINT_ERROR();
-		printf("In readWfnFileAndAllocateChemicalSystem: expecting Nmorb MOL ORBITALS instead of %d %s (positive value).\n",readIntegerIn,readStringIn);
-		closeTheFile(&wfnFile);
-		return 0;
-	}
-	pChemicalSystem->nmorb=readIntegerIn;
-
-	// Allocating memory for MolecularOrbitals and check if it works
-	pChemicalSystem->pmorb=(MolecularOrbital*)calloc(readIntegerIn,sizeof(MolecularOrbital));
-	if (pChemicalSystem->pmorb==NULL)
-	{
-		PRINT_ERROR();
-		printf("In readWfnFileAndAllocateChemicalSystem: could not allocate memory for %d Molecular Orbitals.\n",readIntegerIn);
-		closeTheFile(&wfnFile);
-		return 0;
-	}
-
-	// Reading number of Primitives and store it in pChemicalSystem->ngauss
-	readIntegerOut=fscanf(wfnFile," %d ",&readIntegerIn);
-	readStringOut=fgets(readStringIn,11,wfnFile);
-	if(readIntegerOut!=1 || readStringOut==NULL)
-	{
-		PRINT_ERROR();
-		printf("In readWfnFileAndAllocateChemicalSystem: wrong return of fscanf (=%d) and/or fgets (out=%p) in Primitives.\n",readIntegerOut,readStringOut);		
-		closeTheFile(&wfnFile);
-		return 0;
-	}
-	if (readIntegerIn<1 || strcmp(readStringIn,"PRIMITIVES"))
-	{
-		PRINT_ERROR();
-		printf("In readWfnFileAndAllocateChemicalSystem: expecting Ngauss PRIMITIVES instead of %d %s (positive value).\n",readIntegerIn,readStringIn);		
-		closeTheFile(&wfnFile);
-		return 0;
-	}
-	pChemicalSystem->ngauss=readIntegerIn;
-	iMax=pChemicalSystem->nmorb;
-	for (i=0; i<iMax; i++)
-	{
-		// Initializing MolecularOrbital structure
-		pMolecularOrbital=&pChemicalSystem->pmorb[i];
-		pMolecularOrbital->spin=0;
-		pMolecularOrbital->coeff=NULL;
-		pMolecularOrbital->exp=NULL;
-		pMolecularOrbital->nucl=NULL;
-		pMolecularOrbital->type=NULL;
-
-		// Allocating memory for Primitives in each orbitals and check if it works			
-		pMolecularOrbital->coeff=(double*)calloc(readIntegerIn,sizeof(double));
-		pMolecularOrbital->exp=(double*)calloc(readIntegerIn,sizeof(double));
-		pMolecularOrbital->nucl=(int*)calloc(readIntegerIn,sizeof(int));
-		pMolecularOrbital->type=(int*)calloc(readIntegerIn,sizeof(int));
-		if (pMolecularOrbital->coeff==NULL || pMolecularOrbital->exp==NULL || pMolecularOrbital->nucl==NULL || pMolecularOrbital->type==NULL)
-		{
-			PRINT_ERROR();
-			printf("In readWfnFileAndAllocateChemicalSystem: could not allocate memory for %d Primitives in %d-th Molecular Orbital.\n",readIntegerIn,i+1);		
-			closeTheFile(&wfnFile);
-			return 0;
-		}	
-	}
-
-	// Reading number of Nuclei and store it in pChemicalSystem->nnucl
-	readIntegerOut=fscanf(wfnFile," %d ",&readIntegerIn);
-	readStringOut=fgets(readStringIn,7,wfnFile);	
-	if(readIntegerOut!=1 || readStringOut==NULL)
-	{
-		PRINT_ERROR();
-		printf("In readWfnFileAndAllocateChemicalSystem: wrong return of fscanf (=%d) and/or fgets (=%p) in Nuclei.\n",readIntegerOut,readStringOut);		
-		closeTheFile(&wfnFile);
-		return 0;
-	}
-	if (readIntegerIn<1 || strcmp(readStringIn,"NUCLEI"))
-	{
-		PRINT_ERROR();
-		printf("In readWfnFileAndAllocateChemicalSystem: expecting Nnucl NUCLEI instead of %d %s (positive value).\n",readIntegerIn,readStringIn);		
-		closeTheFile(&wfnFile);
-		return 0;
-	}
-	pChemicalSystem->nnucl=readIntegerIn;
-
-	// Allocating memory for Nuclei and check if it works
-	pChemicalSystem->pnucl=(Nucleus*)calloc(readIntegerIn,sizeof(Nucleus));
-	if (pChemicalSystem->pnucl==NULL)
-	{
-		PRINT_ERROR();
-		printf("In readWfnFileAndAllocateChemicalSystem: could not allocate memory for %d Nuclei.\n",readIntegerIn);		
-		closeTheFile(&wfnFile);
-		return 0;
-	}
-
-	// Saving Nuclei in pMesh->pnucl and check if it works
-	fscanf(wfnFile," ");
-	iMax=readIntegerIn;
-	j=0;
-	for (i=0; i<iMax; i++)
-	{
-		// Read the name of the molecule and check its number
-		readStringOut=fgets(readStringIn,3,wfnFile);
-		readIntegerOut=fscanf(wfnFile," %d (",&readIntegerIn);
-		if (readStringOut==NULL || readIntegerOut!=1 || readIntegerIn!=i+1)
-		{
-			PRINT_ERROR();
-			printf("In readWfnFileAndAllocateChemicalSystem: wrong return of fgets (in=%s, out=%p) and/or fscanf (in=%d, out=%d) ",readStringIn,readStringOut,readIntegerIn,readIntegerOut);
-			printf("in %d-th Nucleus.\n",i+1);
-			closeTheFile(&wfnFile);
-			return 0;
-		}
-
-		// Read the centre reference and store its number in readIntegerIn
-		readStringOut=fgets(readStringIn,7,wfnFile);
-		readIntegerOut=fscanf(wfnFile," %d) ",&readIntegerIn);
-		if(readStringOut==NULL || readIntegerOut!=1)
-		{
-			PRINT_ERROR();
-			printf("In readWfnFileAndAllocateChemicalSystem: wrong return of fgets (=%p) and/or fscanf (=%d) in %d-th Centre.\n",readStringOut,readIntegerOut,i+1);		
-			closeTheFile(&wfnFile);
-			return 0;
-		}
-		if (strcmp(readStringIn,"CENTRE") || readIntegerIn>iMax || readIntegerIn<1)
-		{
-			PRINT_ERROR();
-			printf("In readWfnFileAndAllocateChemicalSystem: expecting CENTRE %d instead of %s %d in %d-th Nucleus ",i+1,readStringIn,readIntegerIn,i+1);
-			printf("(positive value less than %d).\n",iMax);		
-			closeTheFile(&wfnFile);
-			return 0;
-		}
-		if (readIntegerIn!=i+1)
-		{
-			printf("\nWarning in readWfnFileAndAllocateChemicalSystem function: Nucleus %d is not numbered %d (in increasing order).\n",readIntegerIn,i+1);
-		}
-		j+=fscanf(wfnFile,"%lf ",&readDouble);	
-		pChemicalSystem->pnucl[readIntegerIn-1].x=readDouble;
-		j+=fscanf(wfnFile,"%lf ",&readDouble);	
-		pChemicalSystem->pnucl[readIntegerIn-1].y=readDouble;
-		j+=fscanf(wfnFile,"%lf ",&readDouble);	
-		pChemicalSystem->pnucl[readIntegerIn-1].z=readDouble;
-
-		// Read the number of charge of the current nucleus (not used here)
-		readStringOut=fgets(readStringIn,7,wfnFile);
-		readIntegerOut=fscanf(wfnFile," = %lf ",&readDouble);
-		if(readStringOut==NULL || readIntegerOut!=1)
-		{
-			PRINT_ERROR();
-			printf("In readWfnFileAndAllocateChemicalSystem: wrong return of fgets (=%p) and/or fscanf (=%d) in the charge of %d-th Nucleus.\n",readStringOut,readIntegerOut,i+1);		
-			closeTheFile(&wfnFile);
-			return 0;
-		}
-		if (strcmp(readStringIn,"CHARGE") || readDouble>100. || readDouble<1.)
-		{
-			PRINT_ERROR();
-			printf("In readWfnFileAndAllocateChemicalSystem: expecting CHARGE = Rcharge instead of %s = %lf in %d-th Nucleus ",readStringIn,readDouble,i+1);
-			printf("(positive value less than 100).\n");		
-			closeTheFile(&wfnFile);
-			return 0;
-		}
-	}
-
-	// Check that all coordinates of nuclei have been saved
-	if (j!=3*iMax)
-	{
-		PRINT_ERROR();
-		printf("In readWfnFileAndAllocateChemicalSystem: expecting %d Nuclei instead of %d properly saved.\n",iMax,j/3);		
-		closeTheFile(&wfnFile);
-		return 0;
-	}
-	
-	// Save the centre assignments in pChemicalSystem->nmorb[0].nucl and copy them in all pChemicalSystem->nmorb[i].nucl structure i=1..pChemicalSystem->nmorb-1
-	kMax=pChemicalSystem->ngauss;
-	pMolecularOrbital=&pChemicalSystem->pmorb[0];
-	j=0;
-	for (k=0; k<kMax; k++)
-	{
-		readChar=fgetc(wfnFile);
-		if (readChar==EOF)
-		{
-			PRINT_ERROR();
-			printf("In readWfnFileAndAllocateChemicalSystem: problem with fgetc or end-of-file reached without all data saved in %d-th Centre Assignment.\n",k+1);
-			closeTheFile(&wfnFile);
-			return 0;
-		}
-		else if (readChar=='C')
-		{
-			readStringOut=fgets(readStringIn,18,wfnFile);
-			if(readStringOut==NULL || strcmp(readStringIn,"ENTRE ASSIGNMENTS"))	
-			{
-				PRINT_ERROR();
-				printf("In readWfnFileAndAllocateChemicalSystem: expecting CENTRE ASSIGNMENTS instead of C%s (and fgets returns %p adress) ",readStringIn,readStringOut);
-				printf("in %d-th Centre Assignment.\n",k+1);		
-				closeTheFile(&wfnFile);
-				return 0;
-			}
-			fscanf(wfnFile," ");
-		}
-		else
-		{
-			if(fseek(wfnFile,-1,SEEK_CUR)) 
-			{
-				PRINT_ERROR();
-				printf("In readWfnFileAndAllocateChemicalSystem: wrong return of fseek function in %d-th Centre Assignment.\n",k+1);
-				closeTheFile(&wfnFile);
-				return 0;
-			}
-		}
-		j+=fscanf(wfnFile,"%d ",&readIntegerOut);
-		if (readIntegerOut<1 || readIntegerOut>iMax)
-		{
-			PRINT_ERROR();
-			printf("In readWfnFileAndAllocateChemicalSystem: expecting positive integer less than %d instead of %d in %d-th Centre Assignment.\n",iMax,readIntegerOut,k+1);
-			closeTheFile(&wfnFile);
-			return 0;
-		}
-		pMolecularOrbital->nucl[k]=readIntegerOut;
-	}
-	if (j!=kMax)
-	{
-		PRINT_ERROR();
-		printf("In readWfnFileAndAllocateChemicalSystem: expecting %d Centre Assignments instead of %d properly saved.\n",kMax,j);		
-		closeTheFile(&wfnFile);
-		return 0;
-	}
-	iMax=pChemicalSystem->nmorb;
-	if (iMax>1)
-	{
-		for (i=1; i<iMax; i++)
-		{
-			pMolecularOrbitalI=&pChemicalSystem->pmorb[i];
-			for (k=0; k<kMax; k++)
-			{
-				pMolecularOrbitalI->nucl[k]=pMolecularOrbital->nucl[k];
-			}
-		}
-	}
-
-	// Save the type assignments in pChemicalSystem->nmorb[0].type and copy them in all pChemicalSystem->nmorb[i].type structure i=1..pChemicalSystem->nmorb-1
-	kMax=pChemicalSystem->ngauss;
-	pMolecularOrbital=&pChemicalSystem->pmorb[0];
-	j=0;
-	for (k=0; k<kMax; k++)
-	{
-		readChar=fgetc(wfnFile);
-		if (readChar==EOF)
-		{
-			PRINT_ERROR();
-			printf("In readWfnFileAndAllocateChemicalSystem: problem with fgetc or end-of-file reached without all data saved in %d-th Type Assignment.\n",k+1);
-			closeTheFile(&wfnFile);
-			return 0;
-		}
-		else if (readChar=='T')
-		{
-			readStringOut=fgets(readStringIn,16,wfnFile);
-			if(readStringOut==NULL || strcmp(readStringIn,"YPE ASSIGNMENTS"))	
-			{
-				PRINT_ERROR();
-				printf("In readWfnFileAndAllocateChemicalSystem:  expecting TYPE ASSIGNMENTS instead of T%s (and fgets returns %p adress) ",readStringIn,readStringOut);
-				printf("in %d-th Type Assignment.\n",k+1);		
-				closeTheFile(&wfnFile);
-				return 0;
-			}
-			fscanf(wfnFile," ");
-		}
-		else
-		{
-			if(fseek(wfnFile,-1,SEEK_CUR))
-			{
-				PRINT_ERROR();
-				printf("In readWfnFileAndAllocateChemicalSystem: wrong return of fseek function in %d-th Type Assignment.\n",k+1);
-				closeTheFile(&wfnFile);
-				return 0;
-			}
-		}
-		j+=fscanf(wfnFile,"%d ",&readIntegerOut);
-		if (readIntegerOut<1 || readIntegerOut>20)
-		{
-			PRINT_ERROR();
-			printf("In readWfnFileAndAllocateChemicalSystem: expecting positive integer less than 20 instead of %d in %d-th Type Assignment.\n",readIntegerOut,k+1);
-			closeTheFile(&wfnFile);
-			return 0;
-		}		
-		pMolecularOrbital->type[k]=readIntegerOut;
-	}
-	if (j!=kMax)
-	{
-		PRINT_ERROR();
-		printf("In readWfnFileAndAllocateChemicalSystem: expecting %d Type Assignements instead of %d properly saved.\n",kMax,j);		
-		closeTheFile(&wfnFile);
-		return 0;
-	}
-	iMax=pChemicalSystem->nmorb;
-	if (iMax>1)
-	{
-		for (i=1; i<iMax; i++)
-		{
-			pMolecularOrbitalI=&pChemicalSystem->pmorb[i];
-			for (k=0; k<kMax; k++)
-			{
-				pMolecularOrbitalI->type[k]=pMolecularOrbital->type[k];
-			}
-		}
-	}
-
-	// Save the exponents in pChemicalSystem->nmorb[0].exp and copy them in all pChemicalSystem->nmorb[i].exp structure i=1..pChemicalSystem->nmorb-1
-	kMax=pChemicalSystem->ngauss;
-	pMolecularOrbital=&pChemicalSystem->pmorb[0];
-	j=0;
-	for (k=0; k<kMax; k++)
-	{
-		readChar=fgetc(wfnFile);
-		if (readChar==EOF)
-		{
-			PRINT_ERROR();
-			printf("In readWfnFileAndAllocateChemicalSystem: problem with fgetc or end-of-file reached without all data saved in %d-th Exponent.\n",k+1);
-			closeTheFile(&wfnFile);
-			return 0;
-		}
-		else if (readChar=='E')
-		{
-			readStringOut=fgets(readStringIn,9,wfnFile);
-			if(readStringOut==NULL || strcmp(readStringIn,"XPONENTS"))	
-			{
-				PRINT_ERROR();
-				printf("In readWfnFileAndAllocateChemicalSystem: expecting EXPONENTS instead of E%s (and fgets returns %p adress) ",readStringIn,readStringOut);
-				printf("in %d-th Exponent.\n",k+1);		
-				closeTheFile(&wfnFile);
-				return 0;
-			}
-			fscanf(wfnFile," ");
-		}
-		else
-		{
-			if(fseek(wfnFile,-1,SEEK_CUR))
-			{
-				PRINT_ERROR();
-				printf("In readWfnFileAndAllocateChemicalSystem: wrong return of fseek function in %d-th Exponent.\n",k+1);
-				closeTheFile(&wfnFile);
-				return 0;
-			}
-		}
-		j+=fscanf(wfnFile,"%lf ",&readDouble);
-		if (readDouble<=0.)
-		{
-			PRINT_ERROR();
-			printf("In readWfnFileAndAllocateChemicalSystem: expecting positive value instead of %lf in %d-th Exponent.\n",readDouble,k+1);
-			closeTheFile(&wfnFile);
-			return 0;
-		}		
-		pMolecularOrbital->exp[k]=readDouble;
-	}
-	if (j!=kMax)
-	{
-		PRINT_ERROR();
-		printf("In readWfnFileAndAllocateChemicalSystem: expecting %d Exponents instead of %d properly saved.\n",kMax,j);		
-		closeTheFile(&wfnFile);
-		return 0;
-	}
-	iMax=pChemicalSystem->nmorb;
-	if (iMax>1)
-	{
-		for (i=1; i<iMax; i++)
-		{
-			pMolecularOrbitalI=&pChemicalSystem->pmorb[i];
-			for (k=0; k<kMax; k++)
-			{
-				pMolecularOrbitalI->exp[k]=pMolecularOrbital->exp[k];
-			}
-		}
-	}
-
-	// Save in pChemicalSystem->nmorb[i-1].coeff i=1..pChemicalSystem->nmorb, the different primitives coefficients associated with the different molecular orbitals 
-	for (i=0; i<iMax; i++)
-	{
-		// Read the first line associated with the i-th orbital
-		readStringOut=fgets(readStringIn,3,wfnFile);
-		if(readStringOut==NULL || strcmp(readStringIn,"MO"))	
-		{
-			PRINT_ERROR();
-			printf("In readWfnFileAndAllocateChemicalSystem: expecting MO instead of %s (and fgets returns %p adress) ",readStringIn,readStringOut);
-			printf("in %d-th Molecular Orbital.\n",i+1);		
-			closeTheFile(&wfnFile);
-			return 0;
-		}
-		readIntegerOut=fscanf(wfnFile," %d ",&readIntegerIn);
-		if (readIntegerOut!=1 || readIntegerIn<1 || readIntegerIn>iMax)
-		{
-			PRINT_ERROR();
-			printf("In readWfnFileAndAllocateChemicalSystem: wrong return of fscanf (in=%d, out=%d) in %d-th Molecular Orbital ",readIntegerIn,readIntegerOut,i+1);
-			printf("(positive value less than %d.\n",iMax);		
-			closeTheFile(&wfnFile);
-			return 0;
-		}
-		if (readIntegerIn!=i+1)
-		{
-			printf("\nWarning in readWfnFileAndAllocateChemicalSystem function: Molecular Orbital %d is not numbered %d (in increasing order).\n",readIntegerIn,i+1);	
-		}
-		readStringOut=fgets(readStringIn,3,wfnFile);
-		readIntegerOut=fscanf(wfnFile," %lf ",&readDouble);
-		if(readStringOut==NULL || strcmp(readStringIn,"MO") || readIntegerOut!=1 || readDouble!=0.)	
-		{
-			PRINT_ERROR();
-			printf("In readWfnFileAndAllocateChemicalSystem: expecting MO 0.0 instead of %s %lf ",readStringIn,readDouble);
-			printf("(and fgets returns %p adress while fscanf returns %d) in %d-th Molecular Orbital (zero value).\n",readStringOut,readIntegerOut,i+1);		
-			closeTheFile(&wfnFile);
-			return 0;
-		}
-		readStringOut=fgets(readStringIn,7,wfnFile);
-		if(readStringOut==NULL || strcmp(readStringIn,"OCC NO"))	
-		{
-			PRINT_ERROR();
-			printf("In readWfnFileAndAllocateChemicalSystem: expecting OCC NO instead of %s (and fgets returns %p adress) ",readStringIn,readStringOut);
-			printf("in %d-th Molecular Orbital.\n",i+1);		
-			closeTheFile(&wfnFile);
-			return 0;
-		}
-		readIntegerOut=fscanf(wfnFile," = %lf ",&readDouble);
-		if (readIntegerOut!=1)
-		{
-			PRINT_ERROR();
-			printf("In readWfnFileAndAllocateChemicalSystem: wrong return of fscanf (=%d) in occupation number of %d-th Molecular Orbital.\n",readIntegerOut,i+1);		
-			closeTheFile(&wfnFile);
-			return 0;
-		}
-
-		// Temporarily save the occupation number in pChemicalSystem->pmorb[readIntegerIn-1].spin to potentially duplicate the Molecular Orbital (2 spins) later in chemicalSystem.txt file
-		pMolecularOrbitalI=&pChemicalSystem->pmorb[readIntegerIn-1];
-		if (readDouble==2.)
-		{
-			pMolecularOrbitalI->spin=2;
-		}
-		else if (readDouble==1.)
-		{
-			pMolecularOrbitalI->spin=1;
-		}
-		else
-		{
-			PRINT_ERROR();
-			printf("In readWfnFileAndAllocateChemicalSystem: expecting 1.0 or 2.0 instead of %lf as occupation number in %d-th Molecular Orbital.\n",readDouble,readIntegerIn);		
-			closeTheFile(&wfnFile);
-			return 0;
-		}
-		readStringOut=fgets(readStringIn,12,wfnFile);
-		readIntegerOut=fscanf(wfnFile," = %lf ",&readDouble);
-		if(readStringOut==NULL || strcmp(readStringIn,"ORB. ENERGY") || readIntegerOut!=1)	
-		{
-			PRINT_ERROR();
-			printf("In readWfnFileAndAllocateChemicalSystem: expecting ORB. ENERGY = value instead of %s = %lf ",readStringIn,readDouble);
-			printf("(and fgets returns %p adress while fscanf return %d) in %d-th Molecular Orbital.\n",readStringOut,readIntegerOut,i+1);		
-			closeTheFile(&wfnFile);
-			return 0;
-		}
-
-		// Save the coefficients of the primitives in pMolecularOrbitalI->coeff[k-1] k=1...pChemicalSystem->ngauss
-		kMax=pChemicalSystem->ngauss;
-		j=0;
-		for (k=0; k<kMax; k++)
-		{
-			j+=fscanf(wfnFile,"%lf ",&readDouble);
-			pMolecularOrbitalI->coeff[k]=readDouble;
-		}
-		if (j!=kMax)
-		{
-			PRINT_ERROR();
-			printf("In readWfnFileAndAllocateChemicalSystem: expecting %d Primitive instead of %d properly saved in %d-th Molecular Orbital.\n",kMax,j,readIntegerIn);		
-			closeTheFile(&wfnFile);
-			return 0;
-		}
-	}
-
-	// Check that the END DATA keyword follows (transformed into ENe eATA for reading scientific notation by readAndConvertFile function)
-	readStringOut=fgets(readStringIn,9,wfnFile);
-	if(readStringOut==NULL || strcmp(readStringIn,"ENe eATA"))	
-	{
-		PRINT_ERROR();
-		printf("In readWfnFileAndAllocateChemicalSystem: expecting ENe eATA instead of %s (and fgets returns %p adress) for the END DATA keyword.\n",readStringIn,readStringOut);		
-		closeTheFile(&wfnFile);
-		return 0;
-	}
-	
-	// Testing if file is well closed
-	if(fclose(wfnFile))		// fclose function returns zero if the input FILE* variable is successfully closed, otherwise EOF is returned (pointer to the end of the file)
-	{
-		PRINT_ERROR();
-		printf("In readWfnFileAndAllocateChemicalSystem: could not close %s file properly.\n",fileLocation);
-		wfnFile=NULL;
-		return 0;
-	}
-	printf("Closing file.\n");
-	wfnFile=NULL;	
-
-	// Check the number of Molecular Orbitals that have a spin number equals to two, and duplicate them in the pChemicalSystem structure (if the ORB_SPIN parameter is set to 1, see loadChemistry.h)
-	iMax=pChemicalSystem->nmorb;
-	if (ORB_SPIN)
-	{
-		printf("Duplicating Molecular Orbitals whose occupation number equals two.\n");
-		// First count the number of Molecular Orbitals that have an occupation number equals to two (saved in the spin variable for the moment) 
-		readIntegerIn=0;
-		for (i=0; i<iMax; i++)
-		{
-			pMolecularOrbitalI=&pChemicalSystem->pmorb[i];
-			if (pMolecularOrbitalI->spin==2)
-			{
-				readIntegerIn++;
-			}
-		}
-
-		// Allocating memory for the extra molecular orbitals and checks if it works (realloc function returns a pointer to the newly allocated memory, or NULL if the request fails)
-		if (readIntegerIn>0)
-		{
-			pMolecularOrbital=(MolecularOrbital*)realloc(pChemicalSystem->pmorb,(iMax+readIntegerIn)*sizeof(MolecularOrbital));
-			if (pMolecularOrbital==NULL)
-			{
-				PRINT_ERROR();
-				printf("In readWfnFileAndAllocateChemicalSystem: could not reallocate memory for %d Molecular Orbitals.\n",readIntegerIn+iMax);		
-				return 0;
-			}
-			pChemicalSystem->pmorb=(MolecularOrbital*)pMolecularOrbital;
-
-			// Update the new number of Molecular Orbitals
-			pChemicalSystem->nmorb=iMax+readIntegerIn;
-
-			// Duplicate the Molecular Orbitals that have an occupation number equals to two
-			readIntegerIn=iMax-1;
-			kMax=pChemicalSystem->ngauss;
-			for (i=0; i<iMax; i++)
-			{
-				pMolecularOrbitalI=&pChemicalSystem->pmorb[i];
-				if (pMolecularOrbitalI->spin==2)
-				{
-					pMolecularOrbitalI->spin=1;
-					readIntegerIn++;
-					// Initializing MolecularOrbital structure
-					pMolecularOrbital=&pChemicalSystem->pmorb[readIntegerIn];
-					pMolecularOrbital->spin=0;
-					pMolecularOrbital->coeff=NULL;
-					pMolecularOrbital->exp=NULL;
-					pMolecularOrbital->nucl=NULL;
-					pMolecularOrbital->type=NULL;
-
-					// Change the spin of the duplicated Molecular Orbital
-					pMolecularOrbital->spin=-pMolecularOrbitalI->spin;
-
-					// Allocating memory for Primitives of the duplicated Molecular Orbital	
-					pMolecularOrbital->coeff=(double*)calloc(kMax,sizeof(double));
-					pMolecularOrbital->exp=(double*)calloc(kMax,sizeof(double));
-					pMolecularOrbital->nucl=(int*)calloc(kMax,sizeof(int));
-					pMolecularOrbital->type=(int*)calloc(kMax,sizeof(int));
-					// Check if the allocation worked
-					if (pMolecularOrbital->coeff==NULL || pMolecularOrbital->exp==NULL || pMolecularOrbital->nucl==NULL || pMolecularOrbital->type==NULL)
-					{
-						PRINT_ERROR();
-						printf("In readWfnFileAndAllocateChemicalSystem: could not reallocate memory for %d Primitives in %d-th Molecular Orbital.\n",kMax,i+1);		
-						return 0;
-					}
-					for (k=0; k<kMax; k++)
-					{
-						pMolecularOrbital->coeff[k]=pMolecularOrbitalI->coeff[k];
-						pMolecularOrbital->exp[k]=pMolecularOrbitalI->exp[k];
-						pMolecularOrbital->nucl[k]=pMolecularOrbitalI->nucl[k];
-						pMolecularOrbital->type[k]=pMolecularOrbitalI->type[k];
-					}
-				}
-				else if (pMolecularOrbitalI->spin==1)
-				{
-					continue;
-				}
-				else
-				{
-					PRINT_ERROR();
-					printf("In readWfnFileAndAllocateChemicalSystem: expecting 1 or 2 occupation number instead of %d ",pMolecularOrbitalI->spin);
-					printf("in %d-th Molecular Orbital.\n",i+1);		
-					return 0;
-				}
-			}	
-		}		
-	}
-	else
-	{
-		printf("Warning in readWfnFileAndAllocateChemicalSystem function: not duplicating Molecular Orbitals whose occupation number equals two.\n");
-		for (i=0; i<iMax; i++)
-		{
-			pMolecularOrbitalI=&pChemicalSystem->pmorb[i];
-			if (pMolecularOrbitalI->spin==2)
-			{
-				pMolecularOrbitalI->spin=1;
-			}
-			else if (pMolecularOrbitalI->spin==1)
-			{
-				continue;
-			}
-			else
-			{
-				PRINT_ERROR();
-				printf("In readWfnFileAndAllocateChemicalSystem: expecting 1 or 2 occupation number instead of %d in %d-th Molecular Orbital.\n",pMolecularOrbitalI->spin,i+1);		
-				return 0;
-			}
-		}
-	}
-
-	return 1;
+    return 1;
 }
 
-/* *********************************************************************************************************************************************************************************************** */
-// The function writingChemicalFile writes data stored in the pChemicalSystem structure into a file located at fileLocation (warning: reset and overwrite file at fileLocation if already exists)
-// It has the char* fileLocation and the ChemicalSystem* variable (described in main.h) as input arguments and it returns zero if an error occurred, otherwise one
-/* *********************************************************************************************************************************************************************************************** */
-static int writingChemicalFile(char* fileLocation, ChemicalSystem* pChemicalSystem)
+/* ************************************************************************** */
+// The function readWfnFileAndAllocateChemicalSystem reads the file at
+// fileLocation (file must exist with length (strictly) lower than nameLength),
+// checks *.wfn syntax, allocates memory, and fills the values in the variables
+// of the structure pointed by pChemicalSystem. It has the char* fileLocation
+// and ChemicalSystem* variable (defined in main.h) as input arguments and it
+// returns zero if an error is encountered, one (respectively minus one) if the
+// chemical data are successfully loaded and correspond to an restricted (resp.
+// unrestricted) Hartree-Fock chemical structure
+/* ************************************************************************** */
+int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
+                                                ChemicalSystem* pChemicalSystem)
 {
-	int i=0, j=0, numberOfMolecularOrbitals=0, numberOfNuclei=0, numberOfPrimitives=0;
-	MolecularOrbital *pMolecularOrbital=NULL;
-	FILE *chemicalFile=NULL;
+    size_t length=0;
+    char readStringIn[18]={'\0'}, *readStringOut=NULL;
+    int readIntegerIn=0, readIntegerOut=0, readChar=0, i=0, iMax=0, j=0, jMax=0;
+    int returnValue=0;
+    double readDouble=0.;
+    MolecularOrbital *pMolecularOrbital=NULL, *pMolecularOrbitalI=NULL;
+    FILE *wfnFile=NULL;
 
-	// Testing if the input pChemicalSystem variable is pointing to NULL
-	if (pChemicalSystem==NULL)
-	{
-		PRINT_ERROR();
-		printf("In writingChemicalFile: the input pChemicalSystem variable is pointing to %p adress.\n",pChemicalSystem);
-		return 0;	
-	}
-	numberOfMolecularOrbitals=pChemicalSystem->nmorb; 
-	numberOfNuclei=pChemicalSystem->nnucl;
-	numberOfPrimitives=pChemicalSystem->ngauss;
+    // Check if the input pChemicalSystem variable is pointing to NULL
+    if (pChemicalSystem==NULL)
+    {
+        PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: the input ");
+        fprintf(stderr,"pChemicalSystem variable is pointing to the ");
+        fprintf(stderr,"%p adress.\n",(void*)pChemicalSystem);
+        return 0;
+    }
 
-	// Testing if the input fileLocation variable is pointing to NULL
-	if (fileLocation==NULL)
-	{	
-		PRINT_ERROR();
-		printf("In writingChemicalFile: the input fileLocation variable is pointing to %p adress.\n",fileLocation);
-		return 0;
-	}
+    // Initialize the structure to zero for variables and NULL for pointers
+    initializeChemicalStructure(pChemicalSystem);
 
-	// Test if file is well opened (warning: reset and overwrite file at fileLocation if already exists)
-	printf("\nOpening %s file. ",fileLocation);
-	chemicalFile=fopen(fileLocation,"w+");	// fopen function returns a FILE pointer on success, otherwise a NULL pointer is returned
-	if (chemicalFile==NULL)
-	{
-		PRINT_ERROR();
-		printf("In writingChemicalFile: could not write in %s file.\n",fileLocation);
-		return 0;
-	}
-	printf("Writing chemical data. ");
+   // Check that nameLength is (strictly) greater than six
+    if (nameLength<7)
+    {
+        PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: the input ");
+        fprintf(stderr,"nameLength (=%d) variable should be an ",nameLength);
+        fprintf(stderr,"integer (strictly) greater than six.\n");
+        return 0;
+    }
 
-	// Writing file at fileLocation. Start with number of MolecularOrbitals
-	if (numberOfMolecularOrbitals<1)
-	{
-		PRINT_ERROR();
-		printf("In writingChemicalFile: we cannot have %d Molecular Orbitals.\n",numberOfMolecularOrbitals);
-		fprintf(chemicalFile,"\nEnd");
-		closeTheFile(&chemicalFile);
-		return 0;
-	}
-	fprintf(chemicalFile,"MolecularOrbitals %d\n",numberOfMolecularOrbitals);
+    // Check that fileLocation points to a valid existing file
+    if (initialFileExists(fileLocation,nameLength)!=1)
+    {
+        PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: the ");
+        fprintf(stderr,"initialFileExists function did not returned one, ");
+        fprintf(stderr,"which was the expected value here.\n");
+        return 0;
+    }
 
-	// Writing number of Primitives	
-	if (numberOfPrimitives<1)
-	{
-		PRINT_ERROR();
-		printf("In writingChemicalFile: we cannot have %d Primitives.\n",numberOfPrimitives);
-		fprintf(chemicalFile,"\nEnd");
-		closeTheFile(&chemicalFile);
-		return 0;
-	}
-	fprintf(chemicalFile,"\nPrimitives %d\n",numberOfPrimitives);
+    // Check that its size can at least contain the *.chem or *.wfn extension
+    // strlen returns the length of the string, but not including the char '\0'
+    length=strlen(fileLocation);
+    if (length<6)
+    {
+        PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: the input ");
+        fprintf(stderr,"fileLocation variable (=%s) should have ",fileLocation);
+        fprintf(stderr,"a length that at least equals six in order to end ");
+        fprintf(stderr,"with something more than the '.temp' extension.\n");
+        return 0;
+    }
 
-        // Number and description of Nuclei
-	if (numberOfNuclei<1)
-	{
-		PRINT_ERROR();
-		printf("In writingChemicalFile: we cannot have %d Nuclei.\n",numberOfNuclei);
-		fprintf(chemicalFile,"\nEnd");
-		closeTheFile(&chemicalFile);
-		return 0;
-	}
-	fprintf(chemicalFile,"\nNuclei\n%d\n",numberOfNuclei);
-	for (i=0; i<numberOfNuclei; i++)
-	{
-		fprintf(chemicalFile,"%le %le %le \n",pChemicalSystem->pnucl[i].x,pChemicalSystem->pnucl[i].y,pChemicalSystem->pnucl[i].z);
-	}
+    // Check that fileLocation ends with the '.temp' extension
+    if (fileLocation[length-5]!='.' || fileLocation[length-4]!='t' ||
+                   fileLocation[length-3]!='e' || fileLocation[length-2]!='m' ||
+                      fileLocation[length-1]!='p' || fileLocation[length]!='\0')
+    {
+        PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: the input ");
+        fprintf(stderr,"fileLocation variable (=%s) does not ",fileLocation);
+        fprintf(stderr,"end with the '.temp' extension.\n");
+        return 0;
+    }
 
-	// Description of Orbitals
-	fprintf(chemicalFile,"\nCoefficient Exponent Center Type");
-	for (i=0; i<numberOfMolecularOrbitals; i++)
-	{
-		fprintf(chemicalFile,"\n%d\n",i+1);
-		pMolecularOrbital=&pChemicalSystem->pmorb[i];
-		if (abs(pMolecularOrbital->spin)!=1)
-		{
-			PRINT_ERROR();
-			printf("In writingChemicalFile: Spin should be (+/-) 1 instead of %d value.\n",pMolecularOrbital->spin);
-			fprintf(chemicalFile,"\nEnd");
-			closeTheFile(&chemicalFile);
-			return 0;
-		}
-		fprintf(chemicalFile,"Spin %d\n",pMolecularOrbital->spin);
+    // Check if the *.temp file is well opened: fopen function returns a FILE
+    // pointer on success, otherwise NULL is returned
+    fprintf(stdout,"\nOpening %s file. ",fileLocation);
+    wfnFile=fopen(fileLocation,"r");
+    if (wfnFile==NULL)
+    {
+        PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: could not ");
+        fprintf(stderr,"read the content of %s file.\n",fileLocation);
+        return 0;
+    }
+    fprintf(stdout,"Reading and saving chemical data. ");
 
-		// Check if no error occurs for the pointers in pMolecularOrbital structure
-		if (pMolecularOrbital->coeff==NULL || pMolecularOrbital->exp==NULL || pMolecularOrbital->nucl==NULL || pMolecularOrbital->type==NULL)
-		{
-			PRINT_ERROR();
-			printf("In writingChemicalFile: coeff=%p exp=%p nucl=%p or type=%p ",pMolecularOrbital->coeff,pMolecularOrbital->exp,pMolecularOrbital->nucl,pMolecularOrbital->type);
-			printf("is not a valid adress in %d-th MolecularOrbital.\n",i+1);
-			fprintf(chemicalFile,"\nEnd");
-			closeTheFile(&chemicalFile);
-			return 0;					
-		}
-		for (j=0; j<numberOfPrimitives; j++)
-		{
+    // Skip the first line of the (copy *.temp of the) *.wfn file: fgetc returns
+    // the character read as an unsigned char cast to an int or EOF on the end
+    // of file or error (because EOF can't be stored as a char)
+    do {
+        readChar=fgetc(wfnFile);
+    } while (readChar!='\n' && readChar!=EOF);
+    if (readChar==EOF)
+    {
+        PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: problem ");
+        fprintf(stderr,"encountered with the (standard) fgetc c-function or ");
+        fprintf(stderr,"end-of-file reached without any data read in ");
+        fprintf(stderr,"%s file.\n",fileLocation);
+        closeTheFile(&wfnFile);
+        return 0;
+    }
 
-			fprintf(chemicalFile,"%le ",pMolecularOrbital->coeff[j]);
-			// Check exponent values
-			if (pMolecularOrbital->exp[j]<=0.)
-			{
-				PRINT_ERROR();
-				printf("In writingChemicalFile: %d-th Exponent of %d-th MolecularOrbital should be positive instead of %lf value.\n",j+1,i+1,pMolecularOrbital->exp[j]);
-				fprintf(chemicalFile,"\nEnd");
-				closeTheFile(&chemicalFile);
-				return 0;	
-			}
-			fprintf(chemicalFile,"%le ",pMolecularOrbital->exp[j]);
+    // Read the expected word GAUSSIAN in the second line
+    // fgets returns NULL if it fails, otherwise the same (char*) input address
+    readStringOut=fgets(readStringIn,9,wfnFile);
+    if (readStringOut==NULL)
+    {
+        PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong return ");
+        fprintf(stderr,"%p of the (standard) fgets ",(void*)readStringOut);
+        fprintf(stderr,"c-function while attempting to read the GAUSSIAN ");
+        fprintf(stderr,"keyword.\n");
+        closeTheFile(&wfnFile);
+        return 0;
+    }
 
-			// Check center assignments 
-			if (pMolecularOrbital->nucl[j]<1||pMolecularOrbital->nucl[j]>numberOfNuclei)
-			{
-				PRINT_ERROR();
-				printf("In writingChemicalFile: %d-th Center of %d-th MolecularOrbital should be a positive ",j+1,i+1);
-				printf("integer less than %d instead of %d value.\n",numberOfNuclei,pMolecularOrbital->nucl[j]);
-				fprintf(chemicalFile,"\nEnd");
-				closeTheFile(&chemicalFile);
-				return 0;	
-			}
-			fprintf(chemicalFile,"%d ",pMolecularOrbital->nucl[j]);	
+    // strcmp returns 0 if the two strings are equal, otherwise <0 (resp. >0)
+    // if the 1st string argument is shorter (resp. longer) than the 2nd one
+    if (strcmp(readStringIn,"GAUSSIAN"))
+    {
+        PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: expecting ");
+        fprintf(stderr,"the keyword GAUSSIAN instead of %s.\n",readStringIn);
+        closeTheFile(&wfnFile);
+        return 0;
+    }
 
-			// Check type assignments			
-			if (pMolecularOrbital->type[j]<1||pMolecularOrbital->type[j]>20)
-			{
-				PRINT_ERROR();
-				printf("In writingChemicalFile: %d-th Type of %d-th MolecularOrbital should be a positive integer less than 20 instead of %d value.\n",j+1,i+1,pMolecularOrbital->type[j]);
-				fprintf(chemicalFile,"\nEnd");
-				closeTheFile(&chemicalFile);
-				return 0;	
-			}
-			fprintf(chemicalFile,"%d \n",pMolecularOrbital->type[j]);
-		}		
-	}
-	fprintf(chemicalFile,"\nEnd");
+    // Read number of molecular orbitals and store it in pChemicalSystem->nmorb
+    // fscanf function returns the number of input items successfully matched
+    // and assigned, which can be fewer than provided for. Important remark:
+    // white space characters, such as blanks and newline characters, causes
+    // fscanf (scanf and sscanf) to read, but not to store, all consecutive
+    // white space characters in the input up to the next character that is not
+    // white space. One white space character in format-string matches any
+    // combination of white space characters in the input
+    readIntegerOut=fscanf(wfnFile," %d ",&readIntegerIn);
+    readStringOut=fgets(readStringIn,13,wfnFile);
 
-	// Testing if file is well closed
-	if(fclose(chemicalFile))	// fclose function returns zero if the input FILE* variable is successfully closed, otherwise EOF is returned (pointer to the end of the file)
-	{
-		PRINT_ERROR();
-		printf("In writingChemicalFile: could not close %s file properly.\n",fileLocation);
-		chemicalFile=NULL;
-		return 0;
-	}
-	printf("Closing file.\n");
-	chemicalFile=NULL;
+    if (readIntegerOut!=1 || readStringOut==NULL)
+    {
+        PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong return ");
+        fprintf(stderr,"of the (standard) fscanf (=%d) or ",readIntegerOut);
+        fprintf(stderr,"fgets %p c-function while ",(void*)readStringOut);
+        fprintf(stderr,"attempting to read the number of molecular ");
+        fprintf(stderr,"orbitals.\n");
+        closeTheFile(&wfnFile);
+        return 0;
+    }
 
-	return 1;
+    if (readIntegerIn<1 || strcmp(readStringIn,"MOL ORBITALS"))
+    {
+        PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: expecting ");
+        fprintf(stderr,"Nmorb MOL ORBITALS instead of %d ",readIntegerIn);
+        fprintf(stderr,"%s (positive value).\n",readStringIn);
+        closeTheFile(&wfnFile);
+        return 0;
+    }
+    pChemicalSystem->nmorb=readIntegerIn;
+
+    // Allocate memory for each MolecularOrbital and check if it worked
+    // calloc function returns a pointer to the allocated memory, otherwise NULL
+    length=readIntegerIn;
+    pChemicalSystem->pmorb=(MolecularOrbital*)calloc(length,
+                                                      sizeof(MolecularOrbital));
+    if (pChemicalSystem->pmorb==NULL)
+    {
+        PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: could not ");
+        fprintf(stderr,"allocate memory for the (MolecularOrbital*) ");
+        fprintf(stderr,"pChemicalSystem->pmorb variable.\n");
+        closeTheFile(&wfnFile);
+        return 0;
+    }
+
+    // Read the number of primitives and store it in pChemicalSystem->ngauss
+    readIntegerOut=fscanf(wfnFile," %d ",&readIntegerIn);
+    readStringOut=fgets(readStringIn,11,wfnFile);
+
+    if (readIntegerOut!=1 || readStringOut==NULL)
+    {
+        PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong return ");
+        fprintf(stderr,"of the (standard) fscanf (=%d) or ",readIntegerOut);
+        fprintf(stderr,"fgets %p c-function while ",(void*)readStringOut);
+        fprintf(stderr,"attempting to read the number of primitives.\n");
+        closeTheFile(&wfnFile);
+        return 0;
+    }
+
+    if (readIntegerIn<1 || strcmp(readStringIn,"PRIMITIVES"))
+    {
+        PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: expecting ");
+        fprintf(stderr,"Ngauss PRIMITIVES instead of %d ",readIntegerIn);
+        fprintf(stderr,"%s (positive value).\n",readStringIn);
+        closeTheFile(&wfnFile);
+        return 0;
+    }
+    pChemicalSystem->ngauss=readIntegerIn;
+
+    // Dynamically allocate the memory in each MolecularOrbital structure
+    iMax=pChemicalSystem->nmorb;
+    for (i=0; i<iMax; i++)
+    {
+        // Initializing to zero the (i+1)-th MolecularOrbital structure
+        pMolecularOrbital=&pChemicalSystem->pmorb[i];
+        pMolecularOrbital->spin=0;
+        pMolecularOrbital->coeff=NULL;
+        pMolecularOrbital->exp=NULL;
+        pMolecularOrbital->nucl=NULL;
+        pMolecularOrbital->type=NULL;
+
+        // Dynamically allocate memory for primitives and check if it worked
+        length=readIntegerIn;
+        pMolecularOrbital->coeff=(double*)calloc(length,sizeof(double));
+        pMolecularOrbital->exp=(double*)calloc(length,sizeof(double));
+        pMolecularOrbital->nucl=(int*)calloc(length,sizeof(int));
+        pMolecularOrbital->type=(int*)calloc(length,sizeof(int));
+        if (pMolecularOrbital->coeff==NULL || pMolecularOrbital->exp==NULL ||
+                 pMolecularOrbital->nucl==NULL || pMolecularOrbital->type==NULL)
+        {
+            PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: could not ");
+            fprintf(stderr,"allocate memory for %d primitives ",readIntegerIn);
+            fprintf(stderr,"in the %d-th MolecularOrbital structure.\n",i+1);
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+    }
+
+    // Read the number of nuclei and store it in pChemicalSystem->nnucl
+    readIntegerOut=fscanf(wfnFile," %d ",&readIntegerIn);
+    readStringOut=fgets(readStringIn,7,wfnFile);
+
+    if (readIntegerOut!=1 || readStringOut==NULL)
+    {
+        PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong return ");
+        fprintf(stderr,"of the (standard) fscanf (=%d) or ",readIntegerOut);
+        fprintf(stderr,"fgets %p c-function while ",(void*)readStringOut);
+        fprintf(stderr,"attempting to read the number of nuclei.\n");
+        closeTheFile(&wfnFile);
+        return 0;
+    }
+
+    if (readIntegerIn<1 || strcmp(readStringIn,"NUCLEI"))
+    {
+        PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: expecting ");
+        fprintf(stderr,"Nnucl NUCLEI instead of %d ",readIntegerIn);
+        fprintf(stderr,"%s (positive value).\n",readStringIn);
+        closeTheFile(&wfnFile);
+        return 0;
+    }
+    pChemicalSystem->nnucl=readIntegerIn;
+
+    // Dynamically allocate memory for nuclei and check if it worked
+    length=readIntegerIn;
+    pChemicalSystem->pnucl=(Nucleus*)calloc(length,sizeof(Nucleus));
+    if (pChemicalSystem->pnucl==NULL)
+    {
+        PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: could not ");
+        fprintf(stderr,"allocate memory for the (Nucleus*) ");
+        fprintf(stderr,"pChemicalSystem->pnucl variable.\n");
+        closeTheFile(&wfnFile);
+        return 0;
+    }
+
+
+    // Saving the Nucleus data in pMesh->pnucl and check if it worked
+    fscanf(wfnFile," ");
+    iMax=readIntegerIn;
+    for (i=0; i<iMax; i++)
+    {
+        // Read the name of the molecule and check its number
+        readStringOut=fgets(readStringIn,3,wfnFile);
+        readIntegerOut=fscanf(wfnFile," %d (",&readIntegerIn);
+
+        if (readStringOut==NULL || readIntegerOut!=1)
+        {
+            PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong ");
+            fprintf(stderr,"return of the (standard) fgets ");
+            fprintf(stderr,"%p or fscanf ",(void*)readStringOut);
+            fprintf(stderr,"(=%d) c-function while attempting ",readIntegerOut);
+            fprintf(stderr,"to read the symbol of the %d-th Nucleus.\n",i+1);
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+
+        if (readIntegerIn!=i+1)
+        {
+            PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: expecting ");
+            fprintf(stderr,"%s %d instead of ",readStringIn,i+1);
+            fprintf(stderr,"%s %d while scanning ",readStringIn,readIntegerIn);
+            fprintf(stderr,"the %d-th Nucleus.\n",i+1);
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+
+        // Read the centre reference and store its number in readIntegerIn
+        readStringOut=fgets(readStringIn,7,wfnFile);
+        readIntegerOut=fscanf(wfnFile," %d) ",&readIntegerIn);
+
+        if (readStringOut==NULL || readIntegerOut!=1)
+        {
+            PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong ");
+            fprintf(stderr,"return of the (standard) fgets ");
+            fprintf(stderr,"%p or fscanf ",(void*)readStringOut);
+            fprintf(stderr,"(=%d) c-function while attempting ",readIntegerOut);
+            fprintf(stderr,"to read the center reference of the ");
+            fprintf(stderr,"%d-th Nucleus.\n",i+1);
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+
+        if (strcmp(readStringIn,"CENTRE") || readIntegerIn<1 ||
+                                                             readIntegerIn>iMax)
+        {
+            PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: expecting ");
+            fprintf(stderr,"%s %d instead of ",readStringIn,i+1);
+            fprintf(stderr,"%s %d (positive value ",readStringIn,readIntegerIn);
+            fprintf(stderr,"strictly less than %d), while scanning the ",iMax);
+            fprintf(stderr,"number of the center related to the ");
+            fprintf(stderr,"%d-th Nucleus.\n",i+1);
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+
+        if (readIntegerIn!=i+1)
+        {
+            fprintf(stdout,"\nWarning in ");
+            fprintf(stdout,"readWfnFileAndAllocateChemicalSystem function: ");
+            fprintf(stdout,"the Nucleus data are not defined in increasing ");
+            fprintf(stdout,"order (the %d-th Nucleus data are numbered ",i+1);
+            fprintf(stdout,"as the %d-th one).\n",readIntegerIn);
+        }
+
+        j=0;
+        j+=fscanf(wfnFile,"%lf ",&readDouble);
+        pChemicalSystem->pnucl[readIntegerIn-1].x=readDouble;
+
+        j+=fscanf(wfnFile,"%lf ",&readDouble);
+        pChemicalSystem->pnucl[readIntegerIn-1].y=readDouble;
+
+        j+=fscanf(wfnFile,"%lf ",&readDouble);
+        pChemicalSystem->pnucl[readIntegerIn-1].z=readDouble;
+
+        if (j!=3)
+        {
+            PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: we were ");
+            fprintf(stderr,"not able to properly save the three-coordinate ");
+            fprintf(stderr,"positions of the %d-th Nucleus ",readIntegerIn);
+            fprintf(stderr,"(only %d values properly saved instead of 3).\n",j);
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+
+        // Read the charge number of charge of the current nucleus
+        readStringOut=fgets(readStringIn,7,wfnFile);
+        readIntegerOut=fscanf(wfnFile," = %lf ",&readDouble);
+
+        if (readStringOut==NULL || readIntegerOut!=1)
+        {
+            PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong ");
+            fprintf(stderr,"return of the (standard) fgets ");
+            fprintf(stderr,"%p or fscanf ",(void*)readStringOut);
+            fprintf(stderr,"(=%d) c-function while attempting ",readIntegerOut);
+            fprintf(stderr,"to read the charge number associated with the ");
+            fprintf(stderr,"%d-th Nucleus.\n",readIntegerIn);
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+
+        if (strcmp(readStringIn,"CHARGE") || readDouble>100. || readDouble<1.)
+        {
+            PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: the ");
+            fprintf(stderr,"charge number (=%lf) associated with ",readDouble);
+            fprintf(stderr,"the %d-th Nucleus must be a ",readIntegerIn);
+            fprintf(stderr,"positive value that is not (strictly) greater ");
+            fprintf(stderr,"one hundred and should represent an integer.\n");
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+        pChemicalSystem->pnucl[readIntegerIn-1].charge=(int)readDouble;
+    }
+
+    // Save the centre assignments in pChemicalSystem->pmorb[0].nucl and copy
+    // them in all pChemicalSystem->pmorb[i].nucl i=1..pChemicalSystem->nmorb-1
+    pMolecularOrbital=&pChemicalSystem->pmorb[0];
+    iMax=pChemicalSystem->nnucl;
+    jMax=pChemicalSystem->ngauss;
+    for (j=0; j<jMax; j++)
+    {
+        readChar=fgetc(wfnFile);
+        if (readChar==EOF)
+        {
+            PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: problem ");
+            fprintf(stderr,"encountered with the (standard) fgetc c-function ");
+            fprintf(stderr,"or end-of-file reached without all the data ");
+            fprintf(stderr,"saved for the %d-th Centre Assignment.\n",j+1);
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+        else if (readChar=='C')
+        {
+            readStringOut=fgets(readStringIn,18,wfnFile);
+            if (readStringOut==NULL)
+            {
+                PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong ");
+                fprintf(stderr,"return of the (standard) fgets ");
+                fprintf(stderr,"%p c-function while ",(void*)readStringOut);
+                fprintf(stderr,"attempting to read the %d-th Center ",j+1);
+                fprintf(stderr,"Assignment.\n");
+                closeTheFile(&wfnFile);
+                return 0;
+            }
+            if (strcmp(readStringIn,"ENTRE ASSIGNMENTS"))
+            {
+                PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: ");
+                fprintf(stderr,"expecting CENTRE ASSIGNMENTS instead of ");
+                fprintf(stderr,"C%s while reading the %d-th ",readStringIn,j+1);
+                fprintf(stderr,"one.\n");
+                closeTheFile(&wfnFile);
+                return 0;
+            }
+            fscanf(wfnFile," ");
+        }
+        else
+        {
+            // fseek returns zero on success, otherwise a non-zero value
+            if (fseek(wfnFile,-1,SEEK_CUR))
+            {
+                PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: wrong ");
+                fprintf(stderr,"return of the (standard) fseek c-function ");
+                fprintf(stderr,"while reading the %d-th Centre ",j+1);
+                fprintf(stderr,"Assignment.\n");
+                closeTheFile(&wfnFile);
+                return 0;
+            }
+        }
+
+        readIntegerOut=fscanf(wfnFile,"%d ",&readIntegerIn);
+        if (readIntegerOut!=1)
+        {
+            PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong ");
+            fprintf(stderr,"return of the (standard) fscanf ");
+            fprintf(stderr,"(=%d) c-function while attempting ",readIntegerOut);
+            fprintf(stderr,"to read the %d-th Center Assignment.\n",j+1);
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+
+        if (readIntegerIn<1 || readIntegerIn>iMax)
+        {
+            PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: expecting ");
+            fprintf(stderr,"a positive integer that is not (strictly) ");
+            fprintf(stderr,"greater than the total number of nuclei %d ",iMax);
+            fprintf(stderr,"instead of %d while reading the ",readIntegerIn);
+            fprintf(stderr,"%d-th Centre Assignment.\n",j+1);
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+        pMolecularOrbital->nucl[j]=readIntegerIn;
+    }
+
+    iMax=pChemicalSystem->nmorb;
+    if (iMax>1)
+    {
+        for (i=1; i<iMax; i++)
+        {
+            pMolecularOrbitalI=&pChemicalSystem->pmorb[i];
+            for (j=0; j<jMax; j++)
+            {
+                pMolecularOrbitalI->nucl[j]=pMolecularOrbital->nucl[j];
+            }
+        }
+    }
+
+    // Save the type assignments in pChemicalSystem->pmorb[0].type and copy them
+    // in all pChemicalSystem->pmorb[i].type i=1..pChemicalSystem->nmorb-1
+    pMolecularOrbital=&pChemicalSystem->pmorb[0];
+    jMax=pChemicalSystem->ngauss;
+    for (j=0; j<jMax; j++)
+    {
+        readChar=fgetc(wfnFile);
+        if (readChar==EOF)
+        {
+            PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: problem ");
+            fprintf(stderr,"encountered with the (standard) fgetc c-function ");
+            fprintf(stderr,"or end-of-file reached without all the data ");
+            fprintf(stderr,"saved for the %d-th Type Assignment.\n",j+1);
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+        else if (readChar=='T')
+        {
+            readStringOut=fgets(readStringIn,16,wfnFile);
+            if (readStringOut==NULL)
+            {
+                PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong ");
+                fprintf(stderr,"return of the (standard) fgets ");
+                fprintf(stderr,"%p c-function while ",(void*)readStringOut);
+                fprintf(stderr,"attempting to read the %d-th Type ",j+1);
+                fprintf(stderr,"Assignment.\n");
+                closeTheFile(&wfnFile);
+                return 0;
+            }
+            if (strcmp(readStringIn,"YPE ASSIGNMENTS"))
+            {
+                PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: ");
+                fprintf(stderr,"expecting TYPE ASSIGNMENTS instead of ");
+                fprintf(stderr,"T%s while reading the %d-th ",readStringIn,j+1);
+                fprintf(stderr,"one.\n");
+                closeTheFile(&wfnFile);
+                return 0;
+            }
+            fscanf(wfnFile," ");
+        }
+        else
+        {
+            // fseek returns zero on success, otherwise a non-zero value
+            if (fseek(wfnFile,-1,SEEK_CUR))
+            {
+                PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: wrong ");
+                fprintf(stderr,"return of the (standard) fseek c-function ");
+                fprintf(stderr,"while reading the %d-th Type ",j+1);
+                fprintf(stderr,"Assignment.\n");
+                closeTheFile(&wfnFile);
+                return 0;
+            }
+        }
+
+        readIntegerOut=fscanf(wfnFile,"%d ",&readIntegerIn);
+        if (readIntegerOut!=1)
+        {
+            PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong ");
+            fprintf(stderr,"return of the (standard) fscanf ");
+            fprintf(stderr,"(=%d) c-function while attempting ",readIntegerOut);
+            fprintf(stderr,"to read the %d-th Type Assignment.\n",j+1);
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+
+        if (readIntegerIn<1 || readIntegerIn>20)
+        {
+            PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: expecting ");
+            fprintf(stderr,"a positive integer that is not (strictly) ");
+            fprintf(stderr,"greater than twenty instead of %d ",readIntegerIn);
+            fprintf(stderr,"while reading the %d-th Centre Assignment.\n",j+1);
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+        pMolecularOrbital->type[j]=readIntegerIn;
+    }
+
+    iMax=pChemicalSystem->nmorb;
+    if (iMax>1)
+    {
+        for (i=1; i<iMax; i++)
+        {
+            pMolecularOrbitalI=&pChemicalSystem->pmorb[i];
+            for (j=0; j<jMax; j++)
+            {
+                pMolecularOrbitalI->type[j]=pMolecularOrbital->type[j];
+            }
+        }
+    }
+
+    // Save the exponents in pChemicalSystem->pmorb[0].exp and copy them in all
+    // pChemicalSystem->pmorb[i].exp i=1..pChemicalSystem->nmorb-1
+    pMolecularOrbital=&pChemicalSystem->pmorb[0];
+    jMax=pChemicalSystem->ngauss;
+    for (j=0; j<jMax; j++)
+    {
+        readChar=fgetc(wfnFile);
+        if (readChar==EOF)
+        {
+            PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: problem ");
+            fprintf(stderr,"encountered with the (standard) fgetc c-function ");
+            fprintf(stderr,"or end-of-file reached without all the data ");
+            fprintf(stderr,"saved for the %d-th Gaussian Exponent.\n",j+1);
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+        else if (readChar=='E')
+        {
+            readStringOut=fgets(readStringIn,9,wfnFile);
+            if (readStringOut==NULL)
+            {
+                PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong ");
+                fprintf(stderr,"return of the (standard) fgets ");
+                fprintf(stderr,"%p c-function while ",(void*)readStringOut);
+                fprintf(stderr,"attempting to read the %d-th Gaussian",j+1);
+                fprintf(stderr,"Exponent.\n");
+                closeTheFile(&wfnFile);
+                return 0;
+            }
+            if (strcmp(readStringIn,"XPONENTS"))
+            {
+                PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: ");
+                fprintf(stderr,"expecting EXPONENTS instead of ");
+                fprintf(stderr,"E%s while reading the %d-th ",readStringIn,j+1);
+                fprintf(stderr,"Gaussian one.\n");
+                closeTheFile(&wfnFile);
+                return 0;
+            }
+            fscanf(wfnFile," ");
+        }
+        else
+        {
+            // fseek returns zero on success, otherwise a non-zero value
+            if (fseek(wfnFile,-1,SEEK_CUR))
+            {
+                PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: wrong ");
+                fprintf(stderr,"return of the (standard) fseek c-function ");
+                fprintf(stderr,"while reading the %d-th Gaussian ",j+1);
+                fprintf(stderr,"Exponent.\n");
+                closeTheFile(&wfnFile);
+                return 0;
+            }
+        }
+
+        readIntegerOut=fscanf(wfnFile,"%lf ",&readDouble);
+        if (readIntegerOut!=1)
+        {
+            PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong ");
+            fprintf(stderr,"return of the (standard) fscanf ");
+            fprintf(stderr,"(=%d) c-function while attempting ",readIntegerOut);
+            fprintf(stderr,"to read the %d-th Gaussian Exponent.\n",j+1);
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+
+        if (readDouble<=.0)
+        {
+            PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: expecting ");
+            fprintf(stderr,"a positive (double) value instead of ");
+            fprintf(stderr,"%lf while reading the %d-th ",readDouble,j+1);
+            fprintf(stderr,"Gaussian exponent.\n");
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+        pMolecularOrbital->exp[j]=readDouble;
+    }
+
+    iMax=pChemicalSystem->nmorb;
+    if (iMax>1)
+    {
+        for (i=1; i<iMax; i++)
+        {
+            pMolecularOrbitalI=&pChemicalSystem->pmorb[i];
+            for (j=0; j<jMax; j++)
+            {
+                pMolecularOrbitalI->exp[j]=pMolecularOrbital->exp[j];
+            }
+        }
+    }
+
+    // Save in pChemicalSystem->pmorb[i].coeff i=0..pChemicalSystem->nmorb-1
+    // the different primitives coefficients related to the different orbitals
+    iMax=pChemicalSystem->nmorb;
+    jMax=pChemicalSystem->ngauss;
+    for (i=0; i<iMax; i++)
+    {
+        // Read the first line associated with the i-th orbital
+        readStringOut=fgets(readStringIn,3,wfnFile);
+        readIntegerOut=fscanf(wfnFile," %d ",&readIntegerIn);
+
+        if (readStringOut==NULL || readIntegerOut!=1)
+        {
+            PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong ");
+            fprintf(stderr,"return of the (standard) fgets ");
+            fprintf(stderr,"%p or fscanf ",(void*)readStringOut);
+            fprintf(stderr,"(=%d) c-function while attempting ",readIntegerOut);
+            fprintf(stderr,"to read the primitive coefficients associated ");
+            fprintf(stderr,"with the %d-th MolecularOrbital structure.\n",i+1);
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+
+        if (strcmp(readStringIn,"MO") || readIntegerIn<1 || readIntegerIn>iMax)
+        {
+            PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: expecting ");
+            fprintf(stderr,"MO %d instead of %s ",i+1,readStringIn);
+            fprintf(stderr,"%d (positive value strictly less ",readIntegerIn);
+            fprintf(stderr,"than %d) while attempting to read ",iMax);
+            fprintf(stderr,"primitive coefficients of the %d-th ",i+1);
+            fprintf(stderr,"MolecularOrbital structure.\n");
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+
+        if (readIntegerIn!=i+1)
+        {
+            fprintf(stdout,"\nWarning in ");
+            fprintf(stdout,"readWfnFileAndAllocateChemicalSystem function: ");
+            fprintf(stdout,"the primitive coefficients are not defined in ");
+            fprintf(stdout,"increasing order (the %d-th MolecularOrbital ",i+1);
+            fprintf(stdout,"data are numbered as the %d-th ",readIntegerIn);
+            fprintf(stdout,"one).\n");
+        }
+
+        readStringOut=fgets(readStringIn,3,wfnFile);
+        readIntegerOut=fscanf(wfnFile," %lf ",&readDouble);
+
+        if (readStringOut==NULL || readIntegerOut!=1)
+        {
+            PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong ");
+            fprintf(stderr,"return of the (standard) fgets ");
+            fprintf(stderr,"%p or fscanf ",(void*)readStringOut);
+            fprintf(stderr,"(=%d) c-function while attempting ",readIntegerOut);
+            fprintf(stderr,"to read the primitive coefficients associated ");
+            fprintf(stderr,"with the %d-th MolecularOrbital structure.\n",i+1);
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+
+        if (strcmp(readStringIn,"MO") || readDouble!=0.)
+        {
+            PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: expecting ");
+            fprintf(stderr,"MO 0.0 instead of %s %lf ",readStringIn,readDouble);
+            fprintf(stderr,"while attempting to read the primitive ");
+            fprintf(stderr,"coefficients of the %d-th MolecularOrbital ",i+1);
+            fprintf(stderr,"structure.\n");
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+
+        readStringOut=fgets(readStringIn,7,wfnFile);
+        readIntegerOut=fscanf(wfnFile," = %lf ",&readDouble);
+
+        if (readStringOut==NULL || readIntegerOut!=1)
+        {
+            PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong ");
+            fprintf(stderr,"return of the (standard) fgets ");
+            fprintf(stderr,"%p or fscanf ",(void*)readStringOut);
+            fprintf(stderr,"(=%d) c-function while attempting ",readIntegerOut);
+            fprintf(stderr,"to read the occupation number associated with ");
+            fprintf(stderr,"the %d-th MolecularOrbital structure.\n",i+1);
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+
+        if (strcmp(readStringIn,"OCC NO") || (readDouble!=1. && readDouble!=2.))
+        {
+            PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: expecting ");
+            fprintf(stderr,"OCC NO = 1.0000000 or OCC NO = 2.0000000 instead ");
+            fprintf(stderr,"of %s %lf while ",readStringIn,readDouble);
+            fprintf(stderr,"attempting to read the occupation number ");
+            fprintf(stderr,"associated with the %d-th ",readIntegerIn);
+            fprintf(stderr,"MolecularOrbital structure.\n");
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+
+        // Temporarily save the occupation number of the (readInteger)-th
+        // molecular orbital in ChemicalSystem->pmorb[readIntegerIn-1].spin in
+        // order to potentially duplicate the molecular orbital (2 spins) later
+        pMolecularOrbitalI=&pChemicalSystem->pmorb[readIntegerIn-1];
+        if (readDouble==2.)
+        {
+            pMolecularOrbitalI->spin=2;
+        }
+        else
+        {
+            pMolecularOrbitalI->spin=1;
+        }
+
+        readStringOut=fgets(readStringIn,12,wfnFile);
+        readIntegerOut=fscanf(wfnFile," = %lf ",&readDouble);
+
+        if (readStringOut==NULL || readIntegerOut!=1)
+        {
+            PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong ");
+            fprintf(stderr,"return of the (standard) fgets ");
+            fprintf(stderr,"%p or fscanf ",(void*)readStringOut);
+            fprintf(stderr,"(=%d) c-function while attempting ",readIntegerOut);
+            fprintf(stderr,"to read the energy associated with the %d-th ",i+1);
+            fprintf(stderr,"MolecularOrbital structure.\n");
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+
+        // Remarks: in the *.wfn format the molecular orbitals are written in
+        // order of increasing MO energy (i.e. most negative to least negative)
+        // Molecular orbitals should be written in the order: doubly occupied,
+        // singly occupied Alpha, singly occupied Beta
+        if (strcmp(readStringIn,"ORB. ENERGY") || readDouble>0.)
+        {
+            PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: expecting ");
+            fprintf(stderr,"ORB. ENERGY = -(double) instead of ");
+            fprintf(stderr,"%s %lf (non-positive ",readStringIn,readDouble);
+            fprintf(stderr,"value) while attempting to read the energy ");
+            fprintf(stderr,"associated with the %d-th ",readIntegerIn);
+            fprintf(stderr,"MolecularOrbital structure.\n");
+            closeTheFile(&wfnFile);
+            return 0;
+        }
+
+        // Save the primitive coefficients in pMolecularOrbitalI->coeff[j-1]
+        // j=1...pChemicalSystem->ngauss
+        for (j=0; j<jMax; j++)
+        {
+            readIntegerOut=fscanf(wfnFile,"%lf ",&readDouble);
+            if (readIntegerOut!=1)
+            {
+                PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong ");
+                fprintf(stderr,"return of the (standard) fscanf ");
+                fprintf(stderr,"(=%d) c-function while ",readIntegerOut);
+                fprintf(stderr,"attempting to read the %d-th primitive ",j+1);
+                fprintf(stderr,"coefficient of the %d-th ",i+1);
+                fprintf(stderr,"MolecularOrbital structure.\n");
+                closeTheFile(&wfnFile);
+                return 0;
+            }
+            pMolecularOrbitalI->coeff[j]=readDouble;
+        }
+    }
+
+    // Check that the END DATA keyword follows (transformed into ENe eATA here
+    // by the readAndConvertWfnFile function so as to read scientific notation)
+    readStringOut=fgets(readStringIn,9,wfnFile);
+    if (readStringOut==NULL)
+    {
+        PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong return ");
+        fprintf(stderr,"of the (standard) fgets %p ",(void*)readStringOut);
+        fprintf(stderr,"c-function while attempting to read the END DATA ");
+        fprintf(stderr,"keyword.\n");
+        closeTheFile(&wfnFile);
+        return 0;
+    }
+
+    if (strcmp(readStringIn,"ENe eATA"))
+    {
+        PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: expecting ");
+        fprintf(stderr,"ENe eATA instead of %s while attempting ",readStringIn);
+        fprintf(stderr,"to read the END DATA keyword.\n");
+        closeTheFile(&wfnFile);
+        return 0;
+    }
+
+    // Closing the (copy *.temp of the) *.wfn file: fclose returns zero if the
+    // input FILE* variable is successfully closed, otherwise EOF (end-of-file)
+    if (fclose(wfnFile))
+    {
+        PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: the ");
+        fprintf(stderr,"%s file has not been closed properly.\n",fileLocation);
+        wfnFile=NULL;
+        return 0;
+    }
+    fprintf(stdout,"Closing file.\n");
+    wfnFile=NULL;
+
+    // Check the number of molecular orbitals that have a spin number equal to
+    // two, and duplicate them in the pChemicalSystem structure
+    returnValue=1;
+    readIntegerIn=0;
+    iMax=pChemicalSystem->nmorb;
+    for (i=0; i<iMax; i++)
+    {
+        if (pChemicalSystem->pmorb[i].spin==2)
+        {
+            readIntegerIn++;
+        }
+        else
+        {
+            returnValue=-1;
+        }
+    }
+
+    // Allocating memory for extra molecular orbitals and checks if it worked
+    // realloc returns a pointer to the newly allocated memory, otherwise NULL
+    if (readIntegerIn>0)
+    {
+        length=iMax+readIntegerIn;
+        pMolecularOrbital=(MolecularOrbital*)realloc(pChemicalSystem->pmorb,
+                                               length*sizeof(MolecularOrbital));
+        if (pMolecularOrbital==NULL)
+        {
+            PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: could not ");
+            fprintf(stderr,"reallocate memory for %d ",readIntegerIn+iMax);
+            fprintf(stderr,"MolecularOrbital structures.\n");
+            return 0;
+        }
+        pChemicalSystem->pmorb=pMolecularOrbital;
+
+        // Update the new number of molecular orbitals
+        pChemicalSystem->nmorb=iMax+readIntegerIn;
+        readIntegerIn=iMax-1;
+
+        // Duplicate the molecular orbitals with an occupation number of two
+        iMax=pChemicalSystem->nmorb;
+        jMax=pChemicalSystem->ngauss;
+        for (i=0; i<iMax; i++)
+        {
+            pMolecularOrbitalI=&pChemicalSystem->pmorb[i];
+            if (pMolecularOrbitalI->spin==2)
+            {
+                pMolecularOrbitalI->spin=1;
+                readIntegerIn++;
+
+                // Initializing MolecularOrbital structure
+                pMolecularOrbital=&pChemicalSystem->pmorb[readIntegerIn];
+                pMolecularOrbital->spin=0;
+                pMolecularOrbital->coeff=NULL;
+                pMolecularOrbital->exp=NULL;
+                pMolecularOrbital->nucl=NULL;
+                pMolecularOrbital->type=NULL;
+
+                // Change the spin of the duplicated MolecularOrbital structure
+                pMolecularOrbital->spin=-1;
+
+                // Allocating memory for primitives
+                pMolecularOrbital->coeff=(double*)calloc(jMax,sizeof(double));
+                pMolecularOrbital->exp=(double*)calloc(jMax,sizeof(double));
+                pMolecularOrbital->nucl=(int*)calloc(jMax,sizeof(int));
+                pMolecularOrbital->type=(int*)calloc(jMax,sizeof(int));
+
+                // Check if the allocation worked
+                if (pMolecularOrbital->coeff==NULL ||
+                                                 pMolecularOrbital->exp==NULL ||
+                                                pMolecularOrbital->nucl==NULL ||
+                                                  pMolecularOrbital->type==NULL)
+                {
+                    PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: ");
+                    fprintf(stderr,"could not reallocate memory for %d ",jMax);
+                    fprintf(stderr,"primitives in the %d-th ",i+1);
+                    fprintf(stderr,"MolecularOrbital structure.\n");
+                    return 0;
+                }
+
+                for (j=0; j<jMax; j++)
+                {
+                    pMolecularOrbital->coeff[j]=pMolecularOrbitalI->coeff[j];
+                    pMolecularOrbital->exp[j]=pMolecularOrbitalI->exp[j];
+                    pMolecularOrbital->nucl[j]=pMolecularOrbitalI->nucl[j];
+                    pMolecularOrbital->type[j]=pMolecularOrbitalI->type[j];
+                }
+            }
+        }
+    }
+
+    return returnValue;
 }
 
-/* ****************************************************************************************************************************************************************************************** */
-// The function readTxtFileAndAllocateChemicalSystem reads file at fileLocation (file must have been previously created), checks txt syntax, allocates and fills memory in pChemicalSystem 
-// It has the char* fileLocation and ChemicalSystem* variable (described in main.h) as input arguments and it returns zero if an error occurred, otherwise one
-/* ****************************************************************************************************************************************************************************************** */
-static int readTxtFileAndAllocateChemicalSystem(char* fileLocation, ChemicalSystem* pChemicalSystem)
+/* ************************************************************************** */
+// The function writingChemicalFile writes the chemical data stored in the
+// structure pointed by pChemicalSystem, according the the *.chem format, into
+// a file located at fileLocation (warning: reset and overwrite the file if it
+// always exists), which must be a path name of (positive) length (strictly)
+// less than nameLength. It has the char* fileLocation, the int nameLength, and
+// the ChemicalSystem* variable (defined in main.h) as input arguments and it
+// returns zero if an error occurred, otherwise one in case of success
+/* ************************************************************************** */
+int writingChemicalFile(char* fileLocation, int nameLength,
+                                                ChemicalSystem* pChemicalSystem)
 {
-	char readStringIn[33]={'\0'}, *readStringOut=NULL;
-	int readIntegerIn=0, readIntegerOut=0, i=0, iMax=0, j=0, k=0, kMax=0;
-	double readDouble=0.;
-	MolecularOrbital *pMolecularOrbital=NULL;
-	FILE *chemicalFile=NULL;
+    int i=0, j=0, numberOfMolecularOrbitals=0, numberOfNuclei=0;
+    int numberOfPrimitives=0;
+    MolecularOrbital *pMolecularOrbital=NULL;
+    FILE *chemicalFile=NULL;
 
-	// Testing if the input pChemicalSystem variable is pointing to NULL otherwise initialize its structure to zero for variables and NULL for pointers
-	if (pChemicalSystem==NULL)
-	{
-		PRINT_ERROR();
-		printf("In readTxtFileAndAllocateChemicalSystem: the input pChemicalSystem variable is pointing to %p adress.\n",pChemicalSystem);
-		return 0;	
-	}
-	initializeChemicalStructure(pChemicalSystem);
+    // Check if the input pChemicalSystem variable is pointing to NULL
+    if (pChemicalSystem==NULL)
+    {
+        PRINT_ERROR("In writingChemicalFile: the input pChemicalSystem ");
+        fprintf(stderr,"variable is pointing to the ");
+        fprintf(stderr,"%p adress.\n",(void*)pChemicalSystem);
+        return 0;
+    }
 
-	// Since the file must have been previously created, we check if it is the case 
-	if(!initialFileExists(fileLocation))
-	{
-		PRINT_ERROR();
-		printf("In readTxtFileAndAllocateChemicalSystem: initialFileExists function returned zero instead of one.\n");
-		return 0;
-	}
+    // Check fileLocation is a string of length not greater than nameLength (>6)
+    if (!checkStringFromLength(fileLocation,7,nameLength))
+    {
+        PRINT_ERROR("In writingChemicalFile: checkStringFromLength function ");
+        fprintf(stderr,"returned zero, which is not the expected value here, ");
+        fprintf(stderr,"after having checked that the char* fileLocation ");
+        fprintf(stderr,"variable is not a string of length (strictly) less ");
+        fprintf(stderr,"than %d (and more than 5 in order to ",nameLength);
+        fprintf(stderr,"store at least something more than the *.chem ");
+        fprintf(stderr,"extension).\n");
+        return 0;
+    }
 
-	// Testing if the file is well opened (warning: file must have been previously created)
-	printf("\nOpening %s file. ",fileLocation);
-	chemicalFile=fopen(fileLocation,"r");	// fopen function returns a FILE pointer on success, otherwise a NULL pointer is returned
-	if (chemicalFile==NULL)
-	{
-		PRINT_ERROR();
-		printf("In readTxtFileAndAllocateChemicalSystem: could not read %s file.\n",fileLocation);
-		return 0;
-	}
-	printf("Reading and saving chemical data. ");		
+    numberOfMolecularOrbitals=pChemicalSystem->nmorb;
+    if (numberOfMolecularOrbitals<1)
+    {
+        PRINT_ERROR("In writingChemicalFile: we cannot have ");
+        fprintf(stderr,"%d molecular orbitals ",numberOfMolecularOrbitals);
+        fprintf(stderr,"saved in the structure pointed by pChemicalSystem.\n");
+        return 0;
+    }
 
-	// Reading number of MolecularOrbitals and store it in pChemicalSystem->nmorb
-	readStringOut=fgets(readStringIn,18,chemicalFile);	  // fgets function returns a null pointer if it failed, otherwise it returns the same readStringIn parameters
-	readIntegerOut=fscanf(chemicalFile," %d ",&readIntegerIn);// fscanf function returns the number of input items successfully matched and assigned, which can be fewer than provided for
+    numberOfPrimitives=pChemicalSystem->ngauss;
+    if (numberOfPrimitives<1)
+    {
+        PRINT_ERROR("In writingChemicalFile: we cannot have ");
+        fprintf(stderr,"%d primitives saved in each ",numberOfPrimitives);
+        fprintf(stderr,"MolecularOrbital structure of pChemicalSystem.\n");
+        return 0;
+    }
 
-	// Important remark: white space characters, such as blanks and newline characters, causes fscanf (scanf and sscanf) to read, but not to store, all consecutive white space characters in 
-	//                   the input up to the next character that is not white space. One white space character in format-string matches any combination of white space characters in the input.
+    numberOfNuclei=pChemicalSystem->nnucl;
+    if (numberOfNuclei<1)
+    {
+        PRINT_ERROR("In writingChemicalFile: we cannot have ");
+        fprintf(stderr,"%d nuclei saved in the structure ",numberOfNuclei);
+        fprintf(stderr,"pointed by pChemicalSystem.\n");
+        return 0;
+    }
 
-	if(readStringOut==NULL || readIntegerOut!=1) 
-	{
-		PRINT_ERROR();
-		printf("In readAndAllocChemicalSystem: wrong return of fgets (=%p) and/or fscanf (=%d) in MolecularOrbitals.\n",readStringOut,readIntegerOut);
-		closeTheFile(&chemicalFile);
-		return 0;
-	}
-	if (strcmp(readStringIn,"MolecularOrbitals") || readIntegerIn<1)	// strcmp function returns 0 if the two strings are equal, otherwise a non-zero value
-	{
-		PRINT_ERROR();
-		printf("In readAndAllocChemicalSystem: expecting MolecularOrbitals Nmorb instead of %s %d (positive value).\n",readStringIn,readIntegerIn);
-		closeTheFile(&chemicalFile);
-		return 0;
-	}
-	pChemicalSystem->nmorb=readIntegerIn;
+    // Check if the file is well opened (warning: overwrite file if it exists)
+    // fopen returns a FILE pointer on success, otherwise NULL is returned
+    fprintf(stdout,"Opening %s file. ",fileLocation);
+    chemicalFile=fopen(fileLocation,"w+");
+    if (chemicalFile==NULL)
+    {
+        PRINT_ERROR("In writingChemicalFile: could not open and write into ");
+        fprintf(stderr,"the %s file.\n",fileLocation);
+        return 0;
+    }
+    fprintf(stdout,"Writing chemical data. ");
 
-	// Allocating memory for MolecularOrbitals and check if it works
-	pChemicalSystem->pmorb=(MolecularOrbital*)calloc(readIntegerIn,sizeof(MolecularOrbital));
-	if (pChemicalSystem->pmorb==NULL)
-	{
-		PRINT_ERROR();
-		printf("In readAndAllocChemicalSystem: could not allocate memory for %d Molecular Orbitals.\n",readIntegerIn);
-		closeTheFile(&chemicalFile);
-		return 0;
-	}
+    // Writing number of molecular orbitals, primitives, and nuclei
+    fprintf(chemicalFile,"MolecularOrbitals %d\n",numberOfMolecularOrbitals);
+    fprintf(chemicalFile,"\nPrimitives %d\n",numberOfPrimitives);
+    fprintf(chemicalFile,"\nNuclei\n%d\n",numberOfNuclei);
 
-	// Reading number of Primitives and store it in pChemicalSystem->ngauss
-	readStringOut=fgets(readStringIn,11,chemicalFile);
-	readIntegerOut=fscanf(chemicalFile," %d ",&readIntegerIn);
-	if(readStringOut==NULL || readIntegerOut!=1)
-	{
-		PRINT_ERROR();
-		printf("In readTxtFileAndAllocateChemicalSystem: wrong return of fgets (=%p) and/or fscanf (=%d) in Primitives.\n",readStringOut,readIntegerOut);		
-		closeTheFile(&chemicalFile);
-		return 0;
-	}
-	if (strcmp(readStringIn,"Primitives") || readIntegerIn<1)
-	{
-		PRINT_ERROR();
-		printf("In readTxtFileAndAllocateChemicalSystem: expecting Primitives Ngauss instead of %s %d (positive value).\n",readStringIn,readIntegerIn);		
-		closeTheFile(&chemicalFile);
-		return 0;
-	}
-	pChemicalSystem->ngauss=readIntegerIn;
-	iMax=pChemicalSystem->nmorb;
-	for (i=0; i<iMax; i++)
-	{
-		// Initializing MolecularOrbital structure
-		pMolecularOrbital=&pChemicalSystem->pmorb[i];
-		pMolecularOrbital->spin=0;
-		pMolecularOrbital->coeff=NULL;
-		pMolecularOrbital->exp=NULL;
-		pMolecularOrbital->nucl=NULL;
-		pMolecularOrbital->type=NULL;
+    // Write the Nucleus data
+    for (i=0; i<numberOfNuclei; i++)
+    {
+        fprintf(chemicalFile,"%.8le ",pChemicalSystem->pnucl[i].x);
+        fprintf(chemicalFile,"%.8le ",pChemicalSystem->pnucl[i].y);
+        fprintf(chemicalFile,"%.8le ",pChemicalSystem->pnucl[i].z);
+        fprintf(chemicalFile,"%d \n",pChemicalSystem->pnucl[i].charge);
+    }
 
-		// Allocating memory for Primitives in each orbitals and check if it works			
-		pMolecularOrbital->coeff=(double*)calloc(readIntegerIn,sizeof(double));
-		pMolecularOrbital->exp=(double*)calloc(readIntegerIn,sizeof(double));
-		pMolecularOrbital->nucl=(int*)calloc(readIntegerIn,sizeof(int));
-		pMolecularOrbital->type=(int*)calloc(readIntegerIn,sizeof(int));
-		if (pMolecularOrbital->coeff==NULL || pMolecularOrbital->exp==NULL || pMolecularOrbital->nucl==NULL || pMolecularOrbital->type==NULL)
-		{
-			PRINT_ERROR();
-			printf("In readTxtFileAndAllocateChemicalSystem: could not allocate memory for %d Primitives in %d-th Molecular Orbital.\n",readIntegerIn,i+1);		
-			closeTheFile(&chemicalFile);
-			return 0;
-		}	
-	}
+    // Write the content of each MolecularOrbital structure
+    fprintf(chemicalFile,"\nCoefficient Exponent Center Type");
+    for (i=0; i<numberOfMolecularOrbitals; i++)
+    {
+        fprintf(chemicalFile,"\n%d",i+1);
+        pMolecularOrbital=&pChemicalSystem->pmorb[i];
 
-	// Reading number of Nuclei and store it in pChemicalSystem->nnucl
-	readStringOut=fgets(readStringIn,7,chemicalFile);
-	readIntegerOut=fscanf(chemicalFile," %d ",&readIntegerIn);
-	if(readStringOut==NULL || readIntegerOut!=1)
-	{
-		PRINT_ERROR();
-		printf("In readTxtFileAndAllocateChemicalSystem: wrong return of fgets (=%p) and/or fscanf (=%d) in Nuclei.\n",readStringOut,readIntegerOut);		
-		closeTheFile(&chemicalFile);
-		return 0;
-	}
-	if (strcmp(readStringIn,"Nuclei") || readIntegerIn<1)
-	{
-		PRINT_ERROR();
-		printf("In readTxtFileAndAllocateChemicalSystem: expecting Nuclei Nnucl instead of %s %d (positive value).\n",readStringIn,readIntegerIn);		
-		closeTheFile(&chemicalFile);
-		return 0;
-	}
-	pChemicalSystem->nnucl=readIntegerIn;
+        // Check the spin value
+        if (abs(pMolecularOrbital->spin)!=1)
+        {
+            PRINT_ERROR("In writingChemicalFile: the spin variable of the ");
+            fprintf(stderr,"%d-th MolecularOrbital structure should be ",i+1);
+            fprintf(stderr,"(+/-)1 instead of %d.\n",pMolecularOrbital->spin);
+            fprintf(chemicalFile,"\nEnd");
+            closeTheFile(&chemicalFile);
+            return 0;
+        }
+        fprintf(chemicalFile,"\nSpin %d\n",pMolecularOrbital->spin);
 
-	// Allocating memory for Nuclei and check if it works
-	pChemicalSystem->pnucl=(Nucleus*)calloc(readIntegerIn,sizeof(Nucleus));
-	if (pChemicalSystem->pnucl==NULL)
-	{
-		PRINT_ERROR();
-		printf("In readTxtFileAndAllocateChemicalSystem: could not allocate memory for %d Nuclei.\n",readIntegerIn);		
-		closeTheFile(&chemicalFile);
-		return 0;
-	}
+        // Check if no error occurs for the pointers in pMolecularOrbital
+        if (pMolecularOrbital->coeff==NULL || pMolecularOrbital->exp==NULL ||
+                 pMolecularOrbital->nucl==NULL || pMolecularOrbital->type==NULL)
+        {
+            PRINT_ERROR("In writingChemicalFile: one of the following ");
+            fprintf(stderr,"address is not valid in the %d-th ",i+1);
+            fprintf(stderr,"MolecularOrbital structure:\n");
+            fprintf(stderr,"pChemicalSystem->pmorb[%d].coeff=",i);
+            fprintf(stderr,"%p\n",(void*)pMolecularOrbital->coeff);
+            fprintf(stderr,"pChemicalSystem->pmorb[%d].exp=",i);
+            fprintf(stderr,"%p\n",(void*)pMolecularOrbital->exp);
+            fprintf(stderr,"pChemicalSystem->pmorb[%d].nucl=",i);
+            fprintf(stderr,"%p\n",(void*)pMolecularOrbital->nucl);
+            fprintf(stderr,"pChemicalSystem->pmorb[%d].type=",i);
+            fprintf(stderr,"%p\n",(void*)pMolecularOrbital->type);
+            fprintf(chemicalFile,"\nEnd");
+            closeTheFile(&chemicalFile);
+            return 0;
+        }
 
-	// Saving Nuclei in pMesh->pnucl and check if it works
-	j=0;
-	for (i=0; i<readIntegerIn; i++)
-	{
-		j+=fscanf(chemicalFile,"%lf ",&readDouble);	
-		pChemicalSystem->pnucl[i].x=readDouble;	
-		j+=fscanf(chemicalFile,"%lf ",&readDouble);	
-		pChemicalSystem->pnucl[i].y=readDouble;
-		j+=fscanf(chemicalFile,"%lf ",&readDouble);	
-		pChemicalSystem->pnucl[i].z=readDouble;	
-	}
-	if (j!=3*readIntegerIn)
-	{
-		PRINT_ERROR();
-		printf("In readTxtFileAndAllocateChemicalSystem: expecting %d Nuclei instead of %d properly saved.\n",readIntegerIn,j/3);		
-		closeTheFile(&chemicalFile);
-		return 0;
-	}
-	
-	// Read and save successively the spin (1 or -1) followed by enumeration of gaussian coefficients, gaussian exponents and references of associated centers and types, respectively for each orbital
-	readStringOut=fgets(readStringIn,33,chemicalFile);
-	if(readStringOut==NULL || strcmp(readStringIn,"Coefficient Exponent Center Type"))
-	{
-		PRINT_ERROR();
-		printf("In readTxtFileAndAllocateChemicalSystem: expecting Coefficient Exponent Center Type instead of %s (and fgets returns %p adress).\n",readStringIn,readStringOut);		
-		closeTheFile(&chemicalFile);
-		return 0;
-	}
-	iMax=pChemicalSystem->nmorb;
-	for (i=0; i<iMax;i++)
-	{
-		readIntegerOut=fscanf(chemicalFile," %d ",&readIntegerIn);
-		if (readIntegerOut!=1 || readIntegerIn!=i+1)
-		{
-			PRINT_ERROR();
-			printf("In readTxtFileAndAllocateChemicalSystem: wrong return of fscanf (in=%d, out=%d) in %d-th Molecular Orbital.\n",readIntegerIn,readIntegerOut,i+1);		
-			closeTheFile(&chemicalFile);
-			return 0;
-		}
-		pMolecularOrbital=&pChemicalSystem->pmorb[i];
-		readStringOut=fgets(readStringIn,5,chemicalFile);
-		readIntegerOut=fscanf(chemicalFile," %d ",&readIntegerIn);
-		if(readStringOut==NULL || readIntegerOut!=1)
-		{
-			PRINT_ERROR();
-			printf("In readTxtFileAndAllocateChemicalSystem: wrong return of fgets (=%p) and/or fscanf (=%d) in Spin of %d-th Molecular Orbital.\n",readStringOut,readIntegerOut,i+1);
-			closeTheFile(&chemicalFile);
-			return 0;
-		}
-		if (strcmp(readStringIn,"Spin") || abs(readIntegerIn)!=1)
-		{
-			PRINT_ERROR();
-			printf("In readTxtFileAndAllocateChemicalSystem: expecting Spin (+/-)1 instead of %s %d (unitary value).\n",readStringIn,readIntegerIn);		
-			closeTheFile(&chemicalFile);
-			return 0;
-		}
-		pMolecularOrbital->spin=readIntegerIn;
-		j=0;
-		kMax=pChemicalSystem->ngauss;
-		for (k=0; k<kMax; k++)
-		{
-			j+=fscanf(chemicalFile,"%lf ",&readDouble);
-			pMolecularOrbital->coeff[k]=readDouble;
+        for (j=0; j<numberOfPrimitives; j++)
+        {
+            // Write the coefficient value
+            fprintf(chemicalFile,"%.8le ",pMolecularOrbital->coeff[j]);
 
-			// Check exponent values
-			j+=fscanf(chemicalFile,"%lf ",&readDouble);
-			if (readDouble<=0.)
-			{
-				PRINT_ERROR();
-				printf("In readTxtFileAndAllocateChemicalSystem: %d-th Exponent of %d-th Molecular Orbital should be positive instead of %lf value.\n",k+1,i+1,readDouble);
-				closeTheFile(&chemicalFile);
-				return 0;	
-			}
-			pMolecularOrbital->exp[k]=readDouble;
+            // Check and write the exponent value
+            if (pMolecularOrbital->exp[j]<=0.)
+            {
+                PRINT_ERROR("In writingChemicalFile: the ");
+                fprintf(stderr,"%d-th primitive exponent of the ",j+1);
+                fprintf(stderr,"%d-th MolecularOrbital structure should ",i+1);
+                fprintf(stderr,"be positive instead of having the ");
+                fprintf(stderr,"%lf value.\n",pMolecularOrbital->exp[j]);
+                fprintf(chemicalFile,"\nEnd");
+                closeTheFile(&chemicalFile);
+                return 0;
+            }
+            fprintf(chemicalFile,"%.8le ",pMolecularOrbital->exp[j]);
 
-			// Check center assignments 
-			j+=fscanf(chemicalFile,"%d ",&readIntegerOut);
-			if (readIntegerOut<1 || readIntegerOut>pChemicalSystem->nnucl)
-			{
-				PRINT_ERROR();
-				printf("In readTxtFileAndAllocateChemicalSystem: %d-th Center of %d-th Molecular Orbital should be a positive integer ",k+1,i+1);
-				printf("less than %d instead of %d value.\n",pChemicalSystem->nnucl,readIntegerOut);
-				closeTheFile(&chemicalFile);
-				return 0;	
-			}
-			pMolecularOrbital->nucl[k]=readIntegerOut;
+            // Check and write the center assignment value
+            if (pMolecularOrbital->nucl[j]<1 ||
+                                      pMolecularOrbital->nucl[j]>numberOfNuclei)
+            {
+                PRINT_ERROR("In writingChemicalFile: the ");
+                fprintf(stderr,"%d-th primitive center assignment of the ",j+1);
+                fprintf(stderr,"%d-th MolecularOrbital structure should ",i+1);
+                fprintf(stderr,"be a positive integer, not (strictly) ");
+                fprintf(stderr,"greater than the total number of nuclei ");
+                fprintf(stderr,"%d, instead of having the ",numberOfNuclei);
+                fprintf(stderr,"%d value.\n",pMolecularOrbital->nucl[j]);
+                fprintf(chemicalFile,"\nEnd");
+                closeTheFile(&chemicalFile);
+                return 0;
+            }
+            fprintf(chemicalFile,"%d ",pMolecularOrbital->nucl[j]);
 
-			// Check type assignments
-			j+=fscanf(chemicalFile,"%d ",&readIntegerOut);	
-			if (readIntegerOut<1 || readIntegerOut>20)
-			{
-				PRINT_ERROR();
-				printf("In readTxtFileAndAllocateChemicalSystem: %d-th Center of %d-th Molecular Orbital should be a positive integer ",k+1,i+1);
-				printf("less than 20 instead of %d value.\n",readIntegerOut);
-				closeTheFile(&chemicalFile);
-				return 0;	
-			}	
-			pMolecularOrbital->type[k]=readIntegerOut;
-		}	
-		if (j!=4*kMax)
-		{
-			PRINT_ERROR();
-			printf("In readTxtFileAndAllocateChemicalSystem: expecting %d Primitives in %d-th orbitals instead of %d properly saved.\n",kMax,i+1,j/4);		
-			closeTheFile(&chemicalFile);
-			return 0;
-		}
+            // Check and write the type assignment value
+            if (pMolecularOrbital->type[j]<1 || pMolecularOrbital->type[j]>20)
+            {
+                PRINT_ERROR("In writingChemicalFile: the ");
+                fprintf(stderr,"%d-th primitive type assignment of the ",j+1);
+                fprintf(stderr,"%d-th MolecularOrbital structure should ",i+1);
+                fprintf(stderr,"be a positive integer, not (strictly) ");
+                fprintf(stderr,"greater than twenty instead of having the ");
+                fprintf(stderr,"%d value.\n",pMolecularOrbital->type[j]);
+                fprintf(chemicalFile,"\nEnd");
+                closeTheFile(&chemicalFile);
+                return 0;
+            }
+            fprintf(chemicalFile,"%d \n",pMolecularOrbital->type[j]);
+        }
+    }
+    fprintf(chemicalFile,"\nEnd");
 
-	}
+    // Closing the *.chem file: fclose function returns zero if the input FILE*
+    // variable is successfully closed, otherwise EOF (end-of-file) is returned
+    if (fclose(chemicalFile))
+    {
+        PRINT_ERROR("In writingChemicalFile: the");
+        fprintf(stderr,"%s file has not been closed properly.\n",fileLocation);
+        chemicalFile=NULL;
+        return 0;
+    }
+    fprintf(stdout,"Closing file.");
+    chemicalFile=NULL;
 
-	// Check that "End" keyword is ending the file
-	readStringOut=fgets(readStringIn,4,chemicalFile);	
-	if(readStringOut==NULL || strcmp(readStringIn,"End"))
-	{
-		PRINT_ERROR();
-		printf("In readTxtFileAndAllocateChemicalSystem: expecting End instead of %s (and fgets returns %p adress).\n",readStringIn,readStringOut);		
-		closeTheFile(&chemicalFile);
-		return 0;
-	}
-
-	// Testing if file is well closed
-	if(fclose(chemicalFile))	// fclose function returns zero if the input FILE* variable is successfully closed, otherwise EOF is returned (pointer to the end of the file)
-	{
-		PRINT_ERROR();
-		printf("In readTxtFileAndAllocateChemicalSystem: could not close %s file properly.\n",fileLocation);
-		chemicalFile=NULL;
-		return 0;
-	}
-	printf("Closing file.\n");
-	chemicalFile=NULL;
-
-	return 1;
+    return 1;
 }
 
-/* *************************************************************************************************************************************************************************************************** */
-// The function loadChemistry extracts chemical data from file (warning: reset and overwrite chemicalOut.txt file if already exists) located at fileLocation (file must be in *.wfn or *.txt format)
-// It has the char* fileLocation, ChemicalSystem* variable (described in main.h) and int nuElectrons as input arguments and it returns zero if an error occurred, otherwise one
-/* *************************************************************************************************************************************************************************************************** */
-int loadChemistry(char* fileLocation, ChemicalSystem *pChemicalSystem, int nuElectrons)
+/* ************************************************************************** */
+// The function loadChemistry extracts the chemical data from a *.chem or *.wfn
+// file (warning: reset and overwrite chemicalOut.chem file if it already
+// exists) at the location pointed by the name_chem variable of the structure
+// pointed by pParameters. It has the Parameters* and ChemicalSystem* variables
+// (both defined in main.h) as input arguments and it returns zero if an error
+// occurred, otherwise one is returned in case of sucess
+/* ************************************************************************** */
+int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
 {
-	// Reading file at fileLocation if it exists and returns the format (one is *.txt, -1 is *.wfn, zero refers to an error)
-	switch (getChemicalFormat(fileLocation))
-	{
-		case 1:
-			// Reading *.txt file
-			if(!readTxtFileAndAllocateChemicalSystem(fileLocation,pChemicalSystem))
-			{
-				PRINT_ERROR();
-				printf("In loadChemistry: readTxtFileAndAllocateChemicalSystem function returned zero instead of one.\n");
-				return 0;
-			}
-			break;
+    size_t length=0;
+    char *fileLocation=NULL;
+    int orbRhf=0;
 
-		case -1:
-			// Converting the Fortran scientific notation (1.0D+01) into the C format (1.0e+01) in the *.wfn file		
-			if(!readAndConvertWfnFile(fileLocation,'D','e'))
-			{
-				PRINT_ERROR();
-				printf("In loadChemistry: readAndConvertWfnFile function returned zero instead of one.\n");
-				return 0;	
-			}
+    // Testing if pParameters or pChemicalSystem is pointing to NULL
+    if (pParameters==NULL || pChemicalSystem==NULL)
+    {
+        PRINT_ERROR("In loadChemistry: at least one of the input pParameters ");
+        fprintf(stderr,"%p or pChemicalSystem ",(void*)pParameters);
+        fprintf(stderr,"%p variable does not have a ",(void*)pChemicalSystem);
+        fprintf(stderr,"valid address.\n");
+        return 0;
+    }
 
-			// Reading *.wfn file
-			if(!readWfnFileAndAllocateChemicalSystem(fileLocation,pChemicalSystem))
-			{
-				PRINT_ERROR();
-				printf("In loadChemistry: readWfnFileAndAllocateChemicalSystem function returned zero instead of one.\n");
-				// Reconverting the *.wfn file as it was
-				if(!readAndConvertWfnFile(fileLocation,'e','D'))
-				{
-					PRINT_ERROR();
-					printf("In loadChemistry: readAndConvertWfnFile function returned zero instead of one.\n");
-				}
-				return 0;
-			}
+    // Check pParameters->name_info variable
+    if (!checkStringFromLength(pParameters->name_info,7,
+                                                      pParameters->name_length))
+    {
+        PRINT_ERROR("In loadChemistry: checkStringFromLength function ");
+        fprintf(stderr,"returned zero, which is not the expected value here, ");
+        fprintf(stderr,"after having checked that the char* name_info ");
+        fprintf(stderr,"variable of the structure pointed by pParameters is ");
+        fprintf(stderr,"not a string of length (strictly) less than ");
+        fprintf(stderr,"%d (and more than 5 in ",pParameters->name_length);
+        fprintf(stderr,"order to store at least something more than the ");
+        fprintf(stderr,"*.info extension).\n");
+        return 0;
+    }
 
-			// Reconverting the *.wfn file as it was
-			if(!readAndConvertWfnFile(fileLocation,'e','D'))
-			{
-				PRINT_ERROR();
-				printf("In loadChemistry: readAndConvertWfnFile function returned zero instead of one.\n");
-				return 0;
-			}
+    // Check if the *.info file name ends with the ".info" extension
+    // strlen returns the length of the string, but not including the char '\0'
+    length=strlen(pParameters->name_info);
+    if (pParameters->name_info[length-5]!='.' ||
+                                        pParameters->name_info[length-4]!='i' ||
+                                        pParameters->name_info[length-3]!='n' ||
+                                        pParameters->name_info[length-2]!='f' ||
+                                        pParameters->name_info[length-1]!='o' ||
+                                           pParameters->name_info[length]!='\0')
+    {
+        PRINT_ERROR("In loadChemistry: ");
+        fprintf(stderr,"%s file name does not end ",pParameters->name_info);
+        fprintf(stderr,"with with the '.info' extension.\n");
+        return 0;
+    }
 
-			// Writing chemicalOut.txt file (warning: reset and overwrite chemicalOut.txt file if already exists)
-			if(!writingChemicalFile("chemicalOut.txt",pChemicalSystem))
-			{
-				PRINT_ERROR();
-				printf("In loadChemistry: writingChemicalFile function returned zero instead of one.\n");
-				return 0;
-			}
-			break;
+    // calloc returns a pointer to the allocated memory, otherwise NULL
+    length=pParameters->name_length;
+    fileLocation=(char*)calloc(length,sizeof(char));
+    if (fileLocation==NULL)
+    {
+        PRINT_ERROR("In loadChemistry: could not allocate memory for the ");
+        fprintf(stderr,"local (char*) variable fileLocation.\n");
+        return 0;
+    }
 
-		default:
-			PRINT_ERROR();
-			printf("In loadChemistry: getChemicalFormat function returned zero instead of (+/-) one.\n");
-			return 0;
-			break;
-	}
-	printf("Chemical system loaded: %d Molecular Orbitals, %d Primitives, and %d Nuclei.\n",pChemicalSystem->nmorb,pChemicalSystem->ngauss,pChemicalSystem->nnucl);
+    // Reading the chemical file at fileLocation if it exists and returns the
+    // type of format (1 is *.chem, -1 is *.wfn, 0 refers to an error)
+    switch (getChemicalFormat(pParameters->name_chem,pParameters->name_length))
+    {
+        case 1:
+            fprintf(stdout,"\nChemistry will be loaded from ");
+            fprintf(stdout,"%s file.",pParameters->name_chem);
 
-	// Checking the nuElectrons parameter
-	if (nuElectrons<1||nuElectrons>pChemicalSystem->nmorb)
-	{
-		PRINT_ERROR();
-		printf("In loadChemistry: nuElectrons=%d should be positive and not greater than %d (total number of electrons).\n",nuElectrons,pChemicalSystem->nmorb);
-		return 0;
-	}
+            // Reading the *.chem file
+            orbRhf=readChemFileandAllocateChemicalSystem(pParameters->name_chem,
+                                                       pParameters->name_length,
+                                                               pChemicalSystem);
+            // Check the pParameters->orb_rhf variable
+            if (abs(orbRhf)!=1)
+            {
+                PRINT_ERROR("In loadChemistry: ");
+                fprintf(stderr,"readChemFileandAllocateChemicalSystem ");
+                fprintf(stderr,"function returned %d instead of ",orbRhf);
+                fprintf(stderr,"(+/-)1.\n");
+                free(fileLocation);   // free function does not any return value
+                fileLocation=NULL;
+                return 0;
+            }
+            if (orbRhf==1)
+            {
+                if (!pParameters->orb_rhf)
+                {
+                    pParameters->orb_rhf=1;
+                }
+            }
+            else
+            {
+                if (pParameters->orb_rhf)
+                {
+                    PRINT_ERROR("In loadChemistry: apparently, the orb_rhf ");
+                    fprintf(stderr,"(=%d) variable of ",pParameters->orb_rhf);
+                    fprintf(stderr,"the structure pointed by pParameters has ");
+                    fprintf(stderr,"been set to one in the ");
+                    fprintf(stderr,"%s file (i.e. ",pParameters->name_info);
+                    fprintf(stderr,"restricted Hartree-fock was suggested), ");
+                    fprintf(stderr,"whereas in the %s ",pParameters->name_chem);
+                    fprintf(stderr,"file, the chemical data correspond to ");
+                    fprintf(stderr,"an unrestricted Hartree-Fock structure.\n");
+                    fprintf(stderr,"Pleace check the files and modify the ");
+                    fprintf(stderr,"value accordingly after the 'orb_rhf' ");
+                    fprintf(stderr,"keyword in the %s ",pParameters->name_info);
+                    fprintf(stderr,"file, or or simply delete the ");
+                    fprintf(stderr,"corresponding line in order to proceed ");
+                    fprintf(stderr,"further.\n");
+                    free(fileLocation);
+                    fileLocation=NULL;
+                    return 0;
+                }
+            }
 
-	return 1;
+            // Set the default *.chem name in fileLocation in case of file copy
+            // strncpy function returns a pointer to the string (not used here)
+            strncpy(fileLocation,pParameters->name_info,length);
+            length=strlen(fileLocation);
+            fileLocation[length-5]='.';
+            fileLocation[length-4]='c';
+            fileLocation[length-3]='h';
+            fileLocation[length-2]='e';
+            fileLocation[length-1]='m';
+            fileLocation[length]='\0';
+
+            // Copy the *.chem file into a default *.chem if names are different
+            // strcmp returns 0 if the 2 strings are =, otherwise <0 (resp. >0)
+            // if the 1st string arg is shorter (resp. longer) than the 2nd one
+            if (strcmp(pParameters->name_chem,fileLocation))
+            {
+                if (initialFileExists(fileLocation,pParameters->name_length)==1)
+                {
+                    // remove returns 0 on success, otherwise -1 (errno is set)
+                    if (remove(fileLocation))
+                    {
+                        PRINT_ERROR("In loadChemistry: wrong return (=-1) of ");
+                        fprintf(stderr,"the standard remove c-function in ");
+                        fprintf(stderr,"the attempt of removing the ");
+                        fprintf(stderr,"%s file.\n",fileLocation);
+                        free(fileLocation);
+                        fileLocation=NULL;
+                        return 0;
+                    }
+                }
+                if (!copyFileLocation(pParameters->name_chem,
+                                         pParameters->name_length,fileLocation))
+                {
+                    PRINT_ERROR("In loadChemistry: copyFileLocation function ");
+                    fprintf(stderr,"returned zero instead of one.\n");
+                    free(fileLocation);
+                    fileLocation=NULL;
+                    return 0;
+                }
+                strncpy(pParameters->name_chem,fileLocation,
+                                                      pParameters->name_length);
+            }
+            break;
+
+        case -1:
+            fprintf(stdout,"\nChemistry will be loaded from ");
+            fprintf(stdout,"%s file.",pParameters->name_chem);
+
+            // Copy the *.wfn file into a (previously removed if exists) *.temp
+            strncpy(fileLocation,pParameters->name_info,length);
+            length=strlen(fileLocation);
+            fileLocation[length-5]='.';
+            fileLocation[length-4]='t';
+            fileLocation[length-3]='e';
+            fileLocation[length-2]='m';
+            fileLocation[length-1]='p';
+            fileLocation[length]='\0';
+
+            if (initialFileExists(fileLocation,pParameters->name_length)==1)
+            {
+                if (remove(fileLocation))
+                {
+                    PRINT_ERROR("In loadChemistry: wrong return (=-1) of the ");
+                    fprintf(stderr,"standard remove c-function in the ");
+                    fprintf(stderr,"attempt of removing the ");
+                    fprintf(stderr,"%s file.\n",fileLocation);
+                    free(fileLocation);
+                    fileLocation=NULL;
+                    return 0;
+                }
+            }
+
+            if (!copyFileLocation(pParameters->name_chem,
+                                         pParameters->name_length,fileLocation))
+            {
+                PRINT_ERROR("In loadChemistry: copyFileLocation function ");
+                fprintf(stderr,"returned zero instead of one.\n");
+                free(fileLocation);
+                fileLocation=NULL;
+                return 0;
+            }
+
+            // Update the *.temp name in the name_chem variable of pParameters
+            strncpy(pParameters->name_chem,fileLocation,
+                                                      pParameters->name_length);
+
+            // Converting the Fortran scientific notation (1.0D+01) into the C
+            // format (1.0e+01) in the *.temp file (the copy of the *.wfn file)
+            if (!readAndConvertWfnFile(fileLocation,'D','e',
+                                                      pParameters->name_length))
+            {
+                PRINT_ERROR("In loadChemistry: readAndConvertWfnFile ");
+                fprintf(stderr,"function returned zero instead of one.\n");
+                free(fileLocation);
+                fileLocation=NULL;
+                return 0;
+            }
+
+            // Reading the (copy *.temp of the) *.wfn file
+            orbRhf=readWfnFileAndAllocateChemicalSystem(fileLocation,
+                                                       pParameters->name_length,
+                                                               pChemicalSystem);
+            // Check the pParameters->orb_rhf variable
+            if (abs(orbRhf)!=1)
+            {
+                PRINT_ERROR("In loadChemistry: ");
+                fprintf(stderr,"readWfnFileandAllocateChemicalSystem ");
+                fprintf(stderr,"function returned %d instead of ",orbRhf);
+                fprintf(stderr,"(+/-)1.\n");
+                free(fileLocation);
+                fileLocation=NULL;
+                return 0;
+            }
+            if (orbRhf==1)
+            {
+                if (!pParameters->orb_rhf)
+                {
+                    pParameters->orb_rhf=1;
+                }
+            }
+            else
+            {
+                if (pParameters->orb_rhf)
+                {
+                    PRINT_ERROR("In loadChemistry: apparently, the orb_rhf ");
+                    fprintf(stderr,"(=%d) variable of ",pParameters->orb_rhf);
+                    fprintf(stderr,"the structure pointed by pParameters has ");
+                    fprintf(stderr,"been set to one in the ");
+                    fprintf(stderr,"%s file (i.e. ",pParameters->name_info);
+                    fprintf(stderr,"restricted Hartree-fock was suggested), ");
+                    fprintf(stderr,"whereas in the %s ",pParameters->name_chem);
+                    fprintf(stderr,"file, the chemical data correspond to ");
+                    fprintf(stderr,"an unrestricted Hartree-Fock structure.\n");
+                    fprintf(stderr,"Pleace check the files and modify the ");
+                    fprintf(stderr,"value accordingly after the 'orb_rhf' ");
+                    fprintf(stderr,"keyword in the %s ",pParameters->name_info);
+                    fprintf(stderr,"file, or or simply delete the ");
+                    fprintf(stderr,"corresponding line in order to proceed ");
+                    fprintf(stderr,"further.\n");
+                    free(fileLocation);
+                    fileLocation=NULL;
+                    return 0;
+                }
+            }
+
+            // Overwrite the *.temp file to save the *.wfn into a *.chem format
+            if (!writingChemicalFile(fileLocation,
+                                      pParameters->name_length,pChemicalSystem))
+            {
+                PRINT_ERROR("In loadChemistry: writingChemicalFile function ");
+                fprintf(stderr,"returned zero instead of one.\n");
+                free(fileLocation);
+                fileLocation=NULL;
+                return 0;
+            }
+
+            // Change the *.temp extension into an *.chem one (warning: the
+            // corresponding *.chem file will be next deleted if it exists)
+            length=strlen(fileLocation);
+            fileLocation[length-5]='.';
+            fileLocation[length-4]='c';
+            fileLocation[length-3]='h';
+            fileLocation[length-2]='e';
+            fileLocation[length-1]='m';
+            fileLocation[length]='\0';
+
+            if (initialFileExists(fileLocation,pParameters->name_length)==1)
+            {
+                // remove returns zero on success, otherwise -1 and errno is set
+                if (remove(fileLocation))
+                {
+                    PRINT_ERROR("In loadChemistry: wrong return (=-1) of the ");
+                    fprintf(stderr,"standard remove c-function in the ");
+                    fprintf(stderr,"attempt of removing the ");
+                    fprintf(stderr,"%s file.\n",fileLocation);
+                    free(fileLocation);
+                    fileLocation=NULL;
+                    return 0;
+                }
+            }
+
+            // Rename the *.temp file into an *.chem one
+            if (!renameFileLocation(pParameters->name_chem,
+                                         pParameters->name_length,fileLocation))
+            {
+                PRINT_ERROR("In loadChemistry: rename FileLocation function ");
+                fprintf(stderr,"returned zero instead of one.\n");
+                free(fileLocation);
+                fileLocation=NULL;
+                return 0;
+            }
+
+            // Copy the *.chem name in the name_chem variable of pParameters
+            strncpy(pParameters->name_chem,fileLocation,
+                                                      pParameters->name_length);
+            break;
+
+        default:
+            PRINT_ERROR("In loadChemistry: getChemicalFormat function did ");
+            fprintf(stderr,"not return (+/-) one, which was the expected ");
+            fprintf(stderr,"value here.\n");
+            free(fileLocation);
+            fileLocation=NULL;
+            return 0;
+            break;
+    }
+
+    // Free the memory allocated for fileLocation
+    free(fileLocation);
+    fileLocation=NULL;
+
+    fprintf(stdout,"\nChemical system (");
+    if (pParameters->orb_rhf)
+    {
+        fprintf(stdout,"restricted Hartree-Fock) successfully loaded:\n");
+    }
+    else
+    {
+        fprintf(stdout,"unrestricted Hartree-Fock) successfully loaded:\n");
+    }
+    fprintf(stdout,"%d Molecular Orbitals, ",pChemicalSystem->nmorb);
+    fprintf(stdout,"%d Primitives, ",pChemicalSystem->ngauss);
+    fprintf(stdout,"and %d Nuclei.\n",pChemicalSystem->nnucl);
+
+    // Checking the pParameters->nu_electrons variable
+    if (pParameters->nu_electrons<1 ||
+                               pParameters->nu_electrons>pChemicalSystem->nmorb)
+    {
+        PRINT_ERROR("In loadChemistry: the nu_electrons variable ");
+        fprintf(stderr,"(=%d) of the structure ",pParameters->nu_electrons);
+        fprintf(stderr,"pointed by pParameters must be a positive integer ");
+        fprintf(stderr,"that cannot be (strictly) greater than the total ");
+        fprintf(stderr,"number of electrons (=%d).\n",pChemicalSystem->nmorb);
+        return 0;
+    }
+
+    return 1;
 }
+
 

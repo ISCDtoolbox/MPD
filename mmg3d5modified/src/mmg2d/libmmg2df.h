@@ -11,7 +11,7 @@
 ! ** See the "libmmg*.h" file for a correct displaying of the documentation.
 ! */
 
-#include "libmmgtypesf.h"
+#include "mmg/mmg2d/libmmgtypesf.h"
 
 ! /* =============================================================================
 ! **  This file is part of the mmg software package for the tetrahedral
@@ -55,7 +55,7 @@
 ! extern "C" {
 ! #endif
 
-! #include "libmmgtypes.h"
+! #include "mmg/mmg2d/libmmgtypes.h"
 
 ! /**
 !  * Maximum array size when storing adjacent points (or ball) of a vertex.
@@ -89,28 +89,30 @@
 #define   MMG2D_IPARAM_msh                6
 ! /*!<only if no given triangle save the subdomain nb (0==all subdomain) */
 #define   MMG2D_IPARAM_numsubdomain        7
+! /*!< [1/0] Optimize mesh keeping its initial edge sizes */
+#define   MMG2D_IPARAM_optim              8
 ! /*!< [1/0] Avoid/allow point insertion */
-#define   MMG2D_IPARAM_noinsert           8
+#define   MMG2D_IPARAM_noinsert           9
 ! /*!< [1/0] Avoid/allow edge or face flipping */
-#define   MMG2D_IPARAM_noswap             9
+#define   MMG2D_IPARAM_noswap             10
 ! /*!< [1/0] Avoid/allow point relocation */
-#define   MMG2D_IPARAM_nomove             10
+#define   MMG2D_IPARAM_nomove             11
 ! /*!< [1/0] Avoid/allow surface modifications */
-#define   MMG2D_IPARAM_nosurf             11
-! /*!< [n] Specify the size of the bucket per dimension (DELAUNAY) */
-#define   MMG2D_IPARAM_bucket             12
+#define   MMG2D_IPARAM_nosurf             12
 ! /*!< [val] Value for angle detection */
 #define   MMG2D_DPARAM_angleDetection     13
 ! /*!< [val] Minimal mesh size */
 #define   MMG2D_DPARAM_hmin               14
 ! /*!< [val] Maximal mesh size */
 #define   MMG2D_DPARAM_hmax               15
+! /*!< [val] Constant mesh size */
+#define   MMG2D_DPARAM_hsiz               16
 ! /*!< [val] Control global Hausdorff distance (on all the boundary surfaces of the mesh) */
-#define   MMG2D_DPARAM_hausd              16
+#define   MMG2D_DPARAM_hausd              17
 ! /*!< [val] Control gradation */
-#define   MMG2D_DPARAM_hgrad              17
+#define   MMG2D_DPARAM_hgrad              18
 ! /*!< [val] Value of level-set (not use for now) */
-#define   MMG2D_DPARAM_ls                 18
+#define   MMG2D_DPARAM_ls                 19
 
 ! /*----------------------------- functions header -----------------------------*/
 ! /* Initialization functions */
@@ -118,19 +120,30 @@
 
 ! /**
 !  * \param starter dummy argument used to initialize the variadic argument list
-!  * \param ... variadic arguments. For now, you need to call the \a
-!  * MMG2D_Init_mesh function with the following arguments :
-!  * MMG2D_Init_mesh(MMG5_ARG_start,MMG5_ARG_ppMesh, your_mesh,
-!  * MMG5_ARG_ppMet, your_metric,MMG5_ARG_end). Here, \a your_mesh is a pointer
-!  * toward \a MMG5_pMesh and \a your_metric a pointer toward \a MMG5_pSol.
+!  * \param ... variadic arguments.
 !  *
-!  * \remark No fortran interface to allow variadic arguments.
+!  * \return 1 if success, 0 if fail
+!  *
+!  * For the MMG2D_mmgslib function, you need
+!  * to call the \a MMG2D_Init_mesh function with the following arguments :
+!  * MMG2D_Init_mesh(MMG5_ARG_start,MMG5_ARG_ppMesh, &your_mesh, MMG5_ARG_ppMet,
+!  * &your_metric,MMG5_ARG_end).
+!  *
+!  * For the MMG2D_mmgsls function, you need
+!  * to call the \a MMG2D_Init_mesh function with the following arguments :
+!  * MMG2D_Init_mesh(MMG5_ARG_start,MMG5_ARG_ppMesh, &your_mesh, MMG5_ARG_ppLs,
+!  * &your_level_set,MMG5_ARG_end).
+!  *
+!  * Here,\a your_mesh is a \a MMG5_pMesh, \a your_metric and \a your_level_set
+!  * are \a MMG5_pSol.
 !  *
 !  * MMG structures allocation and initialization.
 !  *
+!  * \remark No fortran interface to allow variadic arguments.
+!  *
 !  */
 
-! void MMG2D_Init_mesh(const int starter,...);
+! int MMG2D_Init_mesh(const int starter,...);
 
 ! /**
 !  * \param mesh pointer toward the mesh structure.
@@ -356,7 +369,7 @@ END INTERFACE
 !  * \param c1 coordinate of the point along the second dimension.
 !  * \param ref point reference.
 !  * \param pos position of the point in the mesh.
-!  * \return 1.
+!  * \return 1 if success, 0 if fail.
 !  *
 !  * Set vertex of coordinates \a c0, \a c1 and reference \a ref
 !  * at position \a pos in mesh structure
@@ -403,24 +416,47 @@ END INTERFACE
 !  */
 
 !  int  MMG2D_Set_vertices(MMG5_pMesh mesh, double *vertices,int *refs);
-! /* /\** */
-! /*  * \param mesh pointer toward the mesh structure. */
-! /*  * \param k vertex index. */
-! /*  * \return 1. */
-! /*  * */
-! /*  * Set corner at point \a pos. */
-! /*  * */
-! /*  *\/ */
-! /* int  MMG2D_Set_corner(MMG5_pMesh mesh, int k); */
-! /* /\** */
-! /*  * \param mesh pointer toward the mesh structure. */
-! /*  * \param k vertex index. */
-! /*  * \return 1. */
-! /*  * */
-! /*  * Set point \a k as required. */
-! /*  * */
-! /*  *\/ */
-! /* int  MMG2D_Set_requiredVertex(MMG5_pMesh mesh, int k); */
+! /**
+!  * \param mesh pointer toward the mesh structure.
+!  * \param k vertex index.
+!  * \return 1.
+!  *
+!  * Set corner at point \a pos.
+!  *
+!  * \remark Fortran interface
+!  *
+!  */
+INTERFACE
+  SUBROUTINE MMG2D_SET_CORNER(mesh,k,retval)
+    MMG5_DATA_PTR_T,INTENT(INOUT) :: mesh
+    INTEGER, INTENT(IN)           :: k
+    INTEGER, INTENT(OUT)          :: retval
+  END SUBROUTINE
+END INTERFACE
+!  *
+!  */
+
+! int  MMG2D_Set_corner(MMG5_pMesh mesh, int k);
+! /**
+!  * \param mesh pointer toward the mesh structure.
+!  * \param k vertex index.
+!  * \return 1.
+!  *
+!  * Set point \a k as required.
+!  *
+!  * \remark Fortran interface:
+!  */
+INTERFACE
+  SUBROUTINE MMG2D_SET_REQUIREDVERTEX(mesh,k,retval)
+    MMG5_DATA_PTR_T,INTENT(INOUT) :: mesh
+    INTEGER, INTENT(IN)           :: k
+    INTEGER, INTENT(OUT)          :: retval
+  END SUBROUTINE
+END INTERFACE
+!  *
+!  */
+
+! int  MMG2D_Set_requiredVertex(MMG5_pMesh mesh, int k);
 
 ! /**
 !  * \param mesh pointer toward the mesh structure.
@@ -472,15 +508,16 @@ END INTERFACE
 !  */
 
 !   int  MMG2D_Set_triangles(MMG5_pMesh mesh, int *tria, int *refs);
-! /* /\** */
-! /*  * \param mesh pointer toward the mesh structure. */
-! /*  * \param k triangle index. */
-! /*  * \return 1. */
-! /*  * */
-! /*  * Set triangle \a k as required. */
-! /*  * */
-! /*  *\/ */
-! /* int  MMG2D_Set_requiredTriangle(MMG5_pMesh mesh, int k); */
+! /**
+!  * \param mesh pointer toward the mesh structure.
+!  * \param k triangle index.
+!  * \return 1.
+!  *
+!  * Set triangle \a k as required.
+!  *
+!  */
+
+! int  MMG2D_Set_requiredTriangle(MMG5_pMesh mesh, int k);
 
 ! /**
 !  * \param mesh pointer toward the mesh structure.
@@ -513,9 +550,39 @@ END INTERFACE
 !  *
 !  * Set edge \a k as required.
 !  *
+!  * \remark Fortran interface:
+!  */
+INTERFACE
+  SUBROUTINE MMG2D_SET_REQUIREDEDGE(mesh,k,retval)
+    MMG5_DATA_PTR_T,INTENT(INOUT) :: mesh
+    INTEGER, INTENT(IN)           :: k
+    INTEGER, INTENT(OUT)          :: retval
+  END SUBROUTINE
+END INTERFACE
+!  *
 !  */
 
 ! int  MMG2D_Set_requiredEdge(MMG5_pMesh mesh, int k);
+! /**
+!  * \param mesh pointer toward the mesh structure.
+!  * \param k edge index.
+!  * \return 1.
+!  *
+!  * Set edge \a k as parallel.
+!  *
+!  * \remark Fortran interface:
+!  */
+INTERFACE
+  SUBROUTINE MMG2D_SET_PARALLELEDGE(mesh,k,retval)
+    MMG5_DATA_PTR_T,INTENT(INOUT) :: mesh
+    INTEGER, INTENT(IN)           :: k
+    INTEGER, INTENT(OUT)          :: retval
+  END SUBROUTINE
+END INTERFACE
+!  *
+!  */
+
+! int  MMG2D_Set_parallelEdge(MMG5_pMesh mesh, int k);
 ! /**
 !  * \param met pointer toward the sol structure.
 !  * \param s solution scalar value.
@@ -559,6 +626,52 @@ END INTERFACE
 !  */
 
 ! int  MMG2D_Set_scalarSols(MMG5_pSol met, double *s);
+! /**
+!  * \param met pointer toward the sol structure.
+!  * \param vx x value of the vectorial solution.
+!  * \param vy y value of the vectorial solution.
+!  * \param pos position of the solution in the mesh (begin to 1).
+!  * \return 0 if failed, 1 otherwise.
+!  *
+!  * Set vectorial value \f$(v_x,v_y)\f$ at position \a pos in solution
+!  * structure.
+!  *
+!  * \remark Fortran interface:
+!  */
+INTERFACE
+  SUBROUTINE MMG2D_SET_VECTORSOL(met,vx,vy,pos,retval)
+    MMG5_DATA_PTR_T,INTENT(INOUT) :: met
+    REAL(KIND=8), INTENT(IN)      :: vx,vy
+    INTEGER, INTENT(IN)           :: pos
+    INTEGER, INTENT(OUT)          :: retval
+  END SUBROUTINE
+END INTERFACE
+!  *
+!  */
+
+! int MMG2D_Set_vectorSol(MMG5_pSol met, double vx,double vy,
+!                         int pos);
+! /**
+!  * \param met pointer toward the sol structure.
+!  * \param sols table of the vectorial solutions
+!  * sols[2*(i-1)]\@2 is the solution at vertex i
+!  * \return 0 if failed, 1 otherwise.
+!  *
+!  * Set vectorial solutions at mesh vertices
+!  *
+!  * \remark Fortran interface:
+!  */
+INTERFACE
+  SUBROUTINE MMG2D_SET_VECTORSOLS(met,sols,retval)
+    MMG5_DATA_PTR_T,INTENT(INOUT) :: met
+    REAL(KIND=8),DIMENSION(*), INTENT(IN)      :: sols
+    INTEGER, INTENT(OUT)          :: retval
+  END SUBROUTINE
+END INTERFACE
+!  *
+!  */
+
+! int MMG2D_Set_vectorSols(MMG5_pSol met, double *sols);
 ! /**
 !  * \param met pointer toward the sol structure.
 !  * \param m11 value at position (1,1) in the solution tensor.
@@ -840,6 +953,48 @@ END INTERFACE
 ! int  MMG2D_Get_scalarSols(MMG5_pSol met, double* s);
 ! /**
 !  * \param met pointer toward the sol structure.
+!  * \param vx x value of the vectorial solution.
+!  * \param vy y value of the vectorial solution.
+!  * \return 0 if failed, 1 otherwise.
+!  *
+!  * Get vectorial solution \f$(v_x,v_y)\f$ of next vertex of mesh.
+!  *
+!  * \remark Fortran interface:
+!  */
+INTERFACE
+  SUBROUTINE MMG2D_GET_VECTORSOL(met,vx,vy,retval)
+    MMG5_DATA_PTR_T,INTENT(INOUT) :: met
+    REAL(KIND=8), INTENT(OUT)     :: vx,vy
+    INTEGER, INTENT(OUT)          :: retval
+  END SUBROUTINE
+END INTERFACE
+!  *
+!  */
+
+! int MMG2D_Get_vectorSol(MMG5_pSol met, double* vx, double* vy);
+! /**
+!  * \param met pointer toward the sol structure.
+!  * \param sols table of the solutions at mesh vertices. sols[2*(i-1)]\@2 is
+!  * the solution at vertex i.
+!  * \return 0 if failed, 1 otherwise.
+!  *
+!  * Get vectorial solutions at mesh vertices
+!  *
+!  * \remark Fortran interface:
+!  */
+INTERFACE
+  SUBROUTINE MMG2D_GET_VECTORSOLS(met,sols,retval)
+    MMG5_DATA_PTR_T,INTENT(INOUT) :: met
+    REAL(KIND=8), DIMENSION(*),INTENT(OUT) :: sols
+    INTEGER, INTENT(OUT)          :: retval
+  END SUBROUTINE
+END INTERFACE
+!  *
+!  */
+
+! int MMG2D_Get_vectorSols(MMG5_pSol met, double* sols);
+! /**
+!  * \param met pointer toward the sol structure.
 !  * \param m11 pointer toward the position (1,1) in the solution tensor.
 !  * \param m12 pointer toward the position (1,2) in the solution tensor.
 !  * \param m22 pointer toward the position (2,2) in the solution tensor.
@@ -904,31 +1059,61 @@ END INTERFACE
 
 ! /* deallocations */
 ! /**
-!  * \param starter dummy argument used to initialize the variadic argument list.
-!  * \param ... variadic arguments. For now, you need to call the \a
-!  * MMG2D_Free_all function with the following arguments :
-!  * MMG2D_Free_all(MMG5_ARG_start,MMG5_ARG_ppMesh, your_mesh,
-!  * MMG5_ARG_ppMet, your_metric,MMG5_ARG_end). Here, \a your_mesh is a pointer
-!  * toward \a MMG5_pMesh and \a your_metric a pointer toward \a MMG5_pSol.
+!  * \param starter dummy argument used to initialize the variadic argument
+!  * list.
+!  * \param ... variadic arguments that depend to the library function that you
+!  * have call.
+!  *
+!  * For the MMG2D_mmg2dlib function, you need
+!  * to call the \a MMG2D_Init_mesh function with the following arguments :
+!  * MMG2D_Init_mesh(MMG5_ARG_start,MMG5_ARG_ppMesh, &your_mesh,
+!  * MMG5_ARG_ppMet,&your_metric,MMG5_ARG_end).
+!  *
+!  * For the MMG2D_mmg2dls function, you need
+!  * to call the \a MMG2D_Init_mesh function with the following arguments :
+!  * MMG2D_Init_mesh(MMG5_ARG_start,MMG5_ARG_ppMesh, &your_mesh, MMG5_ARG_ppLs,
+!  * &your_level_set,MMG5_ARG_end).
+!  *
+!  * For the MMG2D_mmg2dmov function, you must call
+!  * : MMG2D_Init_mesh(MMG5_ARG_start,MMG5_ARG_ppMesh, &your_mesh,
+!  * MMG5_ARG_ppMet,&empty_metric,MMG5_ARG_ppDisp, &your_displacement,
+!  * MMG5_ARG_end).
+!  *
+!  * \return 0 if fail, 1 if success
 !  *
 !  * Deallocations before return.
 !  *
 !  * \remark we pass the structures by reference in order to have argument
 !  * compatibility between the library call from a Fortran code and a C code.
 !  *
-!  * \remark No fortran interface to allow variadic arguments.
+!  * \remark no Fortran interface to allow variadic args.
 !  *
 !  */
 
-! void MMG2D_Free_all(const int starter,...);
+! int MMG2D_Free_all(const int starter,...);
 
 ! /**
-!  * \param starter dummy argument used to initialize the variadic argument list.
-!  * \param ... variadic arguments. For now, you need to call the \a
-!  * MMG2D_Free_structures function with the following arguments :
-!  * MMG2D_Free_structures(MMG5_ARG_start,MMG5_ARG_ppMesh, your_mesh,
-!  * MMG5_ARG_ppMet, your_metric,MMG5_ARG_end). Here, \a your_mesh is a pointer
-!  * toward \a MMG5_pMesh and \a your_metric a pointer toward \a MMG5_pSol.
+!  * \param starter dummy argument used to initialize the variadic argument
+!  * list.
+!  * \param ... variadic arguments that depend to the library function that you
+!  * have call.
+!  *
+!  * For the MMG2D_mmg2dlib function, you need
+!  * to call the \a MMG2D_Init_mesh function with the following arguments :
+!  * MMG2D_Init_mesh(MMG5_ARG_start,MMG5_ARG_ppMesh, &your_mesh,
+!  *  MMG5_ARG_ppMet,&your_metric,MMG5_ARG_end).
+!  *
+!  * For the MMG2D_mmg2dls function, you need
+!  * to call the \a MMG2D_Init_mesh function with the following arguments :
+!  * MMG2D_Init_mesh(MMG5_ARG_start,MMG5_ARG_ppMesh, &your_mesh, MMG5_ARG_ppLs,
+!  * &your_level_set,MMG5_ARG_end).
+!  *
+!  * For the MMG2D_mmg2dmov function, you must call
+!  * : MMG2D_Init_mesh(MMG5_ARG_start,MMG5_ARG_ppMesh, &your_mesh,
+!  *  MMG5_ARG_ppMet,&empty_metric,MMG5_ARG_ppDisp, &your_displacement,
+!  * MMG5_ARG_end).
+!  *
+!  * \return 0 if fail, 1 if success
 !  *
 !  * Structure deallocations before return.
 !  *
@@ -937,17 +1122,34 @@ END INTERFACE
 !  *
 !  * \remark No fortran interface to allow variadic arguments.
 !  *
+!  * \remark no Fortran interface to allow variadic args.
+!  *
 !  */
 
-! void MMG2D_Free_structures(const int starter,...);
+! int MMG2D_Free_structures(const int starter,...);
 
 ! /**
-!  * \param starter dummy argument used to initialize the variadic argument list.
-!  * \param ... variadic arguments. For now, you need to call the \a
-!  * MMG2D_Free_names function with the following arguments :
-!  * MMG2D_Free_names(MMG5_ARG_start,MMG5_ARG_ppMesh, your_mesh,
-!  * MMG5_ARG_ppMet, your_metric,MMG5_ARG_end). Here, \a your_mesh is a pointer
-!  * toward \a MMG5_pMesh and \a your_metric a pointer toward \a MMG5_pSol.
+!  * \param starter dummy argument used to initialize the variadic argument
+!  * list.
+!  * \param ... variadic arguments that depend to the library function that you
+!  * have call.
+!  *
+!  * For the MMG2D_mmg2dlib function, you need
+!  * to call the \a MMG2D_Init_mesh function with the following arguments :
+!  * MMG2D_Init_mesh(MMG5_ARG_start,MMG5_ARG_ppMesh, &your_mesh,
+!  *  MMG5_ARG_ppMet,&your_metric,MMG5_ARG_end).
+!  *
+!  * For the MMG2D_mmg2dls function, you need
+!  * to call the \a MMG2D_Init_mesh function with the following arguments :
+!  * MMG2D_Init_mesh(MMG5_ARG_start,MMG5_ARG_ppMesh, &your_mesh, MMG5_ARG_ppLs,
+!  * &your_level_set,MMG5_ARG_end).
+!  *
+!  * For the MMG2D_mmg2dmov function, you must call
+!  * : MMG2D_Init_mesh(MMG5_ARG_start,MMG5_ARG_ppMesh, &your_mesh,
+!  *  MMG5_ARG_ppMet,&empty_metric,MMG5_ARG_ppDisp, &your_displacement,
+!  * MMG5_ARG_end).
+!  *
+!  * \return 0 if fail, 1 otherwise
 !  *
 !  * Structure deallocations before return.
 !  *
@@ -956,14 +1158,16 @@ END INTERFACE
 !  *
 !  * \remark No fortran interface to allow variadic arguments.
 !  *
+!  * \remark no Fortran interface to allow variadic args.
+!  *
 !  */
 
-! void MMG2D_Free_names(const int starter,...);
+! int MMG2D_Free_names(const int starter,...);
 
 ! /**
 !  * \param mesh pointer toward the mesh structure.
 !  * \param filename name of the readed file.
-!  * \return 0 or -1 if fail, 1 otherwise
+!  * \return 0 if fail, 1 otherwise
 !  *
 !  * Read mesh data.
 !  *
@@ -987,7 +1191,7 @@ END INTERFACE
 !  * \param filename name of file.
 !  * \return 0 if failed, 1 otherwise.
 !  *
-!  * Read mesh and sol at MSH file format (.msh extension). We read only
+!  * Read mesh and 0 or 1 data at MSH file format (.msh extension). We read only
 !  * low-order points, edges, tria, quadra, tetra and prisms.
 !  *
 !  * \remark Fortran interface:
@@ -1004,6 +1208,29 @@ END INTERFACE
 !  */
 
 ! int MMG2D_loadMshMesh(MMG5_pMesh mesh,MMG5_pSol sol,const char *filename);
+! /**
+!  * \param mesh pointer toward the mesh structure.
+!  * \param sol pointer toward a list of solution structures.
+!  * \param filename name of file.
+!  * \return 0 if failed, 1 otherwise.
+!  *
+!  * Read mesh and a list of data at MSH file format (.msh extension). We read only
+!  * low-order points, edges, tria, quadra, tetra and prisms.
+!  *
+!  * \remark Fortran interface:
+!  */
+INTERFACE
+  SUBROUTINE MMG2D_LOADMSHMESH_AND_ALLDATA(mesh,sol,filename,strlen,retval)
+    MMG5_DATA_PTR_T, INTENT(INOUT) :: mesh,sol
+    CHARACTER(LEN=*), INTENT(IN)   :: filename
+    INTEGER, INTENT(IN)            :: strlen
+    INTEGER, INTENT(OUT)           :: retval
+  END SUBROUTINE
+END INTERFACE
+!  *
+!  */
+
+! int MMG2D_loadMshMesh_and_allData(MMG5_pMesh mesh,MMG5_pSol *sol,const char *filename);
 
 ! /**
 !  * \param mesh pointer toward the mesh structure.
@@ -1011,7 +1238,8 @@ END INTERFACE
 !  * \param filename name of the solution file.
 !  * \return 0 or -1 if fail, 1 otherwise.
 !  *
-!  * Load solution field.
+!  * Load metric field. The file at medit file format must contains 1 solution:
+!  * the metric.
 !  *
 !  * \remark Fortran interface:
 !  */
@@ -1027,6 +1255,28 @@ END INTERFACE
 !  */
 
 ! int MMG2D_loadSol(MMG5_pMesh mesh,MMG5_pSol sol,const char * filename);
+! /**
+!  * \param mesh pointer toward the mesh structure.
+!  * \param sol pointer toward the solutions array
+!  * \param filename name of file.
+!  * \return 0 if failed, 1 otherwise.
+!  *
+!  * Load 1 or more solutions in a solution file at medit file format
+!  *
+!  * \remark Fortran interface:
+!  */
+INTERFACE
+  SUBROUTINE MMG2D_LOADALLSOLS(mesh,sol,filename,strlen,retval)
+    MMG5_DATA_PTR_T, INTENT(INOUT) :: mesh,sol
+    CHARACTER(LEN=*), INTENT(IN)   :: filename
+    INTEGER, INTENT(IN)            :: strlen
+    INTEGER, INTENT(OUT)           :: retval
+  END SUBROUTINE
+END INTERFACE
+!  *
+!  */
+
+! int MMG2D_loadAllSols(MMG5_pMesh mesh,MMG5_pSol *sol, const char* filename);
 
 ! int MMG2D_loadVect(MMG5_pMesh ,char *);
 
@@ -1057,8 +1307,8 @@ END INTERFACE
 !  * \param filename name of file.
 !  * \return 0 if failed, 1 otherwise.
 !  *
-!  * Write mesh and sol at MSH file format (.msh extension). Save file at ASCII
-!  * format for .msh extension, at binary format for .msh one.
+!  * Write mesh and 0 or 1 data at MSH file format (.msh extension). Save file at
+!  * ASCII format for .msh extension, at binary format for .msh one.
 !  *
 !  * \remark Fortran interface:
 !  */
@@ -1076,11 +1326,34 @@ END INTERFACE
 ! int MMG2D_saveMshMesh(MMG5_pMesh mesh,MMG5_pSol sol,const char *filename);
 ! /**
 !  * \param mesh pointer toward the mesh structure.
+!  * \param sol pointer toward the solution structure.
+!  * \param filename name of file.
+!  * \return 0 if failed, 1 otherwise.
+!  *
+!  * Write mesh and a list of data fields at MSH  file format (.msh extension).
+!  * Save file at ASCII format for .msh extension, at binary format for .mshb one.
+!  *
+!  * \remark Fortran interface:
+!  */
+INTERFACE
+  SUBROUTINE MMG2D_SAVEMSHMESH_AND_ALLDATA(mesh,sol,filename,strlen,retval)
+    MMG5_DATA_PTR_T, INTENT(INOUT) :: mesh,sol
+    CHARACTER(LEN=*), INTENT(IN)   :: filename
+    INTEGER, INTENT(IN)            :: strlen
+    INTEGER, INTENT(OUT)           :: retval
+  END SUBROUTINE
+END INTERFACE
+!  *
+!  */
+
+! int MMG2D_saveMshMesh_and_allData(MMG5_pMesh mesh,MMG5_pSol *sol,const char *filename);
+! /**
+!  * \param mesh pointer toward the mesh structure.
 !  * \param sol pointer toward the solution structure..
 !  * \param filename name of the solution file.
 !  * \return 0 or -1 if fail, 1 otherwise.
 !  *
-!  * Save metric field.
+!  * Save metric field at medit solution file format.
 !  *
 !  * \remark Fortran interface:
 !  */
@@ -1096,6 +1369,30 @@ END INTERFACE
 !  */
 
 ! int MMG2D_saveSol(MMG5_pMesh  mesh,MMG5_pSol sol ,const char *filename);
+! /**
+!  * \param mesh pointer toward the mesh structure.
+!  * \param sol pointer toward the solutions array
+!  * \param filename name of the solution file.
+!  * \return 0 or -1 if fail, 1 otherwise.
+!  *
+!  * Save 1 or more solutions in a solution file at medit file format.
+!  *
+!  * \remark Fortran interface:
+!  */
+INTERFACE
+  SUBROUTINE MMG2D_SAVEALLSOLS(mesh,sol,filename,strlen,retval)
+    MMG5_DATA_PTR_T, INTENT(INOUT) :: mesh,sol
+    CHARACTER(LEN=*), INTENT(IN)   :: filename
+    INTEGER, INTENT(IN)            :: strlen
+    INTEGER, INTENT(OUT)           :: retval
+  END SUBROUTINE
+END INTERFACE
+!  *
+!  */
+
+! int MMG2D_saveAllSols(MMG5_pMesh  mesh,MMG5_pSol *sol ,const char *filename);
+
+
 ! int MMG2D_saveVect(MMG5_pMesh mesh,MMG5_pSol sol,const char *filename,double lambda);
 
 ! /**
@@ -1166,6 +1463,8 @@ END INTERFACE
 ! /**
 !  * \param mesh pointer toward the mesh structure.
 !  * \param sol pointer toward a sol structure (displacement).
+!  * \param disp pointer toward a sol (displacement for the lagrangian motion
+!  * mode) structure.
 !  * \return \ref MMG5_SUCCESS if success, \ref MMG5_LOWFAILURE if failed
 !  * but a conform mesh is saved and \ref MMG5_STRONGFAILURE if failed and we
 !  * can't save the mesh.
@@ -1175,15 +1474,15 @@ END INTERFACE
 !  * \remark Fortran interface:
 !  */
 INTERFACE
-  SUBROUTINE MMG2D_MMG2DMOV(mesh,sol,retval)
-    MMG5_DATA_PTR_T, INTENT(INOUT) :: mesh,sol
+  SUBROUTINE MMG2D_MMG2DMOV(mesh,sol,disp,retval)
+    MMG5_DATA_PTR_T, INTENT(INOUT) :: mesh,sol,disp
     INTEGER, INTENT(OUT)           :: retval
   END SUBROUTINE
 END INTERFACE
 !  *
 !  */
 
-! int MMG2D_mmg2dmov(MMG5_pMesh mesh,MMG5_pSol sol);
+! int MMG2D_mmg2dmov(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol disp);
 
 ! /* Tools for the library */
 ! // void (*MMG2D_callbackinsert) (int ,int ,int ,int, int);
@@ -1210,10 +1509,30 @@ END INTERFACE
 ! int MMG2D_doSol(MMG5_pMesh mesh ,MMG5_pSol met );
 
 ! /**
+!  * \param mesh pointer toward the mesh structure
+!  * \param met pointer toward the sol structure
+!  * \return 1 if success
+!  *
+!  * Compute constant size map according to mesh->info.hsiz
+!  *
+!  * \remark Fortran interface:
+!  */
+INTERFACE
+  SUBROUTINE MMG2D_SET_CONSTANTSIZE(mesh,met,retval)
+    MMG5_DATA_PTR_T, INTENT(INOUT)     :: mesh,met
+    INTEGER, INTENT(OUT)               :: retval
+  END SUBROUTINE
+END INTERFACE
+!  *
+!  */
+
+! int MMG2D_Set_constantSize(MMG5_pMesh mesh,MMG5_pSol met);
+
+! /**
 !  * \param mesh pointer toward the mesh structure.
 !  * \param met pointer toward a sol structure.
 !  *
-!  * Set function pointers for length, caltri, buckin... depending if case is iso or aniso
+!  * Set function pointers for length, caltri... depending if case is iso or aniso
 !  *
 !  * \remark Fortran interface:
 !  */
@@ -1310,16 +1629,15 @@ END INTERFACE
 !                                int lispoi[MMG2D_LMAX]);
 ! /**
 !  * \param mesh pointer toward the mesh structure.
-!  * \param ked useless
+!  * \param ked index of the boundary edge.
 !  * \param ktri pointer toward the index of the tri (filled by the function).
 !  * \param ied pointer toward the index of the edge of the triangle \a ktri that
 !  * correspond to the boundary edge \a ked.
 !  * \return 0 if fail, 1 otherwise
 !  *
-!  * Fill \a ktri by the index of the triangle to which belong the next processed
-!  * boundary edge and \a ied by the index of the edge of the triangle that
-!  * correspond to the edge. It must be called over all the mesh edges and will
-!  * process it in order.
+!  * Fill \a ktri by the index of the triangle to which belong a boundary edge
+!  * and \a ied by the index of the edge of the triangle that correspond to the
+!  * edge.
 !  *
 !  * \remark Fortran interface:
 !  */
@@ -1334,7 +1652,22 @@ END INTERFACE
 !  */
 
 ! int MMG2D_Get_triFromEdge(MMG5_pMesh mesh, int ked, int *ktri, int *ied);
+! /**
+!  * \param mesh pointer toward the mesh structure
+!  *
+!  * Reset the vertices tag (be careful all the tags are deleted).
+!  *
+!  * \remark Fortran interface:
+!  */
+INTERFACE
+  SUBROUTINE MMG2D_RESET_VERTICESTAGS(mesh)
+    MMG5_DATA_PTR_T, INTENT(INOUT) :: mesh
+  END SUBROUTINE
+END INTERFACE
+!  *
+!  */
 
+! void MMG2D_Reset_verticestags(MMG5_pMesh mesh);
 ! /**
 !  * \param mesh pointer toward the mesh structure
 !  *
