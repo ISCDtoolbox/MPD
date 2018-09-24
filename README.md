@@ -72,15 +72,17 @@ The mpdProgram program only takes one input argument: a *.info file (the file mu
 In this file (an example is provided in outputFile directory), the minimal
 configuration is to prescribe
 
--a *.wfn/ *.chem file (see example in the inputFile directory)
+	a *.wfn/ *.chem file (see example in the inputFile directory)
 
--the number of electrons to look for
+	the number of electrons to look for
  
 in the following way in the *.info file
 
-name_chem *.wfn
-nu_electrons 2
-end_data
+	name_chem *.wfn
+
+	nu_electrons 2
+
+	end_data
 
 You can also prescribed a *.mesh/ *.cube file thanks to the name_mesh keyword
 
@@ -88,11 +90,11 @@ The mpd program has also different modes of optimization. It is ruled by the
 opt_mode keyword. Positive value assumes that your mesh is made of tetrahedra
 whereas non-positive value concerns hexahedral meshes (little cubes). Hence, write in the *.info file
 
-opt_mode 0
+	opt_mode 0
 
 for optimizing the hexahedral mesh or write
 
-opt_mode 1 
+	opt_mode 1 
 
 for optimizing the tetrahedral one.
 
