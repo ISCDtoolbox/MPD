@@ -25,12 +25,12 @@
 #define INV_PHI 0.618033988749894848
 
 /**
-* \def INV_PHI
+* \def INV_PHI2
 * \brief Constant used in the golden-section search of the \ref optimization
 *        function. It is equal to [3-sqrt(5)]/2 = 1/(Phi*Phi) where Phi is the
 *        golden number (positive solution of x*x-x+1=0).
 */
-#define INV_PHI2 0.38196601125010515
+#define INV_PHI2 0.381966011250105152
 
 /* ************************************************************************** */
 // Constants defined in the article of Grundmann and Moller (april 1978) for 3D
@@ -1836,6 +1836,7 @@ int saveDataInTheLoop(Parameters* pParameters, Mesh* pMesh, Data* pData,
                       ChemicalSystem* pChemicalSystem, int iterationInTheLoop,
                       time_t* pGlobalInitialTimer, time_t* pStartLocalTimer,
                                                         time_t* pEndLocalTimer);
+
 /**
 * \fn int setupInitialData(Parameters* pParameters, Mesh* pMesh, Data* pData,
 *                          ChemicalSystem* pChemicalSystem,
@@ -1905,7 +1906,7 @@ int saveDataInTheLoop(Parameters* pParameters, Mesh* pMesh, Data* pData,
 *         is provided in the standard error stream before returning zero.
 *
 * The \ref setupInitialData function successively executes the \ref
-* allocateMemoryForData, \ref addLengthForFileName, \ref writingRestartFile,
+* allocateMemoryForData, \ref addLengthForFileName, \ref writingRestartFile, 
 * \ref shapeDerivative, \ref saveDataInTheLoop functions. We refer to their
 * descriptions description for further details. We emphasize here the fact that
 * the \ref setupInitialData function contains the omp_set_num_threads function
@@ -1932,59 +1933,210 @@ int setupInitialData(Parameters* pParameters, Mesh* pMesh, Data* pData,
                      time_t* pGlobalInitialTimer, time_t* pStartLocalTimer,
                                                         time_t* pEndLocalTimer);
 
+/**
+* \fn int exhaustiveSearchAlgorithm(Parameters* pParameters, Mesh* pMesh,
+*                                   Data* pData, 
+*                                   ChemicalSystem* pChemicalSystem,
+*                                                        int iterationInTheLoop)
+* \brief It computes the pParameters->opt_mode=-2 of the \ref optimization
+*        function. It tries to add or remove the hexahedra that are touching
+*        the boundary of the domain. Only perturbations increasing the
+*        probability are retained.
+*
+* \param[in] pParameters A pointer that points to the Parameters structure of
+*                        the \ref main function.
+*
+* \param[in,out] pMesh A pointer that points to the Mesh structure of the \ref
+*                      main function.
+*
+* \param[out] pData A pointer that points to the Data structure of the \ref main
+*                   function.
+*
+* \param[in] pChemicalSystem A pointer that points to the ChemicalSystem
+*                            structure of the \ref main function.
+*
+* \param[in] iterationInTheLoop It represents the integer counting the number
+*                               of iterations already performed in the
+*                               optimization loop. Hence, it must be a
+*                               non-negative integer (zero refers to the
+*                               initial domain after adaptation) not (strictly)
+*                               greater than the maximal number of iterations
+*                               allowed in the mpd algorithm (stored in the
+*                               pParameters->iter_max variable).
+*
+* \return It returns one on success otherwise zero is returned if an error is
+*         encountered during the process.
+*
+* We mention here that the \ref exhaustiveSearchAlgorithm function calls in
+* particular the \ref diagonalizeOverlapMatrix, and \ref computeProbability
+* functions, which uses standard mathematical functions, parallelize with openmp
+* the evaluation of the overlap matrix, and diagonalize it thanks to the dsyev
+* routine of the lapacke library (LAPACK interface for C). Hence, in order to
+* use this function, the -lm -llapacke -fopenmp options must be set at
+* compilation with gcc (or link properly the math.h, lapacke.h and omp.h
+* associated libraries) and the math.h omp.h and lapacke.h files must of course
+* not be put in comment in the main.h file.
+*/
 int exhaustiveSearchAlgorithm(Parameters* pParameters, Mesh* pMesh,
                                Data* pData, ChemicalSystem* pChemicalSystem,
                                                         int iterationInTheLoop);
 
 /**
 * \fn int computeLevelSet(Parameters* pParameters, Mesh* pMesh,
-*                                                        int iterationInTheLoop)
-* \brief It computes the signed distance function of the structure pointed by
-*        pMesh i.e. the level-set function with unitary gradient norm of the
-*        underlying internal domain. The values are saved in a *.chi.sol
-*        associated with a *.mesh file whose name is stored in the name_mesh
-*        variables of the structure pointed by pParameters.
+*                                                       int iterationInTheLoop)
+* \brief It computes the signed distance function i.e. the level-set function
+*        with unitary gradient norm of the internal domain of pMesh and saves
+*        the values in an *.chi.sol file associated with an *.mesh one. It is
+*        ised in the \ref optimization function when pParameters->opt_mode==1.
 *
 * \param[in] pParameters A pointer that points to the Parameters structure
-*                        (defined in main.h file) of the \ref main function. Its
-*                        name_mesh variable must contain the name of a valid and
-*                        existing *.mesh file otherwise an error is returned by
-*                        the \ref computeLevelSet function.
+*                        (defined in main.h file) of the \ref main function.
 *
-* \param[in] pMesh A pointer that points to the Mesh structure (defined in
-*                  main.h file) of the \ref main function, whose underlying
-*                  internal domain is used to generate its associated signed
-*                  distance function.
+* \param[in,out] pMesh A pointer that points to the Mesh structure (defined in
+*                      main.h file) of the \ref main function.
 *
 * \param[in] iterationInTheLoop An integer that refer to the number of steps
 *                               that are already performed in the optimization
-*                               loop. It is used to vizualize the level-set
-*                               function after renormalization according to the
-*                               pParameters->save_print variable.
+*                               loop.
 *
-* \return It returns one if signed distance function of the internal domain
-*         associated with the structure pointed by pMesh has been successfully
-*         computed and saved in a *.chi.sol file. Otherwise, zero is returned
-*         if any error is encountered during the process.
+* \return It returns one if the signed distance function has been successfully
+*         saved in a *.chi.sol file associated with the *.mesh one. Otherwise
+*         zero is returned if an error is encountered during the process.
 *
-* The level-set computation is made thanks to the mshdist algorithm, which must
-* have been previously installed.
+* The \ref computeLevelSet relies on the external mshdist and medit softwares,
+* which must have been previously installed.
 */
 int computeLevelSet(Parameters* pParameters, Mesh* pMesh,
                                                         int iterationInTheLoop);
 
+/**
+* \fn int saveTheShapeGradient(Parameters* pParameters, Mesh* pMesh,
+*                                                        int iterationInTheLoop)
+* \brief It contains successive functions that are used to vizualize and save
+*        the shape gradient in the \ref optimization function when
+*        pParameters->opt_mode==1.
+*
+* \param[in] pParameters A pointer that points to the Parameters structure
+*                        (defined in main.h file) of the \ref main function.
+*
+* \param[in] pMesh A pointer that points to the Mesh structure (defined in
+*                  main.h file) of the \ref main function.
+*
+* \param[in] iterationInTheLoop An integer that refer to the number of steps
+*                               that are already performed in the optimization
+*                               loop.
+*
+* \return It returns one if the shape gradient has been successfully saved in
+*         a *.sol file associated with the *.mesh one. Otherwise zero is
+*         returned if an error is encountered during the process.
+*
+* The \ref saveTheShapeGradient relies on the external medit software, which
+* must have been previously installed.
+*/
 int saveTheShapeGradient(Parameters* pParameters, Mesh* pMesh,
                                                         int iterationInTheLoop);
 
+/**
+* \fn int computeEulerianMode(Parameters* pParameters, Mesh* pMesh,
+*                                                        int iterationInTheLoop)
+* \brief It contains successive functions that are used to specifically compute
+*        the Eulerian mode in the \ref optimization function when
+*        pParameters->opt_mode==1.
+*
+* \param[in] pParameters A pointer that points to the Parameters structure
+*                        (defined in main.h file) of the \ref main function.
+*
+* \param[in,out] pMesh A pointer that points to the Mesh structure (defined in
+*                      main.h file) of the \ref main function.
+*
+* \param[in] iterationInTheLoop An integer that refer to the number of steps
+*                               that are already performed in the optimization
+*                               loop.
+*
+* \return It returns one if the Eulerian adaptation step has been successfully
+*         performed, otherwise zero is returned if an error is encountered 
+*         during the process.
+*
+* The \ref computeEulerianMode relies on the external medit, elastic, mshdist,
+* and advect softwares, which must have been previously installed.
+*/
 int computeEulerianMode(Parameters* pParameters, Mesh* pMesh,
                                                         int iterationInTheLoop);
 
+/**
+* \fn int computeLagrangianMode(Parameters* pParameters, Mesh* pMesh,
+*                                                        int iterationInTheLoop)
+* \brief It contains successive functions that are used to specifically compute
+*        the Lagrangian mode in the \ref optimization function when
+*        pParameters->opt_mode==1.
+*
+* \param[in] pParameters A pointer that points to the Parameters structure
+*                        (defined in main.h file) of the \ref main function.
+*
+* \param[in,out] pMesh A pointer that points to the Mesh structure (defined in
+*                      main.h file) of the \ref main function.
+*
+* \param[in] iterationInTheLoop An integer that refer to the number of steps
+*                               that are already performed in the optimization
+*                               loop.
+*
+* \return It returns one if the Lagrangian adaptation step has been
+*         successfully performed, otherwise zero is returned if an error is
+*         encountered during the process.
+*
+* The \ref computeLagrangianMode relies on the Lagrangian mode of the external
+* mmg3d softwares, which must have been previously installed.
+*/
 int computeLagrangianMode(Parameters* pParameters, Mesh* pMesh,
                                                         int iterationInTheLoop);
 
-int computeProbabilityAndReloadPreviousMesh(Parameters* pParameters, 
-                                            Mesh* pMesh, Data* pData,
-                                            ChemicalSystem* pChemicalSystem
+/**
+* \fn double computeProbabilityAndReloadPreviousMesh(Parameters* pParameters, 
+*                                                    Mesh* pMesh, Data* pData,
+*                                                    ChemicalSystem*
+*                                                    pChemicalSystem,
+*                                                        int iterationInTheLoop)
+* \brief It computes compute the probability of a given mesh then reload the
+*        previous mesh in the structure pointed by pMesh.
+*
+* \param[in] pParameters A pointer that points to the Parameters structure of
+*                        the \ref main function.
+*
+* \param[in,out] pMesh A pointer that points to the Mesh structure of the \ref
+*                      main function.
+*
+* \param[out] pData A pointer that points to the Data structure of the \ref main
+*                   function.
+*
+* \param[in] pChemicalSystem A pointer that points to the ChemicalSystem
+*                            structure of the \ref main function.
+*
+* \param[in] iterationInTheLoop It represents the integer counting the number
+*                               of iterations already performed in the
+*                               optimization loop. Hence, it must be a
+*                               non-negative integer (zero refers to the
+*                               initial domain after adaptation) not (strictly)
+*                               greater than the maximal number of iterations
+*                               allowed in the mpd algorithm (stored in the
+*                               pParameters->iter_max variable).
+*
+* \return It returns the value of the probability as a double on success,
+*         otherwise -10000. is returned if an error is encountered.
+*
+* We mention here that the \ref computeProbabilityAndReloadPreviousMesh function
+* calls in particular the \ref computeOverlapMatrix, \ref
+* diagonalizeOverlapMatrix, and \ref computeProbability functions, which uses
+* standard mathematical functions, parallelize with openmp the evaluation of
+* the overlap matrix, and diagonalize it thanks to the dsyev routine of the
+* lapacke library (LAPACK interface for C). Hence, in order to use this
+* function, the -lm -llapacke -fopenmp options must be set at compilation with
+* gcc (or link properly the math.h, lapacke.h and omp.h aasociated libraries)
+* and the math.h omp.h and lapacke.h files must of course not be put in comment
+* in the main.h file.
+*/
+double computeProbabilityAndReloadPreviousMesh(Parameters* pParameters, 
+                                               Mesh* pMesh, Data* pData,
+                                               ChemicalSystem* pChemicalSystem,
                                                         int iterationInTheLoop);
 
 /**
@@ -1992,10 +2144,10 @@ int computeProbabilityAndReloadPreviousMesh(Parameters* pParameters,
 *                      ChemicalSystem* pChemicalSystem, int iterationInTheLoop,
 *                      time_t* pGlobalInitialTimer, time_t* pStartLocalTimer,
 *                                                        time_t* pEndLocalTimer)
-* \brief It computes the modifies the shape of the MPD domain according to the
-*        the shape derivative in order to increase to probability. This is
-*        the function used iteratively in the optimization loop of the \ref
-*        main function.
+* \brief It computes and modifies the shape of the MPD domain according to the
+*        shape derivative in order to increase to probability. This is the
+*        function used iteratively in the optimization loop of the \ref main
+*        function.
 *
 * \param[in] pParameters A pointer that points to the Parameters structure of
 *                        the \ref main function.

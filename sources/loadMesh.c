@@ -2248,7 +2248,10 @@ int readMeshFileAndAllocateMesh(Parameters* pParameters, Mesh* pMesh)
 
     // Opening *.mesh file (warning: reset and overwrite file if already exists)
     // fopen returns a FILE pointer on success, otherwise NULL is returned
-    fprintf(stdout,"\nOpening %s file. ",pParameters->name_mesh);
+    if (pParameters->opt_mode!=1 || pParameters->verbose)
+    {
+        fprintf(stdout,"\nOpening %s file. ",pParameters->name_mesh);
+    }
     meshFile=fopen(pParameters->name_mesh,"r");
     if (meshFile==NULL)
     {
@@ -2256,7 +2259,10 @@ int readMeshFileAndAllocateMesh(Parameters* pParameters, Mesh* pMesh)
         fprintf(stderr,"read the %s file.\n",pParameters->name_mesh);
         return 0;
     }
-    fprintf(stdout,"Reading mesh data. ");
+    if (pParameters->opt_mode!=1 || pParameters->verbose)
+    {
+        fprintf(stdout,"Reading mesh data. ");
+    }
 
     // Read the precision (expecting MeshVersionFormatted 2): in general
     // 1=single, 2=double, MeshVersionUnformatted for binary (.meshb) file
@@ -3825,21 +3831,29 @@ int readMeshFileAndAllocateMesh(Parameters* pParameters, Mesh* pMesh)
         return 0;
     }
     meshFile=NULL;
-    fprintf(stdout,"Closing file.\n");
-
-    fprintf(stdout,"\nMesh data successfully loaded:\n");
-    if (pParameters->opt_mode>0)
+    if (pParameters->opt_mode!=1 || pParameters->verbose)
     {
-        fprintf(stdout,"%d vertices, %d tetrahedra ",pMesh->nver,pMesh->ntet);
-        fprintf(stdout,"and %d boundary triangles\n",pMesh->ntri);
-        fprintf(stdout,"(%d corners, %d edges, ",pMesh->ncor,pMesh->nedg);
-        fprintf(stdout,"%d tangent and %d normal ",pMesh->ntan,pMesh->nnorm);
-        fprintf(stdout,"vectors).\n");
+        fprintf(stdout,"Closing file.\n");
     }
-    else
+
+    if (pParameters->opt_mode!=1 || pParameters->verbose)
     {
-        fprintf(stdout,"%d vertices, %d hexahedra ",pMesh->nver,pMesh->nhex);
-        fprintf(stdout,"and %d boundary quadrilaterals.\n",pMesh->nqua);
+        fprintf(stdout,"\nMesh data successfully loaded:\n");
+        if (pParameters->opt_mode>0)
+        {
+            fprintf(stdout,"%d vertices, ",pMesh->nver);
+            fprintf(stdout,"%d tetrahedra ",pMesh->ntet);
+            fprintf(stdout,"and %d boundary triangles\n",pMesh->ntri);
+            fprintf(stdout,"(%d corners, %d edges, ",pMesh->ncor,pMesh->nedg);
+            fprintf(stdout,"%d tangent and ",pMesh->ntan);
+            fprintf(stdout,"%d normal vectors).\n",pMesh->nnorm);
+        }
+        else
+        {
+            fprintf(stdout,"%d vertices, ",pMesh->nver);
+            fprintf(stdout,"%d hexahedra ",pMesh->nhex);
+            fprintf(stdout,"and %d boundary quadrilaterals.\n",pMesh->nqua);
+        }
     }
 
     return 1;
@@ -5077,7 +5091,7 @@ int loadMesh(Parameters* pParameters, Mesh* pMesh)
 {
     size_t lengthName=0;
     char* fileLocation=NULL;
-    int readChar=0;
+    int readChar=0, optMode=0;
 
     // Check if the input pParameters or pMesh variable is pointing to NULL
     if (pParameters==NULL || pMesh==NULL)
@@ -5087,6 +5101,12 @@ int loadMesh(Parameters* pParameters, Mesh* pMesh)
         fprintf(stderr,"%p variable does not have a ",(void*)pMesh);
         fprintf(stderr,"valid address.\n");
         return 0;
+    }
+
+    if (pParameters->opt_mode==1)
+    {
+        optMode=1;
+        pParameters->opt_mode=3;
     }
 
     switch (initialFileExists(pParameters->name_mesh,pParameters->name_length))
@@ -5460,6 +5480,11 @@ int loadMesh(Parameters* pParameters, Mesh* pMesh)
             fprintf(stderr,"zero instead of (+/-)one.\n");
             return 0;
             break;
+    }
+
+    if (pParameters->opt_mode==3 && optMode==1)
+    {
+        pParameters->opt_mode=1;
     }
 
     return 1;

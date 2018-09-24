@@ -21,23 +21,28 @@
 * \brief Dimensional constant used for the metric computation.
 *
 * It must be equal to 2/9 in 2d, 9/32 in 3d, and more generally to
-* (d/(d+1))^2/2 in any dimension d>=2.
+* [d/(d+1)]^2/2 in any dimension d>=2.
 */
 #define MET_CST 0.28125
 
 /**
 * \fn int initialDomainInMeshExists(Parameters* pParameters, Mesh* pMesh)
-* \brief It checks if the structure pointed by pMesh is encoding a level-set
-*        function via the labels of its faces (then of its elements in the case
-*        of hexahedra i.e. if pParameters->opt_mode is not positive).
+* \brief It checks if the structure pointed by pMesh contains an internal
+*        domain via the labels of its faces (then of its elements in the case
+*        of hexahedra i.e. if the pParameters->opt_mode variable is not
+*        positive).
 *
 * \param[in] pParameters A pointer that points to the Parameters structure of
 *                        the \ref main function. Its opt_mode variable indicates
-*                        if the mesh is tetrahedral or hexahedral and allows to
-*                        treat the mesh faces as triangles or quadrilaterals.
+*                        if the mesh is tetrahedral (positive values) or
+*                        hexahedral (non-positive values) and allows to treat 
+*                        the mesh faces as triangles or quadrilaterals.
 *
 * \param[in] pMesh A pointer that points to the Mesh structure of the \ref main
-*                  function.
+*                  function. If it contains an internal domain, some of its
+*                  faces should be labelled ten. In such a situation, the
+*                  elements that belongs to the domain are labelled three,
+*                  otherwise two. 
 *
 * \return It returns one (respectively minus one) if the mesh has an (resp. no)
 *         internal domain i.e. if some faces are (resp. not) labelled 10 in the
@@ -55,8 +60,11 @@ int initialDomainInMeshExists(Parameters* pParameters, Mesh* pMesh);
 
 /**
 * \fn int initializeAdjacency(Parameters* pParameters, Mesh* pMesh)
-* \brief If the hexahedral mesh pointed by pMesh has an internal domain, it
-*        generates the Adjacency table of its associated quadrilaterals
+* \brief It sets up the Adjacency structures associated with the boundary
+*        quadrilaterals enclosing the internal domain. We assume here that the
+*        structure pointed by pMesh is made of hexahedra (i.e. the
+*        pParameters->opt_mode variable is not positive) and that such an
+*        internal domain already exists inside the computational box.
 *
 * \param[in] pParameters A pointer that points to the Parameters structure of
 *                        the \ref main function. Its opt_mode variable must be
@@ -67,25 +75,25 @@ int initialDomainInMeshExists(Parameters* pParameters, Mesh* pMesh);
 *
 * \param[in,out] pMesh A pointer that points to the Mesh structure of the \ref
 *                      main function. It is intended to store a uniform grid
-*                      mesh where some quadrialterals (labelled 10) have been
-*                      added for an internal domain. Similarly, the hexahedra
-*                      of the mesh must have been correctly labelled (3 for
-*                      those belonging to the internal domain, 2 for those
-*                      that are not). Otherwise, an error is returned by the
-*                      \ref initializeAdjacency function.
+*                      mesh where some quadrilaterals (labelled 10) have been
+*                      added for specifying the boundary of an internal domain.
+*                      Similarly, the hexahedra of the mesh must have been
+*                      correctly labelled (3 for those belonging to the internal
+*                      domain, 2 for those that are not). Otherwise, an error is
+*                      returned by the \ref initializeAdjacency function.
 *
 * \return It returns one if the \ref Adjacency structures associated with the
-*         internal domain have been succesfully set up. Otherwise, zero is
-*         returned by the \ref initializeAdjacency function if an error is
-*         encountered during the process.
+*         boundary quadrilaterals enclosing the internal domain have been
+*         succesfully set up. Otherwise, zero is returned by the \ref
+*         initializeAdjacency function if an error is encountered during the
+*         process.
 *
 * The hexahedral mesh pointed by the pMesh variable may come from previous
 * calculations and in particular, the hexahedron's labels may have been set to
-* (+/-)2 or (+/-)3. Hence, the \ref initializeAdjacency function reset the
-* labels to their corresponding positive value (see the documentation on the
-* trick_matrix variable of the Parameters structure for further details). The
-* \ref initializeAdjacency function should be static but has been defined as
-* non-static in order to perform unit-tests on it.
+* 2 or 3. Similarly, the labels of boundary quadrilaterals enclosing the
+* internal domain should be set to 10. The \ref initializeAdjacency function
+* should be static but has been defined as non-static in order to perform
+* unit-tests on it.
 */
 int initializeAdjacency(Parameters* pParameters, Mesh* pMesh);
 
@@ -309,6 +317,116 @@ int evaluatingMetricOnMesh(Parameters* pParameters, Mesh* pMesh,
 *         error is encountered during the writing process.
 */
 int writingSolFile(Parameters* pParameters, Mesh* pMesh);
+
+/**
+* \fn int computeMetric(Parameters* pParameters, Mesh* pMesh,
+*                       ChemicalSystem* pChemicalSystem, int iterationInTheLoop)
+* \brief It evaluates the metric adapted to the molecular orbitals of the
+*        structure pointed by pChemicalSystem and it saves the values at the
+*        vertices in a file entitled 'metric.sol'.
+*
+* \param[in] pParameters A pointer that points to the Parameters structure
+*                        (defined in main.h file) of the \ref main function. Its
+*                        met_min, met_max, and met_err also rule the parameters
+*                        related to the metric computation of the molecular
+*                        orbitals in the case of case of tetrahedral meshes,
+*                        i.e. if its opt_mode variable is positive.
+*
+* \param[in,out] pMesh A pointer that points to the Mesh structure (defined in
+*                      main.h file) of the \ref main function, that is intended
+*                      to be adapted and prepared for the optimization loop.
+*
+* \param[in] pChemicalSystem A pointer that points to the ChemicalSystem
+*                            structure of the \ref main function. It contains
+*                            the description of the molecular orbitals as a sum
+*                            of Gaussian-type primitives.
+*
+* \param[in] iterationInTheLoop An integer that refer to the number of steps
+*                               that are already performed in the optimization
+*                               loop. It is used to vizualize the metric
+*                               according to the pParameters->save_print
+*                               variable.
+*
+* \return It returns one if the metric associated with the structure pointed by
+*         pMesh has been successfully computed and saved in a metric.sol file.
+*         Otherwise, zero is returned if any error is encountered during the
+*         process.
+*
+* The metric computation of the molecular orbitals requires to evaluate and
+* diagonalize their Hessian matrix. For this purpose, we use the standard
+* mathematical functions and the dsyev routine of lapacke library (LAPACK
+* interface for c), which computes the eigenvalues (and optionally the
+* eigenvectors) associated with a real symmetric matrix. In order to use these
+* function, the math.h and lapacke.h file must not be put in comment in the
+* main.h file. Furthermore, the -lm and -llapacke options must be set when
+* compiling the program with gcc (or link correctly the math and lapacke library
+* for other compilers and architectures).
+*/
+int computeMetric(Parameters* pParameters, Mesh* pMesh,
+                       ChemicalSystem* pChemicalSystem, int iterationInTheLoop);
+
+/**
+* \fn int performLevelSetAdaptation(Parameters* pParameters, Mesh* pMesh,
+*                                   ChemicalSystem* pChemicalSystem,
+*                                                        int iterationInTheLoop)
+* \brief It compute the molecular orbitals' metric and performs a mesh
+*        adaptation according to the level-set function (that we assume to have
+*        been previously computed and saved in a *.sol file associated with the
+*        *.mesh one) but also respecting the orbitals' metric. It uses the
+*        modified version of the external mmg3d software, that must have been
+*        previously installed. Then, it loads the new mesh obtained in the
+*        structure pointed by pMesh.
+*
+* \param[in] pParameters A pointer that points to the Parameters structure of
+*                        the \ref main function. Its name_mesh variable is
+*                        intended to store the name of a valid and existing
+*                        *.mesh file in order to be launched by the external
+*                        mmg3d sofware which must have been previously
+*                        installed, and whose path name must be store in the
+*                        path_mmg3d variable of the structure pointed by
+*                        pParameters. Otherwise, an error is returned by the
+*                        \ref performLevelSetAdaptation function.
+*
+* \param[in,out] pMesh A pointer that points to the Mesh structure (defined in
+*                      main.h file) of the \ref main function, that is intended
+*                      to be adapted according to both orbitals' metric and
+*                      the one associated with the level-set function that
+*                      we assume to have been previously saved in a *.sol file
+*                      associated with the *.mesh one.
+*
+* \param[in] pChemicalSystem A pointer that points to the ChemicalSystem
+*                            structure of the \ref main function. It contains
+*                            the description of the molecular orbitals as a sum
+*                            of Gaussian-type primitives.
+*
+* \param[in] iterationInTheLoop An integer that refer to the number of steps
+*                               that are already performed in the optimization
+*                               loop. It is used to vizualize the adapted mesh
+*                               according to the pParameters->save_print
+*                               variable.
+*
+* \return It returns one if the *.mesh file stored in the name_mesh variable of
+*         the structure pointed by pParameters has been successfully adapted
+*         by the external mmg3d sofware and loaded in the structure pointed by
+*         pMesh. In any other situation (i.e. if the input variables do not
+*         have the expected content), an error is displayed in the standard
+*         error stream and zero is returned by the \ref
+*         performLevelSetAdaptation function.
+*
+* The \ref performLevelSetAdaptation function uses the \ref
+* adaptMeshWithMmg3dSoftware function that itself executes the mmg3d sofware
+* thank to the standard system c-function. In particular, the mmg3d sofware
+* must have been previously installed at a location that must be either given
+* by the default \ref PATH_MMG3D preprocessor constant, or by a valid path name
+* specified in the input *.info file (preceded by the path_mmg3d keyword).
+* Similarly, the mesh to be read must be an existing file written in the *.mesh
+* format and stored in the name_mesh variable of the structure pointed by
+* pParameters and the corresponding *.sol file must have a similar name
+* (replacing the *.mesh extension by the *.sol one).
+*/
+int performLevelSetAdaptation(Parameters* pParameters, Mesh* pMesh,
+                              ChemicalSystem* pChemicalSystem,
+                                                        int iterationInTheLoop);
 
 /**
 * \fn int adaptMesh(Parameters* pParameters, Mesh* pMesh,

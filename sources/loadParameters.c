@@ -2562,8 +2562,8 @@ int checkValuesOfAllParameters(Parameters* pParameters)
     }
     if (pParameters->verbose)
     {
-        fprintf(stdout,"Checking validity of all values in the ");
-        fprintf(stdout,"structure Parameters.\n");
+        fprintf(stdout,"Checking validity of all values in the structure ");
+        fprintf(stdout,"Parameters.\n");
     }
 
     // Check pParameters->opt_mode
@@ -2663,13 +2663,13 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         // strncpy function returns a pointer to the string (not counting '\0')
         strncpy(pParameters->name_data,pParameters->name_info,
                                                       pParameters->name_length);
-        boolean=strlen(pParameters->name_data);
-        pParameters->name_data[boolean-5]='.';
-        pParameters->name_data[boolean-4]='d';
-        pParameters->name_data[boolean-3]='a';
-        pParameters->name_data[boolean-2]='t';
-        pParameters->name_data[boolean-1]='a';
-        pParameters->name_data[boolean]='\0';
+        lengthName=strlen(pParameters->name_data);
+        pParameters->name_data[lengthName-5]='.';
+        pParameters->name_data[lengthName-4]='d';
+        pParameters->name_data[lengthName-3]='a';
+        pParameters->name_data[lengthName-2]='t';
+        pParameters->name_data[lengthName-1]='a';
+        pParameters->name_data[lengthName]='\0';
     }
 
     // Check pParameters->name_chem
@@ -3259,6 +3259,76 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         return 0;
     }
 
+    // Allocate memory for the fileLocation variable
+    lengthName=pParameters->path_length+50;
+    fileLocation=(char*)calloc(lengthName,sizeof(char));
+    if (fileLocation==NULL)
+    {
+        PRINT_ERROR("In checkValuesOfAllParameters: could not allocate ");
+        fprintf(stderr,"memory for the local char* fileLocation variable.\n");
+        return 0;
+    }
+
+    // Test the path for the medit software
+    strncpy(fileLocation,"command -v ",lengthName);
+    strcat(fileLocation,pParameters->path_medit);
+    strcat(fileLocation," >meditOutput.txt 2>&1");
+    if (pParameters->verbose)
+    {
+        fprintf(stdout,"\n%s",fileLocation);
+    }
+
+    // system returns is -1 on error, otherwise the return status of the command
+    if (system(fileLocation))
+    {
+        PRINT_ERROR("In checkValuesOfAllParameters: wrong return (=-1) of ");
+        fprintf(stderr,"the system (standard) c-function. The path name for ");
+        fprintf(stderr,"the medit software (=%s) ",pParameters->path_medit);
+        fprintf(stderr,"does not seem to work.\nPlease check that the path ");
+        fprintf(stderr,"placed after the 'path_medit' keyword is valid in ");
+        fprintf(stderr,"%s file, or if no such line ",pParameters->name_info);
+        fprintf(stderr,"exists, add one if the default PATH_MEDIT ");
+        fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MEDIT); 
+        fprintf(stderr,"loadParameters.h file is not correct.\n");
+        free(fileLocation);
+        fileLocation=NULL;
+        return 0;
+    }
+
+    strncpy(fileLocation,pParameters->path_medit,lengthName);
+    strcat(fileLocation," -h | grep usage: -i >>meditOutput.txt 2>&1");
+    if (pParameters->verbose)
+    {
+        fprintf(stdout,"\n%s\n",fileLocation);
+    }
+
+    if (system(fileLocation))
+    {
+        PRINT_ERROR("In checkValuesOfAllParameters: wrong return (=-1) of ");
+        fprintf(stderr,"the system (standard) c-function. The path name for ");
+        fprintf(stderr,"the medit software (=%s) ",pParameters->path_medit);
+        fprintf(stderr,"does not seem to work.\nPlease check that the path ");
+        fprintf(stderr,"placed after the 'path_medit' keyword is valid in ");
+        fprintf(stderr,"%s file, or if no such line ",pParameters->name_info);
+        fprintf(stderr,"exists, add one if the default PATH_MEDIT ");
+        fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MEDIT); 
+        fprintf(stderr,"loadParameters.h file is not correct.\n");
+        free(fileLocation);
+        fileLocation=NULL;
+        return 0;
+    }
+
+    // remove returns 0 on success, otherwise -1
+    if (remove("meditOutput.txt"))
+    {
+        PRINT_ERROR("In checkValuesOfAllParameters: wrong return (=-1) of ");
+        fprintf(stderr,"the standard remove c-function in the attempt of ");
+        fprintf(stderr,"removing the meditOutput.txt file.\n");
+        free(fileLocation);
+        fileLocation=NULL;
+        return 0;
+    }
+
     // Check pParameters->path_mmg3d
     if (pParameters->opt_mode>0)
     {
@@ -3280,8 +3350,69 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"after the 'path_mmg3d' keyword or extend ");
             fprintf(stderr,"properly the allowed length for path_* names ");
             fprintf(stderr,"thanks to the 'path_length' keyword.\n");
+            free(fileLocation);
+            fileLocation=NULL;
             return 0;
        }
+
+        // Test the path for the mmg3d software
+        strncpy(fileLocation,"command -v ",lengthName);
+        strcat(fileLocation,pParameters->path_mmg3d);
+        strcat(fileLocation," >mmg3dOutput.txt 2>&1");
+        if (pParameters->verbose)
+        {
+            fprintf(stdout,"\n%s",fileLocation);
+        }
+
+        if (system(fileLocation))
+        {
+            PRINT_ERROR("In checkValuesOfAllParameters: wrong return (=-1) ");
+            fprintf(stderr,"of the system (standard) c-function. The path ");
+            fprintf(stderr,"name for the mmg3d software ");
+            fprintf(stderr,"(=%s) does not seem to ",pParameters->path_mmg3d);
+            fprintf(stderr,"work.\nPlease check that the path placed after ");
+            fprintf(stderr,"the 'path_mmg3d' keyword is valid in ");
+            fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
+            fprintf(stderr,"line exists, add one if the default PATH_MMG3D ");
+            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MMG3D); 
+            fprintf(stderr,"loadParameters.h file is not correct.\n");
+            free(fileLocation);
+            fileLocation=NULL;
+            return 0;
+        }
+
+        strncpy(fileLocation,pParameters->path_mmg3d,lengthName);
+        strcat(fileLocation," -h | grep usage: -i >>mmg3dOutput.txt 2>&1");
+        if (pParameters->verbose)
+        {
+            fprintf(stdout,"\n%s\n",fileLocation);
+        }
+        if (system(fileLocation))
+        {
+            PRINT_ERROR("In checkValuesOfAllParameters: wrong return (=-1) ");
+            fprintf(stderr,"of the system (standard) c-function. The path ");
+            fprintf(stderr,"name for the mmg3d software ");
+            fprintf(stderr,"(=%s) does not seem to ",pParameters->path_mmg3d);
+            fprintf(stderr,"work.\nPlease check that the path placed after ");
+            fprintf(stderr,"the 'path_mmg3d' keyword is valid in ");
+            fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
+            fprintf(stderr,"line exists, add one if the default PATH_MMG3D ");
+            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MMG3D); 
+            fprintf(stderr,"loadParameters.h file is not correct.\n");
+            free(fileLocation);
+            fileLocation=NULL;
+            return 0;
+        }
+
+        if (remove("mmg3dOutput.txt"))
+        {
+            PRINT_ERROR("In checkValuesOfAllParameters: wrong return (=-1) ");
+            fprintf(stderr,"of the standard remove c-function in the attempt ");
+            fprintf(stderr,"of removing the mmg3dOutput.txt file.\n");
+            free(fileLocation);
+            fileLocation=NULL;
+            return 0;
+        }
     }
     else
     {
@@ -3293,6 +3424,8 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"%p address, ",(void*)pParameters->path_mmg3d);
             fprintf(stderr,"whereas it should be set to its default value ");
             fprintf(stderr,"(=%s).\n",PATH_MMG3D);
+            free(fileLocation);
+            fileLocation=NULL;
             return 0;
         }
         else
@@ -3307,6 +3440,8 @@ int checkValuesOfAllParameters(Parameters* pParameters)
                 fprintf(stderr,"such a software.\nPlease delete the line ");
                 fprintf(stderr,"containing the 'path_mmg3d' keyword in ");
                 fprintf(stderr,"%s file.\n",pParameters->name_info);
+                free(fileLocation);
+                fileLocation=NULL;
                 return 0;
             }
         }
@@ -3334,8 +3469,70 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"software after the 'path_mshdist' keyword or");
             fprintf(stderr,"extend properly the allowed length for path_* ");
             fprintf(stderr,"names thanks to the 'path_length' keyword.\n");
+            free(fileLocation);
+            fileLocation=NULL;
             return 0;
        }
+
+        // Test the path for the mshdist software
+        strncpy(fileLocation,"command -v ",lengthName);
+        strcat(fileLocation,pParameters->path_mshdist);
+        strcat(fileLocation," >mshdistOutput.txt 2>&1");
+        if (pParameters->verbose)
+        {
+            fprintf(stdout,"\n%s",fileLocation);
+        }
+
+        if (system(fileLocation))
+        {
+            PRINT_ERROR("In checkValuesOfAllParameters: wrong return (=-1) ");
+            fprintf(stderr,"of the system (standard) c-function. The path ");
+            fprintf(stderr,"name for the mshdist software ");
+            fprintf(stderr,"(=%s) does not seem to ",pParameters->path_mshdist);
+            fprintf(stderr,"work.\nPlease check that the path placed after ");
+            fprintf(stderr,"the 'path_mshdist' keyword is valid in ");
+            fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
+            fprintf(stderr,"line exists, add one if the default PATH_MSHDIST ");
+            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MSHDIST); 
+            fprintf(stderr,"loadParameters.h file is not correct.\n");
+            free(fileLocation);
+            fileLocation=NULL;
+            return 0;
+        }
+
+        strncpy(fileLocation,pParameters->path_mshdist,lengthName);
+        strcat(fileLocation," -? | grep usage: -i >>mshdistOutput.txt 2>&1");
+        if (pParameters->verbose)
+        {
+            fprintf(stdout,"\n%s\n",fileLocation);
+        }
+
+        if (system(fileLocation))
+        {
+            PRINT_ERROR("In checkValuesOfAllParameters: wrong return (=-1) ");
+            fprintf(stderr,"of the system (standard) c-function. The path ");
+            fprintf(stderr,"name for the mshdist software ");
+            fprintf(stderr,"(=%s) does not seem to ",pParameters->path_mshdist);
+            fprintf(stderr,"work.\nPlease check that the path placed after ");
+            fprintf(stderr,"the 'path_mshdist' keyword is valid in ");
+            fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
+            fprintf(stderr,"line exists, add one if the default PATH_MSHDIST ");
+            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MSHDIST); 
+            fprintf(stderr,"loadParameters.h file is not correct.\n");
+            free(fileLocation);
+            fileLocation=NULL;
+            return 0;
+        }
+
+        if (remove("mshdistOutput.txt"))
+        {
+            PRINT_ERROR("In checkValuesOfAllParameters: wrong return (=-1) ");
+            fprintf(stderr,"of the standard remove c-function in the attempt ");
+            fprintf(stderr,"of removing the mshdistOutput.txt file.\n");
+            free(fileLocation);
+            fileLocation=NULL;
+            return 0;
+        }
     }
     else
     {
@@ -3347,6 +3544,8 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"%p address, ",(void*)pParameters->path_mshdist);
             fprintf(stderr,"whereas it should be set to its default value ");
             fprintf(stderr,"(=%s).\n",PATH_MSHDIST);
+            free(fileLocation);
+            fileLocation=NULL;
             return 0;
         }
         else
@@ -3361,6 +3560,8 @@ int checkValuesOfAllParameters(Parameters* pParameters)
                 fprintf(stderr,"such a software.\nPlease delete the line ");
                 fprintf(stderr,"containing the 'path_mshdist' keyword in ");
                 fprintf(stderr,"%s file.\n",pParameters->name_info);
+                free(fileLocation);
+                fileLocation=NULL;
                 return 0;
             }
         }
@@ -3391,8 +3592,130 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"and 'path_advect' keywords or extend properly ");
             fprintf(stderr,"the allowed length for path_* names thanks to ");
             fprintf(stderr,"the 'path_length' keyword.\n");
+            free(fileLocation);
+            fileLocation=NULL;
             return 0;
-       }
+        }
+
+        // Test the path for the elastic software
+        strncpy(fileLocation,"command -v ",lengthName);
+        strcat(fileLocation,pParameters->path_elastic);
+        strcat(fileLocation," >elasticOutput.txt 2>&1");
+        if (pParameters->verbose)
+        {
+            fprintf(stdout,"\n%s",fileLocation);
+        }
+
+        if (system(fileLocation))
+        {
+            PRINT_ERROR("In checkValuesOfAllParameters: wrong return (=-1) ");
+            fprintf(stderr,"of the system (standard) c-function. The path ");
+            fprintf(stderr,"name for the elastic software ");
+            fprintf(stderr,"(=%s) does not seem to ",pParameters->path_elastic);
+            fprintf(stderr,"work.\nPlease check that the path placed after ");
+            fprintf(stderr,"the 'path_elastic' keyword is valid in ");
+            fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
+            fprintf(stderr,"line exists, add one if the default PATH_ELASTIC ");
+            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_ELASTIC); 
+            fprintf(stderr,"loadParameters.h file is not correct.\n");
+            free(fileLocation);
+            fileLocation=NULL;
+            return 0;
+        }
+
+        strncpy(fileLocation,pParameters->path_elastic,lengthName);
+        strcat(fileLocation," -h | grep usage: -i >>elasticOutput.txt 2>&1");
+        if (pParameters->verbose)
+        {
+            fprintf(stdout,"\n%s\n",fileLocation);
+        }
+
+        if (system(fileLocation))
+        {
+            PRINT_ERROR("In checkValuesOfAllParameters: wrong return (=-1) ");
+            fprintf(stderr,"of the system (standard) c-function. The path ");
+            fprintf(stderr,"name for the elastic software ");
+            fprintf(stderr,"(=%s) does not seem to ",pParameters->path_elastic);
+            fprintf(stderr,"work.\nPlease check that the path placed after ");
+            fprintf(stderr,"the 'path_elastic' keyword is valid in ");
+            fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
+            fprintf(stderr,"line exists, add one if the default PATH_ELASTIC ");
+            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_ELASTIC); 
+            fprintf(stderr,"loadParameters.h file is not correct.\n");
+            free(fileLocation);
+            fileLocation=NULL;
+            return 0;
+        }
+
+        if (remove("elasticOutput.txt"))
+        {
+            PRINT_ERROR("In checkValuesOfAllParameters: wrong return (=-1) ");
+            fprintf(stderr,"of the standard remove c-function in the attempt ");
+            fprintf(stderr,"of removing the elasticOutput.txt file.\n");
+            free(fileLocation);
+            fileLocation=NULL;
+            return 0;
+        }
+
+        // Test the path for the advect software
+        strncpy(fileLocation,"command -v ",lengthName);
+        strcat(fileLocation,pParameters->path_advect);
+        strcat(fileLocation," >advectOutput.txt 2>&1");
+        if (pParameters->verbose)
+        {
+            fprintf(stdout,"\n%s",fileLocation);
+        }
+
+        if (system(fileLocation))
+        {
+            PRINT_ERROR("In checkValuesOfAllParameters: wrong return (=-1) ");
+            fprintf(stderr,"of the system (standard) c-function. The path ");
+            fprintf(stderr,"name for the advect software ");
+            fprintf(stderr,"(=%s) does not seem to ",pParameters->path_advect);
+            fprintf(stderr,"work.\nPlease check that the path placed after ");
+            fprintf(stderr,"the 'path_advect' keyword is valid in ");
+            fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
+            fprintf(stderr,"line exists, add one if the default PATH_ADVECT ");
+            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_ADVECT); 
+            fprintf(stderr,"loadParameters.h file is not correct.\n");
+            free(fileLocation);
+            fileLocation=NULL;
+            return 0;
+        }
+
+        strncpy(fileLocation,pParameters->path_advect,lengthName);
+        strcat(fileLocation," -h | grep usage: -i >>advectOutput.txt 2>&1");
+        if (pParameters->verbose)
+        {
+            fprintf(stdout,"\n%s\n",fileLocation);
+        }
+
+        if (system(fileLocation))
+        {
+            PRINT_ERROR("In checkValuesOfAllParameters: wrong return (=-1) ");
+            fprintf(stderr,"of the system (standard) c-function. The path ");
+            fprintf(stderr,"name for the advect software ");
+            fprintf(stderr,"(=%s) does not seem to ",pParameters->path_advect);
+            fprintf(stderr,"work.\nPlease check that the path placed after ");
+            fprintf(stderr,"the 'path_advect' keyword is valid in ");
+            fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
+            fprintf(stderr,"line exists, add one if the default PATH_ADVECT ");
+            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_ADVECT); 
+            fprintf(stderr,"loadParameters.h file is not correct.\n");
+            free(fileLocation);
+            fileLocation=NULL;
+            return 0;
+        }
+
+        if (remove("advectOutput.txt"))
+        {
+            PRINT_ERROR("In checkValuesOfAllParameters: wrong return (=-1) ");
+            fprintf(stderr,"of the standard remove c-function in the attempt ");
+            fprintf(stderr,"of removing the advectOutput.txt file.\n");
+            free(fileLocation);
+            fileLocation=NULL;
+            return 0;
+        }
     }
     else
     {
@@ -3407,6 +3730,8 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"pointing to NULL, whereas they should be both ");
             fprintf(stderr,"set to their default values (%s and ",PATH_ELASTIC);
             fprintf(stderr,"%s).\n",PATH_ADVECT);
+            free(fileLocation);
+            fileLocation=NULL;
             return 0;
         }
         else
@@ -3423,10 +3748,16 @@ int checkValuesOfAllParameters(Parameters* pParameters)
                 fprintf(stderr,"such softwares.\nPlease delete the line(s) ");
                 fprintf(stderr,"containing the corresponding keyword(s) in ");
                 fprintf(stderr,"%s file.\n",pParameters->name_info);
+                free(fileLocation);
+                fileLocation=NULL;
                 return 0;
             }
         }
     }
+
+    // Free the memory allocared for fileLocation
+    free(fileLocation);
+    fileLocation=NULL;
 
     // Check the *_iso and *_met variables related to the mmg3d parameters
     if (pParameters->opt_mode>0)
@@ -3795,25 +4126,25 @@ int writingDefaultElasticFile(Parameters* pParameters)
 }
 
 /* ************************************************************************** */
-// The function writingInputFile, depending on the opt_mode variable, writes an
-// *.input file that contains the default and prescribed values used to perform
-// the mpd algorithm before starting the optimization loop. It has the same
-// name than the *.info file where the '.info' extension has been replaced by
-// the '.input' one. It has the Parameters* variable (defined in main.h) as
+// The function writingRestartFile, depending on the opt_mode variable, writes
+// an *.restart file that contains the default and prescribed values used to
+// perform the mpd algorithm before starting the optimization loop. It has the
+// same name than the *.info file where the '.info' extension has been replaced
+// by the '.restart' one. It has the Parameters* variable (defined in main.h) as
 // input argument and it returns one on success, otherwise zero is returned for
 // an invalid value or an error
 /* ************************************************************************** */
-int writingInputFile(Parameters* pParameters)
+int writingRestartFile(Parameters* pParameters)
 {
     size_t lengthName=0;
     char *fileName=NULL;
-    FILE *inputFile=NULL;
+    FILE *restartFile=NULL;
 
     // Testing if the input variable pParameters is pointing to NULL
     if (pParameters==NULL)
     {
-        PRINT_ERROR("In writingInputFile: the input pParameters variable is ");
-        fprintf(stderr,"pointing to the %p address.\n",(void*)pParameters);
+        PRINT_ERROR("In writingRestartFile: the input pParameters variable ");
+        fprintf(stderr,"is pointing to the %p address.\n",(void*)pParameters);
         return 0;
     }
 
@@ -3821,7 +4152,7 @@ int writingInputFile(Parameters* pParameters)
     if (!checkStringFromLength(pParameters->name_info,7,
                                                       pParameters->name_length))
     {
-        PRINT_ERROR("In writingInputFile: checkStringFromLength function ");
+        PRINT_ERROR("In writingRestartFile: checkStringFromLength function ");
         fprintf(stderr,"returned zero, which is not the expected value here, ");
         fprintf(stderr,"after having checked that the char* name_info ");
         fprintf(stderr,"variable of the structure pointed by pParameters is ");
@@ -3842,7 +4173,7 @@ int writingInputFile(Parameters* pParameters)
                                     pParameters->name_info[lengthName-1]!='o' ||
                                        pParameters->name_info[lengthName]!='\0')
     {
-        PRINT_ERROR("In writingInputFile: ");
+        PRINT_ERROR("In writingRestartFile: ");
         fprintf(stderr,"%s file does not end with the ",pParameters->name_info);
         fprintf(stderr,"'.info' extension.\n");
         return 0;
@@ -3854,9 +4185,10 @@ int writingInputFile(Parameters* pParameters)
     fileName=(char*)calloc(lengthName,sizeof(char));
     if (fileName==NULL)
     {
-        PRINT_ERROR("In writingInputFile: could not allocate memory for the ");
-        fprintf(stderr,"char* (local) fileName variable, that was suppose to ");
-        fprintf(stderr,"temporarily store the name of the *.input file.\n");
+        PRINT_ERROR("In writingRestartFile: could not allocate memory for ");
+        fprintf(stderr,"the char* (local) fileName variable, that was ");
+        fprintf(stderr,"intented to temporarily store the name of the ");
+        fprintf(stderr,"*.restart file.\n");
         return 0;
     }
 
@@ -3864,39 +4196,41 @@ int writingInputFile(Parameters* pParameters)
     strncpy(fileName,pParameters->name_info,lengthName);
     lengthName=strlen(fileName);
     fileName[lengthName-5]='.';
-    fileName[lengthName-4]='i';
-    fileName[lengthName-3]='n';
-    fileName[lengthName-2]='p';
-    fileName[lengthName-1]='u';
-    fileName[lengthName]='t';
-    fileName[lengthName+1]='\0';
-    lengthName++;
+    fileName[lengthName-4]='r';
+    fileName[lengthName-3]='e';
+    fileName[lengthName-2]='s';
+    fileName[lengthName-1]='t';
+    fileName[lengthName]='a';
+    fileName[lengthName+1]='r';
+    fileName[lengthName+2]='t';
+    fileName[lengthName+3]='\0';
+    lengthName=strlen(fileName);
 
     // Create and open the *.input file (warning: overwrite file if it already
     // exists). fopen function returns a FILE pointer on success, otherwise NULL
     fprintf(stdout,"\nOpening %s file. ",fileName);
-    inputFile=fopen(fileName,"w+");
-    if (inputFile==NULL)
+    restartFile=fopen(fileName,"w+");
+    if (restartFile==NULL)
     {
-        PRINT_ERROR("In writingInputFile: we were not able to write into the ");
-        fprintf(stderr,"%s file.\n",fileName);
+        PRINT_ERROR("In writingRestartFile: we were not able to write into ");
+        fprintf(stderr,"the %s file.\n",fileName);
         free(fileName);
         fileName=NULL;
         return 0;
     }
-    fprintf(stdout,"Writing input parameters. ");
+    fprintf(stdout,"Writing restart parameters. ");
 
     // Write general parameters
-    fprintf(inputFile,"opt_mode %d \n",pParameters->opt_mode);
-    fprintf(inputFile,"verbose %d \n",pParameters->verbose);
-    fprintf(inputFile,"n_cpu %d \n",pParameters->n_cpu);
-    fprintf(inputFile,"name_length %d \n\n",pParameters->name_length);
+    fprintf(restartFile,"opt_mode %d \n",pParameters->opt_mode);
+    fprintf(restartFile,"verbose %d \n",pParameters->verbose);
+    fprintf(restartFile,"n_cpu %d \n",pParameters->n_cpu);
+    fprintf(restartFile,"name_length %d \n\n",pParameters->name_length);
 
     // Check and write the pParameters->name_data variable
     if (!checkStringFromLength(pParameters->name_data,7,
                                                       pParameters->name_length))
     {
-        PRINT_ERROR("In writingInputFile: checkStringFromLength function ");
+        PRINT_ERROR("In writingRestartFile: checkStringFromLength function ");
         fprintf(stderr,"returned zero, which is not the expected value ");
         fprintf(stderr,"here, after having checked that the char* ");
         fprintf(stderr,"name_data variable of the structure pointed by ");
@@ -3904,19 +4238,19 @@ int writingInputFile(Parameters* pParameters)
         fprintf(stderr,"less than %d (and more ",pParameters->name_length);
         fprintf(stderr,"than 5 in order to store at least something more ");
         fprintf(stderr,"than the *.data extension).\n");
-        fprintf(inputFile,"end_data\n");
-        closeTheFile(&inputFile);
+        fprintf(restartFile,"end_data\n");
+        closeTheFile(&restartFile);
         free(fileName);
         fileName=NULL;
         return 0;
     }
-    fprintf(inputFile,"name_data %s \n",pParameters->name_data);
+    fprintf(restartFile,"name_data %s \n",pParameters->name_data);
 
     // Check and write the pParameters->name_chem variable
     if (!checkStringFromLength(pParameters->name_chem,7,
                                                       pParameters->name_length))
     {
-        PRINT_ERROR("In writingInputFile: checkStringFromLength function ");
+        PRINT_ERROR("In writingRestartFile: checkStringFromLength function ");
         fprintf(stderr,"returned zero, which is not the expected value here, ");
         fprintf(stderr,"after having checked that the char* name_chem ");
         fprintf(stderr,"variable of the structure pointed by pParameters is ");
@@ -3924,19 +4258,19 @@ int writingInputFile(Parameters* pParameters)
         fprintf(stderr,"%d (and more than 5 in ",pParameters->name_length);
         fprintf(stderr,"order to store at least something more than the ");
         fprintf(stderr,"*.chem or *.wfn extension).\n");
-        fprintf(inputFile,"end_data\n");
-        closeTheFile(&inputFile);
+        fprintf(restartFile,"end_data\n");
+        closeTheFile(&restartFile);
         free(fileName);
         fileName=NULL;
         return 0;
     }
-    fprintf(inputFile,"name_chem %s \n",pParameters->name_chem);
+    fprintf(restartFile,"name_chem %s \n",pParameters->name_chem);
 
     // Check and write the pParameters->name_mesh variable
     if (!checkStringFromLength(pParameters->name_mesh,7,
                                                       pParameters->name_length))
     {
-        PRINT_ERROR("In writingInputFile: checkStringFromLength function ");
+        PRINT_ERROR("In writingRestartFile: checkStringFromLength function ");
         fprintf(stderr,"returned zero, which is not the expected value ");
         fprintf(stderr,"here, after having checked that the char* ");
         fprintf(stderr,"name_mesh variable of the structure pointed by ");
@@ -3944,13 +4278,13 @@ int writingInputFile(Parameters* pParameters)
         fprintf(stderr,"less than %d (and more ",pParameters->name_length);
         fprintf(stderr,"than 5 in order to store at least something more ");
         fprintf(stderr,"than the *.mesh or *.cube extension).\n");
-        fprintf(inputFile,"end_data\n");
-        closeTheFile(&inputFile);
+        fprintf(restartFile,"end_data\n");
+        closeTheFile(&restartFile);
         free(fileName);
         fileName=NULL;
         return 0;
     }
-    fprintf(inputFile,"name_mesh %s \n",pParameters->name_mesh);
+    fprintf(restartFile,"name_mesh %s \n",pParameters->name_mesh);
 
     // Check and write the pParameters->name_elas variable if opt_mode=1/2
     if (pParameters->opt_mode==1 || pParameters->opt_mode==2)
@@ -3958,7 +4292,7 @@ int writingInputFile(Parameters* pParameters)
         if (!checkStringFromLength(pParameters->name_elas,7,
                                                       pParameters->name_length))
         {
-            PRINT_ERROR("In writingInputFile: checkStringFromLength ");
+            PRINT_ERROR("In writingRestartFile: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
             fprintf(stderr,"expected value here, after having checked ");
             fprintf(stderr,"that the char* name_elas variable of the ");
@@ -3967,75 +4301,75 @@ int writingInputFile(Parameters* pParameters)
             fprintf(stderr,"%d (and more than 5 ",pParameters->name_length);
             fprintf(stderr,"in order to store at least something more ");
             fprintf(stderr,"than the *.elas extension).\n");
-            fprintf(inputFile,"end_data\n");
-            closeTheFile(&inputFile);
+            fprintf(restartFile,"end_data\n");
+            closeTheFile(&restartFile);
             free(fileName);
             fileName=NULL;
             return 0;
         }
-        fprintf(inputFile,"name_elas %s \n",pParameters->name_elas);
+        fprintf(restartFile,"name_elas %s \n",pParameters->name_elas);
     }
 
     // Write chemical parameters
-    fprintf(inputFile,"\nnu_electrons %d \n",pParameters->nu_electrons);
-    fprintf(inputFile,"nu_spin %d \n",pParameters->nu_spin);
-    fprintf(inputFile,"orb_rhf %d \n\n",pParameters->orb_rhf);
+    fprintf(restartFile,"\nnu_electrons %d \n",pParameters->nu_electrons);
+    fprintf(restartFile,"nu_spin %d \n",pParameters->nu_spin);
+    fprintf(restartFile,"orb_rhf %d \n\n",pParameters->orb_rhf);
 
     // Write the variables related to the computational box
-    fprintf(inputFile,"x_min %.8le \n",pParameters->x_min);
-    fprintf(inputFile,"y_min %.8le \n",pParameters->y_min);
-    fprintf(inputFile,"z_min %.8le \n\n",pParameters->z_min);
+    fprintf(restartFile,"x_min %.8le \n",pParameters->x_min);
+    fprintf(restartFile,"y_min %.8le \n",pParameters->y_min);
+    fprintf(restartFile,"z_min %.8le \n\n",pParameters->z_min);
 
-    fprintf(inputFile,"x_max %.8le \n",pParameters->x_max);
-    fprintf(inputFile,"y_max %.8le \n",pParameters->y_max);
-    fprintf(inputFile,"z_max %.8le \n\n",pParameters->z_max);
+    fprintf(restartFile,"x_max %.8le \n",pParameters->x_max);
+    fprintf(restartFile,"y_max %.8le \n",pParameters->y_max);
+    fprintf(restartFile,"z_max %.8le \n\n",pParameters->z_max);
 
-    fprintf(inputFile,"n_x %d \n",pParameters->n_x);
-    fprintf(inputFile,"n_y %d \n",pParameters->n_y);
-    fprintf(inputFile,"n_z %d \n\n",pParameters->n_z);
+    fprintf(restartFile,"n_x %d \n",pParameters->n_x);
+    fprintf(restartFile,"n_y %d \n",pParameters->n_y);
+    fprintf(restartFile,"n_z %d \n\n",pParameters->n_z);
 
-    fprintf(inputFile,"delta_x %.8le \n",pParameters->delta_x);
-    fprintf(inputFile,"delta_y %.8le \n",pParameters->delta_y);
-    fprintf(inputFile,"delta_z %.8le \n\n",pParameters->delta_z);
+    fprintf(restartFile,"delta_x %.8le \n",pParameters->delta_x);
+    fprintf(restartFile,"delta_y %.8le \n",pParameters->delta_y);
+    fprintf(restartFile,"delta_z %.8le \n\n",pParameters->delta_z);
 
-    fprintf(inputFile,"ls_type %d \n",pParameters->ls_type);
-    fprintf(inputFile,"ls_x %.8le \n",pParameters->ls_x);
-    fprintf(inputFile,"ls_y %.8le \n",pParameters->ls_y);
-    fprintf(inputFile,"ls_z %.8le \n",pParameters->ls_z);
-    fprintf(inputFile,"ls_r %.8le \n\n",pParameters->ls_r);
+    fprintf(restartFile,"ls_type %d \n",pParameters->ls_type);
+    fprintf(restartFile,"ls_x %.8le \n",pParameters->ls_x);
+    fprintf(restartFile,"ls_y %.8le \n",pParameters->ls_y);
+    fprintf(restartFile,"ls_z %.8le \n",pParameters->ls_z);
+    fprintf(restartFile,"ls_r %.8le \n\n",pParameters->ls_r);
 
     // Write variables related to the metric or matrix computation
     if (pParameters->opt_mode>0)
     {
-        fprintf(inputFile,"met_err %.8le \n",pParameters->met_err);
-        fprintf(inputFile,"met_min %.8le \n",pParameters->met_min);
-        fprintf(inputFile,"met_max %.8le \n\n",pParameters->met_max);
+        fprintf(restartFile,"met_err %.8le \n",pParameters->met_err);
+        fprintf(restartFile,"met_min %.8le \n",pParameters->met_min);
+        fprintf(restartFile,"met_max %.8le \n\n",pParameters->met_max);
     }
     else
     {
-        fprintf(inputFile,"trick_matrix %d \n",pParameters->trick_matrix);
-        fprintf(inputFile,"approx_mode %d \n\n",pParameters->approx_mode);
+        fprintf(restartFile,"trick_matrix %d \n",pParameters->trick_matrix);
+        fprintf(restartFile,"approx_mode %d \n\n",pParameters->approx_mode);
     }
 
     // Write variables related to the stop criteria
-    fprintf(inputFile,"iter_max %d \n",pParameters->iter_max);
-    fprintf(inputFile,"iter_told0p %.8le \n",pParameters->iter_told0p);
-    fprintf(inputFile,"iter_told1p %.8le \n",pParameters->iter_told1p);
-    fprintf(inputFile,"iter_told2p %.8le \n\n",pParameters->iter_told2p);
+    fprintf(restartFile,"iter_max %d \n",pParameters->iter_max);
+    fprintf(restartFile,"iter_told0p %.8le \n",pParameters->iter_told0p);
+    fprintf(restartFile,"iter_told1p %.8le \n",pParameters->iter_told1p);
+    fprintf(restartFile,"iter_told2p %.8le \n\n",pParameters->iter_told2p);
 
     // Write variables related to the saving of data
-    fprintf(inputFile,"save_type %d \n",pParameters->save_type);
-    fprintf(inputFile,"save_mesh %d \n",pParameters->save_mesh);
-    fprintf(inputFile,"save_data %d \n",pParameters->save_data);
-    fprintf(inputFile,"save_print %d \n",pParameters->save_print);
-    fprintf(inputFile,"save_where %d \n\n",pParameters->save_where);
-    fprintf(inputFile,"path_length %d \n",pParameters->path_length);
+    fprintf(restartFile,"save_type %d \n",pParameters->save_type);
+    fprintf(restartFile,"save_mesh %d \n",pParameters->save_mesh);
+    fprintf(restartFile,"save_data %d \n",pParameters->save_data);
+    fprintf(restartFile,"save_print %d \n",pParameters->save_print);
+    fprintf(restartFile,"save_where %d \n\n",pParameters->save_where);
+    fprintf(restartFile,"path_length %d \n",pParameters->path_length);
 
     // Check and write the pParameters->path_medit variable
     if (!checkStringFromLength(pParameters->path_medit,2,
                                                       pParameters->path_length))
     {
-        PRINT_ERROR("In writingInputFile: checkStringFromLength function ");
+        PRINT_ERROR("In writingRestartFile: checkStringFromLength function ");
         fprintf(stderr,"returned zero, which is not the expected value here, ");
         fprintf(stderr,"after having checked that the char* path_medit ");
         fprintf(stderr,"variable of the structure pointed by pParameters is ");
@@ -4043,13 +4377,13 @@ int writingInputFile(Parameters* pParameters)
         fprintf(stderr,"%d (and more than 1 in ",pParameters->path_length);
         fprintf(stderr,"order to store at least something more than the ");
         fprintf(stderr,"terminating nul character).\n");
-        fprintf(inputFile,"end_data\n");
-        closeTheFile(&inputFile);
+        fprintf(restartFile,"end_data\n");
+        closeTheFile(&restartFile);
         free(fileName);
         fileName=NULL;
         return 0;
     }
-    fprintf(inputFile,"path_medit %s \n",pParameters->path_medit);
+    fprintf(restartFile,"path_medit %s \n",pParameters->path_medit);
 
     if (pParameters->opt_mode>0)
     {
@@ -4057,21 +4391,22 @@ int writingInputFile(Parameters* pParameters)
         if (!checkStringFromLength(pParameters->path_mmg3d,2,
                                                       pParameters->path_length))
         {
-            PRINT_ERROR("In writingInputFile: checkStringFromLength function ");
-            fprintf(stderr,"returned zero, which is not the expected value ");
-            fprintf(stderr,"here, after having checked that the char* ");
-            fprintf(stderr,"path_mmg3d variable of the structure pointed by ");
-            fprintf(stderr,"pParameters is not a string of length (strictly) ");
-            fprintf(stderr,"less than %d (and more ",pParameters->path_length);
-            fprintf(stderr,"than 1 in order to store at least something more ");
-            fprintf(stderr,"than the terminating nul character).\n");
-            fprintf(inputFile,"end_data\n");
-            closeTheFile(&inputFile);
+            PRINT_ERROR("In writingRestartFile: checkStringFromLength ");
+            fprintf(stderr,"function returned zero, which is not the ");
+            fprintf(stderr,"expected value here, after having checked that ");
+            fprintf(stderr,"the char* path_mmg3d variable of the structure ");
+            fprintf(stderr,"pointed by pParameters is not a string of length ");
+            fprintf(stderr,"(strictly) less than %d ",pParameters->path_length);
+            fprintf(stderr,"(and more than 1 in order to store at least ");
+            fprintf(stderr,"something more than the terminating nul \n");
+            fprintf(stderr,"character).");
+            fprintf(restartFile,"end_data\n");
+            closeTheFile(&restartFile);
             free(fileName);
             fileName=NULL;
             return 0;
         }
-        fprintf(inputFile,"path_mmg3d %s \n",pParameters->path_mmg3d);
+        fprintf(restartFile,"path_mmg3d %s \n",pParameters->path_mmg3d);
 
         if (pParameters->opt_mode!=3)
         {
@@ -4079,7 +4414,7 @@ int writingInputFile(Parameters* pParameters)
             if (!checkStringFromLength(pParameters->path_mshdist,2,
                                                       pParameters->path_length))
             {
-                PRINT_ERROR("In writingInputFile: checkStringFromLength ");
+                PRINT_ERROR("In writingRestartFile: checkStringFromLength ");
                 fprintf(stderr,"function returned zero, which is not the ");
                 fprintf(stderr,"expected value here, after having checked ");
                 fprintf(stderr,"that the char* path_mshdist variable of the ");
@@ -4088,13 +4423,13 @@ int writingInputFile(Parameters* pParameters)
                 fprintf(stderr,"%d (and more than 1 ",pParameters->path_length);
                 fprintf(stderr,"in order to store at least something more ");
                 fprintf(stderr,"than the terminating nul character).\n");
-                fprintf(inputFile,"end_data\n");
-                closeTheFile(&inputFile);
+                fprintf(restartFile,"end_data\n");
+                closeTheFile(&restartFile);
                 free(fileName);
                 fileName=NULL;
                 return 0;
             }
-            fprintf(inputFile,"path_mshdist %s \n",pParameters->path_mshdist);
+            fprintf(restartFile,"path_mshdist %s \n",pParameters->path_mshdist);
 
             if (pParameters->opt_mode!=4)
             {
@@ -4102,109 +4437,110 @@ int writingInputFile(Parameters* pParameters)
                 if (!checkStringFromLength(pParameters->path_elastic,2,
                                                       pParameters->path_length))
                 {
-                    PRINT_ERROR("In writingInputFile: checkStringFromLength ");
-                    fprintf(stderr,"function returned zero, which is not the ");
-                    fprintf(stderr,"expected value here, after having ");
-                    fprintf(stderr,"checked that the char* path_elastic ");
-                    fprintf(stderr,"variable of the structure pointed by ");
-                    fprintf(stderr,"pParameters is not a string of length ");
-                    fprintf(stderr,"(strictly) less than ");
+                    PRINT_ERROR("In writingRestartFile: ");
+                    fprintf(stderr,"checkStringFromLength function returned ");
+                    fprintf(stderr,"zero, which is not the expected value ");
+                    fprintf(stderr,"here, after having checked that the ");
+                    fprintf(stderr,"char* path_elastic variable of the ");
+                    fprintf(stderr,"structure pointed by pParameters is not ");
+                    fprintf(stderr,"a string of length (strictly) less than ");
                     fprintf(stderr,"%d ",pParameters->path_length);
                     fprintf(stderr,"(and more than 1 in order to store at ");
                     fprintf(stderr,"least something more than the ");
                     fprintf(stderr,"terminating nul character).\n");
-                    fprintf(inputFile,"end_data\n");
-                    closeTheFile(&inputFile);
+                    fprintf(restartFile,"end_data\n");
+                    closeTheFile(&restartFile);
                     free(fileName);
                     fileName=NULL;
                     return 0;
                 }
-                fprintf(inputFile,"path_elastic %s \n",
+                fprintf(restartFile,"path_elastic %s \n",
                                                      pParameters->path_elastic);
 
                 // Check and write the pParameters->path_advect variable
                 if (!checkStringFromLength(pParameters->path_advect,2,
                                                       pParameters->path_length))
                 {
-                    PRINT_ERROR("In writingInputFile: checkStringFromLength ");
-                    fprintf(stderr,"function returned zero, which is not the ");
-                    fprintf(stderr,"expected value here, after having ");
-                    fprintf(stderr,"checked that the char* path_advect ");
-                    fprintf(stderr,"variable of the structure pointed by ");
-                    fprintf(stderr,"pParameters is not a string of length ");
-                    fprintf(stderr,"(strictly) less than ");
+                    PRINT_ERROR("In writingRestartFile: ");
+                    fprintf(stderr,"checkStringFromLength function returned ");
+                    fprintf(stderr,"zero, which is not the expected value ");
+                    fprintf(stderr,"here, after having checked that the ");
+                    fprintf(stderr,"char* path_advect variable of the ");
+                    fprintf(stderr,"structure pointed by pParameters is not ");
+                    fprintf(stderr,"a string of length (strictly) less than ");
                     fprintf(stderr,"%d ",pParameters->path_length);
                     fprintf(stderr,"(and more than 1 in order to store at ");
                     fprintf(stderr,"least something more than the ");
                     fprintf(stderr,"terminating nul character).\n");
-                    fprintf(inputFile,"end_data\n");
-                    closeTheFile(&inputFile);
+                    fprintf(restartFile,"end_data\n");
+                    closeTheFile(&restartFile);
                     free(fileName);
                     fileName=NULL;
                     return 0;
                 }
-                fprintf(inputFile,"path_advect %s \n",pParameters->path_advect);
+                fprintf(restartFile,"path_advect %s \n",
+                                                      pParameters->path_advect);
             }
         }
 
         // Write the *_iso and *_met variables related to the mmg3d parameters
-        fprintf(inputFile,"\nhmin_iso %.8le \n",pParameters->hmin_iso);
-        fprintf(inputFile,"hmax_iso %.8le \n",pParameters->hmax_iso);
-        fprintf(inputFile,"hausd_iso %.8le \n",pParameters->hausd_iso);
-        fprintf(inputFile,"hgrad_iso %.8le \n\n",pParameters->hgrad_iso);
+        fprintf(restartFile,"\nhmin_iso %.8le \n",pParameters->hmin_iso);
+        fprintf(restartFile,"hmax_iso %.8le \n",pParameters->hmax_iso);
+        fprintf(restartFile,"hausd_iso %.8le \n",pParameters->hausd_iso);
+        fprintf(restartFile,"hgrad_iso %.8le \n\n",pParameters->hgrad_iso);
 
-        fprintf(inputFile,"hmin_met %.8le \n",pParameters->hmin_met);
-        fprintf(inputFile,"hmax_met %.8le \n",pParameters->hmax_met);
-        fprintf(inputFile,"hausd_met %.8le \n",pParameters->hausd_met);
-        fprintf(inputFile,"hgrad_met %.8le \n\n",pParameters->hgrad_met);
+        fprintf(restartFile,"hmin_met %.8le \n",pParameters->hmin_met);
+        fprintf(restartFile,"hmax_met %.8le \n",pParameters->hmax_met);
+        fprintf(restartFile,"hausd_met %.8le \n",pParameters->hausd_met);
+        fprintf(restartFile,"hgrad_met %.8le \n\n",pParameters->hgrad_met);
 
         if (pParameters->opt_mode!=3)
         {
             // Write the *_ls variables related to the mmg3d parameters
-            fprintf(inputFile,"hmin_ls %.8le \n",pParameters->hmin_ls);
-            fprintf(inputFile,"hmax_ls %.8le \n",pParameters->hmax_ls);
-            fprintf(inputFile,"hausd_ls %.8le \n",pParameters->hausd_ls);
-            fprintf(inputFile,"hgrad_ls %.8le \n\n",pParameters->hgrad_ls);
+            fprintf(restartFile,"hmin_ls %.8le \n",pParameters->hmin_ls);
+            fprintf(restartFile,"hmax_ls %.8le \n",pParameters->hmax_ls);
+            fprintf(restartFile,"hausd_ls %.8le \n",pParameters->hausd_ls);
+            fprintf(restartFile,"hgrad_ls %.8le \n\n",pParameters->hgrad_ls);
         }
 
         if (pParameters->opt_mode==1 || pParameters->opt_mode==3)
         {
             // Write the *_lag variables related to the mmg3d parameters
-            fprintf(inputFile,"hmode_lag %d \n",pParameters->hmode_lag);
-            fprintf(inputFile,"hmin_lag %.8le \n",pParameters->hmin_lag);
-            fprintf(inputFile,"hmax_lag %.8le \n",pParameters->hmax_lag);
-            fprintf(inputFile,"hausd_lag %.8le \n",pParameters->hausd_lag);
-            fprintf(inputFile,"hgrad_lag %.8le \n\n",pParameters->hgrad_lag);
+            fprintf(restartFile,"hmode_lag %d \n",pParameters->hmode_lag);
+            fprintf(restartFile,"hmin_lag %.8le \n",pParameters->hmin_lag);
+            fprintf(restartFile,"hmax_lag %.8le \n",pParameters->hmax_lag);
+            fprintf(restartFile,"hausd_lag %.8le \n",pParameters->hausd_lag);
+            fprintf(restartFile,"hgrad_lag %.8le \n\n",pParameters->hgrad_lag);
         }
 
         if (pParameters->opt_mode!=3)
         {
             // Check the variables related to the mshdist parameters
-            fprintf(inputFile,"n_iter %d \n",pParameters->n_iter);
-            fprintf(inputFile,"residual %.8le \n",pParameters->residual);
+            fprintf(restartFile,"n_iter %d \n",pParameters->n_iter);
+            fprintf(restartFile,"residual %.8le \n",pParameters->residual);
         }
 
         if (pParameters->opt_mode==1 || pParameters->opt_mode==2)
         {
             // Check the variables related to the advect parameters
-            fprintf(inputFile,"delta_t %.8le \n",pParameters->delta_t);
-            fprintf(inputFile,"no_cfl %d \n",pParameters->no_cfl);
+            fprintf(restartFile,"delta_t %.8le \n",pParameters->delta_t);
+            fprintf(restartFile,"no_cfl %d \n",pParameters->no_cfl);
         }
     }
-    fprintf(inputFile,"\nend_data\n\nThe remaining part of this file ");
-    fprintf(inputFile,"is considered as comments\n\n");
+    fprintf(restartFile,"\nend_data\n\nThe remaining part of this file ");
+    fprintf(restartFile,"is considered as comments\n\n");
 
     // Closing the *.input file: fclose function returns zero if the input FILE*
     // variable is successfully closed, otherwise EOF (end-of-file) is returned
-    if (fclose(inputFile))
+    if (fclose(restartFile))
     {
-        PRINT_ERROR("In writingInputFile: the ");
+        PRINT_ERROR("In writingRestartFile: the ");
         fprintf(stderr,"%s file has not been closed properly.\n",fileName);
-        inputFile=NULL;
+        restartFile=NULL;
         return 0;
     }
     fprintf(stdout,"Closing file.\n");
-    inputFile=NULL;
+    restartFile=NULL;
 
     // Free the memory allocated for fileName
     free(fileName);

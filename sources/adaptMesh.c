@@ -39,6 +39,7 @@ int initialDomainInMeshExists(Parameters* pParameters, Mesh* pMesh)
         return 0;
     }
 
+    // Check and set up the iMax variable for the tetrahedral/hexahedral mesh
     if (pParameters->opt_mode>0)
     {
         // Check the total number of triangles and its associated pointer
@@ -57,16 +58,6 @@ int initialDomainInMeshExists(Parameters* pParameters, Mesh* pMesh)
             fprintf(stderr,"pMesh->ptri=%p does not point ",(void*)pMesh->ptri);
             fprintf(stderr,"to a valid address.\n");
             return 0;
-        }
-
-        // Return 1 if one of the triangle labels is set to 10
-        for (i=0; i<iMax; i++)
-        {
-            if (pMesh->ptri[i].label==10)
-            {
-                returnValue=1;
-                break;
-            }
         }
     }
     else
@@ -88,7 +79,23 @@ int initialDomainInMeshExists(Parameters* pParameters, Mesh* pMesh)
             fprintf(stderr,"to a valid address.\n");
             return 0;
         }
+    }
 
+    // Search for an internal domain in the tetrahedral/hexahedral mesh
+    if (pParameters->opt_mode>0)
+    {
+        // Return 1 if one of the triangle labels is set to 10
+        for (i=0; i<iMax; i++)
+        {
+            if (pMesh->ptri[i].label==10)
+            {
+                returnValue=1;
+                break;
+            }
+        }
+    }
+    else
+    {
         // Return 1 if one of the quadrilateral labels is set to 10
         for (i=0; i<iMax; i++)
         {
@@ -149,7 +156,7 @@ int initialDomainInMeshExists(Parameters* pParameters, Mesh* pMesh)
         }
     }
 
-    // Return -1 if no level-set structure has been found in the mesh
+    // Return -1 if no internal domain has been found in the mesh
     if (!returnValue)
     {
         returnValue=-1;
@@ -159,28 +166,29 @@ int initialDomainInMeshExists(Parameters* pParameters, Mesh* pMesh)
 }
 
 /* ************************************************************************** */
-// The function initializeAdjacency generates the Adjacency table of
-// Quadrilaterals that are labelled 10 on mesh structure pointed by pMesh (it is
-// only used for hexahedral meshes i.e. if pParameters->opt_mode is not
-// positive). It has the Parameters* and Mesh* variables (both defined in
-// main.h) as input arguments and it returns one on sucess, otherwise zero
+// The function initializeAdjacency sets up the Adjacency structures associated
+// with the quadrilaterals that are labelled 10 in structure pointed by pMesh
+// (it is only used for hexahedral meshes i.e. if the pParameters->opt_mode
+// variable is not positive). It has the Parameters* and Mesh* variables (both
+// defined in main.h) as input arguments and it returns 1 on sucess, otherwise 0
 /* ************************************************************************** */
 int initializeAdjacency(Parameters* pParameters, Mesh* pMesh)
 {
-    size_t length=0;
+    size_t lengthAdjacency=0;
     int i=0, j=0, k=0, l=0, lMax=0, lPoint=0, lLabel=0, label=0, counter=0;
     int nX=0, nY=0, nZ=0, initialNumberOfQuadrilaterals=0;
 
     // Check that the input variables are not pointing to NULL
     if (pParameters==NULL || pMesh==NULL)
     {
-        PRINT_ERROR("In initializeAdjacency: one of the input variable ");
-        fprintf(stderr,"pParameters=%p or ",(void*)pParameters);
+        PRINT_ERROR("In initializeAdjacency: at least one of the input ");
+        fprintf(stderr,"variable pParameters=%p or ",(void*)pParameters);
         fprintf(stderr,"pMesh=%p does not point to a valid ",(void*)pMesh);
         fprintf(stderr,"address.\n");
         return 0;
     }
 
+    // Check that the mesh is made of hexahedra
     if (pParameters->opt_mode>0)
     {
         PRINT_ERROR("In initializeAdjacency: the opt_mode variable ");
@@ -195,12 +203,12 @@ int initializeAdjacency(Parameters* pParameters, Mesh* pMesh)
     nZ=pParameters->n_z;
     if (nX<3 || nY<3 || nZ<3)
     {
-        PRINT_ERROR("In initializeAdjacency: expecting that the n_x ");
+        PRINT_ERROR("In initializeAdjacency: the integer n_x ");
         fprintf(stderr,"(=%d), n_y (=%d), and n_z (=%d) variables ",nX,nY,nZ);
-        fprintf(stderr,"of the structure pointed by pParameters must remain ");
-        fprintf(stderr,"(strictly) greater than two (in order to have at ");
-        fprintf(stderr,"least one normal/tangent vector on each face of the ");
-        fprintf(stderr,"cube associated with the default initial ");
+        fprintf(stderr,"of the structure pointed by pParameters should ");
+        fprintf(stderr,"remain (strictly) greater than two (in order to have ");
+        fprintf(stderr,"at least one normal/tangent vector on each face of ");
+        fprintf(stderr,"the cube associated with the default initial ");
         fprintf(stderr,"computational box).\n");
         return 0;
     }
@@ -210,21 +218,22 @@ int initializeAdjacency(Parameters* pParameters, Mesh* pMesh)
     lMax=pMesh->nhex;
     if (lMax<1)
     {
-        PRINT_ERROR("In initializeAdjacency: expecting a positive number of ");
-        fprintf(stderr,"hexahedra instead of %d in the structure ",lMax);
-        fprintf(stderr,"pointed by pMesh.\n");
-        return 0;
-    }
-    if (pMesh->phex==NULL)
-    {
-        PRINT_ERROR("In initializeAdjacency: the phex variable of the ");
-        fprintf(stderr,"the structure pointed by pMesh is pointing to the ");
-        fprintf(stderr,"%p address.\n",(void*)pMesh->phex);
+        PRINT_ERROR("In initializeAdjacency: the total number of hexahedra ");
+        fprintf(stderr,"(=%d) in the structure pointed by pMesh should ",lMax);
+        fprintf(stderr,"be a positive integer.\n");
         return 0;
     }
 
-    // Counting the number of boundary quadrilaterals corresponding to the
-    // initial level-set domain inside the cube and save it in pMesh->nadj
+    if (pMesh->phex==NULL)
+    {
+        PRINT_ERROR("In initializeAdjacency: the variable ");
+        fprintf(stderr,"pMesh->phex=%p does not point to ",(void*)pMesh->phex);
+        fprintf(stderr,"a valid address.\n");
+        return 0;
+    }
+
+    // Count the number of boundary quadrilaterals corresponding to the initial
+    // internal domain inside the computational box and save it in pMesh->nadj
     lMax=pMesh->nqua;
     if (lMax<=initialNumberOfQuadrilaterals)
     {
@@ -249,16 +258,17 @@ int initializeAdjacency(Parameters* pParameters, Mesh* pMesh)
     if (initialNumberOfQuadrilaterals!=pMesh->nqua-pMesh->nadj)
     {
         PRINT_ERROR("In initializeAdjacency: expecting ");
-        fprintf(stderr,"%d initial quadrilaterals instead of ",counter);
+        fprintf(stderr,"%d initial quadrilaterals instead of ",pMesh->nadj);
         fprintf(stderr,"%d ",pMesh->nqua-initialNumberOfQuadrilaterals);
-        fprintf(stderr,"for the internal domain detected in the structure ");
-        fprintf(stderr,"pointed by pMesh.\n");
+        fprintf(stderr,"boundary elements enclosing the internal domain ");
+        fprintf(stderr,"detected in the structure pointed by pMesh.\n");
         return 0;
     }
 
-    // Allocating memory for the adjacency table
-    length=pMesh->nadj;
-    pMesh->padj=(Adjacency*)calloc(length,sizeof(Adjacency));
+    // Allocate memory for the Adjacency structures
+    // calloc function returns a pointer to allocated memory, otherwise NULL
+    lengthAdjacency=pMesh->nadj;
+    pMesh->padj=(Adjacency*)calloc(lengthAdjacency,sizeof(Adjacency));
     if (pMesh->padj==NULL)
     {
         PRINT_ERROR("In initializeAdjacency: could not allocate memory for ");
@@ -266,9 +276,9 @@ int initializeAdjacency(Parameters* pParameters, Mesh* pMesh)
         return 0;
     }
 
-    // Save the boundary quadrilaterals adjacency that are not faces of the cube
-    lMax=pMesh->nhex;
+    // Set Adjacency of boundary quadrilaterals that are not faces of the cube
     counter=0;
+    lMax=pMesh->nhex;
     for (l=0; l<lMax; l++)
     {
         label=pMesh->phex[l].label;
@@ -281,13 +291,13 @@ int initializeAdjacency(Parameters* pParameters, Mesh* pMesh)
         // saved as (a*nY+b)*nZ+c a=0...nX-1, b=0...nY-1, and c=0...nZ-1
         // Point reference (a,b,c) in each cube cell: 1=(i-1,j-1,k-1)
         // 2=(i,j-1,k-1) 3=(i,j,k-1) 4=(i-1,j,k-1) 5=(i-1,j-1,k) 6=(i,j-1,k)
-        // 7=(i,j,k) 8=(i-1,j,k) i=1..nX-1; j=1..nY-1; k=1..nZ-1
+        // 7=(i,j,k) 8=(i-1,j,k) i=1...nX-1; j=1...nY-1; k=1...nZ-1
         if (i>0)
         {
             lPoint=((i-1)*(nY-1)+j)*(nZ-1)+k;
             lLabel=pMesh->phex[lPoint].label;
 
-            // Test not to count two times the quadrilaterals
+            // Test made not to count two times the quadrilaterals
             if (label==2 && lLabel==3)
             {
                 pMesh->padj[counter].quad=initialNumberOfQuadrilaterals+counter;
@@ -357,12 +367,15 @@ int initializeAdjacency(Parameters* pParameters, Mesh* pMesh)
             }
         }
     }
-    // Checking the number of quadrilaterals in the Adjacency structure
+
+    // Check the number of quadrilaterals related to the Adjacency structures
     if (pMesh->nadj!=counter)
     {
         PRINT_ERROR("In initializeAdjacency: expecting ");
-        fprintf(stderr,"%d quadrilaterals instead of %d ",pMesh->nadj,counter);
-        fprintf(stderr,"for the initial faces of the internal domain.\n");
+        fprintf(stderr,"%d initial quadrilaterals enclosing the ",pMesh->nadj);
+        fprintf(stderr,"internal domain detected in the structure pointed by ");
+        fprintf(stderr,"pMesh instead of the %d boundary elements ",counter);
+        fprintf(stderr,"obtained while looking at the hexahedron labels.\n");
         return 0;
     }
 
@@ -370,11 +383,14 @@ int initializeAdjacency(Parameters* pParameters, Mesh* pMesh)
 }
 
 /* ************************************************************************** */
-// The function initializeLevelSetFunction generates the initial level set
-// function on the mesh structure pointed by pMesh (sphere or cube defined by
-// the pParameters->ls_* variables). It has the Parameters* and Mesh* variable
-// (defined in main.h) as input arguments and it returns one on sucess,
-// otherwise zero is returned if an error is encountered during the process
+// The function initializeLevelSetFunction generates either the initial 
+// level-set function asssociated with the initial domain (sphere/cube) at the
+// vertices of the tetrahedral structure pointed by pMesh, or directly the
+// initial internal domain by labelling 3 the elements of the hexahedral
+// structure that belongs to the domain otherwise 2. The pParameters->ls_* 
+// variables characterizes the initial domain as a cube or a sphere. It has the
+// Parameters* and Mesh* variables (both defined in main.h) as input arguments
+// and it returns one on sucess, otherwise zero is returned in case of error
 /* ************************************************************************** */
 int initializeLevelSetFunction(Parameters* pParameters, Mesh* pMesh)
 {
@@ -387,47 +403,72 @@ int initializeLevelSetFunction(Parameters* pParameters, Mesh* pMesh)
     // Check that the input variables are not pointing to NULL
     if (pParameters==NULL || pMesh==NULL)
     {
-        PRINT_ERROR("In initializeLevelSetFunction: one of the input ");
-        fprintf(stderr,"variable pParameters=%p or ",(void*)pParameters);
-        fprintf(stderr,"pMesh=%p is not a valid address.\n",(void*)pMesh);
+        PRINT_ERROR("In initializeLevelSetFunction: at least one of the ");
+        fprintf(stderr,"input variable pParameters=%p or ",(void*)pParameters);
+        fprintf(stderr,"pMesh=%p does not point to a valid ",(void*)pMesh);
+        fprintf(stderr,"address.\n");
         return 0;
     }
 
+    // Set up the local parameters for the initial sphere/cube
     x0=pParameters->ls_x;
     y0=pParameters->ls_y;
     z0=pParameters->ls_z;
     r0=pParameters->ls_r;
     if (r0<=0.)
     {
-        PRINT_ERROR("In initializeLevelSetFunction: the radius ");
-        fprintf(stderr,"(=%lf) of the initial sphere should be ",r0);
+        PRINT_ERROR("In initializeLevelSetFunction: the prescribed radius ");
+        fprintf(stderr,"(=%lf) for the initial sphere should be ",r0);
         fprintf(stderr,"positive.\n");
         return 0;
     }
 
-    // Check the number of vertices and its associated pointer
-    if (pMesh->nver<1)
+    // Check and set correctly the lMax variable for tetrahedral/hexahedral mesh
+    lMax=pMesh->nver;
+    if (lMax<1)
     {
-        PRINT_ERROR("In initializeLevelSetFunction: expecting a ");
-        fprintf(stderr,"positive number of vertices instead of ");
-        fprintf(stderr,"%d in the structure pointed by pMesh.\n",pMesh->nver);
-        return 0;
-    }
-    if (pMesh->pver==NULL)
-    {
-        PRINT_ERROR("In initializeLevelSetFunction: the pver variable of the ");
-        fprintf(stderr,"the structure pointed by pMesh is pointing to the ");
-        fprintf(stderr,"%p address.\n",(void*)pMesh->pver);
+        PRINT_ERROR("In initializeLevelSetFunction: the total number of ");
+        fprintf(stderr,"vertices (=%d) in the structure pointed by ",lMax);
+        fprintf(stderr,"pMesh should be a positive integer.\n");
         return 0;
     }
 
-    // Distinguish the case where the initial domain is a sphere from the cube
+    if (pMesh->pver==NULL)
+    {
+        PRINT_ERROR("In initializeLevelSetFunction: the variable ");
+        fprintf(stderr,"pMesh->pver=%p of the structure ",(void*)pMesh->pver);
+        fprintf(stderr,"pointed by pMesh does not point to a valid address.\n");
+        return 0;
+    }
+
+    if (pParameters->opt_mode<=0)
+    {
+        // Check number of hexahedra and its associated pointer
+        lMax=pMesh->nhex;
+        if (lMax<1)
+        {
+            PRINT_ERROR("In initializeLevelSetFunction: the total number of ");
+            fprintf(stderr,"hexahedra (=%d) in the structure pointed by ",lMax);
+            fprintf(stderr,"pMesh should be a positive integer.\n");
+            return 0;
+        }
+
+        if (pMesh->phex==NULL)
+        {
+            PRINT_ERROR("In initializeLevelSetFunction: the variable ");
+            fprintf(stderr,"pMesh->phex=%p of the ",(void*)pMesh->phex);
+            fprintf(stderr,"structure pointed by pMesh does not point to a ");
+            fprintf(stderr,"valid address.\n");
+            return 0;
+        }
+    }
+
+    // Distinguish the case where the initial domain is a sphere or a cube
     if (pParameters->ls_type)
     {
         fprintf(stdout,"\nInitializing the signed distance function ");
         if (pParameters->verbose)
         {
-
             fprintf(stdout,"of the sphere of radius %lf and center ",r0);
             fprintf(stdout,"(%lf,%lf,%lf).\n",x0,y0,z0);
         }
@@ -439,36 +480,18 @@ int initializeLevelSetFunction(Parameters* pParameters, Mesh* pMesh)
         if (pParameters->opt_mode>0)
         {
             // Save the initial level-set function in pMesh->pver[l].value
-            lMax=pMesh->nver;
             for (l=0; l<lMax; l++)
             {
                 pPoint=&pMesh->pver[l];
-                dx=(pPoint->x)-x0;
-                dy=(pPoint->y)-y0;
-                dz=(pPoint->z)-z0;
+                dx=pPoint->x-x0;
+                dy=pPoint->y-y0;
+                dz=pPoint->z-z0;
                 value=dx*dx+dy*dy+dz*dz;
                 pPoint->value=sqrt(value)-r0;
             }
         }
         else
         {
-            lMax=pMesh->nhex;
-            if (lMax<1)
-            {
-                PRINT_ERROR("In initializeLevelSetFunction: expecting a ");
-                fprintf(stderr,"positive number of hexahedra instead of ");
-                fprintf(stderr,"%d in the structure pointed by pMesh.\n",lMax);
-                return 0;
-            }
-            if (pMesh->phex==NULL)
-            {
-                PRINT_ERROR("In initializeLevelSetFunction: the phex ");
-                fprintf(stderr,"variable of the the structure pointed by ");
-                fprintf(stderr,"pMesh is pointing to the ");
-                fprintf(stderr,"%p address.\n",(void*)pMesh->phex);
-                return 0;
-            }
-
             // Labelling the exterior hexahedra by 2 (positive level-set
             // function) while the interior ones are labelled 3 (negative value)
             for (l=0; l<lMax; l++)
@@ -489,7 +512,7 @@ int initializeLevelSetFunction(Parameters* pParameters, Mesh* pMesh)
                 value=sqrt(value)-r0;
                 if (value>0.)
                 {
-                      pHexahedron->label=2;
+                    pHexahedron->label=2;
                 }
                 else
                 {
@@ -500,14 +523,6 @@ int initializeLevelSetFunction(Parameters* pParameters, Mesh* pMesh)
     }
     else
     {
-        xMin=x0-.5*r0;
-        yMin=y0-.5*r0;
-        zMin=z0-.5*r0;
-
-        xMax=x0+.5*r0;
-        yMax=y0+.5*r0;
-        zMax=z0+.5*r0;
-
         fprintf(stdout,"\nInitializing the signed distance function ");
         if (pParameters->verbose)
         {
@@ -520,6 +535,14 @@ int initializeLevelSetFunction(Parameters* pParameters, Mesh* pMesh)
         {
             fprintf(stdout,"of the initial domain (cube).\n");
         }
+
+        xMin=x0-.5*r0;
+        yMin=y0-.5*r0;
+        zMin=z0-.5*r0;
+
+        xMax=x0+.5*r0;
+        yMax=y0+.5*r0;
+        zMax=z0+.5*r0;
 
         if (pParameters->opt_mode>0)
         {
@@ -641,23 +664,6 @@ int initializeLevelSetFunction(Parameters* pParameters, Mesh* pMesh)
         }
         else
         {
-            lMax=pMesh->nhex;
-            if (lMax<1)
-            {
-                PRINT_ERROR("In initializeLevelSetFunction: expecting a ");
-                fprintf(stderr,"positive number of hexahedra instead of ");
-                fprintf(stderr,"%d in the structure pointed by pMesh.\n",lMax);
-                return 0;
-            }
-            if (pMesh->phex==NULL)
-            {
-                PRINT_ERROR("In initializeLevelSetFunction: the phex ");
-                fprintf(stderr,"variable of the the structure pointed by ");
-                fprintf(stderr,"pMesh is pointing to the ");
-                fprintf(stderr,"%p address.\n",(void*)pMesh->phex);
-                return 0;
-            }
-
             // Labelling the exterior hexahedra by 2 (positive level-set
             // function) while the interior ones are labelled 3 (negative value)
             for (l=0; l<lMax; l++)
@@ -730,67 +736,13 @@ int initializeLevelSetFunction(Parameters* pParameters, Mesh* pMesh)
                 }
                 dz=value;
 
-                if (dx<=0.)
+                if (dx<=0. && dy<=0. && dz<=0.)
                 {
-                    if (dy<=0.)
-                    {
-                        if (dz<=0.)
-                        {
-                            value=DEF_MAX(dx,dy);
-                            if (dz>value)
-                            {
-                                value=dz;
-                            }
-                        }
-                        else
-                        {
-                            value=dz;
-                        }
-                    }
-                    else
-                    {
-                        if (dz<=0.)
-                        {
-                            value=dy;
-                        }
-                        else
-                        {
-                            value=sqrt(dy*dy+dz*dz);
-                        }
-                    }
+                      pHexahedron->label=3;
                 }
                 else
                 {
-                    if (dy<=0.)
-                    {
-                        if (dz<=0.)
-                        {
-                            value=dx;
-                        }
-                        else
-                        {
-                            value=sqrt(dx*dx+dz*dz);
-                        }
-                    }
-                    else
-                    {
-                        if (dz<=0.)
-                        {
-                            value=sqrt(dx*dx+dy*dy);
-                        }
-                        else
-                        {
-                            value=sqrt(dx*dx+dy*dy+dz*dz);
-                        }
-                    }
-                }
-                if (value>0.)
-                {
-                      pHexahedron->label=2;
-                }
-                else
-                {
-                    pHexahedron->label=3;
+                    pHexahedron->label=2;
                 }
             }
         }
@@ -984,7 +936,7 @@ int getLevelSetQuadrilaterals(Parameters* pParameters, Mesh* pMesh)
         // saved as (a*nY+b)*nZ+c a=0...nX-1, b=0...nY-1, c=0...nZ-1
         // Point reference (a,b,c) in a cube cell: 1=(i-1,j-1,k-1) 2=(i,j-1,k-1)
         // 3=(i,j,k-1) 4=(i-1,j,k-1) 5=(i-1,j-1,k) 6=(i,j-1,k) 7=(i,j,k)
-        // 8=(i-1,j,k) i=1..nX-1; j=1..nY-1; k=1..nZ-1
+        // 8=(i-1,j,k) i=1...nX-1; j=1...nY-1; k=1...nZ-1
         if (i>0)
         {
             lPoint=((i-1)*(nY-1)+j)*(nZ-1)+k;
@@ -1573,7 +1525,7 @@ int evaluatingMetricOnMesh(Parameters* pParameters, Mesh* pMesh,
         return 0;
     }
 
-    // The mesh must be made of tetrahedra in order to compute the metric
+    // The mesh must be made of tetraahedra in order to compute the metric
     if (pParameters->opt_mode<=0)
     {
         PRINT_ERROR("In evaluatingMetricOnMesh: the opt_mode variable ");
@@ -1604,14 +1556,31 @@ int evaluatingMetricOnMesh(Parameters* pParameters, Mesh* pMesh,
         return 0;
     }
 
-    // Initializing the metric to pParameters->met_max at each mesh vertex
-    fprintf(stdout,"\nEvaluating the metric of molecular orbitals on mesh.\n");
-    if (pParameters->verbose)
+    if (pParameters->opt_mode!=1)
     {
-        fprintf(stdout,"met_err=%lf ",pParameters->met_err);
-        fprintf(stdout,"met_min=%lf ",pParameters->met_min);
-        fprintf(stdout,"met_max=%lf\n",pParameters->met_max);
+        fprintf(stdout,"\nEvaluating the metric of molecular orbitals ");
+        fprintf(stdout,"on mesh.\n");
+        if (pParameters->verbose)
+        {
+            fprintf(stdout,"met_err=%lf ",pParameters->met_err);
+            fprintf(stdout,"met_min=%lf ",pParameters->met_min);
+            fprintf(stdout,"met_max=%lf\n",pParameters->met_max);
+        }
     }
+    else
+    {
+        if (pParameters->verbose)
+        {
+            fprintf(stdout,"\nEvaluating the metric of molecular orbitals ");
+            fprintf(stdout,"on mesh.\n"); 
+        }
+        else
+        {
+            fprintf(stdout,"45 %% done.\n");
+        }
+    }
+
+    // Initializing the metric to pParameters->met_max at each mesh vertex
     for (i=0; i<nVer; i++)
     {
         pMesh->pver[i].value=pParameters->met_max;
@@ -1862,7 +1831,10 @@ int writingSolFile(Parameters* pParameters, Mesh* pMesh)
 
     // Opening *.sol file (warning: reset and overwrite file if already exists)
     // fopen returns a FILE pointer on success, otherwise NULL is returned
-    fprintf(stdout,"\nOpening %s file. ",fileLocation);
+    if (pParameters->opt_mode!=1 || pParameters->verbose)
+    {
+        fprintf(stdout,"\nOpening %s file. ",fileLocation);
+    }
     solFile=fopen(fileLocation,"w+");
     if (solFile==NULL)
     {
@@ -1872,7 +1844,10 @@ int writingSolFile(Parameters* pParameters, Mesh* pMesh)
         fileLocation=NULL;
         return 0;
     }
-    fprintf(stdout,"Start writing solution. ");
+    if (pParameters->opt_mode!=1 || pParameters->verbose)
+    {
+        fprintf(stdout,"Start writing solution. ");
+    }
 
     // Writing according to the *.sol format: MeshVersionFormated (1=single,
     // 2=double precision), Dimension (2 or 3), SolAtVertices numberOfSolution
@@ -1917,11 +1892,276 @@ int writingSolFile(Parameters* pParameters, Mesh* pMesh)
         return 0;
     }
     solFile=NULL;
-    fprintf(stdout,"Closing file.\n");
+    if (pParameters->opt_mode!=1 || pParameters->verbose)
+    {
+        fprintf(stdout,"Closing file.\n");
+    }
 
     // Free the memory allocated for fileLocation
     free(fileLocation);
     fileLocation=NULL;
+
+    return 1;
+}
+
+/* ************************************************************************** */
+// The function computeMetric evaluates the molecular orbitals' metric on the
+// mesh and save it in a metric.sol file. It has the Parameters*, Mesh* and
+// ChemicalSystem* (both defined in main.h) as input arguments and it returns
+// zero if an error occurred, otherwise one is returned in case of success
+/* ************************************************************************** */
+int computeMetric(Parameters* pParameters, Mesh* pMesh,
+                        ChemicalSystem* pChemicalSystem, int iterationInTheLoop)
+{
+    size_t lengthName=0;
+    char* fileLocation=NULL;
+
+    // Evaluate the orbitals' metric on mesh (NULL pointers are checked here)
+    if (!evaluatingMetricOnMesh(pParameters,pMesh,pChemicalSystem))
+    {
+        PRINT_ERROR("In computeMetric: evaluatingMetricOnMesh function ");
+        fprintf(stderr,"returned zero instead of one.\n");
+        return 0;
+    }
+
+    // Check the iterationInTheLoopVariable variable
+    if (iterationInTheLoop<0 || iterationInTheLoop>pParameters->iter_max)
+    {
+        PRINT_ERROR("In computeMetric: the input iterationInTheLoop variable ");
+        fprintf(stderr,"(=%d) should be a non-negative ",iterationInTheLoop);
+        fprintf(stderr,"integer not (strictly) greater than the maximal ");
+        fprintf(stderr,"number of allowed iterations ");
+        fprintf(stderr,"(=%d).\n",pParameters->iter_max);
+        return 0;
+    }
+
+    // Check the name_mesh and name_length variables
+    if (getMeshFormat(pParameters->name_mesh,pParameters->name_length)!=1)
+    {
+        PRINT_ERROR("In computeMetric: getMeshFormat function did not return ");
+        fprintf(stderr,"one, which was the expected value here.\n");
+        return 0;
+    }
+
+    // Check that the metric.mesh file does not exist. Warning: metric.mesh
+    // and metric.sol cannot be used as names in the MPD program
+    switch (initialFileExists("metric.mesh",15))
+    {
+        case -1:
+            break;
+
+        case 1:
+            PRINT_ERROR("In computeMetric: 'metric.mesh' file cannot refer ");
+            fprintf(stderr,"to a mesh name in the MPD program.\nPlease ");
+            fprintf(stderr,"modify the name associated with the name_mesh ");
+            fprintf(stderr,"keyword or if no such line exists in your ");
+            fprintf(stderr,"(input) *.info file, check that it is not ");
+            fprintf(stderr,"entitled 'metric.info'.\n");
+            return 0;
+            break;
+
+        default:
+            PRINT_ERROR("In computeMetric: initialFileExists function ");
+            fprintf(stderr,"returned zero instead of (+/-)one.\n");
+            return 0;
+            break;
+    }
+
+    // Allocate memory for the fileLocation variables and check if it worked
+    // calloc function returns a pointer to allocated memory, otherwise NULL
+    lengthName=pParameters->name_length;
+    fileLocation=(char*)calloc(lengthName,sizeof(char));
+    if (fileLocation==NULL)
+    {
+        PRINT_ERROR("In computeMetric: could not allocate memory for the ");
+        fprintf(stderr,"local char* fileLocation variable.\n");
+        return 0;
+    }
+
+    // Store the name of the *.mesh file in fileLocation
+    // strncpy function returns a pointer to the string (not used here)
+    strncpy(fileLocation,pParameters->name_mesh,lengthName);
+
+    // Temporary rename the *.mesh by metric.mesh
+    if (!renameFileLocation(pParameters->name_mesh,pParameters->name_length,
+                                                                 "metric.mesh"))
+    {
+        PRINT_ERROR("In computeMetric: renameFileLocation function returned ");
+        fprintf(stderr,"zero instead of one.\n");
+        free(fileLocation);
+        fileLocation=NULL;
+        return 0;
+    }
+    strncpy(pParameters->name_mesh,"metric.mesh",pParameters->name_length);
+
+    // Save the metric values in a file entitled metric.sol
+    if (!writingSolFile(pParameters,pMesh))
+    {
+        PRINT_ERROR("In computeMetric: writingSolFile function returned zero ");
+        fprintf(stderr,"instead of one.\n");
+        free(fileLocation);
+        fileLocation=NULL;
+        return 0;
+    }
+
+    // Vizualize the metric of the orbitals on the mesh
+    if (pParameters->opt_mode!=1 && iterationInTheLoop)
+    {
+        if (pParameters->save_print>0)
+        {
+            if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
+                                                     pParameters->save_where==1)
+            {
+                if (!plotMeshWithMeditSoftware(pParameters))
+                {
+                    PRINT_ERROR("In computeMetric: plotMeshWithMeditSoftware ");
+                    fprintf(stderr,"function returned zero instead of one.\n");
+                    free(fileLocation);
+                    fileLocation=NULL;
+                    return 0;
+                }
+            }
+        }
+    }
+
+    // Rename the *.mesh file as it was
+    if (!renameFileLocation("metric.mesh",pParameters->name_length,
+                                                                  fileLocation))
+    {
+        PRINT_ERROR("In computeMetric: renameFileLocation function returned ");
+        fprintf(stderr,"zero instead of one.\n");
+        free(fileLocation);
+        fileLocation=NULL;
+        return 0;
+    }
+    strncpy(pParameters->name_mesh,fileLocation,pParameters->name_length);
+
+    // Free the memory allocated for fileLocation
+    free(fileLocation);
+    fileLocation=NULL;
+
+    return 1;
+}
+
+/* ************************************************************************** */
+// The function performLevelSetAdaptation computes the orbitals' metric and
+// perform a mesh adaptation according to the level-set function (that must
+// have been previously computed in a *.sol file associated with the .mesh) but
+// also respecting the orbitals' metric. This is done by using the modified 
+// version of the external mmg3d software, that must have been previously
+// installed. It has the Parameters*, Mesh*, and ChemicalSystem* (both defined
+// in main.h) and the int iterationInTheLoop variables as input arguments and
+// it returns one on success otherwise zero is returned if an error is found
+/* ************************************************************************** */
+int performLevelSetAdaptation(Parameters* pParameters, Mesh* pMesh,
+                              ChemicalSystem* pChemicalSystem,
+                                                         int iterationInTheLoop)
+{
+    int sizeMemory=0;
+
+    // Check that the input variables are not pointing to NULL
+    if (pParameters==NULL || pMesh==NULL || pChemicalSystem==NULL)
+    {
+        PRINT_ERROR("In performLevelSetAdaptation: one of the input variable");
+        fprintf(stderr,"pParameters=%p, ",(void*)pParameters);
+        fprintf(stderr,"pMesh=%p, or ",(void*)pMesh);
+        fprintf(stderr,"pChemicalSystem=%p ",(void*)pChemicalSystem);
+        fprintf(stderr,"does not point to a valid address.\n");
+        return 0;
+    }
+
+    if (pParameters->opt_mode==2)
+    {
+        fprintf(stdout,"\nSTEP 4: COMPUTE THE METRIC RELATED TO THE ");
+        fprintf(stdout,"CHEMISTRY OF THE MOLECULAR ORBITALS.\n");
+    }
+    else if (pParameters->opt_mode==4)
+    {
+        fprintf(stdout,"\nSTEP 2: COMPUTE THE METRIC RELATED TO THE ");
+        fprintf(stdout,"CHEMISTRY OF THE MOLECULAR ORBITALS.\n");
+    }
+
+    // Evaluate the metric associated with the molecular orbitals
+    if (!computeMetric(pParameters,pMesh,pChemicalSystem,iterationInTheLoop))
+    {
+        PRINT_ERROR("In performLevelSetAdaptation: computeMetric function ");
+        fprintf(stderr,"returned zero instead of one.\n");
+        return 0;
+    }
+
+    if (pParameters->opt_mode==2)
+    {
+        fprintf(stdout,"\nSTEP 5: GET NEW DOMAIN BY ADAPTING MESH TO BOTH ");
+        fprintf(stdout,"ADVECTED LEVEL-SET AND METRIC.\n");
+    }
+    else if (pParameters->opt_mode==4)
+    {
+        fprintf(stdout,"\nSTEP 3: GET NEW DOMAIN BY ADAPTING MESH TO BOTH ");
+        fprintf(stdout,"ADVECTED LEVEL-SET AND METRIC.\n");
+    }
+
+    // Free the memory allocated for the mesh
+    if (pParameters->opt_mode!=1 || pParameters->verbose)
+    {
+        sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
+        sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
+        sizeMemory+=(pMesh->nedg)*sizeof(Edge);
+        sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
+        sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
+        fprintf(stdout,"\nCleaning the allocated memory ");
+        fprintf(stdout,"(%d,%d Mo) for ",sizeMemory/1000000,sizeMemory%1000000);
+        fprintf(stdout,"a mesh adaptation according to both the level-set ");
+        fprintf(stdout,"interface geometry and molecular orbitals ");
+        fprintf(stdout,"chemistry.\n");
+    }
+    freeMeshMemory(pMesh);
+
+    // Perform a mesh adaptation according to both level set and metric
+    // Warning: mmg3d software must have been previously installed
+    if (!adaptMeshWithMmg3dSoftware(pParameters,"ls"))
+    {
+        PRINT_ERROR("In performLevelSetAdaptation: ");
+        fprintf(stderr,"adaptMeshWithMmg3dSoftware function returned zero ");
+        fprintf(stderr,"instead of one.\n");;
+        return 0;
+    }
+
+    // Read the new *.mesh file
+    if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
+    {
+        PRINT_ERROR("In performLevelSetAdaptation: ");
+        fprintf(stderr,"readMeshFileAndAllocateMesh function returned zero ");
+        fprintf(stderr,"instead of one.\n");
+        return 0;
+    }
+
+    // Update the parameters related to the computational box
+    if (!updateDiscretizationParameters(pParameters,pMesh))
+    {
+        PRINT_ERROR("In performLevelSetAdaptation: ");
+        fprintf(stderr,"updateDiscretizationParameters function returned ");
+        fprintf(stderr,"zero instead of one.\n");
+        return 0;
+    }
+
+    // Vizualize the new mesh
+    if (pParameters->opt_mode!=1 && iterationInTheLoop)
+    {
+        if (pParameters->save_print>0)
+        {
+            if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
+                                                     pParameters->save_where==7)
+            {
+                if (!plotMeshWithMeditSoftware(pParameters))
+                {
+                    PRINT_ERROR("In performLevelSetAdaptation: ");
+                    fprintf(stderr,"plotMeshWithMeditSoftware function ");
+                    fprintf(stderr,"returned zero instead of one.\n");
+                    return 0;
+                }
+            }
+        }
+    }
 
     return 1;
 }
@@ -1944,9 +2184,7 @@ int writingSolFile(Parameters* pParameters, Mesh* pMesh)
 int adaptMesh(Parameters* pParameters, Mesh* pMesh,
                                                 ChemicalSystem* pChemicalSystem)
 {
-    size_t lengthName=0;
-    char *fileLocation=NULL;
-    int sizeMemory=0;
+    int sizeMemory=0, optMode=0;
 
     switch (initialDomainInMeshExists(pParameters,pMesh))
     {
@@ -1981,8 +2219,8 @@ int adaptMesh(Parameters* pParameters, Mesh* pMesh,
                 if (pParameters->verbose)
                 {
                     fprintf(stdout,"\nInternal domain detected in the mesh. ");
-                    fprintf(stdout,"Setting up the adjacency table for ");
-                    fprintf(stdout,"Quadrilaterals. ");
+                    fprintf(stdout,"Setting up the Adjacency structures for ");
+                    fprintf(stdout,"the boundary quadrilaterals. ");
                 }
                 if (!initializeAdjacency(pParameters,pMesh))
                 {
@@ -1992,7 +2230,7 @@ int adaptMesh(Parameters* pParameters, Mesh* pMesh,
                 }
                 if (pParameters->verbose)
                 {
-                    fprintf(stdout,"Procedure end normally.\n");
+                    fprintf(stdout,"Procedure ended normally.\n");
                 }
             }
             break;
@@ -2027,6 +2265,12 @@ int adaptMesh(Parameters* pParameters, Mesh* pMesh,
             }
             else
             {
+                if (pParameters->opt_mode==1)
+                {
+                    optMode=1;
+                    pParameters->opt_mode=3;
+                }
+
                 // Evaluate the metric associated with the orbitals
                 if (!evaluatingMetricOnMesh(pParameters,pMesh,pChemicalSystem))
                 {
@@ -2067,93 +2311,20 @@ int adaptMesh(Parameters* pParameters, Mesh* pMesh,
                 // Read the new *.mesh file
                 if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
                 {
-                    PRINT_ERROR("In adaptMesh: readMeshFileAndAllocateMesh ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    return 0;
-                }
-
-                // Evaluate the orbitals' metric on the new mesh
-                if (!evaluatingMetricOnMesh(pParameters,pMesh,pChemicalSystem))
-                {
-                    PRINT_ERROR("In adaptMesh: evaluatingMetricOnMesh ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    return 0;
-                }
-
-                // Remove the metric.mesh file if it already exists. Warning:
-                // metric.mesh and metric.sol cannot be used in the MPD program
-                switch (initialFileExists("metric.mesh",15))
-                {
-                    case -1:
-                        break;
-
-                    case 1:
-                        PRINT_ERROR("In adaptMesh: 'metric.mesh' file cannot ");
-                        fprintf(stderr,"refer to a mesh name in the MPD ");
-                        fprintf(stderr,"program.\nPlease modify the name ");
-                        fprintf(stderr,"associated with the name_mesh ");
-                        fprintf(stderr,"keyword or if no such line exists ");
-                        fprintf(stderr,"in your (input) *.info file, check ");
-                        fprintf(stderr,"that it is not entitled ");
-                        fprintf(stderr,"'metric.info'.\n");
-                        return 0;
-                        break;
-
-                    default:
-                        PRINT_ERROR("In adaptMesh: initialFileExists ");
-                        fprintf(stderr,"function returned zero instead of ");
-                        fprintf(stderr,"(+/-)one.\n");
-                        return 0;
-                        break;
-                }
-
-                // Temporary rename the *.mesh by metric.mesh
-                if (!renameFileLocation(pParameters->name_mesh,
-                                        pParameters->name_length,"metric.mesh"))
-                {
-                    PRINT_ERROR("In adaptMesh: renameFileLocation function ");
+                    PRINT_ERROR("In performLevelSetAdaptation: ");
+                    fprintf(stderr,"readMeshFileAndAllocateMesh function ");
                     fprintf(stderr,"returned zero instead of one.\n");
                     return 0;
                 }
 
-                // Allocate memory for fileLocation and check if it worked
-                // calloc returns a pointer to allocated memory, otherwise NULL
-                lengthName=pParameters->name_length;
-                fileLocation=(char*)calloc(lengthName,sizeof(char));
-                if (fileLocation==NULL)
+                // Update the parameters related to the computational box
+                if (!updateDiscretizationParameters(pParameters,pMesh))
                 {
-                    PRINT_ERROR("In adaptMesh: could not allocate memory for ");
-                    fprintf(stderr,"the local char* fileLocation variable.\n");
-                    return 0;
-                }
-
-                // strncpy returns a pointer to the string (not used here)
-                strncpy(fileLocation,pParameters->name_mesh,lengthName);
-                strncpy(pParameters->name_mesh,"metric.mesh",lengthName);
-
-                // Save metric values in a file entitled metric.sol
-                if (!writingSolFile(pParameters,pMesh))
-                {
-                    PRINT_ERROR("In adaptMesh: writingSolFile function ");
+                    PRINT_ERROR("In performLevelSetAdaptation: ");
+                    fprintf(stderr,"updateDiscretizationParameters function ");
                     fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
                     return 0;
                 }
-
-                // Rename the *.mesh file as it was
-                if (!renameFileLocation("metric.mesh",
-                                         pParameters->name_length,fileLocation))
-                {
-                    PRINT_ERROR("In adaptMesh: renameFileLocation function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    return 0;
-                }
-                strncpy(pParameters->name_mesh,fileLocation,lengthName);
-                free(fileLocation);
-                fileLocation=NULL;
 
                 // Evaluate the initial level-set function on mesh
                 if (!initializeLevelSetFunction(pParameters,pMesh))
@@ -2171,42 +2342,19 @@ int adaptMesh(Parameters* pParameters, Mesh* pMesh,
                     return 0;
                 }
 
-                // Free the memory allocated for the mesh
-                sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-                sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-                sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-                sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-                sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-                fprintf(stdout,"Cleaning the allocated memory ");
-                fprintf(stdout,"(%d,%d ",sizeMemory/1000000,sizeMemory%1000000);
-                fprintf(stdout,"Mo) for a second mesh adaptation according ");
-                fprintf(stdout,"to the level-set interface geometry.\n");
-                freeMeshMemory(pMesh);
-
-                // Perform a first adaptation according to the orbitals' metric
+                // Perform a 2nd adaptation according to the level-set function
                 // Warning: mmg3d software must have been previously installed
-                if (!adaptMeshWithMmg3dSoftware(pParameters,"ls"))
+                if (!performLevelSetAdaptation(pParameters,pMesh,
+                                                             pChemicalSystem,0))
                 {
-                    PRINT_ERROR("In adaptMesh: adaptMeshWithMmg3dSoftware ");
+                    PRINT_ERROR("In adaptMesh: performLevelSetAdaptation ");
                     fprintf(stderr,"function returned zero instead of one.\n");;
                     return 0;
                 }
 
-                // Read the new *.mesh file
-                if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
+                if (pParameters->opt_mode==3 && optMode==1)
                 {
-                    PRINT_ERROR("In adaptMesh: readMeshFileAndAllocateMesh ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    return 0;
-                }
-
-                // Update the parameters related to the computational box
-                if (!updateDiscretizationParameters(pParameters,pMesh))
-                {
-                    PRINT_ERROR("In adaptMesh: ");
-                    fprintf(stderr,"updateDiscretizationParameters function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    return 0;
+                    pParameters->opt_mode=1;
                 }
             }
 

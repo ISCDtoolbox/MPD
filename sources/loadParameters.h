@@ -1692,8 +1692,8 @@ int loadParameters(Parameters* pParameters, char* nameInfo);
 int writingDefaultElasticFile(Parameters* pParameters);
 
 /**
-* \fn int writingInputFile(Parameters* pParameters)
-* \brief It write a *.input file that recalls the values of all parameters,
+* \fn int writingRestartFile(Parameters* pParameters)
+* \brief It write a *.restart file that recalls the values of all parameters,
 *        depending on the optimization mode chosen. It is a sort of exhaustive
 *        *.info file (following the same syntax) that is used to save the
 *        input data before starting the optimization loop in the MPD algorithm.
@@ -1702,14 +1702,14 @@ int writingDefaultElasticFile(Parameters* pParameters);
 *                        (defined in main.h file) of the \ref main function.
 *                        Depending on its opt_mode variable, the unnecessary
 *                        parameters are avoided whereas all the others are
-*                        written in the *.input file whose path name is the one
-*                        of pParameters->name_info but where the '.info'
-*                        extension has been replace by the '.input' one.
+*                        written in the *.restart file whose path name is the
+*                        one of pParameters->name_info but where the '.info'
+*                        extension has been replace by the '.restart' one.
 *
-* \return It returns one if the *.input file has been successfully written.
+* \return It returns one if the *.restart file has been successfully written.
 *         Otherwise, zero is returned if an error is encountered in the process.
 */
-int writingInputFile(Parameters* pParameters);
+int writingRestartFile(Parameters* pParameters);
 
 #endif
 

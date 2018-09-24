@@ -36,7 +36,7 @@
 #include "loadMesh.h"
 #include "adaptMesh.h"
 #include "optimization.h"
-#include "test.h"
+//#include "test.h"
 
 /**
 * \var globalInitialTimer
@@ -188,8 +188,8 @@ int main(int argc, char *argv[])
     }
 
     // We set the seed for rand() function then we test the selected functions
-    srand(time(NULL)); // Warning: srand(time(NULL)) must be set only one time
-    test();            // It contains all the selected unit-testing functions
+    //srand(time(NULL)); // Warning: srand(time(NULL)) must be set only one time
+    //test();            // It contains all the selected unit-testing functions
 
     // Check values of all the preprocessor constants
     if (!checkAllPreprocessorConstants(OPT_MODE,VERBOSE,N_CPU,NAME_LENGTH,
@@ -215,7 +215,8 @@ int main(int argc, char *argv[])
                                        ORB_4FXZZ,ORB_4FYZZ,ORB_4FXYZ,CST_A,
                                        CST_B,CST_C,CST_a,CST_b,CST_c,CST_aa,
                                        CST_bb,CST_cc,CST_ONE,CST_TWO,CST_THREE,
-                                               CST_1,CST_2,CST_3,CST_22,CST_33))
+                                       CST_1,CST_2,CST_3,CST_22,CST_33,INV_PHI,
+                                                                      INV_PHI2))
     {
         PRINT_ERROR("In main: checkAllPreprocessorConstants function ");
         fprintf(stderr,"returned zero instead of one.\n");
@@ -315,10 +316,6 @@ int main(int argc, char *argv[])
         {
             optMode=1;
             parameters.opt_mode=4;
-            for (j=0; j<mesh.nver; j++)
-            {
-                mesh.pver[j].value*=-1.;
-            }
         }
 
         switch (optimization(&parameters,&mesh,&data,&chemicalSystem,i,
@@ -332,6 +329,8 @@ int main(int argc, char *argv[])
                 {
                     optMode=-1;
                     parameters.opt_mode=1;
+
+                    // Rescale the shape gradient by -1 to avoid domaininversion
                     for (j=0; j<mesh.nver; j++)
                     {
                         mesh.pver[j].value*=-1.;
@@ -632,7 +631,7 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
                                   double cstbb, double cstcc, double cstOne,
                                   double cstTwo, double cstThree, double cst1,
                                   double cst2, double cst3, double cst22,
-                                                                   double cst33)
+                                    double cst33, double invPhi, double invPhi2)
 {
     int boolean=0;
     double dx=0., dy=0., dz=0.;
@@ -1084,6 +1083,17 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
         return 0;
     }
 
+    boolean=(invPhi==0.618033988749894848 && invPhi2==0.381966011250105152);
+    if (!boolean)
+    {
+        PRINT_ERROR("In checkAllPreprocessorConstants: expecting\n");
+        fprintf(stderr,"(INV_PHI=%.18lf) == 0.618033988749894848\n",invPhi);
+        fprintf(stderr,"(INV_PHI2=%.18lf) == 0.381966011250105152\n",invPhi2);
+        fprintf(stderr,"Please modify the preprocessor constants accordingly ");
+        fprintf(stderr,"in optimization.h file.\n");
+        return 0;
+    }
+
     if (verbose)
     {
         fprintf(stdout,"Preprocessor constants are ok. Setting default ");
@@ -1327,7 +1337,10 @@ int renameFileLocation(char* fileLocation, int nameLength,
     strcat(commandLine,newFileLocation);
 
     // system returns is -1 on error, otherwise the return status of the command
-    fprintf(stdout,"\n%s\n",commandLine);
+    if (commandLine[length-4]=='t')
+    {
+        fprintf(stdout,"\n%s\n",commandLine);
+    }
     if (system(commandLine))
     {
         PRINT_ERROR("In renameFileLocation: wrong return of the system ");
@@ -1640,9 +1653,16 @@ int adaptMeshWithMmg3dSoftware(Parameters* pParameters, char adaptMode[4])
         return 0;
     }
 
-    if (pParameters->verbose)
+    if (pParameters->opt_mode!=1)
     {
-        strcat(commandLine," -v 10");
+        if (pParameters->verbose)
+        {
+            strcat(commandLine," -v 1"); // Error detected mmg3d_O3 -v 10 or not
+        }
+        else
+        {
+            strcat(commandLine," >mmg3dOutput.txt 2>&1");
+        }
     }
     else
     {
@@ -1650,7 +1670,32 @@ int adaptMeshWithMmg3dSoftware(Parameters* pParameters, char adaptMode[4])
     }
 
     // system returns is -1 on error, otherwise the return status of the command
-    fprintf(stdout,"\n%s\n",commandLine);
+    if (pParameters->opt_mode!=1)
+    {
+        fprintf(stdout,"\n%s\n",commandLine);
+    }
+    else
+    {
+        if (pParameters->verbose)
+        {
+            fprintf(stdout,"\n%s\n",commandLine);
+        }
+        else
+        {
+            if (!strcmp(adaptMode,"ls"))
+            {
+                fprintf(stdout,"55 %% done.\n");
+            }
+            else if (!strcmp(adaptMode,"lag"))
+            {
+                fprintf(stdout,"10 %% done.\n");
+            }
+            else
+            {
+                 fprintf(stdout,"\n%s\n",commandLine);
+            }
+        }
+    }
     if (system(commandLine))
     {
         PRINT_ERROR("In adaptMeshWithMmg3dSoftware: wrong return of the ");
@@ -1660,7 +1705,7 @@ int adaptMeshWithMmg3dSoftware(Parameters* pParameters, char adaptMode[4])
         return 0;
     }
 
-    if (!pParameters->verbose)
+    if (!pParameters->verbose || pParameters->opt_mode==1)
     {
         // remove returns 0 on success, otherwise -1
         if (remove("mmg3dOutput.txt"))
@@ -1845,17 +1890,42 @@ int renormalizeWithMshdistSoftware(Parameters* pParameters, char mode[4])
     }
     strcat(commandLine,options);
 
-    if (pParameters->verbose)
+    if (pParameters->opt_mode!=1)
     {
-        strcat(commandLine," -v 10");
+        if (pParameters->verbose)
+        {
+            strcat(commandLine," -v 10");
+        }
+        else
+        {
+            strcat(commandLine," >mshdistOutput.txt 2>&1");
+        }
     }
     else
     {
-        strcat(commandLine," >mshdistOutput.txt 2>&1");
+        strcat(commandLine," -v 10 >mshdistOutput.txt 2>&1");
     }
 
     // system returns is -1 on error, otherwise the return status of the command
-    fprintf(stdout,"\n%s\n",commandLine);
+    if (pParameters->opt_mode!=1)
+    {
+        fprintf(stdout,"\n%s\n",commandLine);
+    }
+    else
+    {
+        if (pParameters->verbose)
+        {
+            fprintf(stdout,"\n%s\n",commandLine);
+        }
+        else
+        {
+            if (pParameters->n_iter!=10)
+            {
+                fprintf(stdout,"10 %% done.\n");
+            }    
+        }
+    }
+
     if (system(commandLine))
     {
         PRINT_ERROR("In renormalizeWithMshdistSoftware: wrong return of the ");
@@ -1865,7 +1935,7 @@ int renormalizeWithMshdistSoftware(Parameters* pParameters, char mode[4])
         return 0;
     }
 
-    if (!pParameters->verbose)
+    if (!pParameters->verbose || pParameters->opt_mode==1)
     {
         // remove returns 0 on success, otherwise -1
         if (remove("mshdistOutput.txt"))
@@ -2002,17 +2072,27 @@ int extendShapeGradientWithElasticSoftware(Parameters* pParameters)
     commandLine[length-5]='\0';
     strcat(commandLine,".sol");
 
-    if (pParameters->verbose)
+    if (pParameters->opt_mode!=1)
     {
-        strcat(commandLine," +v");
+        if (pParameters->verbose)
+        {
+            strcat(commandLine," +v");
+        }
+        else
+        {
+            strcat(commandLine," >elasticOutput.txt 2>&1");
+        }
     }
     else
     {
-        strcat(commandLine," >elasticOutput.txt 2>&1");
+        strcat(commandLine," +v >elasticOutput.txt 2>&1");
     }
 
     // system returns is -1 on error, otherwise the return status of the command
-    fprintf(stdout,"\n%s\n",commandLine);
+    if (pParameters->opt_mode!=1 || pParameters->verbose)
+    {
+        fprintf(stdout,"\n%s\n",commandLine);
+    }
     if (system(commandLine))
     {
         PRINT_ERROR("In extendShapeGradientWithElasticSoftware: wrong ");
@@ -2022,7 +2102,7 @@ int extendShapeGradientWithElasticSoftware(Parameters* pParameters)
         return 0;
     }
 
-    if (!pParameters->verbose)
+    if (!pParameters->verbose || pParameters->opt_mode==1)
     {
         // remove returns 0 on success, otherwise -1
         if (remove("elasticOutput.txt"))
@@ -2153,17 +2233,27 @@ int advectLevelSetWithAdvectSoftware(Parameters* pParameters)
     }
 
     // Choose the verbose mode
-    if (pParameters->verbose)
+    if (pParameters->opt_mode!=1)
     {
-        strcat(commandLine," +v");
+        if (pParameters->verbose)
+        {
+            strcat(commandLine," +v");
+        }
+        else
+        {
+            strcat(commandLine," >advectOutput.txt 2>&1");
+        }
     }
     else
     {
-        strcat(commandLine," >advectOutput.txt 2>&1");
+        strcat(commandLine," +v >advectOutput.txt 2>&1");
     }
 
     // system returns is -1 on error, otherwise the return status of the command
-    fprintf(stdout,"\n%s\n",commandLine);
+    if (pParameters->opt_mode!=1 || pParameters->verbose)
+    {
+        fprintf(stdout,"\n%s\n",commandLine);
+    }
     if (system(commandLine))
     {
         PRINT_ERROR("In advectLevelSetWithAdvectSoftware: wrong return of ");
@@ -2173,7 +2263,7 @@ int advectLevelSetWithAdvectSoftware(Parameters* pParameters)
         return 0;
     }
 
-    if (!pParameters->verbose)
+    if (!pParameters->verbose || pParameters->opt_mode==1)
     {
         // remove returns 0 on success, otherwise -1
         if (remove("advectOutput.txt"))

@@ -901,8 +901,24 @@ int computeOverlapMatrix(Parameters* pParameters, Mesh* pMesh, Data* pData,
         return 0;
     }
 
-    fprintf(stdout,"\nEvaluating the overlap matrix S(%d) on ",labelToAvoid);
-    fprintf(stdout,"mesh.\n");
+    if (pParameters->opt_mode!=1 || !iterationInTheLoop)
+    {
+        fprintf(stdout,"\nEvaluating the overlap matrix S(%d) ",labelToAvoid);
+        fprintf(stdout,"on mesh.\n");
+    }
+    else
+    {
+        if (pParameters->verbose)
+        {
+            fprintf(stdout,"\nEvaluating the overlap matrix ");
+            fprintf(stdout,"S(%d) on mesh.\n",labelToAvoid);
+        }
+        else
+        {
+            fprintf(stdout,"65 %% done.\n");
+        }
+        
+    }
 
     // Set the pointer for the overlap matrix
     if (pData->pmat==NULL)
@@ -1177,15 +1193,19 @@ int computeOverlapMatrix(Parameters* pParameters, Mesh* pMesh, Data* pData,
 
             // End of the parallelization for the loop for
             pOverlapMatrix->coef[i*nMorb+j]=integralK;
-            if (pParameters->orb_rhf)
+            if (pParameters->opt_mode!=1 || pParameters->verbose ||
+                                                            !iterationInTheLoop)
             {
-                fprintf(stdout,"%d %% done.\n",
+                if (pParameters->orb_rhf || pParameters->verbose)
+                {
+                    fprintf(stdout,"%d %% done.\n",
                                (int)(100.*(i*.5*nMorb+j+1.)/(.25*nMorb*nMorb)));
-            }
-            else
-            {
-                fprintf(stdout,"%d %% done.\n",
+                }
+                else
+                {
+                    fprintf(stdout,"%d %% done.\n",
                                       (int)(100.*(i*nMorb+j+1.)/(nMorb*nMorb)));
+                }
             }
         }
 
@@ -1318,15 +1338,19 @@ int computeOverlapMatrix(Parameters* pParameters, Mesh* pMesh, Data* pData,
 
         // End of the parallelization for the loop for
         pOverlapMatrix->coef[i*nMorb+i]=integralK;
-        if (pParameters->orb_rhf)
+        if (pParameters->opt_mode!=1 || pParameters->verbose || 
+                                                            !iterationInTheLoop)
         {
-            fprintf(stdout,"%d %% done.\n",
+            if (pParameters->orb_rhf)
+            {
+                fprintf(stdout,"%d %% done.\n",
                                (int)(100.*(i*.5*nMorb+i+1.)/(.25*nMorb*nMorb)));
-        }
-        else
-        {
-            fprintf(stdout,"%d %% done.\n",
+            }
+            else
+            {
+                fprintf(stdout,"%d %% done.\n",
                                       (int)(100.*(i*nMorb+i+1.)/(nMorb*nMorb)));
+            }
         }
     }
 
@@ -2300,7 +2324,8 @@ int diagonalizeOverlapMatrix(Parameters* pParameters, Data* pData,
 
     if (pParameters->verbose)
     {
-        if (pParameters->opt_mode!=-2 || !iterationInTheLoop)
+        if ((pParameters->opt_mode!=-2 && pParameters->opt_mode!=1) ||
+                                                            !iterationInTheLoop)
         {
             fprintf(stdout,"\nEvaluating the eigenvalues and eigenvectors ");
             fprintf(stdout,"of the overlap matrix:\n");
@@ -2378,7 +2403,8 @@ int diagonalizeOverlapMatrix(Parameters* pParameters, Data* pData,
 
     if (pParameters->verbose)
     {
-        if (pParameters->opt_mode!=-2 || !iterationInTheLoop)
+        if ((pParameters->opt_mode!=-2 && pParameters->opt_mode!=1) ||
+                                                            !iterationInTheLoop)
         {
             // Print the eigenvalues and eigenvectors
             fprintf(stdout,"\nEigenvalues: \n");
@@ -2532,7 +2558,8 @@ int computeProbability(Parameters* pParameters, Data* pData,
     // Note that for the moment we are not able to compute a spin probabilities
     if (pParameters->verbose)
     {
-        if (pParameters->opt_mode!=-2 || !iterationInTheLoop)
+        if ((pParameters->opt_mode!=-2 && pParameters->opt_mode!=1) ||
+                                                            !iterationInTheLoop)
         {
             fprintf(stdout,"\nComputing the probability to find exactly ");
             fprintf(stdout,"%d electron",nu);
@@ -2577,9 +2604,10 @@ int computeProbability(Parameters* pParameters, Data* pData,
     pData->pnu[iterationInTheLoop]=pProbabilities->pk[nu];
 
     // Print the probabilities and save
-    if (pParameters->verbose)
+    if ((pParameters->opt_mode!=-2 && pParameters->opt_mode!=1) ||
+                                                            !iterationInTheLoop)
     {
-        if (pParameters->opt_mode!=-2 || !iterationInTheLoop)
+        if (pParameters->verbose)    
         {
             for (i=0; i<nProb; i++)
             {
@@ -2606,13 +2634,22 @@ int computeProbability(Parameters* pParameters, Data* pData,
                 }
             }
         }
-    }
-    else
-    {
-        if (pParameters->opt_mode!=-2 || !iterationInTheLoop)
+        else
         {
             fprintf(stdout,"\nProbability(nu=%d electrons in Omega) = ",nu);
             fprintf(stdout,"%.8lf\n",pData->pnu[iterationInTheLoop]);
+        }
+    }
+    else if (pParameters->opt_mode==1)
+    {
+        if (pParameters->verbose)
+        {
+            fprintf(stdout,"\nProbability(nu=%d electrons in Omega) = ",nu);
+            fprintf(stdout,"%.8lf\n",pData->pnu[iterationInTheLoop]);
+        }
+        else
+        {
+            fprintf(stdout,"100 %% done.\n");
         }
     }
 
@@ -2624,7 +2661,13 @@ int computeProbability(Parameters* pParameters, Data* pData,
         value+=i*pProbabilities->pk[i];
     }
     pData->pop[iterationInTheLoop]=value;
-    if (pParameters->opt_mode!=-2 || !iterationInTheLoop)
+    if ((pParameters->opt_mode!=-2 && pParameters->opt_mode!=1) ||
+                                                            !iterationInTheLoop)
+    {
+        fprintf(stdout,"\nTotal population in Omega is equal to ");
+        fprintf(stdout,"%.8lf\n",value);
+    }
+    else if (pParameters->opt_mode==1 && pParameters->verbose)
     {
         fprintf(stdout,"\nTotal population in Omega is equal to ");
         fprintf(stdout,"%.8lf\n",value);
@@ -4472,7 +4515,10 @@ int writingShapeSolFile(Parameters* pParameters, Mesh* pMesh)
 
     // Opening *.sol file (warning: reset and overwrite file if already exists)
     // fopen returns a FILE pointer on success, otherwise NULL is returned
-    fprintf(stdout,"\nOpening %s file. ",fileLocation);
+    if (pParameters->opt_mode!=1 || pParameters->verbose)
+    {
+        fprintf(stdout,"\nOpening %s file. ",fileLocation);
+    }
     shapeFile=fopen(fileLocation,"w+");
     if (shapeFile==NULL)
     {
@@ -4482,7 +4528,10 @@ int writingShapeSolFile(Parameters* pParameters, Mesh* pMesh)
         fileLocation=NULL;
         return 0;
     }
-    fprintf(stdout,"Start writing vectorial data. ");
+    if (pParameters->opt_mode!=1 || pParameters->verbose)
+    {
+        fprintf(stdout,"Start writing vectorial data. ");
+    }
 
     // Writing according to the *.sol format: MeshVersionFormated (1=single,
     // 2=double precision), Dimension (2 or 3), SolAtVertices numberOfSolution
@@ -4614,7 +4663,10 @@ int writingShapeSolFile(Parameters* pParameters, Mesh* pMesh)
         return 0;
     }
     shapeFile=NULL;
-    fprintf(stdout,"Closing file.\n");
+    if (pParameters->opt_mode!=1 || pParameters->verbose)
+    {
+        fprintf(stdout,"Closing file.\n");
+    }
 
     // Free the memory allocated for fileLocation
     free(fileLocation);
@@ -5067,7 +5119,7 @@ int saveDataInTheLoop(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 {
                     fprintf(dataFile,"D2prob. ");
                 }
-                fprintf(dataFile,"Time (in sec.) Cumulated time (in sec.)\n\n");
+                fprintf(dataFile,"Time (in min.) Cumulated time (in min.)\n\n");
             }
 
             fprintf(dataFile,"%d ",iterationInTheLoop);
@@ -5076,8 +5128,8 @@ int saveDataInTheLoop(Parameters* pParameters, Mesh* pMesh, Data* pData,
             fprintf(dataFile,"%.8le ",pData->d0p[iterationInTheLoop]);
             fprintf(dataFile,"%.8le ",pData->d1p[iterationInTheLoop]);
             fprintf(dataFile,"%.8le ",pData->d2p[iterationInTheLoop]);
-            fprintf(dataFile,"%d ",(int)pData->tim[iterationInTheLoop]);
-            fprintf(dataFile,"%d \n",(int)pData->ctim[iterationInTheLoop]);
+            fprintf(dataFile,"%.2lf ",pData->tim[iterationInTheLoop]/60.);
+            fprintf(dataFile,"%.2lf \n",pData->ctim[iterationInTheLoop]/60.);
 
             // Closing the *.data file: fclose returns zero if the input FILE*
             // variable is successfully closed, otherwise EOF (end-of-file)
@@ -5213,10 +5265,10 @@ int setupInitialData(Parameters* pParameters, Mesh* pMesh, Data* pData,
     }
 
     // Write the *.input file before starting the optimization loop
-    if (!writingInputFile(pParameters))
+    if (!writingRestartFile(pParameters))
     {
-        PRINT_ERROR("In setupInitialData: writingInputFile function returned ");
-        fprintf(stderr,"zero instead of one.\n");
+        PRINT_ERROR("In setupInitialData: writingRestartFile function ");
+        fprintf(stderr,"returned zero instead of one.\n");
         return 0;
     }
 
@@ -5252,7 +5304,12 @@ int setupInitialData(Parameters* pParameters, Mesh* pMesh, Data* pData,
 }
 
 /* ************************************************************************** */
-// The function exhaustiveSearchAlgorithm
+// The function exhaustiveSearchAlgorithm computes the pParameters->opt_mode=-2
+// of the optimization function. It tries to add or remove the hexahedra that
+// are touching the boundary of the domain. Only those increasing the
+// probability are retained. It has the Parameters*, Mesh*, Data*,
+// ChemicalSystem* (both defined in main.h) and the int iterationInTheLoop
+// variables as input arguments. It returns one on success otherwise zero
 /* ************************************************************************** */
 int exhaustiveSearchAlgorithm(Parameters* pParameters, Mesh* pMesh,
                                Data* pData, ChemicalSystem* pChemicalSystem,
@@ -5775,16 +5832,717 @@ int exhaustiveSearchAlgorithm(Parameters* pParameters, Mesh* pMesh,
 }
 
 /* ************************************************************************** */
-// The function optimization
+// The function computeLevelSet computes the signed distance function i.e. the
+// level-set function with unitary gradient norm of the internal domain of pMesh
+// and saves the values in an *.chi.sol file associated with an *.mesh one. It
+// has the Parameters* and Mesh* variables (both defined in main.h) as input
+// arguments and it returns zero if an error occurred, otherwise one is returned
+// on success
+/* ************************************************************************** */
+int computeLevelSet(Parameters* pParameters, Mesh* pMesh,
+                                                         int iterationInTheLoop)
+{
+    size_t lengthName=0;
+    char* fileLocation=NULL;
+
+    // Check that the input variables are not pointing to NULL
+    if (pParameters==NULL || pMesh==NULL)
+    {
+        PRINT_ERROR("In computeLevelSet: at least one of the input variable ");
+        fprintf(stderr,"pParameters=%p or",(void*)pParameters);
+        fprintf(stderr,"pMesh=%p does not point to a valid ",(void*)pMesh);
+        fprintf(stderr,"address.\n");
+        return 0;
+    }
+
+    // Check the pParameters->opt_mode variable
+    if (pParameters->opt_mode!=1 && pParameters->opt_mode!=2)
+    {
+        PRINT_ERROR("In computeLevelSet: the pParameters->opt_mode ");
+        fprintf(stderr,"variable (=%d) can only be set ",pParameters->opt_mode);
+        fprintf(stderr,"to one or two here.\n");
+        return 0;
+    }
+
+    // Check the iterationInTheLoopVariable variable
+    if (iterationInTheLoop<1 || iterationInTheLoop>pParameters->iter_max)
+    {
+        PRINT_ERROR("In computeLevelSet: the input iterationInTheLoop ");
+        fprintf(stderr,"variable (=%d) should be a ",iterationInTheLoop);
+        fprintf(stderr,"positive integer not (strictly) greater than the ");
+        fprintf(stderr,"maximal number of allowed iterations ");
+        fprintf(stderr,"(=%d).\n",pParameters->iter_max);
+        return 0;
+    }
+
+    // Check the name_mesh and name_length variables
+    if (getMeshFormat(pParameters->name_mesh,pParameters->name_length)!=1)
+    {
+        PRINT_ERROR("In computeLevelSet: getMeshFormat function did not ");
+        fprintf(stderr,"return one, which was the expected value here.\n");
+        return 0;
+    }
+
+    // Store the name of the *.chi.mesh file in fileLocation
+    lengthName=pParameters->name_length;
+    fileLocation=(char*)calloc(lengthName,sizeof(char));
+    if (fileLocation==NULL)
+    {
+        PRINT_ERROR("In computeLevelSet: could not allocate memory for the ");
+        fprintf(stderr,"local char* fileLocation variable.\n");
+        return 0;
+    }
+    strncpy(fileLocation,pParameters->name_mesh,lengthName);
+    lengthName=strlen(fileLocation);
+    fileLocation[lengthName-5]='.';
+    fileLocation[lengthName-4]='c';
+    fileLocation[lengthName-3]='h';
+    fileLocation[lengthName-2]='i';
+    fileLocation[lengthName-1]='.';
+    fileLocation[lengthName]='m';
+    fileLocation[lengthName+1]='e';
+    fileLocation[lengthName+2]='s';
+    fileLocation[lengthName+3]='h';
+    fileLocation[lengthName+4]='\0';
+
+    // Remove the *.chi.mesh file if it already exists.
+    switch (initialFileExists(fileLocation,pParameters->name_length))
+    {
+        case -1:
+            break;
+
+        case 1:
+            // remove returns 0 on success, otherwise -1
+            if (remove(fileLocation))
+            {
+                PRINT_ERROR("In computeLevelSet: wrong return (=-1) of the ");
+                fprintf(stderr,"standard remove c-function in the attempt of ");
+                fprintf(stderr,"removing the %s file.\n",fileLocation);
+                free(fileLocation);
+                fileLocation=NULL;
+                return 0;
+            }
+            break;
+
+        default:
+            PRINT_ERROR("In computeLevelSet: initialFileExists function ");
+            fprintf(stderr,"returned zero instead of (+/-)one.\n");
+            free(fileLocation);
+            fileLocation=NULL;
+            return 0;
+            break;
+    }
+
+    // Temporary rename the *.mesh by *.chi.mesh
+    if (!renameFileLocation(pParameters->name_mesh,pParameters->name_length,
+                                                                  fileLocation))
+    {
+        PRINT_ERROR("In computeLevelSet: renameFileLocation function ");
+        fprintf(stderr,"returned zero instead of one.\n");
+        free(fileLocation);
+        fileLocation=NULL;
+        return 0;
+    }
+    strncpy(pParameters->name_mesh,fileLocation,pParameters->name_length);
+
+    // Generate the level-set function from mesh with mshdist
+    if (!renormalizeWithMshdistSoftware(pParameters,"dom"))
+    {
+        PRINT_ERROR("In computeLevelSet: renormalizeWithMshdistSoftware ");
+        fprintf(stderr,"function returned zero instead of one.\n");
+        free(fileLocation);
+        fileLocation=NULL;
+        return 0;
+    }
+
+    // Vizualize the shape gradient after renormalization
+    if (pParameters->opt_mode==2)
+    {
+        if (pParameters->save_print>0)
+        {
+            if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
+                                                     pParameters->save_where==2)
+            {
+                if (!plotMeshWithMeditSoftware(pParameters))
+                {
+                    PRINT_ERROR("In computeLevelSet: ");
+                    fprintf(stderr,"plotMeshWithMeditSoftware function ");
+                    fprintf(stderr,"returned zero instead of one.\n");
+                    free(fileLocation);
+                    fileLocation=NULL;
+                    return 0;
+                }
+            }
+        }
+    }
+
+    // Rename the *.mesh file as it was
+    lengthName=strlen(fileLocation);
+    fileLocation[lengthName-9]='.';
+    fileLocation[lengthName-8]='m';
+    fileLocation[lengthName-7]='e';
+    fileLocation[lengthName-6]='s';
+    fileLocation[lengthName-5]='h';
+    fileLocation[lengthName-4]='\0';
+    fileLocation[lengthName-3]='\0';
+    fileLocation[lengthName-2]='\0';
+    fileLocation[lengthName-1]='\0';
+    fileLocation[lengthName]='\0';
+    if (!renameFileLocation(pParameters->name_mesh,pParameters->name_length,
+                                                                  fileLocation))
+    {
+        PRINT_ERROR("In computeLevelSet: renameFileLocation function ");
+        fprintf(stderr,"returned zero instead of one.\n");
+        free(fileLocation);
+        fileLocation=NULL;
+        return 0;
+    }
+    strncpy(pParameters->name_mesh,fileLocation,pParameters->name_length);
+
+    // Free the memory allocated for fileLocation
+    free(fileLocation);
+    fileLocation=NULL;
+
+    return 1;
+}
+
+/* ************************************************************************** */
+// The function saveTheShapeGradient contains successive functions that are
+// used to vizualize the norm of the shape gradient, save it in the vectorial
+// *.sol file, and vizualize it with the medit software. It has the
+// Parameters*, Mesh*, (both defined in main.h), and the int
+// interationInTheLoop variables as input arguments. It returns one on success
+// otherwise zero if an error is encoutnered during the process
+/* ************************************************************************** */
+int saveTheShapeGradient(Parameters* pParameters, Mesh* pMesh,
+                                                         int iterationInTheLoop)
+{
+    // Check that the input variables are not pointing to NULL
+    if (pParameters==NULL || pMesh==NULL)
+    {
+        PRINT_ERROR("In saveTheShapeGradient: at least one of the input ");
+        fprintf(stderr,"variable pParameters=%p or",(void*)pParameters);
+        fprintf(stderr,"pMesh=%p does not point to a valid ",(void*)pMesh);
+        fprintf(stderr,"address.\n");
+        return 0;
+    }
+
+    // Check the iterationInTheLoopVariable variable
+    if (iterationInTheLoop<1 || iterationInTheLoop>pParameters->iter_max)
+    {
+        PRINT_ERROR("In saveTheShapeGradient: the input iterationInTheLoop ");
+        fprintf(stderr,"variable (=%d) should be a ",iterationInTheLoop);
+        fprintf(stderr,"positive integer not (strictly) greater than the ");
+        fprintf(stderr,"maximal number of allowed iterations ");
+        fprintf(stderr,"(=%d).\n",pParameters->iter_max);
+        return 0;
+    }
+
+    if (pParameters->opt_mode==3)
+    {
+            fprintf(stdout,"\nSTEP 1: DEFORM THE MESH ACCORDING TO THE ");
+            fprintf(stdout,"COMPUTED SHAPE GRADIENT MOTION.\n");
+    }
+    else if (pParameters->opt_mode==2)
+    {
+            fprintf(stdout,"\nSTEP 1: EXTEND THE COMPUTED SHAPE GRADIENT ");
+            fprintf(stdout,"OUTSIDE THE BOUNDARY OF THE DOMAIN.\n");
+    }
+
+    // Vizualize the norm of the shape gradient at the boundary vertices
+    if (pParameters->opt_mode!=1)
+    {
+        if (pParameters->save_print>0)
+        {
+            if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
+                                                     pParameters->save_where==3)
+            {
+                if (!writingSolFile(pParameters,pMesh))
+                {
+                    PRINT_ERROR("In saveTheShapeGradient: writingSolFile ");
+                    fprintf(stderr,"function returned zero instead of one.\n");
+                    return 0;
+                }
+
+                if (!plotMeshWithMeditSoftware(pParameters))
+                {
+                     PRINT_ERROR("In saveTheShapeGradient: ");
+                     fprintf(stderr,"plotMeshWithMeditSoftware function ");
+                     fprintf(stderr,"returned zero instead of one.\n");
+                    return 0;
+                }
+            }
+        }
+    }
+
+    // Save the vectorial shape gradient at the shape vertices
+    if (!writingShapeSolFile(pParameters,pMesh))
+    {
+        PRINT_ERROR("In saveTheShapeGradient: writingShapeSolFile function ");
+        fprintf(stderr,"returned zero instead of one.\n");
+        return 0;
+    }
+
+    // Vizualize the vectorial shape gradient at the shape vertices
+    if (pParameters->opt_mode!=1)
+    {
+        if (pParameters->save_print>0)
+        {
+            if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
+                                                     pParameters->save_where==4)
+            {
+                if (!plotMeshWithMeditSoftware(pParameters))
+                {
+                    PRINT_ERROR("In saveTheShapeGradient: ");
+                    fprintf(stderr,"plotMeshWithMeditSoftware function ");
+                    fprintf(stderr,"returned zero instead of one.\n");
+                    return 0;
+                }
+            }
+        }
+    }
+
+    return 1;
+}
+
+/* ************************************************************************** */
+// The function computeEulerianMode contains successive functions that are
+// used to specifically compute the Eulerian mode in the optimization function
+// It has the Parameters*, Mesh*, (both defined in main.h), and the int
+// interationInTheLoop variables as input arguments. It returns one on success
+// otherwise zero if an error is encoutnered during the process
+/* ************************************************************************** */
+int computeEulerianMode(Parameters* pParameters, Mesh* pMesh,
+                                                         int iterationInTheLoop)
+{
+    // Check that the input variables are not pointing to NULL
+    if (pParameters==NULL || pMesh==NULL)
+    {
+        PRINT_ERROR("In computeEulerianMode: at least one of the input ");
+        fprintf(stderr,"variable pParameters=%p or",(void*)pParameters);
+        fprintf(stderr,"pMesh=%p does not point to a valid ",(void*)pMesh);
+        fprintf(stderr,"address.\n");
+        return 0;
+    }
+
+    // Check the pParameters->opt_mode variable
+    if (pParameters->opt_mode!=1 && pParameters->opt_mode!=2)
+    {
+        PRINT_ERROR("In computeEulerianMode: the pParameters->opt_mode ");
+        fprintf(stderr,"variable (=%d) can only be set ",pParameters->opt_mode);
+        fprintf(stderr,"to one or two here.\n");
+        return 0;
+    }
+
+    // Check the iterationInTheLoopVariable variable
+    if (iterationInTheLoop<1 || iterationInTheLoop>pParameters->iter_max)
+    {
+        PRINT_ERROR("In computeEulerianMode: the input iterationInTheLoop ");
+        fprintf(stderr,"variable (=%d) should be a ",iterationInTheLoop);
+        fprintf(stderr,"positive integer not (strictly) greater than the ");
+        fprintf(stderr,"maximal number of allowed iterations ");
+        fprintf(stderr,"(=%d).\n",pParameters->iter_max);
+        return 0;
+    }
+
+    // Extend the shape gradient outside the domain thanks to the elasticity
+    if (!extendShapeGradientWithElasticSoftware(pParameters))
+    {
+        PRINT_ERROR("In computeEulerianMode: ");
+        fprintf(stderr,"extendLevelSetWithElasticSoftware function returned ");
+        fprintf(stderr,"zero instead of one.\n");
+        return 0;
+    }
+
+    // Vizualize the extension of the vectorial shape gradient
+    if (pParameters->opt_mode==2)
+    {
+       if (pParameters->save_print>0)
+        {
+            if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
+                                                     pParameters->save_where==5)
+            {
+                if (!plotMeshWithMeditSoftware(pParameters))
+                {
+                    PRINT_ERROR("In computeEulerianMode: ");
+                    fprintf(stderr,"plotMeshWithMeditSoftware function ");
+                    fprintf(stderr,"returned zero instead of one.\n");
+                    return 0;
+                }
+            }
+        }
+
+        fprintf(stdout,"\nSTEP 2: GET THE LEVEL-SET FUNCTION OF ");
+        fprintf(stdout,"THE DOMAIN WITH A UNITARY GRADIENT NORM.\n");
+    }
+
+    // Generate the level-set function from mesh with mshdist
+    if (!computeLevelSet(pParameters,pMesh,iterationInTheLoop))
+    {
+        PRINT_ERROR("In computeEulerianMode: computeLevelSet function ");
+        fprintf(stderr,"returned zero instead of one.\n");
+        return 0;
+    }
+
+    if (pParameters->opt_mode==2)
+    {
+        fprintf(stdout,"\nSTEP 3: ADVECT THE LEVEL-SET FUNCTION ");
+        fprintf(stdout,"ACCORDING TO THE EXTENDED SHAPE GRADIENT.\n");
+    }
+         
+    // Advect the level-set function according to the parameters
+    if (!advectLevelSetWithAdvectSoftware(pParameters))
+    {
+        PRINT_ERROR("In computeEulerianMode:  ");
+        fprintf(stderr,"advectLevelSetWithAdvectSoftware function ");
+        fprintf(stderr,"returned zero instead of one.\n");
+        return 0;
+    }
+
+    // Vizualize the advected level-set function on the mesh
+    if (pParameters->opt_mode==2)
+    {
+        if (pParameters->save_print>0)
+        {
+            if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
+                                                     pParameters->save_where==6)
+            {
+                if (!plotMeshWithMeditSoftware(pParameters))
+                {
+                    PRINT_ERROR("In computeEulerianMode: ");
+                    fprintf(stderr,"plotMeshWithMeditSoftware function ");
+                    fprintf(stderr,"returned zero instead of one.\n");
+                    return 0;
+                }
+            }
+        }
+    }
+
+    return 1;
+}
+
+/* ************************************************************************** */
+// The function computeLagrangianMode contains successive functions that are
+// used to specifically compute the Lagrangian mode in the optimization function
+// It has the Parameters*, Mesh*, (both defined in main.h), and the int
+// interationInTheLoop variables as input arguments. It returns one on success
+// otherwise zero if an error is encoutnered during the process
+/* ************************************************************************** */
+int computeLagrangianMode(Parameters* pParameters, Mesh* pMesh,
+                                                         int iterationInTheLoop)
+{
+    int sizeMemory=0, nIter=0;
+
+    // Check that the input variables are not pointing to NULL
+    if (pParameters==NULL || pMesh==NULL)
+    {
+        PRINT_ERROR("In computeLagrangianMode: at least one of the input ");
+        fprintf(stderr,"variable pParameters=%p or",(void*)pParameters);
+        fprintf(stderr,"pMesh=%p does not point to a valid ",(void*)pMesh);
+        fprintf(stderr,"address.\n");
+        return 0;
+    }
+
+    // Check the pParameters->opt_mode variable
+    if (pParameters->opt_mode!=1 && pParameters->opt_mode!=3)
+    {
+        PRINT_ERROR("In computeLagrangianMode: the pParameters->opt_mode ");
+        fprintf(stderr,"variable (=%d) can only be set ",pParameters->opt_mode);
+        fprintf(stderr,"to one or three here.\n");
+        return 0;
+    }
+
+    // Check the iterationInTheLoopVariable variable
+    if (iterationInTheLoop<1 || iterationInTheLoop>pParameters->iter_max)
+    {
+        PRINT_ERROR("In computeLagrangianMode: the input iterationInTheLoop ");
+        fprintf(stderr,"variable (=%d) should be a ",iterationInTheLoop);
+        fprintf(stderr,"positive integer not (strictly) greater than the ");
+        fprintf(stderr,"maximal number of allowed iterations ");
+        fprintf(stderr,"(=%d).\n",pParameters->iter_max);
+        return 0;
+    }
+
+    // Free the memory allocated for the mesh
+    if (pParameters->opt_mode!=1 || pParameters->verbose)
+    {
+        sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
+        sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
+        sizeMemory+=(pMesh->nedg)*sizeof(Edge);
+        sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
+        sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
+        fprintf(stdout,"\nCleaning the allocated memory ");
+        fprintf(stdout,"(%d,%d Mo) for ",sizeMemory/1000000,sizeMemory%1000000);
+        fprintf(stdout,"a mesh adaptation according to the shape gradient ");
+        fprintf(stdout,"with a Lagrangian approach.\n");
+    }
+    freeMeshMemory(pMesh);
+
+    // Warning: mmg3d software must have been previously installed
+    if (!adaptMeshWithMmg3dSoftware(pParameters,"lag"))
+    {
+        PRINT_ERROR("In computeLagrangianMode: adaptMeshWithMmg3dSoftware ");
+        fprintf(stderr,"function returned zero instead of one.\n");;
+        return 0;
+    }
+
+    // Read the intermediate *.mesh file
+    if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
+    {
+        PRINT_ERROR("In computeLagrangianMode: readMeshFileAndAllocateMesh ");
+        fprintf(stderr,"function returned zero instead of one.\n");
+        return 0;
+    }
+
+    // Update the parameters related to the computational box
+    if (!updateDiscretizationParameters(pParameters,pMesh))
+    {
+        PRINT_ERROR("In computeLagrangianMode: ");
+        fprintf(stderr,"updateDiscretizationParameters function returned ");
+        fprintf(stderr,"zero instead of one.\n");
+        return 0;
+    }
+
+    // Vizualize the intermediate mesh
+    if (pParameters->opt_mode==3)
+    {
+        if (pParameters->save_print>0)
+        {
+            if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
+                                                     pParameters->save_where==7)
+            {
+                if (!plotMeshWithMeditSoftware(pParameters))
+                {
+                    PRINT_ERROR("In computeLagrangianMode: ");
+                    fprintf(stderr,"plotMeshWithMeditSoftware function ");
+                    fprintf(stderr,"returned zero instead of one.\n");
+                    return 0;
+                }
+            }
+        }
+    }
+
+    if (pParameters->opt_mode==3)
+    {
+        fprintf(stdout,"\nSTEP 2: ADAPT THE MESH TO BOTH THE NEW DOMAIN ");
+        fprintf(stdout,"GEOMETRY AND SYSTEM CHEMISTRY.\n");
+    }
+
+    // Generate a coarse level-set function of the intermediate mesh
+    nIter=pParameters->n_iter;
+    pParameters->n_iter=10;
+    if (!renormalizeWithMshdistSoftware(pParameters,"dom"))
+    {
+        PRINT_ERROR("In computeLagrangianMode: ");
+        fprintf(stderr,"renormalizeWithMshdistSoftware function returned ");
+        fprintf(stderr,"zero instead of one.\n");
+        return 0;
+    }
+    pParameters->n_iter=nIter;
+
+    // Vizualize the coarse level-set function of the intermediate mesh
+    if (pParameters->opt_mode==3)
+    {
+        if (pParameters->save_print>0)
+        {
+            if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
+                                                     pParameters->save_where==2)
+            {
+                if (!plotMeshWithMeditSoftware(pParameters))
+                {
+                    PRINT_ERROR("In computeLagrangianMode: ");
+                    fprintf(stderr,"plotMeshWithMeditSoftware function ");
+                    fprintf(stderr,"returned zero instead of one.\n");
+                    return 0;
+                }
+            }
+        }
+    }
+
+    return 1;
+}
+
+/* ************************************************************************** */
+// The function computeProbabilityAndReloadPreviousMesh compute the probability
+// of a given mesh then reload the previous mesh in the structure pointed by
+// pMesh. It has the Parameters*, Mesh*, Data*, ChemicalSystem* (both defined in
+// main.h), and the int interationInTheLoop variables as input arguments. It
+// returns the value of the probability on success otherwise -10000 for an error
+/* ************************************************************************** */
+double computeProbabilityAndReloadPreviousMesh(Parameters* pParameters, 
+                                               Mesh* pMesh, Data* pData,
+                                               ChemicalSystem* pChemicalSystem,
+                                                         int iterationInTheLoop)
+{
+    size_t lengthName=0;
+    char *fileLocation=NULL;
+    int sizeMemory=0;
+    double returnValue=0.;
+
+    // Computing overlap matrix. Warning: bounadary triangles are labbelled 10
+    // but not necessarily the related vertices (ok now and checked in
+    // writeShapeSolFile function)
+    if (!computeOverlapMatrix(pParameters,pMesh,pData,pChemicalSystem,2,
+                                                            iterationInTheLoop))
+    {
+        PRINT_ERROR("In computeProbabilityAndReloadPreviousMesh: ");
+        fprintf(stderr,"computeOverlapMatrix function returned zero instead ");
+        fprintf(stderr,"of one.\n");
+        return -10000.;
+    }
+
+    // Diagonalize the overlap matrix. Warning: we use lapacke.h
+    // and lapacke package must have been previously installed
+    if (!diagonalizeOverlapMatrix(pParameters,pData,iterationInTheLoop))
+    {
+        PRINT_ERROR("In computeProbabilityAndReloadPreviousMesh: ");
+        fprintf(stderr,"diagonalizeOverlapMatrix function returned zero ");
+        fprintf(stderr,"instead of one.\n");
+        return -10000.;
+    }
+
+    // Compute the probabilities and total population in the domain
+    if (!computeProbability(pParameters,pData,iterationInTheLoop))
+    {
+        PRINT_ERROR("In computeProbabilityAndReloadPreviousMesh: ");
+        fprintf(stderr,"computeProbability function returned zero instead ");
+        fprintf(stderr,"of one.\n");
+        return -10000.;
+    }
+    returnValue=pData->pnu[iterationInTheLoop];
+
+    // Store the name of the *.mesh file in fileLocation
+    lengthName=pParameters->name_length;
+    fileLocation=(char*)calloc(lengthName,sizeof(char));
+    if (fileLocation==NULL)
+    {
+        PRINT_ERROR("In computeProbabilityAndReloadPreviousMesh: could not ");
+        fprintf(stderr,"allocate memory for the local char* fileLocation ");
+        fprintf(stderr,"variable.\n");
+        return -10000.;
+    }
+
+    // Store the *.[iterationInTheLoop-1].mesh name in fileLocation
+    strncpy(fileLocation,pParameters->name_mesh,lengthName);
+    lengthName=strlen(fileLocation);
+    fileLocation[lengthName-5]='\0';
+
+    // sprintf returns the total number of characters written
+    // not including the '\0', otherwise a negative number on failure
+    if (sprintf(pParameters->name_mesh,"%s.%d.mesh",fileLocation,
+                                                        iterationInTheLoop-1)<0)
+    {
+        PRINT_ERROR("In computeProbabilityAndReloadPreviousMesh: the ");
+        fprintf(stderr,"standard sprintf c-function returned an unexpected ");
+        fprintf(stderr,"negative value.\n");
+        free(fileLocation);
+        fileLocation=NULL;
+        return -10000.;
+    }
+    fileLocation[lengthName-5]='.';
+
+    // Check if *.[iterationInTheLoop-1].mesh file exists.
+    if (initialFileExists(pParameters->name_mesh,pParameters->name_length)!=1)
+    {
+            PRINT_ERROR("In computeProbabilityAndReloadPreviousMesh: ");
+            fprintf(stderr,"initialFileExists function did not return one, ");
+            fprintf(stderr,"which was the expected value here.\n");
+            free(fileLocation);
+            fileLocation=NULL;
+            return -10000.;
+    }
+
+    // Check if *.mesh file exists and remove it
+    if (initialFileExists(fileLocation,pParameters->name_length)!=1)
+    {
+            PRINT_ERROR("In computeProbabilityAndReloadPreviousMesh: ");
+            fprintf(stderr,"initialFileExists function did not return one, ");
+            fprintf(stderr,"which was the expected value here.\n");
+            free(fileLocation);
+            fileLocation=NULL;
+            return -10000.;
+    }
+
+    if (remove(fileLocation))
+    {
+        PRINT_ERROR("In computeProbabilityAndReloadPreviousMesh: wrong ");
+        fprintf(stderr,"return (=-1) of the standard remove c-function in ");
+        fprintf(stderr,"the attempt of removing the %s file.\n",fileLocation);
+        free(fileLocation);
+        fileLocation=NULL;
+        return -10000.;
+    }
+
+    // Copy the *.[iterationInTheLoop-1].mesh into *.mesh
+    if (!copyFileLocation(pParameters->name_mesh,pParameters->name_length,
+                                                                  fileLocation))
+    {
+        PRINT_ERROR("In computeProbabilityAndReloadPreviousMesh: ");
+        fprintf(stderr,"copyFileLocation function returned zero instead ");
+        fprintf(stderr,"of one.\n");
+        free(fileLocation);
+        fileLocation=NULL;
+        return -10000.;
+    }
+    strncpy(pParameters->name_mesh,fileLocation,pParameters->name_length);
+
+    // Free the memory allocated for the mesh
+    if (pParameters->opt_mode!=1 || pParameters->verbose)
+    {
+        sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
+        sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
+        sizeMemory+=(pMesh->nedg)*sizeof(Edge);
+        sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
+        sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
+        fprintf(stdout,"\nCleaning the allocated memory ");
+        fprintf(stdout,"(%d,%d Mo) for ",sizeMemory/1000000,sizeMemory%1000000);
+        fprintf(stdout,"reloading the %d-th mesh.\n",iterationInTheLoop-1);
+    }
+    freeMeshMemory(pMesh);
+
+    // Read the new *.mesh file
+    if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
+    {
+        PRINT_ERROR("In computeProbabilityAndReloadPreviousMesh: ");
+        fprintf(stderr,"readMeshFileAndAllocateMesh function returned zero ");
+        fprintf(stderr,"instead of one.\n");
+        free(fileLocation);
+        fileLocation=NULL;
+        return -10000.;
+    }
+
+    // Update the parameters related to the computational box
+    if (!updateDiscretizationParameters(pParameters,pMesh))
+    {
+        PRINT_ERROR("In computeProbabilityAndReloadPreviousMesh: ");
+        fprintf(stderr,"updateDiscretizationParameters function returned ");
+        fprintf(stderr,"zero instead of one.\n");
+        free(fileLocation);
+        fileLocation=NULL;
+        return -10000.;
+    }
+
+    // Free the memory allocated for fileLocation
+    free(fileLocation);
+    fileLocation=NULL;
+
+    return returnValue;
+}
+
+/* ************************************************************************** */
+// The function optimization modifies the shape of the MPD domain according to
+// the shape derivative in order to increase to probability. This is the
+// function used iteratively in the optimization loop of the main function.
+// It has the Parameters*, Mesh*, Data*, ChemicalSystem* (both defined in
+// main.h), the int interationInTheLoop, and the three time_t* variables as
+// input arguments. It returns one on success otherwise zero for an error
 /* ************************************************************************** */
 int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                  ChemicalSystem* pChemicalSystem, int iterationInTheLoop,
                  time_t* pGlobalInitialTimer, time_t* pStartLocalTimer,
                                                          time_t* pEndLocalTimer)
 {
-    size_t lengthName=0;
-    char *fileLocation=NULL;
-    int sizeMemory=0, nIter=0, i=0, counter=0, n=0, nMax=0;
+    int i=0, counter=0, n=0, nMax=0;
     double tMin=0, tMax=0, t0=0., t1=0., *pShapeGradient=NULL, pMax=0., pMin=0.;
     double p0=0., p1=0., h=0.;
 
@@ -5840,8 +6598,9 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
 
     switch (pParameters->opt_mode)
     {
-        // Case where Omega_new={dP/dOmega_old>0}
+// Case where Omega_new={dP/dOmega_old>0}
         case 4:
+
             fprintf(stdout,"\nSTEP 1: MAKE THE SHAPE GRADIENT A LEVEL-SET ");
             fprintf(stdout,"FUNCTION WITH UNITARY GRADIENT.\n");
 
@@ -5874,6 +6633,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             {
                 fprintf(stdout,"\nRenormalization of the shape gradient.");
             }
+
             if (!renormalizeWithMshdistSoftware(pParameters,"sol"))
             {
                 PRINT_ERROR("In optimization: renormalizeWithMshdistSoftware ");
@@ -5897,168 +6657,13 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 }
             }
 
-            fprintf(stdout,"\nSTEP 2: COMPUTE THE METRIC RELATED TO THE ");
-            fprintf(stdout,"CHEMISTRY OF THE MOLECULAR ORBITALS.\n");
-
-            // Evaluate the orbitals' metric on the mesh
-            if (!evaluatingMetricOnMesh(pParameters,pMesh,pChemicalSystem))
+            // Adapt the mesh to both molecular orbitals and level set function
+            if (!performLevelSetAdaptation(pParameters,pMesh,pChemicalSystem,
+                                                            iterationInTheLoop))
             {
-                PRINT_ERROR("In optimization: evaluatingMetricOnMesh ");
+                PRINT_ERROR("In optimization: performLevelSetAdaptation ");
                 fprintf(stderr,"function returned zero instead of one.\n");
                 return 0;
-            }
-
-            // Store the name of the *.mesh file in fileLocation
-            // calloc returns a pointer to the allocated memory, otherwise NULL
-            // strncpy returns a pointer to the string (not used here)
-            lengthName=pParameters->name_length;
-            fileLocation=(char*)calloc(lengthName,sizeof(char));
-            if (fileLocation==NULL)
-            {
-                PRINT_ERROR("In optimization: could not allocate memory for ");
-                fprintf(stderr,"the local char* fileLocation variable.\n");
-                return 0;
-            }
-            strncpy(fileLocation,pParameters->name_mesh,lengthName);
-
-            // Remove the metric.mesh file if it already exists. Warning:
-            // metric.mesh and metric.sol cannot be used in the MPD program
-            switch (initialFileExists("metric.mesh",15))
-            {
-                case -1:
-                    break;
-
-                case 1:
-                    PRINT_ERROR("In optimization: 'metric.mesh' file ");
-                    fprintf(stderr,"cannot refer to a mesh name in the MPD ");
-                    fprintf(stderr,"program.\nPlease modify the name ");
-                    fprintf(stderr,"associated with the name_mesh ");
-                    fprintf(stderr,"keyword or if no such line exists ");
-                    fprintf(stderr,"in your (input) *.info file, check ");
-                    fprintf(stderr,"that it is not entitled ");
-                    fprintf(stderr,"'metric.info'.\n");
-                    return 0;
-                    break;
-
-                default:
-                    PRINT_ERROR("In optimization: initialFileExists function ");
-                    fprintf(stderr,"returned zero instead of (+/-)one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    return 0;
-                    break;
-            }
-
-            // Temporary rename the *.mesh by metric.mesh
-            if (!renameFileLocation(pParameters->name_mesh,
-                                        pParameters->name_length,"metric.mesh"))
-            {
-                PRINT_ERROR("In optimization: renameFileLocation function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                return 0;
-            }
-            strncpy(pParameters->name_mesh,"metric.mesh",lengthName);
-
-            // Save metric values in a file entitled metric.sol
-            if (!writingSolFile(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: writingSolFile function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                return 0;
-            }
-
-            // Vizualize the metric of the orbitals on the mesh
-            if (pParameters->save_print>0)
-            {
-                if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==1)
-                {
-                    if (!plotMeshWithMeditSoftware(pParameters))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"plotMeshWithMeditSoftware function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        return 0;
-                    }
-                }
-            }
-
-            // Rename the *.mesh file as it was
-            if (!renameFileLocation("metric.mesh",
-                                         pParameters->name_length,fileLocation))
-            {
-                PRINT_ERROR("In optimization: renameFileLocation function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                return 0;
-            }
-            strncpy(pParameters->name_mesh,fileLocation,lengthName);
-
-            // Free the memory allocated for fileLocation
-            free(fileLocation);
-            fileLocation=NULL;
-
-            fprintf(stdout,"\nSTEP 3: GET NEW DOMAIN BY ADAPTING MESH ");
-            fprintf(stdout,"TO BOTH ADVECTED LEVEL-SET AND METRIC.\n");
-
-            // Free the memory allocated for the mesh
-            sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-            sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-            sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-            sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-            sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-            fprintf(stdout,"\nCleaning the allocated memory ");
-            fprintf(stdout,"(%d,%d ",sizeMemory/1000000,sizeMemory%1000000);
-            fprintf(stdout,"Mo) for a mesh adaptation according ");
-            fprintf(stdout,"to both the level-set interface geometry ");
-            fprintf(stdout,"and molecular orbitals chemistry.\n");
-            freeMeshMemory(pMesh);
-
-            // Warning: mmg3d software must have been previously installed
-            if (!adaptMeshWithMmg3dSoftware(pParameters,"ls"))
-            {
-                PRINT_ERROR("In optimization: adaptMeshWithMmg3dSoftware ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                return 0;
-            }
-
-            // Read the new *.mesh file
-            if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: readMeshFileAndAllocateMesh ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                return 0;
-            }
-
-            // Update the parameters related to the computational box
-            if (!updateDiscretizationParameters(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: updateDiscretizationParameters ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                return 0;
-            }
-
-            // Vizualize the new mesh
-            if (pParameters->save_print>0)
-            {
-                if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==7)
-                {
-                    if (!plotMeshWithMeditSoftware(pParameters))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"plotMeshWithMeditSoftware function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        return 0;
-                    }
-                }
             }
 
             fprintf(stdout,"\nSTEP 4: COMPUTE THE PROBABILITY, POPULATION ");
@@ -6085,293 +6690,36 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             }
             break;
 
-        // Case where Omega_new=Lagangian_advection{dP/dOmega_old*Normal}
+// Case where Omega_new=Lagangian_advection{dP/dOmega_old*Normal}
         case 3:
-            fprintf(stdout,"\nSTEP 1: DEFORM THE MESH ACCORDING TO THE ");
-            fprintf(stdout,"COMPUTED SHAPE GRADIENT MOTION.\n");
 
-            // Vizualize the norm of the shape gradient at the boundary vertices
-            if (pParameters->save_print>0)
+            // Save the shape gradient
+            if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
             {
-                if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==3)
-                {
-                    if (!writingSolFile(pParameters,pMesh))
-                    {
-                        PRINT_ERROR("In optimization: writingSolFile ");
-                        fprintf(stderr,"function returned zero instead of ");
-                        fprintf(stderr,"one.\n");
-                        return 0;
-                    }
-
-                    if (!plotMeshWithMeditSoftware(pParameters))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"plotMeshWithMeditSoftware function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        return 0;
-                    }
-                }
-            }
-
-            // Save the vectorial shape gradient at the shape vertices
-            if (!writingShapeSolFile(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: writingShapeSolFile function ");
+                PRINT_ERROR("In optimization: saveTheShapeGradient function ");
                 fprintf(stderr,"returned zero instead of one.\n");
                 return 0;
             }
 
-            // Vizualize the vectorial shape gradient at the shape vertices
-            if (pParameters->save_print>0)
+            // Advect the mesh thanks to Lagrangian mode of mmg3d software
+            if (!computeLagrangianMode(pParameters,pMesh,iterationInTheLoop))
             {
-                if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==4)
-                {
-                    if (!plotMeshWithMeditSoftware(pParameters))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"plotMeshWithMeditSoftware function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        return 0;
-                    }
-                }
-            }
-
-            // Free the memory allocated for the mesh
-            sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-            sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-            sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-            sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-            sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-            fprintf(stdout,"\nCleaning the allocated memory ");
-            fprintf(stdout,"(%d,%d ",sizeMemory/1000000,sizeMemory%1000000);
-            fprintf(stdout,"Mo) for a mesh adaptation according to the ");
-            fprintf(stdout,"shape gradient with a Lagrangian approach.\n");
-            freeMeshMemory(pMesh);
-
-            // Warning: mmg3d software must have been previously installed
-            if (!adaptMeshWithMmg3dSoftware(pParameters,"lag"))
-            {
-                PRINT_ERROR("In optimization: adaptMeshWithMmg3dSoftware ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                return 0;
-            }
-
-            // Vizualize the intermediate mesh
-            if (pParameters->save_print>0)
-            {
-                if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==7)
-                {
-                    if (!plotMeshWithMeditSoftware(pParameters))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"plotMeshWithMeditSoftware function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        return 0;
-                    }
-                }
-            }
-
-            // Read the intermediate *.mesh file
-            if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: readMeshFileAndAllocateMesh ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                return 0;
-            }
-
-            fprintf(stdout,"\nSTEP 2: ADAPT THE MESH TO BOTH THE NEW DOMAIN ");
-            fprintf(stdout,"GEOMETRY AND SYSTEM CHEMISTRY.\n");
-            // Generate a coarse level-set function of the intermediate mesh
-            nIter=pParameters->n_iter;
-            pParameters->n_iter=10;
-            if (!renormalizeWithMshdistSoftware(pParameters,"dom"))
-            {
-                PRINT_ERROR("In optimization: renormalizeWithMshdistSoftware ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                return 0;
-            }
-            pParameters->n_iter=nIter;
-
-            // Vizualize the coarse level-set function of the intermediate mesh
-            if (pParameters->save_print>0)
-            {
-                if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==2)
-                {
-                    if (!plotMeshWithMeditSoftware(pParameters))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"plotMeshWithMeditSoftware function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        return 0;
-                    }
-                }
-            }
-
-            // Evaluate the orbitals' metric on the mesh
-            if (!evaluatingMetricOnMesh(pParameters,pMesh,pChemicalSystem))
-            {
-                PRINT_ERROR("In optimization: evaluatingMetricOnMesh ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                return 0;
-            }
-
-            // Store the name of the *.mesh file in fileLocation
-            // Remove the metric.mesh file if it already exists. Warning:
-            // metric.mesh and metric.sol cannot be used in the MPD program
-            lengthName=pParameters->name_length;
-            fileLocation=(char*)calloc(lengthName,sizeof(char));
-            if (fileLocation==NULL)
-            {
-                PRINT_ERROR("In optimization: could not allocate memory for ");
-                fprintf(stderr,"the local char* fileLocation variable.\n");
-                return 0;
-            }
-            strncpy(fileLocation,pParameters->name_mesh,lengthName);
-            switch (initialFileExists("metric.mesh",15))
-            {
-                case -1:
-                    break;
-
-                case 1:
-                    PRINT_ERROR("In optimization: 'metric.mesh' file ");
-                    fprintf(stderr,"cannot refer to a mesh name in the MPD ");
-                    fprintf(stderr,"program.\nPlease modify the name ");
-                    fprintf(stderr,"associated with the name_mesh ");
-                    fprintf(stderr,"keyword or if no such line exists ");
-                    fprintf(stderr,"in your (input) *.info file, check ");
-                    fprintf(stderr,"that it is not entitled ");
-                    fprintf(stderr,"'metric.info'.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    return 0;
-                    break;
-
-                default:
-                    PRINT_ERROR("In optimization: initialFileExists function ");
-                    fprintf(stderr,"returned zero instead of (+/-)one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    return 0;
-                    break;
-            }
-
-            // Temporary rename the *.mesh by metric.mesh
-            if (!renameFileLocation(pParameters->name_mesh,
-                                        pParameters->name_length,"metric.mesh"))
-            {
-                PRINT_ERROR("In optimization: renameFileLocation function ");
+                PRINT_ERROR("In optimization: computeLagrangianMode function ");
                 fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                return 0;
-            }
-            strncpy(pParameters->name_mesh,"metric.mesh",
-                                                      pParameters->name_length);
-
-            // Save metric values in a file entitled metric.sol
-            if (!writingSolFile(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: writingSolFile function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
                 return 0;
             }
 
-            // Vizualize the metric of the orbitals on the mesh
-            if (pParameters->save_print>0)
+            // Re-Adapt the mesh to both molecular orbitals and domain geometry
+            if (!performLevelSetAdaptation(pParameters,pMesh,pChemicalSystem,
+                                                            iterationInTheLoop))
             {
-                if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==1)
-                {
-                    if (!plotMeshWithMeditSoftware(pParameters))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"plotMeshWithMeditSoftware function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        return 0;
-                    }
-                }
-            }
-
-            // Rename the *.mesh file as it was
-            if (!renameFileLocation("metric.mesh",
-                                         pParameters->name_length,fileLocation))
-            {
-                PRINT_ERROR("In optimization: renameFileLocation function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                return 0;
-            }
-            strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-
-            // Free the memory allocated for fileLocation
-            free(fileLocation);
-            fileLocation=NULL;
-
-            // Free the memory allocated for the intermediate mesh
-            sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-            sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-            sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-            sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-            sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-            fprintf(stdout,"\nCleaning the allocated memory ");
-            fprintf(stdout,"(%d,%d ",sizeMemory/1000000,sizeMemory%1000000);
-            fprintf(stdout,"Mo) for a mesh adaptation according ");
-            fprintf(stdout,"to both the level-set interface geometry ");
-            fprintf(stdout,"and molecular orbitals chemistry.\n");
-            freeMeshMemory(pMesh);
-
-            // Warning: mmg3d software must have been previously installed
-            if (!adaptMeshWithMmg3dSoftware(pParameters,"ls"))
-            {
-                PRINT_ERROR("In optimization: adaptMeshWithMmg3dSoftware ");
+                PRINT_ERROR("In optimization: performLevelSetAdaptation ");
                 fprintf(stderr,"function returned zero instead of one.\n");
                 return 0;
             }
 
-            // Read the new *.mesh file
-            if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: readMeshFileAndAllocateMesh ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                return 0;
-            }
-
-            // Update the parameters related to the computational box
-            if (!updateDiscretizationParameters(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: updateDiscretizationParameters ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                return 0;
-            }
-
-            // Vizualize the new mesh
-            if (pParameters->save_print>0)
-            {
-                if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==7)
-                {
-                    if (!plotMeshWithMeditSoftware(pParameters))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"plotMeshWithMeditSoftware function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        return 0;
-                    }
-                }
-            }
-
-            fprintf(stdout,"\nSTEP 3: COMPUTE THE PROBABILITY, POPULATION ");
-            fprintf(stdout,"AND SHAPE GRADIENT ON NEW DOMAIN.\n");
+            fprintf(stdout,"\nSTEP 3: COMPUTE PROBABILITY, POPULATION ");
+            fprintf(stdout,"AND SHAPE GRADIENT ON THE NEW DOMAIN.\n");
 
             // Compute the overlap matrix, probability, shape gradient, and
             // residual for the new domain
@@ -6394,398 +6742,36 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             }
             break;
 
-        // Case where Omega_new=EulerianLevelSet_advection{dP/dOmega_old*Normal}
+// Case where Omega_new=EulerianLevelSet_advection{dP/dOmega_old*Normal}
         case 2:
 
-            fprintf(stdout,"\nSTEP 1: EXTEND THE COMPUTED SHAPE GRADIENT ");
-            fprintf(stdout,"OUTSIDE THE BOUNDARY OF THE DOMAIN.\n");
-
-            // Vizualize the norm of the shape gradient at the boundary vertices
-            if (pParameters->save_print>0)
+            // Save the shape gradient
+            if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
             {
-                if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==3)
-                {
-                    if (!writingSolFile(pParameters,pMesh))
-                    {
-                        PRINT_ERROR("In optimization: writingSolFile ");
-                        fprintf(stderr,"function returned zero instead of ");
-                        fprintf(stderr,"one.\n");
-                        return 0;
-                    }
-
-                    if (!plotMeshWithMeditSoftware(pParameters))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"plotMeshWithMeditSoftware function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        return 0;
-                    }
-                }
-            }
-
-            // Save the vectorial shape gradient at the shape vertices
-            if (!writingShapeSolFile(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: writingShapeSolFile function ");
+                PRINT_ERROR("In optimization: saveTheShapeGradient function ");
                 fprintf(stderr,"returned zero instead of one.\n");
                 return 0;
             }
 
-            // Vizualize the vectorial shape gradient at the shape vertices
-            if (pParameters->save_print>0)
+            // Advect the mesh thanks to Eulerian mode (level-set approach)
+            if (!computeEulerianMode(pParameters,pMesh,iterationInTheLoop))
             {
-                if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==4)
-                {
-                    if (!plotMeshWithMeditSoftware(pParameters))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"plotMeshWithMeditSoftware function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        return 0;
-                    }
-                }
-            }
-
-            // Extend the shape gradient outside the domain thanks elasticity
-            if (!extendShapeGradientWithElasticSoftware(pParameters))
-            {
-                PRINT_ERROR("In optimization: ");
-                fprintf(stderr,"extendLevelSetWithElasticSoftware function ");
+                PRINT_ERROR("In optimization: computeEulerianMode function ");
                 fprintf(stderr,"returned zero instead of one.\n");
                 return 0;
             }
 
-            // Vizualize the extension of the vectorial shape gradient
-            if (pParameters->save_print>0)
+            // Adapt the mesh to both molecular orbitals and new domain geometry
+            if (!performLevelSetAdaptation(pParameters,pMesh,pChemicalSystem,
+                                                            iterationInTheLoop))
             {
-                if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==5)
-                {
-                    if (!plotMeshWithMeditSoftware(pParameters))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"plotMeshWithMeditSoftware function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        return 0;
-                    }
-                }
-            }
-
-            fprintf(stdout,"\nSTEP 2: GET THE LEVEL-SET FUNCTION OF ");
-            fprintf(stdout,"THE DOMAIN WITH A UNITARY GRADIENT NORM.\n");
-
-            // Store the name of the *.chi.mesh file in fileLocation
-            lengthName=pParameters->name_length;
-            fileLocation=(char*)calloc(lengthName,sizeof(char));
-            if (fileLocation==NULL)
-            {
-                PRINT_ERROR("In optimization: could not allocate memory for ");
-                fprintf(stderr,"the local char* fileLocation variable.\n");
-                return 0;
-            }
-            strncpy(fileLocation,pParameters->name_mesh,lengthName);
-            lengthName=strlen(fileLocation);
-            fileLocation[lengthName-5]='.';
-            fileLocation[lengthName-4]='c';
-            fileLocation[lengthName-3]='h';
-            fileLocation[lengthName-2]='i';
-            fileLocation[lengthName-1]='.';
-            fileLocation[lengthName]='m';
-            fileLocation[lengthName+1]='e';
-            fileLocation[lengthName+2]='s';
-            fileLocation[lengthName+3]='h';
-            fileLocation[lengthName+4]='\0';
-
-            // Remove the *.chi.mesh file if it already exists. Warning:
-            switch (initialFileExists(fileLocation,pParameters->name_length))
-            {
-                case -1:
-                    break;
-
-                case 1:
-                    // remove returns 0 on success, otherwise -1
-                    if (remove(fileLocation))
-                    {
-                        PRINT_ERROR("In optimization: wrong return (=-1) of ");
-                        fprintf(stderr,"the standard remove c-function in ");
-                        fprintf(stderr,"the attempt of removing the ");
-                        fprintf(stderr,"%s file.\n",fileLocation);
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        return 0;
-                    }
-                    break;
-
-                default:
-                    PRINT_ERROR("In optimization: initialFileExists function ");
-                    fprintf(stderr,"returned zero instead of (+/-)one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    return 0;
-                    break;
-            }
-
-            // Temporary rename the *.mesh by *.chi.mesh
-            if (!renameFileLocation(pParameters->name_mesh,
-                                         pParameters->name_length,fileLocation))
-            {
-                PRINT_ERROR("In optimization: renameFileLocation function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                return 0;
-            }
-            strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-
-            // Generate the level-set function from mesh with mshdist
-            if (!renormalizeWithMshdistSoftware(pParameters,"dom"))
-            {
-                PRINT_ERROR("In optimization: renormalizeWithMshdistSoftware ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                return 0;
-            }
-
-            // Vizualize the level-set function on the mesh
-            if (pParameters->save_print>0)
-            {
-                if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==2)
-                {
-                    if (!plotMeshWithMeditSoftware(pParameters))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"plotMeshWithMeditSoftware function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        return 0;
-                    }
-                }
-            }
-
-            // Rename the *.mesh file as it was
-            lengthName=strlen(fileLocation);
-            fileLocation[lengthName-9]='.';
-            fileLocation[lengthName-8]='m';
-            fileLocation[lengthName-7]='e';
-            fileLocation[lengthName-6]='s';
-            fileLocation[lengthName-5]='h';
-            fileLocation[lengthName-4]='\0';
-            fileLocation[lengthName-3]='\0';
-            fileLocation[lengthName-2]='\0';
-            fileLocation[lengthName-1]='\0';
-            fileLocation[lengthName]='\0';
-            if (!renameFileLocation(pParameters->name_mesh,
-                                         pParameters->name_length,fileLocation))
-            {
-                PRINT_ERROR("In optimization: renameFileLocation function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                return 0;
-            }
-            lengthName=pParameters->name_length;
-            strncpy(pParameters->name_mesh,fileLocation,lengthName);
-
-            fprintf(stdout,"\nSTEP 3: ADVECT THE LEVEL-SET FUNCTION ");
-            fprintf(stdout,"ACCORDING TO THE EXTENDED SHAPE GRADIENT.\n");
-
-            // Advect the level-set function according to the parameters
-            if (!advectLevelSetWithAdvectSoftware(pParameters))
-            {
-                PRINT_ERROR("In optimization:  ");
-                fprintf(stderr,"advectLevelSetWithAdvectSoftware function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                return 0;
-            }
-
-            // Vizualize the advected level-set function on the mesh
-            if (pParameters->save_print>0)
-            {
-                if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==6)
-                {
-                    if (!plotMeshWithMeditSoftware(pParameters))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"plotMeshWithMeditSoftware function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        return 0;
-                    }
-                }
-            }
-
-            fprintf(stdout,"\nSTEP 4: COMPUTE THE METRIC RELATED TO THE ");
-            fprintf(stdout,"CHEMISTRY OF THE MOLECULAR ORBITALS.\n");
-
-            // Evaluate the orbitals' metric on the mesh
-            if (!evaluatingMetricOnMesh(pParameters,pMesh,pChemicalSystem))
-            {
-                PRINT_ERROR("In optimization: evaluatingMetricOnMesh ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                return 0;
-            }
-
-            // Store the name of the *.mesh file in fileLocation
-            // Remove the metric.mesh file if it already exists. Warning:
-            // metric.mesh and metric.sol cannot be used in the MPD program
-            strncpy(fileLocation,pParameters->name_mesh,
-                                                      pParameters->name_length);
-            switch (initialFileExists("metric.mesh",15))
-            {
-                case -1:
-                    break;
-
-                case 1:
-                    PRINT_ERROR("In optimization: 'metric.mesh' file ");
-                    fprintf(stderr,"cannot refer to a mesh name in the MPD ");
-                    fprintf(stderr,"program.\nPlease modify the name ");
-                    fprintf(stderr,"associated with the name_mesh ");
-                    fprintf(stderr,"keyword or if no such line exists ");
-                    fprintf(stderr,"in your (input) *.info file, check ");
-                    fprintf(stderr,"that it is not entitled ");
-                    fprintf(stderr,"'metric.info'.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    return 0;
-                    break;
-
-                default:
-                    PRINT_ERROR("In optimization: initialFileExists function ");
-                    fprintf(stderr,"returned zero instead of (+/-)one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    return 0;
-                    break;
-            }
-
-            // Temporary rename the *.mesh by metric.mesh
-            if (!renameFileLocation(pParameters->name_mesh,
-                                        pParameters->name_length,"metric.mesh"))
-            {
-                PRINT_ERROR("In optimization: renameFileLocation function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                return 0;
-            }
-            strncpy(pParameters->name_mesh,"metric.mesh",
-                                                      pParameters->name_length);
-
-            // Save metric values in a file entitled metric.sol
-            if (!writingSolFile(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: writingSolFile function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                return 0;
-            }
-
-            // Vizualize the metric of the orbitals on the mesh
-            if (pParameters->save_print>0)
-            {
-                if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==1)
-                {
-                    if (!plotMeshWithMeditSoftware(pParameters))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"plotMeshWithMeditSoftware function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        return 0;
-                    }
-                }
-            }
-
-            // Rename the *.mesh file as it was
-            if (!renameFileLocation("metric.mesh",
-                                         pParameters->name_length,fileLocation))
-            {
-                PRINT_ERROR("In optimization: renameFileLocation function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                return 0;
-            }
-            strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-
-            // Free the memory allocated for fileLocation
-            free(fileLocation);
-            fileLocation=NULL;
-
-            fprintf(stdout,"\nSTEP 5: GET NEW DOMAIN BY ADAPTING MESH ");
-            fprintf(stdout,"TO BOTH ADVECTED LEVEL-SET AND METRIC.\n");
-
-            // Free the memory allocated for the mesh
-            sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-            sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-            sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-            sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-            sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-            fprintf(stdout,"\nCleaning the allocated memory ");
-            fprintf(stdout,"(%d,%d ",sizeMemory/1000000,sizeMemory%1000000);
-            fprintf(stdout,"Mo) for a mesh adaptation according ");
-            fprintf(stdout,"to both the advect level-set interface geometry ");
-            fprintf(stdout,"and molecular orbitals chemistry.\n");
-            freeMeshMemory(pMesh);
-
-            // Warning: mmg3d software must have been previously installed
-            if (!adaptMeshWithMmg3dSoftware(pParameters,"ls"))
-            {
-                PRINT_ERROR("In optimization: adaptMeshWithMmg3dSoftware ");
+                PRINT_ERROR("In optimization: performLevelSetAdaptation ");
                 fprintf(stderr,"function returned zero instead of one.\n");
                 return 0;
-            }
+            } 
 
-            // Read the new *.mesh file
-            if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: readMeshFileAndAllocateMesh ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                return 0;
-            }
-
-            // Update the parameters related to the computational box
-            if (!updateDiscretizationParameters(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: updateDiscretizationParameters ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                return 0;
-            }
-
-            // Vizualize the new mesh
-            if (pParameters->save_print>0)
-            {
-                if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==7)
-                {
-                    if (!plotMeshWithMeditSoftware(pParameters))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"plotMeshWithMeditSoftware function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        return 0;
-                    }
-                }
-            }
-
-            fprintf(stdout,"\nSTEP 6: COMPUTE THE PROBABILITY, POPULATION ");
-            fprintf(stdout,"AND SHAPE GRADIENT ON NEW DOMAIN.\n");
+            fprintf(stdout,"\nSTEP 6: COMPUTE PROBABILITY, POPULATION ");
+            fprintf(stdout,"AND SHAPE GRADIENT ON THE NEW DOMAIN.\n");
 
             // Compute the overlap matrix, probability, shape gradient, and
             // residual for the new domain
@@ -6808,18 +6794,18 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             }
             break;
 
-        // Golden search algorithm with Eulerian/Lagrangian perturbations
+// Golden search algorithm with Eulerian/Lagrangian perturbations
         case 1:
 
             // Save the initial shape gradient computed at the mesh vertices
-            lengthName=pMesh->nver;
-            pShapeGradient=(double*)calloc(lengthName,sizeof(double));
+            pShapeGradient=(double*)calloc(pMesh->nver,sizeof(double));
             if (pShapeGradient==NULL)
             {
                 PRINT_ERROR("In optimization: could not allocate memory for ");
                 fprintf(stderr,"the local double* pShapeGradient variable.\n");
                 return 0;
             }
+
             for (i=0; i<pMesh->nver; i++)
             {
                 pShapeGradient[i]=pMesh->pver[i].value;
@@ -6829,473 +6815,68 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             tMin=0.;
             pMin=pData->pnu[iterationInTheLoop-1];
 
-            // First perform an initial Eulerian perturbation of one
+            // First perform an initial Eulerian perturbation of intensity one
             fprintf(stdout,"\nSEARCHING THE STARTING INTERVAL FOR THE ");
-            fprintf(stdout,"OPTIMAL STEP.\n");
+            fprintf(stdout,"OPTIMAL STEP.\nCOMPUTING p(%lf).\n",tMax);
 
-            // Save the vectorial shape gradient at the shape vertices
-            if (!writingShapeSolFile(pParameters,pMesh))
+            // Save the shape gradient
+            if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
             {
-                PRINT_ERROR("In optimization: writingShapeSolFile ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            // Extend the shape gradient outside the domain with elasticity
-            if (!extendShapeGradientWithElasticSoftware(pParameters))
-            {
-                PRINT_ERROR("In optimization: ");
-                fprintf(stderr,"extendLevelSetWithElasticSoftware ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            // Store the name of the *.mesh file in fileLocation
-            lengthName=pParameters->name_length;
-            fileLocation=(char*)calloc(lengthName,sizeof(char));
-            if (fileLocation==NULL)
-            {
-                PRINT_ERROR("In optimization: could not allocate memory ");
-                fprintf(stderr,"for the local char* fileLocation ");
-                fprintf(stderr,"variable.\n");
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-            strncpy(fileLocation,pParameters->name_mesh,lengthName);
-
-            // Store the name of the *.chi.mesh file in fileLocation
-            lengthName=strlen(fileLocation);
-            fileLocation[lengthName-5]='.';
-            fileLocation[lengthName-4]='c';
-            fileLocation[lengthName-3]='h';
-            fileLocation[lengthName-2]='i';
-            fileLocation[lengthName-1]='.';
-            fileLocation[lengthName]='m';
-            fileLocation[lengthName+1]='e';
-            fileLocation[lengthName+2]='s';
-            fileLocation[lengthName+3]='h';
-            fileLocation[lengthName+4]='\0';
-
-            // Remove the *.chi.mesh file if it already exists. Warning:
-            switch (initialFileExists(fileLocation,pParameters->name_length))
-            {
-                case -1:
-                    break;
-
-                case 1:
-                    // remove returns 0 on success, otherwise -1
-                    if (remove(fileLocation))
-                    {
-                        PRINT_ERROR("In optimization: wrong return (=-1) ");
-                        fprintf(stderr,"of the standard remove c-");
-                        fprintf(stderr,"function in the attempt of ");
-                        fprintf(stderr,"removing the ");
-                        fprintf(stderr,"%s file.\n",fileLocation);
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-                    break;
-
-                default:
-                    PRINT_ERROR("In optimization: initialFileExists ");
-                    fprintf(stderr,"function returned zero instead of ");
-                    fprintf(stderr,"(+/-)one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                    break;
-            }
-
-            // Temporary rename the *.mesh by *.chi.mesh
-            if (!renameFileLocation(pParameters->name_mesh,
-                                         pParameters->name_length,fileLocation))
-            {
-                PRINT_ERROR("In optimization: renameFileLocation ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-            strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-
-            // Generate the level-set function from mesh with mshdist
-            if (!renormalizeWithMshdistSoftware(pParameters,"dom"))
-            {
-                PRINT_ERROR("In optimization: ");
-                fprintf(stderr,"renormalizeWithMshdistSoftware function ");
+                PRINT_ERROR("In optimization: saveTheShapeGradient function ");
                 fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
                 free(pShapeGradient);
                 pShapeGradient=NULL;
                 return 0;
             }
 
-            // Rename the *.mesh file as it was
-            lengthName=strlen(fileLocation);
-            fileLocation[lengthName-9]='.';
-            fileLocation[lengthName-8]='m';
-            fileLocation[lengthName-7]='e';
-            fileLocation[lengthName-6]='s';
-            fileLocation[lengthName-5]='h';
-            fileLocation[lengthName-4]='\0';
-            fileLocation[lengthName-3]='\0';
-            fileLocation[lengthName-2]='\0';
-            fileLocation[lengthName-1]='\0';
-            fileLocation[lengthName]='\0';
-            if (!renameFileLocation(pParameters->name_mesh,
-                                         pParameters->name_length,fileLocation))
+            // Advect the mesh thanks to Eulerian mode (level-set approach)
+            if (!computeEulerianMode(pParameters,pMesh,iterationInTheLoop))
             {
-                PRINT_ERROR("In optimization: renameFileLocation ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-            lengthName=pParameters->name_length;
-            strncpy(pParameters->name_mesh,fileLocation,lengthName);
-
-            // Advect the level-set function according to the parameters
-            if (!advectLevelSetWithAdvectSoftware(pParameters))
-            {
-                PRINT_ERROR("In optimization:  ");
-                fprintf(stderr,"advectLevelSetWithAdvectSoftware ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            // Evaluate the orbitals' metric on the mesh
-            if (!evaluatingMetricOnMesh(pParameters,pMesh,pChemicalSystem))
-            {
-                PRINT_ERROR("In optimization: evaluatingMetricOnMesh ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            // Store the name of the *.mesh file in fileLocation
-            // Remove the metric.mesh file if it already exists. Warning:
-            // metric.mesh and metric.sol cannot be used in the MPD program
-            strncpy(fileLocation,pParameters->name_mesh,
-                                                      pParameters->name_length);
-            switch (initialFileExists("metric.mesh",15))
-            {
-                case -1:
-                    break;
-
-                case 1:
-                    PRINT_ERROR("In optimization: 'metric.mesh' file ");
-                    fprintf(stderr,"cannot refer to a mesh name in the ");
-                    fprintf(stderr,"MPD program.\nPlease modify the name ");
-                    fprintf(stderr,"associated with the name_mesh ");
-                    fprintf(stderr,"keyword or if no such line exists ");
-                    fprintf(stderr,"in your (input) *.info file, check ");
-                    fprintf(stderr,"that it is not entitled ");
-                    fprintf(stderr,"'metric.info'.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                    break;
-
-                default:
-                    PRINT_ERROR("In optimization: initialFileExists ");
-                    fprintf(stderr,"function returned zero instead of ");
-                    fprintf(stderr,"(+/-)one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                    break;
-            }
-
-            // Temporary rename the *.mesh by metric.mesh
-            if (!renameFileLocation(pParameters->name_mesh,
-                                        pParameters->name_length,"metric.mesh"))
-            {
-                PRINT_ERROR("In optimization: renameFileLocation ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-            strncpy(pParameters->name_mesh,"metric.mesh",
-                                                      pParameters->name_length);
-
-            // Save metric values in a file entitled metric.sol
-            if (!writingSolFile(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: writingSolFile function ");
+                PRINT_ERROR("In optimization: computeEulerianMode function ");
                 fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
                 free(pShapeGradient);
                 pShapeGradient=NULL;
                 return 0;
             }
 
-            // Rename the *.mesh file as it was
-            if (!renameFileLocation("metric.mesh",
-                                         pParameters->name_length,fileLocation))
-            {
-                PRINT_ERROR("In optimization: renameFileLocation ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-            strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-
-            // Free the memory allocated for the mesh
-            sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-            sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-            sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-            sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-            sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-            fprintf(stdout,"\nCleaning the allocated memory ");
-            fprintf(stdout,"(%d,%d ",sizeMemory/1000000,sizeMemory%1000000);
-            fprintf(stdout,"Mo) for a mesh adaptation according ");
-            fprintf(stdout,"to both the advect level-set interface ");
-            fprintf(stdout,"geometry and molecular orbitals chemistry.\n");
-            freeMeshMemory(pMesh);
-
-            // Warning: mmg3d software must have been previously installed
-            if (!adaptMeshWithMmg3dSoftware(pParameters,"ls"))
-            {
-                PRINT_ERROR("In optimization: adaptMeshWithMmg3dSoftware ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            // Read the new *.mesh file
-            if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: ");
-                fprintf(stderr,"readMeshFileAndAllocateMesh function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            // Update the parameters related to the computational box
-            if (!updateDiscretizationParameters(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: ");
-                fprintf(stderr,"updateDiscretizationParameters function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            // Computing overlap matrix. Warning: bounadary triangles are 
-            // labbelled10 but not necessarily the related vertices (ok now 
-            // and checked in writeShapeSolFile function)
-            if (!computeOverlapMatrix(pParameters,pMesh,pData,pChemicalSystem,2,
+            // Adapt the mesh to both molecular orbitals and new domain geometry
+            if (!performLevelSetAdaptation(pParameters,pMesh,pChemicalSystem,
                                                             iterationInTheLoop))
             {
-                PRINT_ERROR("In shapeDerivative: computeOverlapMatrix ");
+                PRINT_ERROR("In optimization: performLevelSetAdaptation ");
                 fprintf(stderr,"function returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
                 free(pShapeGradient);
                 pShapeGradient=NULL;
                 return 0;
             }
 
-            // Diagonalize the overlap matrix. Warning: we use lapacke.h
-            // and lapacke package must have been previously installed
-            if (!diagonalizeOverlapMatrix(pParameters,pData,iterationInTheLoop))
-            {
-                PRINT_ERROR("In shapeDerivative: ");
-                fprintf(stderr,"diagonalizeOverlapMatrix function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            // Compute the probabilities and total population in the domain
-            if (!computeProbability(pParameters,pData,iterationInTheLoop))
-            {
-                PRINT_ERROR("In shapeDerivative: computeProbability ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-            pMax=pData->pnu[iterationInTheLoop];
-
-            // Store the *.[iterationInTheLoop-1].mesh name in fileLocation
-            strncpy(fileLocation,pParameters->name_mesh,lengthName);
-            lengthName=strlen(fileLocation);
-            fileLocation[lengthName-5]='\0';
-
-            // sprintf returns the total number of characters written
-            // not including the '\0', otherwise a negative number on failure
-            if (sprintf(pParameters->name_mesh,"%s.%d.mesh",fileLocation,
-                                                        iterationInTheLoop-1)<0)
-            {
-                PRINT_ERROR("In advectLevelSetWithAdvectSoftware: the s");
-                fprintf(stderr,"tandard sprintf c-function returned an ");
-                fprintf(stderr,"unexpected negative value.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-            fileLocation[lengthName-5]='.';
-
-            // Check if *.[iterationInTheLoop-1].mesh file exists.
-            if (initialFileExists(pParameters->name_mesh,
-                                                   pParameters->name_length)!=1)
-            {
-                    PRINT_ERROR("In optimization: initialFileExists function ");
-                    fprintf(stderr,"did not return one, which was the ");
-                    fprintf(stderr,"expected value here.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-            }
-
-            // Check if *.mesh file exists and remove it
-            if (initialFileExists(fileLocation,pParameters->name_length)!=1)
-            {
-                    PRINT_ERROR("In optimization: initialFileExists function ");
-                    fprintf(stderr,"did not return one, which was the ");
-                    fprintf(stderr,"expected value here.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-            }
-
-            if (remove(fileLocation))
-            {
-                PRINT_ERROR("In optimization: wrong return (=-1) of the ");
-                fprintf(stderr,"standard remove c-function in the attempt of ");
-                fprintf(stderr,"removing the %s file.\n",fileLocation);
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            // Copy the *.[iterationInTheLoop-1].mesh into *.mesh
-            if (!copyFileLocation(pParameters->name_mesh,
-                                         pParameters->name_length,fileLocation))
-            {
-                PRINT_ERROR("In optimization: renameFileLocation ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-            strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-
-            // Free the memory allocated for the mesh
-            sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-            sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-            sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-            sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-            sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-            fprintf(stdout,"\nCleaning the allocated memory ");
-            fprintf(stdout,"(%d,%d ",sizeMemory/1000000,sizeMemory%1000000);
-            fprintf(stdout,"Mo) for reloading the ");
-            fprintf(stdout,"%d-th mesh.\n",iterationInTheLoop-1);
-            freeMeshMemory(pMesh);
-
-            // Read the new *.mesh file
-            if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
+            // Compute pMax and reload the previous mesh
+            pMax=computeProbabilityAndReloadPreviousMesh(pParameters,pMesh,
+                                                         pData,pChemicalSystem,
+                                                            iterationInTheLoop);
+            if (pMax==-10000.)
             {
                 PRINT_ERROR("In optimization: ");
-                fprintf(stderr,"readMeshFileAndAllocateMesh function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
+                fprintf(stderr,"computeProbabilityAndReloadPreviousMesh ");
+                fprintf(stderr,"function returned zero instead of one.\n");
                 free(pShapeGradient);
                 pShapeGradient=NULL;
                 return 0;
             }
 
-            // Update the parameters related to the computational box
-            if (!updateDiscretizationParameters(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: ");
-                fprintf(stderr,"updateDiscretizationParameters function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
+            // Trying to enlarge the searching interval
             t0=tMax;
             p0=pMax;
 
             tMax=tMin;
             pMax=pMin;
 
-            counter=1;
+            counter=0;
             while (pMax<p0)
             {
-                fprintf(stdout,"\nTRYING TO ENLARGE THE INTERVAL ");
-                fprintf(stdout,"[%lf,%lf].\n",tMax,t0);
+                fprintf(stdout,"\nTRYING TO ENLARGE THE SEARCHING INTERVAL ");
+                fprintf(stdout,"[%lf, %lf].\n",tMax,t0);
+                fprintf(stdout,"p(%lf)=%lf p(%lf)=%lf. ",tMax,pMax,t0,p0);
 
                 tMin=tMax;
                 pMin=pMax;
@@ -7304,446 +6885,56 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 pMax=p0;
 
                 counter++;
-                t0*=counter;
+                t0=exp(counter);
+                fprintf(stdout,"COMPUTING p(%lf).\n",t0);
 
                 for (i=0; i<pMesh->nver; i++)
                 {
                     pMesh->pver[i].value=t0*pShapeGradient[i];
                 }
 
-                // Save the vectorial shape gradient at the shape vertices
-                if (!writingShapeSolFile(pParameters,pMesh))
+                // Save the shape gradient
+                if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
                 {
-                    PRINT_ERROR("In optimization: writingShapeSolFile ");
+                    PRINT_ERROR("In optimization: saveTheShapeGradient ");
                     fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
                     free(pShapeGradient);
                     pShapeGradient=NULL;
                     return 0;
                 }
-    
-                // Extend the shape gradient outside the domain with elasticity
-                if (!extendShapeGradientWithElasticSoftware(pParameters))
+
+                // Advect the mesh thanks to Eulerian mode (level-set approach)
+                if (!computeEulerianMode(pParameters,pMesh,iterationInTheLoop))
                 {
-                    PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"extendLevelSetWithElasticSoftware ");
+                    PRINT_ERROR("In optimization: computeEulerianMode ");
                     fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
                     free(pShapeGradient);
                     pShapeGradient=NULL;
                     return 0;
                 }
-    
-                // Store the name of the *.chi.mesh file in fileLocation
-                strncpy(fileLocation,pParameters->name_mesh,lengthName);
-                lengthName=strlen(fileLocation);
-                fileLocation[lengthName-5]='.';
-                fileLocation[lengthName-4]='c';
-                fileLocation[lengthName-3]='h';
-                fileLocation[lengthName-2]='i';
-                fileLocation[lengthName-1]='.';
-                fileLocation[lengthName]='m';
-                fileLocation[lengthName+1]='e';
-                fileLocation[lengthName+2]='s';
-                fileLocation[lengthName+3]='h';
-                fileLocation[lengthName+4]='\0';
-    
-                // Remove the *.chi.mesh file if it already exists. Warning:
-                switch (initialFileExists(fileLocation,
-                                                      pParameters->name_length))
-                {
-                    case -1:
-                        break;
-    
-                    case 1:
-                        // remove returns 0 on success, otherwise -1
-                        if (remove(fileLocation))
-                        {
-                            PRINT_ERROR("In optimization: wrong return (=-1) ");
-                            fprintf(stderr,"of the standard remove c-");
-                            fprintf(stderr,"function in the attempt of ");
-                            fprintf(stderr,"removing the ");
-                            fprintf(stderr,"%s file.\n",fileLocation);
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                        break;
-    
-                    default:
-                        PRINT_ERROR("In optimization: initialFileExists ");
-                        fprintf(stderr,"function returned zero instead of ");
-                        fprintf(stderr,"(+/-)one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                        break;
-                }
-    
-                // Temporary rename the *.mesh by *.chi.mesh
-                if (!renameFileLocation(pParameters->name_mesh,
-                                         pParameters->name_length,fileLocation))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-    
-                // Generate the level-set function from mesh with mshdist
-                if (!renormalizeWithMshdistSoftware(pParameters,"dom"))
-                {
-                    PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"renormalizeWithMshdistSoftware function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-    
-                // Rename the *.mesh file as it was
-                lengthName=strlen(fileLocation);
-                fileLocation[lengthName-9]='.';
-                fileLocation[lengthName-8]='m';
-                fileLocation[lengthName-7]='e';
-                fileLocation[lengthName-6]='s';
-                fileLocation[lengthName-5]='h';
-                fileLocation[lengthName-4]='\0';
-                fileLocation[lengthName-3]='\0';
-                fileLocation[lengthName-2]='\0';
-                fileLocation[lengthName-1]='\0';
-                fileLocation[lengthName]='\0';
-                if (!renameFileLocation(pParameters->name_mesh,
-                                         pParameters->name_length,fileLocation))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                lengthName=pParameters->name_length;
-                strncpy(pParameters->name_mesh,fileLocation,lengthName);
-    
-                // Advect the level-set function according to the parameters
-                if (!advectLevelSetWithAdvectSoftware(pParameters))
-                {
-                    PRINT_ERROR("In optimization:  ");
-                    fprintf(stderr,"advectLevelSetWithAdvectSoftware ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-    
-                // Evaluate the orbitals' metric on the mesh
-                if (!evaluatingMetricOnMesh(pParameters,pMesh,pChemicalSystem))
-                {
-                    PRINT_ERROR("In optimization: evaluatingMetricOnMesh ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-    
-                // Store the name of the *.mesh file in fileLocation
-                // Remove the metric.mesh file if it already exists. Warning:
-                // metric.mesh and metric.sol cannot be used in the MPD program
-                strncpy(fileLocation,pParameters->name_mesh,
-                                                      pParameters->name_length);
-                switch (initialFileExists("metric.mesh",15))
-                {
-                    case -1:
-                        break;
-    
-                    case 1:
-                        PRINT_ERROR("In optimization: 'metric.mesh' file ");
-                        fprintf(stderr,"cannot refer to a mesh name in the ");
-                        fprintf(stderr,"MPD program.\nPlease modify the name ");
-                        fprintf(stderr,"associated with the name_mesh ");
-                        fprintf(stderr,"keyword or if no such line exists ");
-                        fprintf(stderr,"in your (input) *.info file, check ");
-                        fprintf(stderr,"that it is not entitled ");
-                        fprintf(stderr,"'metric.info'.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                        break;
-    
-                    default:
-                        PRINT_ERROR("In optimization: initialFileExists ");
-                        fprintf(stderr,"function returned zero instead of ");
-                        fprintf(stderr,"(+/-)one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                        break;
-                }
-    
-                // Temporary rename the *.mesh by metric.mesh
-                if (!renameFileLocation(pParameters->name_mesh,
-                                        pParameters->name_length,"metric.mesh"))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                strncpy(pParameters->name_mesh,"metric.mesh",
-                                                      pParameters->name_length);
-    
-                // Save metric values in a file entitled metric.sol
-                if (!writingSolFile(pParameters,pMesh))
-                {
-                    PRINT_ERROR("In optimization: writingSolFile function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-    
-                // Rename the *.mesh file as it was
-                if (!renameFileLocation("metric.mesh",
-                                         pParameters->name_length,fileLocation))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-    
-                // Free the memory allocated for the mesh
-                sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-                sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-                sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-                sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-                sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-                fprintf(stdout,"\nCleaning the allocated memory ");
-                fprintf(stdout,"(%d,%d ",sizeMemory/1000000,sizeMemory%1000000);
-                fprintf(stdout,"Mo) for a mesh adaptation according ");
-                fprintf(stdout,"to both the advect level-set interface ");
-                fprintf(stdout,"geometry and molecular orbitals chemistry.\n");
-                freeMeshMemory(pMesh);
-    
-                // Warning: mmg3d software must have been previously installed
-                if (!adaptMeshWithMmg3dSoftware(pParameters,"ls"))
-                {
-                    PRINT_ERROR("In optimization: adaptMeshWithMmg3dSoftware ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-    
-                // Read the new *.mesh file
-                if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
-                {
-                    PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"readMeshFileAndAllocateMesh function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-    
-                // Update the parameters related to the computational box
-                if (!updateDiscretizationParameters(pParameters,pMesh))
-                {
-                    PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"updateDiscretizationParameters function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-    
-                // Computing overlap matrix. Warning: bounadary triangles are 
-                // labbelled10 but not necessarily the related vertices (ok now 
-                // and checked in writeShapeSolFile function)
-                if (!computeOverlapMatrix(pParameters,pMesh,pData,
-                                          pChemicalSystem,2,iterationInTheLoop))
-                {
-                    PRINT_ERROR("In shapeDerivative: computeOverlapMatrix ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-    
-                // Diagonalize the overlap matrix. Warning: we use lapacke.h
-                // and lapacke package must have been previously installed
-                if (!diagonalizeOverlapMatrix(pParameters,pData,
+
+                // Adapt mesh to both molecular orbitals and new domain geometry
+                if (!performLevelSetAdaptation(pParameters,pMesh,
+                                               pChemicalSystem,
                                                             iterationInTheLoop))
                 {
-                    PRINT_ERROR("In shapeDerivative: ");
-                    fprintf(stderr,"diagonalizeOverlapMatrix function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-    
-                // Compute the probabilities and total population in the domain
-                if (!computeProbability(pParameters,pData,iterationInTheLoop))
-                {
-                    PRINT_ERROR("In shapeDerivative: computeProbability ");
+                    PRINT_ERROR("In optimization: performLevelSetAdaptation ");
                     fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                p0=pData->pnu[iterationInTheLoop];
-
-                // Store the *.[iterationInTheLoop-1].mesh name in fileLocation
-                strncpy(fileLocation,pParameters->name_mesh,lengthName);
-                lengthName=strlen(fileLocation);
-                fileLocation[lengthName-5]='\0';
-                if (sprintf(pParameters->name_mesh,"%s.%d.mesh",fileLocation,
-                                                        iterationInTheLoop-1)<0)
-                {
-                    PRINT_ERROR("In advectLevelSetWithAdvectSoftware: the s");
-                    fprintf(stderr,"tandard sprintf c-function returned an ");
-                    fprintf(stderr,"unexpected negative value.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                fileLocation[lengthName-5]='.';
-
-                // Check if *.[iterationInTheLoop-1].mesh file exists.
-                if (initialFileExists(pParameters->name_mesh,
-                                                   pParameters->name_length)!=1)
-                {
-                    PRINT_ERROR("In optimization: initialFileExists function ");
-                    fprintf(stderr,"did not return one, which was the ");
-                    fprintf(stderr,"expected value here.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
                     free(pShapeGradient);
                     pShapeGradient=NULL;
                     return 0;
                 }
 
-                // Check if *.mesh file exists and remove it
-                if (initialFileExists(fileLocation,pParameters->name_length)!=1)
-                {
-                    PRINT_ERROR("In optimization: initialFileExists function ");
-                    fprintf(stderr,"did not return one, which was the ");
-                    fprintf(stderr,"expected value here.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-
-                if (remove(fileLocation))
-                {
-                    PRINT_ERROR("In optimization: wrong return (=-1) of the ");
-                    fprintf(stderr,"standard remove c-function in the ");
-                    fprintf(stderr,"attempt of removing the ");
-                    fprintf(stderr,"%s file.\n",fileLocation);
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-
-                // Copy the *.[iterationInTheLoop-1].mesh into *.mesh
-                if (!copyFileLocation(pParameters->name_mesh,
-                                         pParameters->name_length,fileLocation))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-
-                // Free the memory allocated for the mesh
-                sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-                sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-                sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-                sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-                sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-                fprintf(stdout,"\nCleaning the allocated memory ");
-                fprintf(stdout,"(%d,%d ",sizeMemory/1000000,sizeMemory%1000000);
-                fprintf(stdout,"Mo) for loading the previous mesh.\n");
-                freeMeshMemory(pMesh);
-
-                // Read the new *.mesh file
-                if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
+                // Compute p0 and reload the previous mesh
+                p0=computeProbabilityAndReloadPreviousMesh(pParameters,pMesh,
+                                                           pData,
+                                                           pChemicalSystem,
+                                                            iterationInTheLoop);
+                if (p0==-10000.)
                 {
                     PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"readMeshFileAndAllocateMesh function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-
-                // Update the parameters related to the computational box
-                if (!updateDiscretizationParameters(pParameters,pMesh))
-                {
-                    PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"updateDiscretizationParameters function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
+                    fprintf(stderr,"computeProbabilityAndReloadPreviousMesh ");
+                    fprintf(stderr,"function returned zero instead of one.\n");
                     free(pShapeGradient);
                     pShapeGradient=NULL;
                     return 0;
@@ -7754,26 +6945,32 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             pMax=p0;
     
             // Starting golden-line search on the initial interval
-            fprintf(stdout,"\nINITIAL INTERVAL FOUND: [%lf,%lf].\n",tMin,tMax);
+            fprintf(stdout,"\nINITIAL INTERVAL FOUND: [%lf, %lf].\n",tMin,tMax);
             fprintf(stdout,"STARTING THE GOLDEN-SECTION LINE SEARCH.\n");
 
             h=tMax-tMin;
-            nMax=(int)(floor(log(1.e-1/h)/log(INV_PHI)));
+            if (tMax==1.)
+            {
+                nMax=3;
+                //nMax=(int)(floor(log(1.e-1/h)/log(INV_PHI)));
+            }
+            else
+            {
+                nMax=0;
+            }
 
-            // Evaluation of p0 (t0>=1. Eulerian, otherwise Lagrangian)
+            // Evaluation of p0 (t0<1. Lagrangian otherwise Eulerian approach)
             t0=tMin+INV_PHI2*h;
             for (i=0; i<pMesh->nver; i++)
             {
                 pMesh->pver[i].value=t0*pShapeGradient[i];
             }
 
-            // Save the vectorial shape gradient at the shape vertices
-            if (!writingShapeSolFile(pParameters,pMesh))
+            // Save the shape gradient
+            if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
             {
-                PRINT_ERROR("In optimization: writingShapeSolFile ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
+                PRINT_ERROR("In optimization: saveTheShapeGradient function ");
+                fprintf(stderr,"returned zero instead of one.\n");
                 free(pShapeGradient);
                 pShapeGradient=NULL;
                 return 0;
@@ -7781,168 +6978,12 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
 
             if (t0<1.)
             {
-                // Free the memory allocated for the mesh
-                sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-                sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-                sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-                sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-                sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-                fprintf(stdout,"\nCleaning the allocated memory ");
-                fprintf(stdout,"(%d,%d ",sizeMemory/1000000,sizeMemory%1000000);
-                fprintf(stdout,"Mo) for a mesh adaptation according to the ");
-                fprintf(stdout,"shape gradient with a Lagrangian approach.\n");
-                freeMeshMemory(pMesh);
-
-                // Warning: mmg3d software must have been previously installed
-                if (!adaptMeshWithMmg3dSoftware(pParameters,"lag"))
+                // Advect the mesh thanks to Lagrangian mode of mmg3d software
+                if (!computeLagrangianMode(pParameters,pMesh,
+                                                            iterationInTheLoop))
                 {
-                    PRINT_ERROR("In optimization: adaptMeshWithMmg3dSoftware ");
+                    PRINT_ERROR("In optimization: computeLagrangianMode ");
                     fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-
-                // Read the intermediate *.mesh file
-                if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
-                {
-                    PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"readMeshFileAndAllocateMesh function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-
-                // Generate a coarse level-set function of the intermediate mesh
-                nIter=pParameters->n_iter;
-                pParameters->n_iter=10;
-                if (!renormalizeWithMshdistSoftware(pParameters,"dom"))
-                {
-                    PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"renormalizeWithMshdistSoftware function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                pParameters->n_iter=nIter;
-
-                // Evaluate the orbitals' metric on the mesh
-                if (!evaluatingMetricOnMesh(pParameters,pMesh,pChemicalSystem))
-                {
-                    PRINT_ERROR("In optimization: evaluatingMetricOnMesh ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-
-                // Store the name of the *.mesh file in fileLocation
-                strncpy(fileLocation,pParameters->name_mesh,lengthName);
-                switch (initialFileExists("metric.mesh",15))
-                {
-                    case -1:
-                        break;
-
-                    case 1:
-                        PRINT_ERROR("In optimization: 'metric.mesh' file ");
-                        fprintf(stderr,"cannot refer to a mesh name in the ");
-                        fprintf(stderr,"MPD program.\nPlease modify the name ");
-                        fprintf(stderr,"associated with the name_mesh ");
-                        fprintf(stderr,"keyword or if no such line exists ");
-                        fprintf(stderr,"in your (input) *.info file, check ");
-                        fprintf(stderr,"that it is not entitled ");
-                        fprintf(stderr,"'metric.info'.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                        break;
-
-                    default:
-                        PRINT_ERROR("In optimization: initialFileExists ");
-                        fprintf(stderr,"function returned zero instead of ");
-                        fprintf(stderr,"(+/-)one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                        break;
-                }
-
-                // Temporary rename the *.mesh by metric.mesh
-                if (!renameFileLocation(pParameters->name_mesh,
-                                        pParameters->name_length,"metric.mesh"))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                strncpy(pParameters->name_mesh,"metric.mesh",
-                                                      pParameters->name_length);
-
-                // Save metric values in a file entitled metric.sol
-                if (!writingSolFile(pParameters,pMesh))
-                {
-                    PRINT_ERROR("In optimization: writingSolFile function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-
-                // Rename the *.mesh file as it was
-                if (!renameFileLocation("metric.mesh",
-                                         pParameters->name_length,fileLocation))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-
-                // Free the memory allocated for the intermediate mesh
-                sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-                sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-                sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-                sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-                sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-                fprintf(stdout,"\nCleaning the allocated memory ");
-                fprintf(stdout,"(%d,%d ",sizeMemory/1000000,sizeMemory%1000000);
-                fprintf(stdout,"Mo) for a mesh adaptation according ");
-                fprintf(stdout,"to both the level-set interface geometry ");
-                fprintf(stdout,"and molecular orbitals chemistry.\n");
-                freeMeshMemory(pMesh);
-
-                // Warning: mmg3d software must have been previously installed
-                if (!adaptMeshWithMmg3dSoftware(pParameters,"ls"))
-                {
-                    PRINT_ERROR("In optimization: adaptMeshWithMmg3dSoftware ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
                     free(pShapeGradient);
                     pShapeGradient=NULL;
                     return 0;
@@ -7950,464 +6991,56 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             }
             else
             {
-                // Extend the shape gradient outside the domain with elasticity
-                if (!extendShapeGradientWithElasticSoftware(pParameters))
+                // Advect the mesh thanks to Eulerian mode (level-set approach)
+                if (!computeEulerianMode(pParameters,pMesh,iterationInTheLoop))
                 {
-                    PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"extendLevelSetWithElasticSoftware ");
+                    PRINT_ERROR("In optimization: computeEulerianMode ");
                     fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-    
-                // Store the name of the *.chi.mesh file in fileLocation
-                strncpy(fileLocation,pParameters->name_mesh,lengthName);
-                lengthName=strlen(fileLocation);
-                fileLocation[lengthName-5]='.';
-                fileLocation[lengthName-4]='c';
-                fileLocation[lengthName-3]='h';
-                fileLocation[lengthName-2]='i';
-                fileLocation[lengthName-1]='.';
-                fileLocation[lengthName]='m';
-                fileLocation[lengthName+1]='e';
-                fileLocation[lengthName+2]='s';
-                fileLocation[lengthName+3]='h';
-                fileLocation[lengthName+4]='\0';
-    
-                // Remove the *.chi.mesh file if it already exists. Warning:
-                switch (initialFileExists(fileLocation,
-                                                      pParameters->name_length))
-                {
-                    case -1:
-                        break;
-    
-                    case 1:
-                        // remove returns 0 on success, otherwise -1
-                        if (remove(fileLocation))
-                        {
-                            PRINT_ERROR("In optimization: wrong return (=-1) ");
-                            fprintf(stderr,"of the standard remove c-");
-                            fprintf(stderr,"function in the attempt of ");
-                            fprintf(stderr,"removing the ");
-                            fprintf(stderr,"%s file.\n",fileLocation);
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                        break;
-    
-                    default:
-                        PRINT_ERROR("In optimization: initialFileExists ");
-                        fprintf(stderr,"function returned zero instead of ");
-                        fprintf(stderr,"(+/-)one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                        break;
-                }
-    
-                // Temporary rename the *.mesh by *.chi.mesh
-                if (!renameFileLocation(pParameters->name_mesh,
-                                         pParameters->name_length,fileLocation))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-    
-                // Generate the level-set function from mesh with mshdist
-                if (!renormalizeWithMshdistSoftware(pParameters,"dom"))
-                {
-                    PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"renormalizeWithMshdistSoftware function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-    
-                // Rename the *.mesh file as it was
-                lengthName=strlen(fileLocation);
-                fileLocation[lengthName-9]='.';
-                fileLocation[lengthName-8]='m';
-                fileLocation[lengthName-7]='e';
-                fileLocation[lengthName-6]='s';
-                fileLocation[lengthName-5]='h';
-                fileLocation[lengthName-4]='\0';
-                fileLocation[lengthName-3]='\0';
-                fileLocation[lengthName-2]='\0';
-                fileLocation[lengthName-1]='\0';
-                fileLocation[lengthName]='\0';
-                if (!renameFileLocation(pParameters->name_mesh,
-                                         pParameters->name_length,fileLocation))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                lengthName=pParameters->name_length;
-                strncpy(pParameters->name_mesh,fileLocation,lengthName);
-    
-                // Advect the level-set function according to the parameters
-                if (!advectLevelSetWithAdvectSoftware(pParameters))
-                {
-                    PRINT_ERROR("In optimization:  ");
-                    fprintf(stderr,"advectLevelSetWithAdvectSoftware ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-    
-                // Evaluate the orbitals' metric on the mesh
-                if (!evaluatingMetricOnMesh(pParameters,pMesh,pChemicalSystem))
-                {
-                    PRINT_ERROR("In optimization: evaluatingMetricOnMesh ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-    
-                // Store the name of the *.mesh file in fileLocation
-                // Remove the metric.mesh file if it already exists. Warning:
-                // metric.mesh and metric.sol cannot be used in the MPD program
-                strncpy(fileLocation,pParameters->name_mesh,
-                                                      pParameters->name_length);
-                switch (initialFileExists("metric.mesh",15))
-                {
-                    case -1:
-                        break;
-    
-                    case 1:
-                        PRINT_ERROR("In optimization: 'metric.mesh' file ");
-                        fprintf(stderr,"cannot refer to a mesh name in the ");
-                        fprintf(stderr,"MPD program.\nPlease modify the name ");
-                        fprintf(stderr,"associated with the name_mesh ");
-                        fprintf(stderr,"keyword or if no such line exists ");
-                        fprintf(stderr,"in your (input) *.info file, check ");
-                        fprintf(stderr,"that it is not entitled ");
-                        fprintf(stderr,"'metric.info'.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                        break;
-    
-                    default:
-                        PRINT_ERROR("In optimization: initialFileExists ");
-                        fprintf(stderr,"function returned zero instead of ");
-                        fprintf(stderr,"(+/-)one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                        break;
-                }
-    
-                // Temporary rename the *.mesh by metric.mesh
-                if (!renameFileLocation(pParameters->name_mesh,
-                                        pParameters->name_length,"metric.mesh"))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                strncpy(pParameters->name_mesh,"metric.mesh",
-                                                      pParameters->name_length);
-    
-                // Save metric values in a file entitled metric.sol
-                if (!writingSolFile(pParameters,pMesh))
-                {
-                    PRINT_ERROR("In optimization: writingSolFile function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-    
-                // Rename the *.mesh file as it was
-                if (!renameFileLocation("metric.mesh",
-                                         pParameters->name_length,fileLocation))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-    
-                // Free the memory allocated for the mesh
-                sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-                sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-                sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-                sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-                sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-                fprintf(stdout,"\nCleaning the allocated memory ");
-                fprintf(stdout,"(%d,%d ",sizeMemory/1000000,sizeMemory%1000000);
-                fprintf(stdout,"Mo) for a mesh adaptation according ");
-                fprintf(stdout,"to both the advect level-set interface ");
-                fprintf(stdout,"geometry and molecular orbitals chemistry.\n");
-                freeMeshMemory(pMesh);
-    
-                // Warning: mmg3d software must have been previously installed
-                if (!adaptMeshWithMmg3dSoftware(pParameters,"ls"))
-                {
-                    PRINT_ERROR("In optimization: adaptMeshWithMmg3dSoftware ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
                     free(pShapeGradient);
                     pShapeGradient=NULL;
                     return 0;
                 }
             }
 
-            // Read the new *.mesh file
-            if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
+            // Adapt the mesh to both molecular orbitals and new domain geometry
+            if (!performLevelSetAdaptation(pParameters,pMesh,pChemicalSystem,
+                                                            iterationInTheLoop))
+            {
+                PRINT_ERROR("In optimization: performLevelSetAdaptation ");
+                fprintf(stderr,"function returned zero instead of one.\n");
+                free(pShapeGradient);
+                pShapeGradient=NULL;
+                return 0;
+            }
+
+            // Compute p0 and reload the previous mesh
+            p0=computeProbabilityAndReloadPreviousMesh(pParameters,pMesh,pData,
+                                                       pChemicalSystem,
+                                                            iterationInTheLoop);
+            if (p0==-10000.)
             {
                 PRINT_ERROR("In optimization: ");
-                fprintf(stderr,"readMeshFileAndAllocateMesh ");
-                fprintf(stderr,"function returned zero instead ");
-                fprintf(stderr,"of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-    
-            // Update the parameters of computational box
-            if (!updateDiscretizationParameters(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: ");
-                fprintf(stderr,"updateDiscretizationParameters ");
-                fprintf(stderr,"function returned zero instead ");
-                fprintf(stderr,"of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-    
-            // Computing overlap matrix. Warning: boundary triangles
-            // are labbelled 10 but not necessarily the related
-            // vertices (ok now and checked in writeShapeSolFile)
-            if (!computeOverlapMatrix(pParameters,pMesh,pData,
-                                      pChemicalSystem,2,
-                                                    iterationInTheLoop))
-            {
-                PRINT_ERROR("In shapeDerivative: ");
-                fprintf(stderr,"computeOverlapMatrix function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-    
-            // Diagonalize the overlap matrix. Warning: lapacke.h
-            // and lapacke package must have been installed
-            if (!diagonalizeOverlapMatrix(pParameters,pData,
-                                                    iterationInTheLoop))
-            {
-                PRINT_ERROR("In shapeDerivative: ");
-                fprintf(stderr,"diagonalizeOverlapMatrix ");
-                fprintf(stderr,"function returned zero instead ");
-                fprintf(stderr,"of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-    
-            // Compute the probabilities and total population
-            if (!computeProbability(pParameters,pData,
-                                                    iterationInTheLoop))
-            {
-                PRINT_ERROR("In shapeDerivative: ");
-                fprintf(stderr,"computeProbability function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-            p0=pData->pnu[iterationInTheLoop];
-
-            // Store the *.[iterationInTheLoop-1].mesh name
-            strncpy(fileLocation,pParameters->name_mesh,lengthName);
-            lengthName=strlen(fileLocation);
-            fileLocation[lengthName-5]='\0';
-            if (sprintf(pParameters->name_mesh,"%s.%d.mesh",
-                                   fileLocation,iterationInTheLoop-1)<0)
-            {
-                PRINT_ERROR("In advectLevelSetWithAdvectSoftware:");
-                fprintf(stderr," the standard sprintf ");
-                fprintf(stderr,"c-function returned an ");
-                fprintf(stderr,"unexpected negative value.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-            fileLocation[lengthName-5]='.';
-
-            // Check if *.[iterationInTheLoop-1].mesh file exists.
-            if (initialFileExists(pParameters->name_mesh,
-                                           pParameters->name_length)!=1)
-            {
-                PRINT_ERROR("In optimization: initialFileExists ");
-                fprintf(stderr,"function did not return one, ");
-                fprintf(stderr,"which was the expected value ");
-                fprintf(stderr,"here.\n");
-                free(fileLocation);
-                fileLocation=NULL;
+                fprintf(stderr,"computeProbabilityAndReloadPreviousMesh ");
+                fprintf(stderr,"function returned zero instead of one.\n");
                 free(pShapeGradient);
                 pShapeGradient=NULL;
                 return 0;
             }
 
-            // Check if *.mesh file exists and remove it
-            if (initialFileExists(fileLocation,
-                                           pParameters->name_length)!=1)
-            {
-                PRINT_ERROR("In optimization: initialFileExists ");
-                fprintf(stderr,"function did not return one, ");
-                fprintf(stderr,"which was the expected value ");
-                fprintf(stderr,"here.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            if (remove(fileLocation))
-            {
-                PRINT_ERROR("In optimization: wrong return (=-1) ");
-                fprintf(stderr,"of the standard remove ");
-                fprintf(stderr,"c-function in the attempt of ");
-                fprintf(stderr,"removing the ");
-                fprintf(stderr,"%s file.\n",fileLocation);
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            // Copy the *.[iterationInTheLoop-1].mesh into *.mesh
-            if (!copyFileLocation(pParameters->name_mesh,
-                                  pParameters->name_length,
-                                                          fileLocation))
-            {
-                PRINT_ERROR("In optimization: renameFileLocation ");
-                fprintf(stderr,"function returned zero instead ");
-                fprintf(stderr,"of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-           }
-           strncpy(pParameters->name_mesh,fileLocation,
-                                              pParameters->name_length);
-
-            // Free the memory allocated for the mesh
-            sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-            sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-            sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-            sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-            sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-            fprintf(stdout,"\nCleaning the allocated memory ");
-            fprintf(stdout,"(%d,",sizeMemory/1000000);
-            fprintf(stdout,"%d ",sizeMemory%1000000);
-            fprintf(stdout,"Mo) for loading the previous mesh.\n");
-            freeMeshMemory(pMesh);
-
-            // Read the new *.mesh file
-            if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: ");
-                fprintf(stderr,"readMeshFileAndAllocateMesh ");
-                fprintf(stderr,"function returned zero instead ");
-                fprintf(stderr,"of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            // Update the parameters of the computational box
-            if (!updateDiscretizationParameters(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: ");
-                fprintf(stderr,"updateDiscretizationParameters ");
-                fprintf(stderr,"function returned zero instead ");
-                fprintf(stderr,"of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            // Evaluation of p1 (t1>=1. Eulerian, otherwise Lagrangian)
+            // Evaluation of p1 (t1<1. Lagrangian otherwise Eulerian approach)
             t1=tMin+INV_PHI*h;
+            fprintf(stdout,"\nFIRST EVALUATION ENDED: p(%lf). COMPUTING ",t0);
+            fprintf(stdout,"p(%lf).\n",t1);
             for (i=0; i<pMesh->nver; i++)
             {
                pMesh->pver[i].value=t1*pShapeGradient[i];
             }
 
-            // Save the vectorial shape gradient at the shape vertices
-            if (!writingShapeSolFile(pParameters,pMesh))
+            // Save the shape gradient
+            if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
             {
-                PRINT_ERROR("In optimization: writingShapeSolFile ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
+                PRINT_ERROR("In optimization: saveTheShapeGradient function ");
+                fprintf(stderr,"returned zero instead of one.\n");
                 free(pShapeGradient);
                 pShapeGradient=NULL;
                 return 0;
@@ -8415,168 +7048,12 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
 
             if (t1<1.)
             {
-                // Free the memory allocated for the mesh
-                sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-                sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-                sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-                sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-                sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-                fprintf(stdout,"\nCleaning the allocated memory ");
-                fprintf(stdout,"(%d,%d ",sizeMemory/1000000,sizeMemory%1000000);
-                fprintf(stdout,"Mo) for a mesh adaptation according to the ");
-                fprintf(stdout,"shape gradient with a Lagrangian approach.\n");
-                freeMeshMemory(pMesh);
-
-                // Warning: mmg3d software must have been previously installed
-                if (!adaptMeshWithMmg3dSoftware(pParameters,"lag"))
+                // Advect the mesh thanks to Lagrangian mode of mmg3d software
+                if (!computeLagrangianMode(pParameters,pMesh,
+                                                            iterationInTheLoop))
                 {
-                    PRINT_ERROR("In optimization: adaptMeshWithMmg3dSoftware ");
+                    PRINT_ERROR("In optimization: computeLagrangianMode ");
                     fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-
-                // Read the intermediate *.mesh file
-                if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
-                {
-                    PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"readMeshFileAndAllocateMesh function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-
-                // Generate a coarse level-set function of the intermediate mesh
-                nIter=pParameters->n_iter;
-                pParameters->n_iter=10;
-                if (!renormalizeWithMshdistSoftware(pParameters,"dom"))
-                {
-                    PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"renormalizeWithMshdistSoftware function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                pParameters->n_iter=nIter;
-
-                // Evaluate the orbitals' metric on the mesh
-                if (!evaluatingMetricOnMesh(pParameters,pMesh,pChemicalSystem))
-                {
-                    PRINT_ERROR("In optimization: evaluatingMetricOnMesh ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-
-                // Store the name of the *.mesh file in fileLocation
-                strncpy(fileLocation,pParameters->name_mesh,lengthName);
-                switch (initialFileExists("metric.mesh",15))
-                {
-                    case -1:
-                        break;
-
-                    case 1:
-                        PRINT_ERROR("In optimization: 'metric.mesh' file ");
-                        fprintf(stderr,"cannot refer to a mesh name in the ");
-                        fprintf(stderr,"MPD program.\nPlease modify the name ");
-                        fprintf(stderr,"associated with the name_mesh ");
-                        fprintf(stderr,"keyword or if no such line exists ");
-                        fprintf(stderr,"in your (input) *.info file, check ");
-                        fprintf(stderr,"that it is not entitled ");
-                        fprintf(stderr,"'metric.info'.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                        break;
-
-                    default:
-                        PRINT_ERROR("In optimization: initialFileExists ");
-                        fprintf(stderr,"function returned zero instead of ");
-                        fprintf(stderr,"(+/-)one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                        break;
-                }
-
-                // Temporary rename the *.mesh by metric.mesh
-                if (!renameFileLocation(pParameters->name_mesh,
-                                        pParameters->name_length,"metric.mesh"))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                strncpy(pParameters->name_mesh,"metric.mesh",
-                                                      pParameters->name_length);
-
-                // Save metric values in a file entitled metric.sol
-                if (!writingSolFile(pParameters,pMesh))
-                {
-                    PRINT_ERROR("In optimization: writingSolFile function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-
-                // Rename the *.mesh file as it was
-                if (!renameFileLocation("metric.mesh",
-                                         pParameters->name_length,fileLocation))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-
-                // Free the memory allocated for the intermediate mesh
-                sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-                sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-                sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-                sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-                sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-                fprintf(stdout,"\nCleaning the allocated memory ");
-                fprintf(stdout,"(%d,%d ",sizeMemory/1000000,sizeMemory%1000000);
-                fprintf(stdout,"Mo) for a mesh adaptation according ");
-                fprintf(stdout,"to both the level-set interface geometry ");
-                fprintf(stdout,"and molecular orbitals chemistry.\n");
-                freeMeshMemory(pMesh);
-
-                // Warning: mmg3d software must have been previously installed
-                if (!adaptMeshWithMmg3dSoftware(pParameters,"ls"))
-                {
-                    PRINT_ERROR("In optimization: adaptMeshWithMmg3dSoftware ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
                     free(pShapeGradient);
                     pShapeGradient=NULL;
                     return 0;
@@ -8584,445 +7061,37 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             }
             else
             {
-                // Extend the shape gradient outside the domain with elasticity
-                if (!extendShapeGradientWithElasticSoftware(pParameters))
+                // Advect the mesh thanks to Eulerian mode (level-set approach)
+                if (!computeEulerianMode(pParameters,pMesh,iterationInTheLoop))
                 {
-                    PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"extendLevelSetWithElasticSoftware ");
+                    PRINT_ERROR("In optimization: computeEulerianMode ");
                     fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-    
-                // Store the name of the *.chi.mesh file in fileLocation
-                strncpy(fileLocation,pParameters->name_mesh,lengthName);
-                lengthName=strlen(fileLocation);
-                fileLocation[lengthName-5]='.';
-                fileLocation[lengthName-4]='c';
-                fileLocation[lengthName-3]='h';
-                fileLocation[lengthName-2]='i';
-                fileLocation[lengthName-1]='.';
-                fileLocation[lengthName]='m';
-                fileLocation[lengthName+1]='e';
-                fileLocation[lengthName+2]='s';
-                fileLocation[lengthName+3]='h';
-                fileLocation[lengthName+4]='\0';
-    
-                // Remove the *.chi.mesh file if it already exists. Warning:
-                switch (initialFileExists(fileLocation,
-                                                      pParameters->name_length))
-                {
-                    case -1:
-                        break;
-    
-                    case 1:
-                        // remove returns 0 on success, otherwise -1
-                        if (remove(fileLocation))
-                        {
-                            PRINT_ERROR("In optimization: wrong return (=-1) ");
-                            fprintf(stderr,"of the standard remove c-");
-                            fprintf(stderr,"function in the attempt of ");
-                            fprintf(stderr,"removing the ");
-                            fprintf(stderr,"%s file.\n",fileLocation);
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                        break;
-    
-                    default:
-                        PRINT_ERROR("In optimization: initialFileExists ");
-                        fprintf(stderr,"function returned zero instead of ");
-                        fprintf(stderr,"(+/-)one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                        break;
-                }
-    
-                // Temporary rename the *.mesh by *.chi.mesh
-                if (!renameFileLocation(pParameters->name_mesh,
-                                         pParameters->name_length,fileLocation))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-    
-                // Generate the level-set function from mesh with mshdist
-                if (!renormalizeWithMshdistSoftware(pParameters,"dom"))
-                {
-                    PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"renormalizeWithMshdistSoftware function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-    
-                // Rename the *.mesh file as it was
-                lengthName=strlen(fileLocation);
-                fileLocation[lengthName-9]='.';
-                fileLocation[lengthName-8]='m';
-                fileLocation[lengthName-7]='e';
-                fileLocation[lengthName-6]='s';
-                fileLocation[lengthName-5]='h';
-                fileLocation[lengthName-4]='\0';
-                fileLocation[lengthName-3]='\0';
-                fileLocation[lengthName-2]='\0';
-                fileLocation[lengthName-1]='\0';
-                fileLocation[lengthName]='\0';
-                if (!renameFileLocation(pParameters->name_mesh,
-                                         pParameters->name_length,fileLocation))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                lengthName=pParameters->name_length;
-                strncpy(pParameters->name_mesh,fileLocation,lengthName);
-    
-                // Advect the level-set function according to the parameters
-                if (!advectLevelSetWithAdvectSoftware(pParameters))
-                {
-                    PRINT_ERROR("In optimization:  ");
-                    fprintf(stderr,"advectLevelSetWithAdvectSoftware ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-    
-                // Evaluate the orbitals' metric on the mesh
-                if (!evaluatingMetricOnMesh(pParameters,pMesh,pChemicalSystem))
-                {
-                    PRINT_ERROR("In optimization: evaluatingMetricOnMesh ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-    
-                // Store the name of the *.mesh file in fileLocation
-                // Remove the metric.mesh file if it already exists. Warning:
-                // metric.mesh and metric.sol cannot be used in the MPD program
-                strncpy(fileLocation,pParameters->name_mesh,
-                                                      pParameters->name_length);
-                switch (initialFileExists("metric.mesh",15))
-                {
-                    case -1:
-                        break;
-    
-                    case 1:
-                        PRINT_ERROR("In optimization: 'metric.mesh' file ");
-                        fprintf(stderr,"cannot refer to a mesh name in the ");
-                        fprintf(stderr,"MPD program.\nPlease modify the name ");
-                        fprintf(stderr,"associated with the name_mesh ");
-                        fprintf(stderr,"keyword or if no such line exists ");
-                        fprintf(stderr,"in your (input) *.info file, check ");
-                        fprintf(stderr,"that it is not entitled ");
-                        fprintf(stderr,"'metric.info'.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                        break;
-    
-                    default:
-                        PRINT_ERROR("In optimization: initialFileExists ");
-                        fprintf(stderr,"function returned zero instead of ");
-                        fprintf(stderr,"(+/-)one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                        break;
-                }
-    
-                // Temporary rename the *.mesh by metric.mesh
-                if (!renameFileLocation(pParameters->name_mesh,
-                                        pParameters->name_length,"metric.mesh"))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                strncpy(pParameters->name_mesh,"metric.mesh",
-                                                      pParameters->name_length);
-    
-                // Save metric values in a file entitled metric.sol
-                if (!writingSolFile(pParameters,pMesh))
-                {
-                    PRINT_ERROR("In optimization: writingSolFile function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-    
-                // Rename the *.mesh file as it was
-                if (!renameFileLocation("metric.mesh",
-                                         pParameters->name_length,fileLocation))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-    
-                // Free the memory allocated for the mesh
-                sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-                sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-                sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-                sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-                sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-                fprintf(stdout,"\nCleaning the allocated memory ");
-                fprintf(stdout,"(%d,%d ",sizeMemory/1000000,sizeMemory%1000000);
-                fprintf(stdout,"Mo) for a mesh adaptation according ");
-                fprintf(stdout,"to both the advect level-set interface ");
-                fprintf(stdout,"geometry and molecular orbitals chemistry.\n");
-                freeMeshMemory(pMesh);
-    
-                // Warning: mmg3d software must have been previously installed
-                if (!adaptMeshWithMmg3dSoftware(pParameters,"ls"))
-                {
-                    PRINT_ERROR("In optimization: adaptMeshWithMmg3dSoftware ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
                     free(pShapeGradient);
                     pShapeGradient=NULL;
                     return 0;
                 }
             }
-    
-            // Read the new *.mesh file
-            if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
+
+            // Adapt the mesh to both molecular orbitals and new domain geometry
+            if (!performLevelSetAdaptation(pParameters,pMesh,pChemicalSystem,
+                                                            iterationInTheLoop))
+            {
+                PRINT_ERROR("In optimization: performLevelSetAdaptation ");
+                fprintf(stderr,"function returned zero instead of one.\n");
+                free(pShapeGradient);
+                pShapeGradient=NULL;
+                return 0;
+            }
+
+            // Compute p1 and reload the previous mesh
+            p1=computeProbabilityAndReloadPreviousMesh(pParameters,pMesh,pData,
+                                                       pChemicalSystem,
+                                                            iterationInTheLoop);
+            if (p1==-10000.)
             {
                 PRINT_ERROR("In optimization: ");
-                fprintf(stderr,"readMeshFileAndAllocateMesh ");
-                fprintf(stderr,"function returned zero instead ");
-                fprintf(stderr,"of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-    
-            // Update the parameters of computational box
-            if (!updateDiscretizationParameters(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: ");
-                fprintf(stderr,"updateDiscretizationParameters ");
-                fprintf(stderr,"function returned zero instead ");
-                fprintf(stderr,"of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-    
-            // Computing overlap matrix. Warning: boundary triangles
-            // are labbelled 10 but not necessarily the related
-            // vertices (ok now and checked in writeShapeSolFile)
-            if (!computeOverlapMatrix(pParameters,pMesh,pData,
-                                      pChemicalSystem,2,
-                                                    iterationInTheLoop))
-            {
-                PRINT_ERROR("In shapeDerivative: ");
-                fprintf(stderr,"computeOverlapMatrix function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-    
-            // Diagonalize the overlap matrix. Warning: lapacke.h
-            // and lapacke package must have been installed
-            if (!diagonalizeOverlapMatrix(pParameters,pData,
-                                                    iterationInTheLoop))
-            {
-                PRINT_ERROR("In shapeDerivative: ");
-                fprintf(stderr,"diagonalizeOverlapMatrix ");
-                fprintf(stderr,"function returned zero instead ");
-                fprintf(stderr,"of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-    
-            // Compute the probabilities and total population
-            if (!computeProbability(pParameters,pData,
-                                                    iterationInTheLoop))
-            {
-                PRINT_ERROR("In shapeDerivative: ");
-                fprintf(stderr,"computeProbability function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-            p1=pData->pnu[iterationInTheLoop];
-
-            // Store the *.[iterationInTheLoop-1].mesh name
-            strncpy(fileLocation,pParameters->name_mesh,lengthName);
-            lengthName=strlen(fileLocation);
-            fileLocation[lengthName-5]='\0';
-            if (sprintf(pParameters->name_mesh,"%s.%d.mesh",
-                                   fileLocation,iterationInTheLoop-1)<0)
-            {
-                PRINT_ERROR("In advectLevelSetWithAdvectSoftware:");
-                fprintf(stderr," the standard sprintf ");
-                fprintf(stderr,"c-function returned an ");
-                fprintf(stderr,"unexpected negative value.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-            fileLocation[lengthName-5]='.';
-
-            // Check if *.[iterationInTheLoop-1].mesh file exists.
-            if (initialFileExists(pParameters->name_mesh,
-                                           pParameters->name_length)!=1)
-            {
-                PRINT_ERROR("In optimization: initialFileExists ");
-                fprintf(stderr,"function did not return one, ");
-                fprintf(stderr,"which was the expected value ");
-                fprintf(stderr,"here.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            // Check if *.mesh file exists and remove it
-            if (initialFileExists(fileLocation,
-                                           pParameters->name_length)!=1)
-            {
-                PRINT_ERROR("In optimization: initialFileExists ");
-                fprintf(stderr,"function did not return one, ");
-                fprintf(stderr,"which was the expected value ");
-                fprintf(stderr,"here.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            if (remove(fileLocation))
-            {
-                PRINT_ERROR("In optimization: wrong return (=-1) ");
-                fprintf(stderr,"of the standard remove ");
-                fprintf(stderr,"c-function in the attempt of ");
-                fprintf(stderr,"removing the ");
-                fprintf(stderr,"%s file.\n",fileLocation);
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            // Copy the *.[iterationInTheLoop-1].mesh into *.mesh
-            if (!copyFileLocation(pParameters->name_mesh,
-                                  pParameters->name_length,
-                                                          fileLocation))
-            {
-                PRINT_ERROR("In optimization: renameFileLocation ");
-                fprintf(stderr,"function returned zero instead ");
-                fprintf(stderr,"of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-           }
-           strncpy(pParameters->name_mesh,fileLocation,
-                                              pParameters->name_length);
-
-            // Free the memory allocated for the mesh
-            sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-            sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-            sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-            sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-            sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-            fprintf(stdout,"\nCleaning the allocated memory ");
-            fprintf(stdout,"(%d,",sizeMemory/1000000);
-            fprintf(stdout,"%d ",sizeMemory%1000000);
-            fprintf(stdout,"Mo) for loading the previous mesh.\n");
-            freeMeshMemory(pMesh);
-
-            // Read the new *.mesh file
-            if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: ");
-                fprintf(stderr,"readMeshFileAndAllocateMesh ");
-                fprintf(stderr,"function returned zero instead ");
-                fprintf(stderr,"of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            // Update the parameters of the computational box
-            if (!updateDiscretizationParameters(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: ");
-                fprintf(stderr,"updateDiscretizationParameters ");
-                fprintf(stderr,"function returned zero instead ");
-                fprintf(stderr,"of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
+                fprintf(stderr,"computeProbabilityAndReloadPreviousMesh ");
+                fprintf(stderr,"function returned zero instead of one.\n");
                 free(pShapeGradient);
                 pShapeGradient=NULL;
                 return 0;
@@ -9035,218 +7104,44 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     tMin=t0;
                     pMin=p0;
 
-                    fprintf(stdout,"\nTRYING TO RESTRICT THE LINE SEARCH ON ");
-                    fprintf(stdout,"THE INTERVAL [%lf,%lf].\n",tMin,tMax);
-
                     t0=t1;
                     p0=p1;
 
                     h*=INV_PHI;
                     t1=tMin+INV_PHI*h;
 
+                    fprintf(stdout,"\nTRYING TO RESTRICT THE LINE SEARCH ON ");
+                    fprintf(stdout,"THE INTERVAL [%lf, %lf].\n",tMin,tMax);
+                    fprintf(stdout,"p(%lf)=%lf p(%lf)=%lf ",tMin,pMin,t0,p0);
+                    fprintf(stdout,"p(%lf)=%lf.\nCOMPUTING ",tMax,pMax);
+                    fprintf(stdout,"p(%lf).\n",t1);
+
                     for (i=0; i<pMesh->nver; i++)
                     {
                         pMesh->pver[i].value=t1*pShapeGradient[i];
                     }
 
-                    // Save the vectorial shape gradient at the vertices
-                    if (!writingShapeSolFile(pParameters,pMesh))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"writingShapeSolFile function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
+                   // Save the shape gradient
+                   if (!saveTheShapeGradient(pParameters,pMesh,
+                                                            iterationInTheLoop))
+                   {
+                       PRINT_ERROR("In optimization: saveTheShapeGradient ");
+                       fprintf(stderr,"function returned zero instead of ");
+                       fprintf(stderr,"one.\n");
+                       free(pShapeGradient);
+                       pShapeGradient=NULL;
+                       return 0;
+                   }
 
-                    // Evaluation of p0 (t0>=1. Eulerian, otherwise Lagrangian)
-                    if (t1<1.)
-                    {
-                        // Free the memory allocated for the mesh
-                        sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-                        sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-                        sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-                        sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-                        sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-                        fprintf(stdout,"\nCleaning the allocated memory ");
-                        fprintf(stdout,"(%d,",sizeMemory/1000000);
-                        fprintf(stderr,"%d ",sizeMemory%1000000);
-                        fprintf(stdout,"Mo) for a mesh adaptation according ");
-                        fprintf(stdout,"to the shape gradient with a ");
-                        fprintf(stdout,"Lagrangian approach.\n");
-                        freeMeshMemory(pMesh);
-        
-                        // Warning: mmg3d software must have been installed
-                        if (!adaptMeshWithMmg3dSoftware(pParameters,"lag"))
+                   if (t1<1.)
+                   {
+                        // Advect mesh thanks to Lagrangian mode of mmg3d
+                        if (!computeLagrangianMode(pParameters,pMesh,
+                                                            iterationInTheLoop))
                         {
                             PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"adaptMeshWithMmg3dSoftware ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-        
-                        // Read the intermediate *.mesh file
-                        if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"readMeshFileAndAllocateMesh ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-        
-                        // Generate a coarse level-set function of the mesh
-                        nIter=pParameters->n_iter;
-                        pParameters->n_iter=10;
-                        if (!renormalizeWithMshdistSoftware(pParameters,"dom"))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"renormalizeWithMshdistSoftware ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                        pParameters->n_iter=nIter;
-        
-                        // Evaluate the orbitals' metric on the mesh
-                        if (!evaluatingMetricOnMesh(pParameters,pMesh,
-                                                               pChemicalSystem))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"evaluatingMetricOnMesh function ");
+                            fprintf(stderr,"computeLagrangianMode function ");
                             fprintf(stderr,"returned zero instead of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-        
-                        // Store the name of the *.mesh file in fileLocation
-                        strncpy(fileLocation,pParameters->name_mesh,lengthName);
-                        switch (initialFileExists("metric.mesh",15))
-                        {
-                            case -1:
-                                break;
-        
-                            case 1:
-                                PRINT_ERROR("In optimization: 'metric.mesh' ");
-                                fprintf(stderr,"file cannot refer to a mesh ");
-                                fprintf(stderr,"name in the MPD program.\n");
-                                fprintf(stderr,"Please modify the name ");
-                                fprintf(stderr,"associated with the ");
-                                fprintf(stderr,"name_mesh keyword or if no ");
-                                fprintf(stderr,"such line exists in your ");
-                                fprintf(stderr,"(input) *.info file, check ");
-                                fprintf(stderr,"that it is not entitled ");
-                                fprintf(stderr,"'metric.info'.\n");
-                                free(fileLocation);
-                                fileLocation=NULL;
-                                free(pShapeGradient);
-                                pShapeGradient=NULL;
-                                return 0;
-                                break;
-        
-                            default:
-                                PRINT_ERROR("In optimization: ");
-                                fprintf(stderr,"initialFileExists function ");
-                                fprintf(stderr,"returned zero instead of ");
-                                fprintf(stderr,"(+/-)one.\n");
-                                free(fileLocation);
-                                fileLocation=NULL;
-                                free(pShapeGradient);
-                                pShapeGradient=NULL;
-                                return 0;
-                                break;
-                        }
-        
-                        // Temporary rename the *.mesh by metric.mesh
-                        if (!renameFileLocation(pParameters->name_mesh,
-                                                pParameters->name_length,
-                                                                 "metric.mesh"))
-                        {
-                            PRINT_ERROR("In optimization: renameFileLocation ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                        strncpy(pParameters->name_mesh,"metric.mesh",
-                                                      pParameters->name_length);
-        
-                        // Save metric values in a file entitled metric.sol
-                        if (!writingSolFile(pParameters,pMesh))
-                        {
-                            PRINT_ERROR("In optimization: writingSolFile ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-        
-                        // Rename the *.mesh file as it was
-                        if (!renameFileLocation("metric.mesh",
-                                                pParameters->name_length,
-                                                                  fileLocation))
-                        {
-                            PRINT_ERROR("In optimization: renameFileLocation ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                        strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-        
-                        // Free the memory allocated for the intermediate mesh
-                        sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-                        sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-                        sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-                        sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-                        sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-                        fprintf(stdout,"\nCleaning the allocated memory ");
-                        fprintf(stdout,"(%d,",sizeMemory/1000000);
-                        fprintf(stdout,"%d ",sizeMemory%1000000);
-                        fprintf(stdout,"Mo) for a mesh adaptation according ");
-                        fprintf(stdout,"to both the level-set interface ");
-                        fprintf(stdout,"geometry and molecular orbitals ");
-                        fprintf(stdout,"chemistry.\n");
-                        freeMeshMemory(pMesh);
-        
-                        // Warning: mmg3d software must have been installed
-                        if (!adaptMeshWithMmg3dSoftware(pParameters,"ls"))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"adaptMeshWithMmg3dSoftware ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
                             free(pShapeGradient);
                             pShapeGradient=NULL;
                             return 0;
@@ -9254,466 +7149,42 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     }
                     else
                     {
-                        // Extend the shape gradient outside the domain
-                        if (!extendShapeGradientWithElasticSoftware(
-                                                                   pParameters))
+                        // Advect mesh thanks to Eulerian mode (level-set mode)
+                        if (!computeEulerianMode(pParameters,pMesh,
+                                                            iterationInTheLoop))
                         {
                             PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"extendLevelSetWithElasticSoftware");
-                            fprintf(stderr," function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-            
-                        // Store the name of the *.chi.mesh file in fileLocation
-                        strncpy(fileLocation,pParameters->name_mesh,lengthName);
-                        lengthName=strlen(fileLocation);
-                        fileLocation[lengthName-5]='.';
-                        fileLocation[lengthName-4]='c';
-                        fileLocation[lengthName-3]='h';
-                        fileLocation[lengthName-2]='i';
-                        fileLocation[lengthName-1]='.';
-                        fileLocation[lengthName]='m';
-                        fileLocation[lengthName+1]='e';
-                        fileLocation[lengthName+2]='s';
-                        fileLocation[lengthName+3]='h';
-                        fileLocation[lengthName+4]='\0';
-            
-                        // Remove the *.chi.mesh file if it already exists
-                        switch (initialFileExists(fileLocation,
-                                                      pParameters->name_length))
-                        {
-                            case -1:
-                                break;
-            
-                            case 1:
-                                if (remove(fileLocation))
-                                {
-                                    PRINT_ERROR("In optimization: wrong ");
-                                    fprintf(stderr,"return (=-1) of the ");
-                                    fprintf(stderr,"standard remove ");
-                                    fprintf(stderr,"c-function in the ");
-                                    fprintf(stderr,"attempt of removing the ");
-                                    fprintf(stderr,"%s file.\n",fileLocation);
-                                    free(fileLocation);
-                                    fileLocation=NULL;
-                                    free(pShapeGradient);
-                                    pShapeGradient=NULL;
-                                    return 0;
-                                }
-                                break;
-            
-                            default:
-                                PRINT_ERROR("In optimization: ");
-                                fprintf(stderr,"initialFileExists function ");
-                                fprintf(stderr,"returned zero instead of ");
-                                fprintf(stderr,"(+/-)one.\n");
-                                free(fileLocation);
-                                fileLocation=NULL;
-                                free(pShapeGradient);
-                                pShapeGradient=NULL;
-                                return 0;
-                                break;
-                        }
-            
-                        // Temporary rename the *.mesh by *.chi.mesh
-                        if (!renameFileLocation(pParameters->name_mesh,
-                                                pParameters->name_length,
-                                                                  fileLocation))
-                        {
-                            PRINT_ERROR("In optimization: renameFileLocation ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                        strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-            
-                        // Generate level-set function from mesh with mshdist
-                        if (!renormalizeWithMshdistSoftware(pParameters,"dom"))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"renormalizeWithMshdistSoftware ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-            
-                        // Rename the *.mesh file as it was
-                        lengthName=strlen(fileLocation);
-                        fileLocation[lengthName-9]='.';
-                        fileLocation[lengthName-8]='m';
-                        fileLocation[lengthName-7]='e';
-                        fileLocation[lengthName-6]='s';
-                        fileLocation[lengthName-5]='h';
-                        fileLocation[lengthName-4]='\0';
-                        fileLocation[lengthName-3]='\0';
-                        fileLocation[lengthName-2]='\0';
-                        fileLocation[lengthName-1]='\0';
-                        fileLocation[lengthName]='\0';
-                        if (!renameFileLocation(pParameters->name_mesh,
-                                                pParameters->name_length,
-                                                                  fileLocation))
-                        {
-                            PRINT_ERROR("In optimization: renameFileLocation ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                        lengthName=pParameters->name_length;
-                        strncpy(pParameters->name_mesh,fileLocation,lengthName);
-            
-                        // Advect the level-set function according to parameters
-                        if (!advectLevelSetWithAdvectSoftware(pParameters))
-                        {
-                            PRINT_ERROR("In optimization:  ");
-                            fprintf(stderr,"advectLevelSetWithAdvectSoftware ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-            
-                        // Evaluate the orbitals' metric on the mesh
-                        if (!evaluatingMetricOnMesh(pParameters,pMesh,
-                                                               pChemicalSystem))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"evaluatingMetricOnMesh function ");
+                            fprintf(stderr,"computeEulerianMode function ");
                             fprintf(stderr,"returned zero instead of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-            
-                        // Store the name of the *.mesh file in fileLocation
-                        strncpy(fileLocation,pParameters->name_mesh,
-                                                      pParameters->name_length);
-                        switch (initialFileExists("metric.mesh",15))
-                        {
-                            case -1:
-                                break;
-            
-                            case 1:
-                                PRINT_ERROR("In optimization: 'metric.mesh' ");
-                                fprintf(stderr,"file cannot refer to a mesh ");
-                                fprintf(stderr,"name in the MPD program.\n");
-                                fprintf(stderr,"Please modify the name ");
-                                fprintf(stderr,"associated with the ");
-                                fprintf(stderr,"name_mesh keyword or if no ");
-                                fprintf(stderr,"such line exists in your ");
-                                fprintf(stderr,"(input) *.info file, check ");
-                                fprintf(stderr,"that it is not entitled ");
-                                fprintf(stderr,"'metric.info'.\n");
-                                free(fileLocation);
-                                fileLocation=NULL;
-                                free(pShapeGradient);
-                                pShapeGradient=NULL;
-                                return 0;
-                                break;
-            
-                            default:
-                                PRINT_ERROR("In optimization: ");
-                                fprintf(stderr,"initialFileExists function ");
-                                fprintf(stderr,"returned zero instead of ");
-                                fprintf(stderr,"(+/-)one.\n");
-                                free(fileLocation);
-                                fileLocation=NULL;
-                                free(pShapeGradient);
-                                pShapeGradient=NULL;
-                                return 0;
-                                break;
-                        }
-            
-                        // Temporary rename the *.mesh by metric.mesh
-                        if (!renameFileLocation(pParameters->name_mesh,
-                                                pParameters->name_length,
-                                                                 "metric.mesh"))
-                        {
-                            PRINT_ERROR("In optimization: renameFileLocation ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                        strncpy(pParameters->name_mesh,"metric.mesh",
-                                                      pParameters->name_length);
-            
-                        // Save metric values in a file entitled metric.sol
-                        if (!writingSolFile(pParameters,pMesh))
-                        {
-                            PRINT_ERROR("In optimization: writingSolFile ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-            
-                        // Rename the *.mesh file as it was
-                        if (!renameFileLocation("metric.mesh",
-                                                pParameters->name_length,
-                                                                  fileLocation))
-                        {
-                            PRINT_ERROR("In optimization: renameFileLocation ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                        strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-            
-                        // Free the memory allocated for the mesh
-                        sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-                        sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-                        sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-                        sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-                        sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-                        fprintf(stdout,"\nCleaning the allocated memory ");
-                        fprintf(stdout,"(%d,",sizeMemory/1000000);
-                        fprintf(stdout,"%d ",sizeMemory%1000000);
-                        fprintf(stdout,"Mo) for a mesh adaptation according ");
-                        fprintf(stdout,"to both the advect level-set ");
-                        fprintf(stdout,"interface geometry and molecular ");
-                        fprintf(stdout,"orbitals chemistry.\n");
-                        freeMeshMemory(pMesh);
-            
-                        // Warning: mmg3d software must have been installed
-                        if (!adaptMeshWithMmg3dSoftware(pParameters,"ls"))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"adaptMeshWithMmg3dSoftware ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
                             free(pShapeGradient);
                             pShapeGradient=NULL;
                             return 0;
                         }
                     }
 
-                    // Read the new *.mesh file
-                    if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"readMeshFileAndAllocateMesh ");
-                        fprintf(stderr,"function returned zero instead ");
-                        fprintf(stderr,"of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-            
-                    // Update the parameters of computational box
-                    if (!updateDiscretizationParameters(pParameters,pMesh))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"updateDiscretizationParameters ");
-                        fprintf(stderr,"function returned zero instead ");
-                        fprintf(stderr,"of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-            
-                    // Computing overlap matrix. Warning: boundary triangles
-                    // are labbelled 10 but not necessarily the related
-                    // vertices (ok now and checked in writeShapeSolFile)
-                    if (!computeOverlapMatrix(pParameters,pMesh,pData,
-                                              pChemicalSystem,2,
+                    // Adapt mesh to both molecular orbitals and new domain
+                    if (!performLevelSetAdaptation(pParameters,pMesh,
+                                                   pChemicalSystem,
                                                             iterationInTheLoop))
                     {
-                        PRINT_ERROR("In shapeDerivative: ");
-                        fprintf(stderr,"computeOverlapMatrix function ");
+                        PRINT_ERROR("In optimization: ");
+                        fprintf(stderr,"performLevelSetAdaptation function ");
                         fprintf(stderr,"returned zero instead of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
                         free(pShapeGradient);
                         pShapeGradient=NULL;
                         return 0;
                     }
-            
-                    // Diagonalize the overlap matrix. Warning: lapacke.h
-                    // and lapacke package must have been installed
-                    if (!diagonalizeOverlapMatrix(pParameters,pData,
-                                                            iterationInTheLoop))
+
+                    // Compute p1 and reload the previous mesh
+                    p1=computeProbabilityAndReloadPreviousMesh(pParameters,
+                                                               pMesh,pData,
+                                                               pChemicalSystem,
+                                                            iterationInTheLoop);
+                    if (p1==-10000.)
                     {
-                        PRINT_ERROR("In shapeDerivative: ");
-                        fprintf(stderr,"diagonalizeOverlapMatrix ");
-                        fprintf(stderr,"function returned zero instead ");
-                        fprintf(stderr,"of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-            
-                    // Compute the probabilities and total population
-                    if (!computeProbability(pParameters,pData,
-                                                            iterationInTheLoop))
-                    {
-                        PRINT_ERROR("In shapeDerivative: ");
-                        fprintf(stderr,"computeProbability function ");
+                        PRINT_ERROR("In optimization: computeProbabilityAnd");
+                        fprintf(stderr,"ReloadPreviousMesh function ");
                         fprintf(stderr,"returned zero instead of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-                    p1=pData->pnu[iterationInTheLoop];
-        
-                    // Store the *.[iterationInTheLoop-1].mesh name
-                    strncpy(fileLocation,pParameters->name_mesh,lengthName);
-                    lengthName=strlen(fileLocation);
-                    fileLocation[lengthName-5]='\0';
-                    if (sprintf(pParameters->name_mesh,"%s.%d.mesh",
-                                           fileLocation,iterationInTheLoop-1)<0)
-                    {
-                        PRINT_ERROR("In advectLevelSetWithAdvectSoftware:");
-                        fprintf(stderr," the standard sprintf ");
-                        fprintf(stderr,"c-function returned an ");
-                        fprintf(stderr,"unexpected negative value.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-                    fileLocation[lengthName-5]='.';
-        
-                    // Check if *.[iterationInTheLoop-1].mesh file exists.
-                    if (initialFileExists(pParameters->name_mesh,
-                                                   pParameters->name_length)!=1)
-                    {
-                        PRINT_ERROR("In optimization: initialFileExists ");
-                        fprintf(stderr,"function did not return one, ");
-                        fprintf(stderr,"which was the expected value ");
-                        fprintf(stderr,"here.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-        
-                    // Check if *.mesh file exists and remove it
-                    if (initialFileExists(fileLocation,
-                                                   pParameters->name_length)!=1)
-                    {
-                        PRINT_ERROR("In optimization: initialFileExists ");
-                        fprintf(stderr,"function did not return one, ");
-                        fprintf(stderr,"which was the expected value ");
-                        fprintf(stderr,"here.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-        
-                    if (remove(fileLocation))
-                    {
-                        PRINT_ERROR("In optimization: wrong return (=-1) ");
-                        fprintf(stderr,"of the standard remove ");
-                        fprintf(stderr,"c-function in the attempt of ");
-                        fprintf(stderr,"removing the ");
-                        fprintf(stderr,"%s file.\n",fileLocation);
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-        
-                    // Copy the *.[iterationInTheLoop-1].mesh into *.mesh
-                    if (!copyFileLocation(pParameters->name_mesh,
-                                          pParameters->name_length,
-                                                                  fileLocation))
-                    {
-                        PRINT_ERROR("In optimization: renameFileLocation ");
-                        fprintf(stderr,"function returned zero instead ");
-                        fprintf(stderr,"of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                   }
-                   strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-        
-                    // Free the memory allocated for the mesh
-                    sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-                    sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-                    sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-                    sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-                    sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-                    fprintf(stdout,"\nCleaning the allocated memory ");
-                    fprintf(stdout,"(%d,",sizeMemory/1000000);
-                    fprintf(stdout,"%d ",sizeMemory%1000000);
-                    fprintf(stdout,"Mo) for loading the previous mesh.\n");
-                    freeMeshMemory(pMesh);
-        
-                    // Read the new *.mesh file
-                    if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"readMeshFileAndAllocateMesh ");
-                        fprintf(stderr,"function returned zero instead ");
-                        fprintf(stderr,"of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-        
-                    // Update the parameters of the computational box
-                    if (!updateDiscretizationParameters(pParameters,pMesh))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"updateDiscretizationParameters ");
-                        fprintf(stderr,"function returned zero instead ");
-                        fprintf(stderr,"of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
                         free(pShapeGradient);
                         pShapeGradient=NULL;
                         return 0;
@@ -9724,217 +7195,44 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     tMax=t1;
                     pMax=p1;
 
-                    fprintf(stdout,"\nTRYING TO RESTRICT THE LINE SEARCH ON ");
-                    fprintf(stdout,"THE INTERVAL [%lf,%lf].\n",tMin,tMax);
-
                     t1=t0;
                     p1=p0;
 
                     h*=INV_PHI;
                     t0=tMin+INV_PHI2*h;
+
+                    fprintf(stdout,"\nTRYING TO RESTRICT THE LINE SEARCH ON ");
+                    fprintf(stdout,"THE INTERVAL [%lf, %lf].\n",tMin,tMax);
+                    fprintf(stdout,"p(%lf)=%lf p(%lf)=%lf ",tMin,pMin,t1,p1);
+                    fprintf(stdout,"p(%lf)=%lf.\nCOMPUTING ",tMax,pMax);
+                    fprintf(stdout,"p(%lf).\n",t0);
+
                     for (i=0; i<pMesh->nver; i++)
                     {
                         pMesh->pver[i].value=t0*pShapeGradient[i];
                     }
 
-                    // Save the vectorial shape gradient at the vertices
-                    if (!writingShapeSolFile(pParameters,pMesh))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"writingShapeSolFile function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
+                   // Save the shape gradient
+                   if (!saveTheShapeGradient(pParameters,pMesh,
+                                                            iterationInTheLoop))
+                   {
+                       PRINT_ERROR("In optimization: saveTheShapeGradient ");
+                       fprintf(stderr,"function returned zero instead of ");
+                       fprintf(stderr,"one.\n");
+                       free(pShapeGradient);
+                       pShapeGradient=NULL;
+                       return 0;
+                   }
 
-                    // Evaluation of p0 (t0>=1. Eulerian, otherwise Lagrangian)
-                    if (t0<1.)
-                    {        
-                        // Free the memory allocated for the mesh
-                        sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-                        sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-                        sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-                        sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-                        sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-                        fprintf(stdout,"\nCleaning the allocated memory ");
-                        fprintf(stdout,"(%d,",sizeMemory/1000000);
-                        fprintf(stderr,"%d ",sizeMemory%1000000);
-                        fprintf(stdout,"Mo) for a mesh adaptation according ");
-                        fprintf(stdout,"to the shape gradient with a ");
-                        fprintf(stdout,"Lagrangian approach.\n");
-                        freeMeshMemory(pMesh);
-        
-                        // Warning: mmg3d software must have been installed
-                        if (!adaptMeshWithMmg3dSoftware(pParameters,"lag"))
+                   if (t0<1.)
+                   {
+                        // Advect mesh thanks to Lagrangian mode of mmg3d
+                        if (!computeLagrangianMode(pParameters,pMesh,
+                                                            iterationInTheLoop))
                         {
                             PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"adaptMeshWithMmg3dSoftware ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-        
-                        // Read the intermediate *.mesh file
-                        if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"readMeshFileAndAllocateMesh ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-        
-                        // Generate a coarse level-set function of the mesh
-                        nIter=pParameters->n_iter;
-                        pParameters->n_iter=10;
-                        if (!renormalizeWithMshdistSoftware(pParameters,"dom"))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"renormalizeWithMshdistSoftware ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                        pParameters->n_iter=nIter;
-        
-                        // Evaluate the orbitals' metric on the mesh
-                        if (!evaluatingMetricOnMesh(pParameters,pMesh,
-                                                               pChemicalSystem))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"evaluatingMetricOnMesh function ");
+                            fprintf(stderr,"computeLagrangianMode function ");
                             fprintf(stderr,"returned zero instead of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-        
-                        // Store the name of the *.mesh file in fileLocation
-                        strncpy(fileLocation,pParameters->name_mesh,lengthName);
-                        switch (initialFileExists("metric.mesh",15))
-                        {
-                            case -1:
-                                break;
-        
-                            case 1:
-                                PRINT_ERROR("In optimization: 'metric.mesh' ");
-                                fprintf(stderr,"file cannot refer to a mesh ");
-                                fprintf(stderr,"name in the MPD program.\n");
-                                fprintf(stderr,"Please modify the name ");
-                                fprintf(stderr,"associated with the ");
-                                fprintf(stderr,"name_mesh keyword or if no ");
-                                fprintf(stderr,"such line exists in your ");
-                                fprintf(stderr,"(input) *.info file, check ");
-                                fprintf(stderr,"that it is not entitled ");
-                                fprintf(stderr,"'metric.info'.\n");
-                                free(fileLocation);
-                                fileLocation=NULL;
-                                free(pShapeGradient);
-                                pShapeGradient=NULL;
-                                return 0;
-                                break;
-        
-                            default:
-                                PRINT_ERROR("In optimization: ");
-                                fprintf(stderr,"initialFileExists function ");
-                                fprintf(stderr,"returned zero instead of ");
-                                fprintf(stderr,"(+/-)one.\n");
-                                free(fileLocation);
-                                fileLocation=NULL;
-                                free(pShapeGradient);
-                                pShapeGradient=NULL;
-                                return 0;
-                                break;
-                        }
-        
-                        // Temporary rename the *.mesh by metric.mesh
-                        if (!renameFileLocation(pParameters->name_mesh,
-                                                pParameters->name_length,
-                                                                 "metric.mesh"))
-                        {
-                            PRINT_ERROR("In optimization: renameFileLocation ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                        strncpy(pParameters->name_mesh,"metric.mesh",
-                                                      pParameters->name_length);
-        
-                        // Save metric values in a file entitled metric.sol
-                        if (!writingSolFile(pParameters,pMesh))
-                        {
-                            PRINT_ERROR("In optimization: writingSolFile ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-        
-                        // Rename the *.mesh file as it was
-                        if (!renameFileLocation("metric.mesh",
-                                                pParameters->name_length,
-                                                                  fileLocation))
-                        {
-                            PRINT_ERROR("In optimization: renameFileLocation ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                        strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-        
-                        // Free the memory allocated for the intermediate mesh
-                        sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-                        sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-                        sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-                        sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-                        sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-                        fprintf(stdout,"\nCleaning the allocated memory ");
-                        fprintf(stdout,"(%d,",sizeMemory/1000000);
-                        fprintf(stdout,"%d ",sizeMemory%1000000);
-                        fprintf(stdout,"Mo) for a mesh adaptation according ");
-                        fprintf(stdout,"to both the level-set interface ");
-                        fprintf(stdout,"geometry and molecular orbitals ");
-                        fprintf(stdout,"chemistry.\n");
-                        freeMeshMemory(pMesh);
-        
-                        // Warning: mmg3d software must have been installed
-                        if (!adaptMeshWithMmg3dSoftware(pParameters,"ls"))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"adaptMeshWithMmg3dSoftware ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
                             free(pShapeGradient);
                             pShapeGradient=NULL;
                             return 0;
@@ -9942,466 +7240,42 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     }
                     else
                     {
-                        // Extend the shape gradient outside the domain
-                        if (!extendShapeGradientWithElasticSoftware(
-                                                                   pParameters))
+                        // Advect mesh thanks to Eulerian mode (level-set mode)
+                        if (!computeEulerianMode(pParameters,pMesh,
+                                                            iterationInTheLoop))
                         {
                             PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"extendLevelSetWithElasticSoftware");
-                            fprintf(stderr," function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-            
-                        // Store the name of the *.chi.mesh file in fileLocation
-                        strncpy(fileLocation,pParameters->name_mesh,lengthName);
-                        lengthName=strlen(fileLocation);
-                        fileLocation[lengthName-5]='.';
-                        fileLocation[lengthName-4]='c';
-                        fileLocation[lengthName-3]='h';
-                        fileLocation[lengthName-2]='i';
-                        fileLocation[lengthName-1]='.';
-                        fileLocation[lengthName]='m';
-                        fileLocation[lengthName+1]='e';
-                        fileLocation[lengthName+2]='s';
-                        fileLocation[lengthName+3]='h';
-                        fileLocation[lengthName+4]='\0';
-            
-                        // Remove the *.chi.mesh file if it already exists
-                        switch (initialFileExists(fileLocation,
-                                                      pParameters->name_length))
-                        {
-                            case -1:
-                                break;
-            
-                            case 1:
-                                if (remove(fileLocation))
-                                {
-                                    PRINT_ERROR("In optimization: wrong ");
-                                    fprintf(stderr,"return (=-1) of the ");
-                                    fprintf(stderr,"standard remove ");
-                                    fprintf(stderr,"c-function in the ");
-                                    fprintf(stderr,"attempt of removing the ");
-                                    fprintf(stderr,"%s file.\n",fileLocation);
-                                    free(fileLocation);
-                                    fileLocation=NULL;
-                                    free(pShapeGradient);
-                                    pShapeGradient=NULL;
-                                    return 0;
-                                }
-                                break;
-            
-                            default:
-                                PRINT_ERROR("In optimization: ");
-                                fprintf(stderr,"initialFileExists function ");
-                                fprintf(stderr,"returned zero instead of ");
-                                fprintf(stderr,"(+/-)one.\n");
-                                free(fileLocation);
-                                fileLocation=NULL;
-                                free(pShapeGradient);
-                                pShapeGradient=NULL;
-                                return 0;
-                                break;
-                        }
-            
-                        // Temporary rename the *.mesh by *.chi.mesh
-                        if (!renameFileLocation(pParameters->name_mesh,
-                                                pParameters->name_length,
-                                                                  fileLocation))
-                        {
-                            PRINT_ERROR("In optimization: renameFileLocation ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                        strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-            
-                        // Generate level-set function from mesh with mshdist
-                        if (!renormalizeWithMshdistSoftware(pParameters,"dom"))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"renormalizeWithMshdistSoftware ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-            
-                        // Rename the *.mesh file as it was
-                        lengthName=strlen(fileLocation);
-                        fileLocation[lengthName-9]='.';
-                        fileLocation[lengthName-8]='m';
-                        fileLocation[lengthName-7]='e';
-                        fileLocation[lengthName-6]='s';
-                        fileLocation[lengthName-5]='h';
-                        fileLocation[lengthName-4]='\0';
-                        fileLocation[lengthName-3]='\0';
-                        fileLocation[lengthName-2]='\0';
-                        fileLocation[lengthName-1]='\0';
-                        fileLocation[lengthName]='\0';
-                        if (!renameFileLocation(pParameters->name_mesh,
-                                                pParameters->name_length,
-                                                                  fileLocation))
-                        {
-                            PRINT_ERROR("In optimization: renameFileLocation ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                        lengthName=pParameters->name_length;
-                        strncpy(pParameters->name_mesh,fileLocation,lengthName);
-            
-                        // Advect the level-set function according to parameters
-                        if (!advectLevelSetWithAdvectSoftware(pParameters))
-                        {
-                            PRINT_ERROR("In optimization:  ");
-                            fprintf(stderr,"advectLevelSetWithAdvectSoftware ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-            
-                        // Evaluate the orbitals' metric on the mesh
-                        if (!evaluatingMetricOnMesh(pParameters,pMesh,
-                                                               pChemicalSystem))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"evaluatingMetricOnMesh function ");
+                            fprintf(stderr,"computeEulerianMode function ");
                             fprintf(stderr,"returned zero instead of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-            
-                        // Store the name of the *.mesh file in fileLocation
-                        strncpy(fileLocation,pParameters->name_mesh,
-                                                      pParameters->name_length);
-                        switch (initialFileExists("metric.mesh",15))
-                        {
-                            case -1:
-                                break;
-            
-                            case 1:
-                                PRINT_ERROR("In optimization: 'metric.mesh' ");
-                                fprintf(stderr,"file cannot refer to a mesh ");
-                                fprintf(stderr,"name in the MPD program.\n");
-                                fprintf(stderr,"Please modify the name ");
-                                fprintf(stderr,"associated with the ");
-                                fprintf(stderr,"name_mesh keyword or if no ");
-                                fprintf(stderr,"such line exists in your ");
-                                fprintf(stderr,"(input) *.info file, check ");
-                                fprintf(stderr,"that it is not entitled ");
-                                fprintf(stderr,"'metric.info'.\n");
-                                free(fileLocation);
-                                fileLocation=NULL;
-                                free(pShapeGradient);
-                                pShapeGradient=NULL;
-                                return 0;
-                                break;
-            
-                            default:
-                                PRINT_ERROR("In optimization: ");
-                                fprintf(stderr,"initialFileExists function ");
-                                fprintf(stderr,"returned zero instead of ");
-                                fprintf(stderr,"(+/-)one.\n");
-                                free(fileLocation);
-                                fileLocation=NULL;
-                                free(pShapeGradient);
-                                pShapeGradient=NULL;
-                                return 0;
-                                break;
-                        }
-            
-                        // Temporary rename the *.mesh by metric.mesh
-                        if (!renameFileLocation(pParameters->name_mesh,
-                                                pParameters->name_length,
-                                                                 "metric.mesh"))
-                        {
-                            PRINT_ERROR("In optimization: renameFileLocation ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                        strncpy(pParameters->name_mesh,"metric.mesh",
-                                                      pParameters->name_length);
-            
-                        // Save metric values in a file entitled metric.sol
-                        if (!writingSolFile(pParameters,pMesh))
-                        {
-                            PRINT_ERROR("In optimization: writingSolFile ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-            
-                        // Rename the *.mesh file as it was
-                        if (!renameFileLocation("metric.mesh",
-                                                pParameters->name_length,
-                                                                  fileLocation))
-                        {
-                            PRINT_ERROR("In optimization: renameFileLocation ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                        strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-            
-                        // Free the memory allocated for the mesh
-                        sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-                        sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-                        sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-                        sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-                        sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-                        fprintf(stdout,"\nCleaning the allocated memory ");
-                        fprintf(stdout,"(%d,",sizeMemory/1000000);
-                        fprintf(stdout,"%d ",sizeMemory%1000000);
-                        fprintf(stdout,"Mo) for a mesh adaptation according ");
-                        fprintf(stdout,"to both the advect level-set ");
-                        fprintf(stdout,"interface geometry and molecular ");
-                        fprintf(stdout,"orbitals chemistry.\n");
-                        freeMeshMemory(pMesh);
-            
-                        // Warning: mmg3d software must have been installed
-                        if (!adaptMeshWithMmg3dSoftware(pParameters,"ls"))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"adaptMeshWithMmg3dSoftware ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
                             free(pShapeGradient);
                             pShapeGradient=NULL;
                             return 0;
                         }
                     }
 
-                    // Read the new *.mesh file
-                    if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"readMeshFileAndAllocateMesh ");
-                        fprintf(stderr,"function returned zero instead ");
-                        fprintf(stderr,"of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-            
-                    // Update the parameters of computational box
-                    if (!updateDiscretizationParameters(pParameters,pMesh))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"updateDiscretizationParameters ");
-                        fprintf(stderr,"function returned zero instead ");
-                        fprintf(stderr,"of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-            
-                    // Computing overlap matrix. Warning: boundary triangles
-                    // are labbelled 10 but not necessarily the related
-                    // vertices (ok now and checked in writeShapeSolFile)
-                    if (!computeOverlapMatrix(pParameters,pMesh,pData,
-                                              pChemicalSystem,2,
+                    // Adapt mesh to both molecular orbitals and new domain
+                    if (!performLevelSetAdaptation(pParameters,pMesh,
+                                                   pChemicalSystem,
                                                             iterationInTheLoop))
                     {
-                        PRINT_ERROR("In shapeDerivative: ");
-                        fprintf(stderr,"computeOverlapMatrix function ");
+                        PRINT_ERROR("In optimization: ");
+                        fprintf(stderr,"performLevelSetAdaptation function ");
                         fprintf(stderr,"returned zero instead of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
                         free(pShapeGradient);
                         pShapeGradient=NULL;
                         return 0;
                     }
-            
-                    // Diagonalize the overlap matrix. Warning: lapacke.h
-                    // and lapacke package must have been installed
-                    if (!diagonalizeOverlapMatrix(pParameters,pData,
-                                                            iterationInTheLoop))
+
+                    // Compute p0 and reload the previous mesh
+                    p0=computeProbabilityAndReloadPreviousMesh(pParameters,
+                                                               pMesh,pData,
+                                                               pChemicalSystem,
+                                                            iterationInTheLoop);
+                    if (p0==-10000.)
                     {
-                        PRINT_ERROR("In shapeDerivative: ");
-                        fprintf(stderr,"diagonalizeOverlapMatrix ");
-                        fprintf(stderr,"function returned zero instead ");
-                        fprintf(stderr,"of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-            
-                    // Compute the probabilities and total population
-                    if (!computeProbability(pParameters,pData,
-                                                            iterationInTheLoop))
-                    {
-                        PRINT_ERROR("In shapeDerivative: ");
-                        fprintf(stderr,"computeProbability function ");
+                        PRINT_ERROR("In optimization: computeProbabilityAnd");
+                        fprintf(stderr,"ReloadPreviousMesh function ");
                         fprintf(stderr,"returned zero instead of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-                    p0=pData->pnu[iterationInTheLoop];
-        
-                    // Store the *.[iterationInTheLoop-1].mesh name
-                    strncpy(fileLocation,pParameters->name_mesh,lengthName);
-                    lengthName=strlen(fileLocation);
-                    fileLocation[lengthName-5]='\0';
-                    if (sprintf(pParameters->name_mesh,"%s.%d.mesh",
-                                           fileLocation,iterationInTheLoop-1)<0)
-                    {
-                        PRINT_ERROR("In advectLevelSetWithAdvectSoftware:");
-                        fprintf(stderr," the standard sprintf ");
-                        fprintf(stderr,"c-function returned an ");
-                        fprintf(stderr,"unexpected negative value.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-                    fileLocation[lengthName-5]='.';
-        
-                    // Check if *.[iterationInTheLoop-1].mesh file exists.
-                    if (initialFileExists(pParameters->name_mesh,
-                                                   pParameters->name_length)!=1)
-                    {
-                        PRINT_ERROR("In optimization: initialFileExists ");
-                        fprintf(stderr,"function did not return one, ");
-                        fprintf(stderr,"which was the expected value ");
-                        fprintf(stderr,"here.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-        
-                    // Check if *.mesh file exists and remove it
-                    if (initialFileExists(fileLocation,
-                                                   pParameters->name_length)!=1)
-                    {
-                        PRINT_ERROR("In optimization: initialFileExists ");
-                        fprintf(stderr,"function did not return one, ");
-                        fprintf(stderr,"which was the expected value ");
-                        fprintf(stderr,"here.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-        
-                    if (remove(fileLocation))
-                    {
-                        PRINT_ERROR("In optimization: wrong return (=-1) ");
-                        fprintf(stderr,"of the standard remove ");
-                        fprintf(stderr,"c-function in the attempt of ");
-                        fprintf(stderr,"removing the ");
-                        fprintf(stderr,"%s file.\n",fileLocation);
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-        
-                    // Copy the *.[iterationInTheLoop-1].mesh into *.mesh
-                    if (!copyFileLocation(pParameters->name_mesh,
-                                          pParameters->name_length,
-                                                                  fileLocation))
-                    {
-                        PRINT_ERROR("In optimization: renameFileLocation ");
-                        fprintf(stderr,"function returned zero instead ");
-                        fprintf(stderr,"of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                   }
-                   strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-        
-                    // Free the memory allocated for the mesh
-                    sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-                    sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-                    sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-                    sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-                    sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-                    fprintf(stdout,"\nCleaning the allocated memory ");
-                    fprintf(stdout,"(%d,",sizeMemory/1000000);
-                    fprintf(stdout,"%d ",sizeMemory%1000000);
-                    fprintf(stdout,"Mo) for loading the previous mesh.\n");
-                    freeMeshMemory(pMesh);
-        
-                    // Read the new *.mesh file
-                    if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"readMeshFileAndAllocateMesh ");
-                        fprintf(stderr,"function returned zero instead ");
-                        fprintf(stderr,"of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-        
-                    // Update the parameters of the computational box
-                    if (!updateDiscretizationParameters(pParameters,pMesh))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"updateDiscretizationParameters ");
-                        fprintf(stderr,"function returned zero instead ");
-                        fprintf(stderr,"of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
                         free(pShapeGradient);
                         pShapeGradient=NULL;
                         return 0;
@@ -10410,681 +7284,79 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             }
 
             // Finally compute the optimal line search
-            t0=.5*(tMin+tMax);
-            fprintf(stdout,"\nOPTIMAL STEP FOUND: %lf.\n",t0);
-            fprintf(stdout,"COMPUTING THE CORRESPONDING ADVECTED DOMAIN.\n");
+            if (p0<p1)
+            {
+                t0=t1;
+            }
+            fprintf(stdout,"\nOPTIMAL STEP FOUND: %lf.\nCOMPUTING THE ",t0);
+            fprintf(stdout,"CORRESPONDING ADVECTED DOMAIN.\n");
+
             for (i=0; i<pMesh->nver; i++)
             {
                 pMesh->pver[i].value=t0*pShapeGradient[i];
             }
 
-            // Vizualize the norm of the shape gradient at the boundary vertices
-            if (pParameters->save_print>0)
-            {
-                if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==3)
-                {
-                    if (!writingSolFile(pParameters,pMesh))
-                    {
-                        PRINT_ERROR("In optimization: writingSolFile ");
-                        fprintf(stderr,"function returned zero instead of ");
-                        fprintf(stderr,"one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
+            pParameters->opt_mode=2;
 
-                    if (!plotMeshWithMeditSoftware(pParameters))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"plotMeshWithMeditSoftware function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-                }
-            }
+            // Free the memory allocated for pShapeGradient
+            free(pShapeGradient);
+            pShapeGradient=NULL; 
 
-            // Save the vectorial shape gradient at the shape vertices
-            if (!writingShapeSolFile(pParameters,pMesh))
+            // Save the shape gradient
+            if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
             {
-                PRINT_ERROR("In optimization: writingShapeSolFile ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(fileLocation);
-                fileLocation=NULL;
-                free(pShapeGradient);
-                pShapeGradient=NULL;
+                PRINT_ERROR("In optimization: saveTheShapeGradient ");
+                fprintf(stderr,"function returned zero instead of ");
+                fprintf(stderr,"one.\n");
                 return 0;
             }
 
-            // Vizualize the vectorial shape gradient at the shape vertices
-            if (pParameters->save_print>0)
-            {
-                if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==4)
-                {
-                    if (!plotMeshWithMeditSoftware(pParameters))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"plotMeshWithMeditSoftware function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-                }
-            }
-
-            // Evaluation of p0 (t0>=1. Eulerian, otherwise Lagrangian)
             if (t0<1.)
             {
-                // Free the memory allocated for the mesh
-                sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-                sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-                sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-                sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-                sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-                fprintf(stdout,"\nCleaning the allocated memory ");
-                fprintf(stdout,"(%d,%d ",sizeMemory/1000000,sizeMemory%1000000);
-                fprintf(stdout,"Mo) for a mesh adaptation according to the ");
-                fprintf(stdout,"shape gradient with a Lagrangian approach.\n");
-                freeMeshMemory(pMesh);
-
-                // Warning: mmg3d software must have been previously installed
-                if (!adaptMeshWithMmg3dSoftware(pParameters,"lag"))
+                pParameters->opt_mode=3;
+                // Advect mesh thanks to Lagrangian mode of mmg3d
+                if (!computeLagrangianMode(pParameters,pMesh,
+                                                            iterationInTheLoop))
                 {
-                    PRINT_ERROR("In optimization: adaptMeshWithMmg3dSoftware ");
+                    PRINT_ERROR("In optimization: computeLagrangianMode ");
                     fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-
-                // Vizualize the intermediate mesh
-                if (pParameters->save_print>0)
-                {
-                    if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==7)
-                    {
-                        if (!plotMeshWithMeditSoftware(pParameters))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"plotMeshWithMeditSoftware ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                    }
-                }
-
-                // Read the intermediate *.mesh file
-                if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
-                {
-                    PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"readMeshFileAndAllocateMesh function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-
-                // Generate a coarse level-set function of the intermediate mesh
-                nIter=pParameters->n_iter;
-                pParameters->n_iter=10;
-                if (!renormalizeWithMshdistSoftware(pParameters,"dom"))
-                {
-                    PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"renormalizeWithMshdistSoftware function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                pParameters->n_iter=nIter;
-
-                // Vizualize the coarse level-set function on intermediate mesh
-                if (pParameters->save_print>0)
-                {
-                    if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==2)
-                    {
-                        if (!plotMeshWithMeditSoftware(pParameters))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"plotMeshWithMeditSoftware ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                    }
-                }
-
-                // Evaluate the orbitals' metric on the mesh
-                if (!evaluatingMetricOnMesh(pParameters,pMesh,pChemicalSystem))
-                {
-                    PRINT_ERROR("In optimization: evaluatingMetricOnMesh ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-
-                // Store the name of the *.mesh file in fileLocation
-                strncpy(fileLocation,pParameters->name_mesh,lengthName);
-                switch (initialFileExists("metric.mesh",15))
-                {
-                    case -1:
-                        break;
-
-                    case 1:
-                        PRINT_ERROR("In optimization: 'metric.mesh' file ");
-                        fprintf(stderr,"cannot refer to a mesh name in the ");
-                        fprintf(stderr,"MPD program.\nPlease modify the name ");
-                        fprintf(stderr,"associated with the name_mesh ");
-                        fprintf(stderr,"keyword or if no such line exists ");
-                        fprintf(stderr,"in your (input) *.info file, check ");
-                        fprintf(stderr,"that it is not entitled ");
-                        fprintf(stderr,"'metric.info'.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                        break;
-
-                    default:
-                        PRINT_ERROR("In optimization: initialFileExists ");
-                        fprintf(stderr,"function returned zero instead of ");
-                        fprintf(stderr,"(+/-)one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                        break;
-                }
-
-                // Temporary rename the *.mesh by metric.mesh
-                if (!renameFileLocation(pParameters->name_mesh,
-                                        pParameters->name_length,"metric.mesh"))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                strncpy(pParameters->name_mesh,"metric.mesh",
-                                                      pParameters->name_length);
-
-                // Save metric values in a file entitled metric.sol
-                if (!writingSolFile(pParameters,pMesh))
-                {
-                    PRINT_ERROR("In optimization: writingSolFile function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-
-                // Vizualize the metric of the orbitals on the mesh
-                if (pParameters->save_print>0)
-                {
-                    if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==1)
-                    {
-                        if (!plotMeshWithMeditSoftware(pParameters))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"plotMeshWithMeditSoftware ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                    }
-                }
-
-                // Rename the *.mesh file as it was
-                if (!renameFileLocation("metric.mesh",
-                                         pParameters->name_length,fileLocation))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-
-                // Free the memory allocated for the intermediate mesh
-                sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-                sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-                sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-                sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-                sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-                fprintf(stdout,"\nCleaning the allocated memory ");
-                fprintf(stdout,"(%d,%d ",sizeMemory/1000000,sizeMemory%1000000);
-                fprintf(stdout,"Mo) for a mesh adaptation according ");
-                fprintf(stdout,"to both the level-set interface geometry ");
-                fprintf(stdout,"and molecular orbitals chemistry.\n");
-                freeMeshMemory(pMesh);
-
-                // Warning: mmg3d software must have been previously installed
-                if (!adaptMeshWithMmg3dSoftware(pParameters,"ls"))
-                {
-                    PRINT_ERROR("In optimization: adaptMeshWithMmg3dSoftware ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
                     return 0;
                 }
             }
             else
-            {    
-                // Extend the shape gradient outside the domain with elasticity
-                if (!extendShapeGradientWithElasticSoftware(pParameters))
+            {
+                // Advect mesh thanks to Eulerian mode (level-set mode)
+                if (!computeEulerianMode(pParameters,pMesh,iterationInTheLoop))
                 {
-                    PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"extendLevelSetWithElasticSoftware ");
+                    PRINT_ERROR("In optimization: computeEulerianMode ");
                     fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-
-                // Vizualize the extension of the vectorial shape gradient
-                if (pParameters->save_print>0)
-                {
-                    if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==5)
-                    {
-                        if (!plotMeshWithMeditSoftware(pParameters))
-                        {  
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"plotMeshWithMeditSoftware ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                    }
-                }
-    
-                // Store the name of the *.chi.mesh file in fileLocation
-                strncpy(fileLocation,pParameters->name_mesh,lengthName);
-                lengthName=strlen(fileLocation);
-                fileLocation[lengthName-5]='.';
-                fileLocation[lengthName-4]='c';
-                fileLocation[lengthName-3]='h';
-                fileLocation[lengthName-2]='i';
-                fileLocation[lengthName-1]='.';
-                fileLocation[lengthName]='m';
-                fileLocation[lengthName+1]='e';
-                fileLocation[lengthName+2]='s';
-                fileLocation[lengthName+3]='h';
-                fileLocation[lengthName+4]='\0';
-    
-                // Remove the *.chi.mesh file if it already exists. Warning:
-                switch (initialFileExists(fileLocation,
-                                                      pParameters->name_length))
-                {
-                    case -1:
-                        break;
-    
-                    case 1:
-                        // remove returns 0 on success, otherwise -1
-                        if (remove(fileLocation))
-                        {
-                            PRINT_ERROR("In optimization: wrong return (=-1) ");
-                            fprintf(stderr,"of the standard remove c-");
-                            fprintf(stderr,"function in the attempt of ");
-                            fprintf(stderr,"removing the ");
-                            fprintf(stderr,"%s file.\n",fileLocation);
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                        break;
-    
-                    default:
-                        PRINT_ERROR("In optimization: initialFileExists ");
-                        fprintf(stderr,"function returned zero instead of ");
-                        fprintf(stderr,"(+/-)one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                        break;
-                }
-    
-                // Temporary rename the *.mesh by *.chi.mesh
-                if (!renameFileLocation(pParameters->name_mesh,
-                                         pParameters->name_length,fileLocation))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-    
-                // Generate the level-set function from mesh with mshdist
-                if (!renormalizeWithMshdistSoftware(pParameters,"dom"))
-                {
-                    PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"renormalizeWithMshdistSoftware function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-
-                // Vizualize the level-set function on the mesh
-                if (pParameters->save_print>0)
-                {
-                    if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==2)
-                    {
-                        if (!plotMeshWithMeditSoftware(pParameters))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"plotMeshWithMeditSoftware ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                    }
-                }
-    
-                // Rename the *.mesh file as it was
-                lengthName=strlen(fileLocation);
-                fileLocation[lengthName-9]='.';
-                fileLocation[lengthName-8]='m';
-                fileLocation[lengthName-7]='e';
-                fileLocation[lengthName-6]='s';
-                fileLocation[lengthName-5]='h';
-                fileLocation[lengthName-4]='\0';
-                fileLocation[lengthName-3]='\0';
-                fileLocation[lengthName-2]='\0';
-                fileLocation[lengthName-1]='\0';
-                fileLocation[lengthName]='\0';
-                if (!renameFileLocation(pParameters->name_mesh,
-                                         pParameters->name_length,fileLocation))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                lengthName=pParameters->name_length;
-                strncpy(pParameters->name_mesh,fileLocation,lengthName);
-    
-                // Advect the level-set function according to the parameters
-                if (!advectLevelSetWithAdvectSoftware(pParameters))
-                {
-                    PRINT_ERROR("In optimization:  ");
-                    fprintf(stderr,"advectLevelSetWithAdvectSoftware ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-
-                // Vizualize the advected level-set function on the mesh
-                if (pParameters->save_print>0)
-                {
-                    if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==6)
-                    {
-                        if (!plotMeshWithMeditSoftware(pParameters))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"plotMeshWithMeditSoftware ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                    }
-                }
-    
-                // Evaluate the orbitals' metric on the mesh
-                if (!evaluatingMetricOnMesh(pParameters,pMesh,pChemicalSystem))
-                {
-                    PRINT_ERROR("In optimization: evaluatingMetricOnMesh ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-    
-                // Store the name of the *.mesh file in fileLocation
-                // Remove the metric.mesh file if it already exists. Warning:
-                // metric.mesh and metric.sol cannot be used in the MPD program
-                strncpy(fileLocation,pParameters->name_mesh,
-                                                      pParameters->name_length);
-                switch (initialFileExists("metric.mesh",15))
-                {
-                    case -1:
-                        break;
-    
-                    case 1:
-                        PRINT_ERROR("In optimization: 'metric.mesh' file ");
-                        fprintf(stderr,"cannot refer to a mesh name in the ");
-                        fprintf(stderr,"MPD program.\nPlease modify the name ");
-                        fprintf(stderr,"associated with the name_mesh ");
-                        fprintf(stderr,"keyword or if no such line exists ");
-                        fprintf(stderr,"in your (input) *.info file, check ");
-                        fprintf(stderr,"that it is not entitled ");
-                        fprintf(stderr,"'metric.info'.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                        break;
-    
-                    default:
-                        PRINT_ERROR("In optimization: initialFileExists ");
-                        fprintf(stderr,"function returned zero instead of ");
-                        fprintf(stderr,"(+/-)one.\n");
-                        free(fileLocation);
-                        fileLocation=NULL;
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                        break;
-                }
-    
-                // Temporary rename the *.mesh by metric.mesh
-                if (!renameFileLocation(pParameters->name_mesh,
-                                        pParameters->name_length,"metric.mesh"))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                strncpy(pParameters->name_mesh,"metric.mesh",
-                                                      pParameters->name_length);
-    
-                // Save metric values in a file entitled metric.sol
-                if (!writingSolFile(pParameters,pMesh))
-                {
-                    PRINT_ERROR("In optimization: writingSolFile function ");
-                    fprintf(stderr,"returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-
-                // Vizualize the metric of the orbitals on the mesh
-                if (pParameters->save_print>0)
-                {
-                    if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==1)
-                    {
-                        if (!plotMeshWithMeditSoftware(pParameters))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"plotMeshWithMeditSoftware ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(fileLocation);
-                            fileLocation=NULL;
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                    }
-                }
-    
-                // Rename the *.mesh file as it was
-                if (!renameFileLocation("metric.mesh",
-                                         pParameters->name_length,fileLocation))
-                {
-                    PRINT_ERROR("In optimization: renameFileLocation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-                strncpy(pParameters->name_mesh,fileLocation,
-                                                      pParameters->name_length);
-    
-                // Free the memory allocated for the mesh
-                sizeMemory=sizeof(Mesh)+(pMesh->nver)*sizeof(Point);
-                sizeMemory+=(pMesh->nnorm+pMesh->ntan)*sizeof(Vector);
-                sizeMemory+=(pMesh->nedg)*sizeof(Edge);
-                sizeMemory+=(pMesh->ntri)*sizeof(Triangle);
-                sizeMemory+=(pMesh->ntet)*sizeof(Tetrahedron);
-                fprintf(stdout,"\nCleaning the allocated memory ");
-                fprintf(stdout,"(%d,%d ",sizeMemory/1000000,sizeMemory%1000000);
-                fprintf(stdout,"Mo) for a mesh adaptation according ");
-                fprintf(stdout,"to both the advect level-set interface ");
-                fprintf(stdout,"geometry and molecular orbitals chemistry.\n");
-                freeMeshMemory(pMesh);
-    
-                // Warning: mmg3d software must have been previously installed
-                if (!adaptMeshWithMmg3dSoftware(pParameters,"ls"))
-                {
-                    PRINT_ERROR("In optimization: adaptMeshWithMmg3dSoftware ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(fileLocation);
-                    fileLocation=NULL;
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
                     return 0;
                 }
             }
 
-            // Free the memory allocated for pShapeGradient and fileLocation
-            free(fileLocation);
-            fileLocation=NULL;
-            free(pShapeGradient);
-            pShapeGradient=NULL;
-    
-            // Read the new *.mesh file
-            if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
+            // Adapt mesh to both molecular orbitals and new domain
+            if (!performLevelSetAdaptation(pParameters,pMesh,pChemicalSystem,
+                                                            iterationInTheLoop))
             {
-                PRINT_ERROR("In optimization: readMeshFileAndAllocateMesh");
-                fprintf(stderr," function returned zero instead of one.\n");
-                return 0;
-            }
-    
-            // Update the parameters related to the computational box
-            if (!updateDiscretizationParameters(pParameters,pMesh))
-            {
-                PRINT_ERROR("In optimization: updateDiscretizationParameters ");
+                PRINT_ERROR("In optimization: performLevelSetAdaptation ");
                 fprintf(stderr,"function returned zero instead of one.\n");
                 return 0;
             }
 
-            // Vizualize the new mesh
-            if (pParameters->save_print>0)
+            if (t0<1.)
             {
-                if ((iterationInTheLoop-1)%pParameters->save_print==0 &&
-                                                     pParameters->save_where==7)
-                {
-                    if (!plotMeshWithMeditSoftware(pParameters))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"plotMeshWithMeditSoftware function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        return 0;
-                    }
-                }
+                fprintf(stdout,"\nSTEP 3: COMPUTE PROBABILITY, POPULATION ");
+                fprintf(stdout,"AND SHAPE GRADIENT ON THE NEW DOMAIN.\n");
+            }
+            else
+            {
+                fprintf(stdout,"\nSTEP 6: COMPUTE PROBABILITY, POPULATION ");
+                fprintf(stdout,"AND SHAPE GRADIENT ON THE NEW DOMAIN.\n");
+            }
+
+            if ((iterationInTheLoop+1)%3==0)
+            {
+                pParameters->opt_mode=4;
             }
 
             // Compute the overlap matrix, probability, shape gradient, and
@@ -11106,9 +7378,11 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 fprintf(stderr,"returned zero instead of one.\n");
                 return 0;
             }
+
+            pParameters->opt_mode=1;
             break;
 
-        // Omega_new=Omega_Old+Hexa(dP/dOmega_old>0)-Hexa(dP/dOmega_old<0)
+// Omega_new=Omega_Old+Hexa(dP/dOmega_old>0)-Hexa(dP/dOmega_old<0)
         case -1:
 
             // Vizualize the mesh of the previous iteration
@@ -11150,7 +7424,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             }
             break;
 
-        // Omega_new=Omega_Old+Hexa[P(old+Hexa)>P(old)]-Hexa[P(old-Hexa)>P(old)]
+// Omega_new=Omega_Old+Hexa[P(old+Hexa)>P(old)]-Hexa[P(old-Hexa)>P(old)]
         case -2:
 
             // Vizualize the mesh of the previous iteration

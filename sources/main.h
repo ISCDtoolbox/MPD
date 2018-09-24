@@ -1820,7 +1820,8 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
 *                                       double cstcc, double cstOne,
 *                                       double cstTwo, double cstThree,
 *                                       double cst1, double cst2, double cst3,
-*                                                    double cst22, double cst33)
+*                                       double cst22, double cst33,
+*                                                 double invPhi, double invPhi2)
 * \brief It tests if all the preprocessor constants are valid.
 *
 * \param[in] optMode It can only be set to -2/-1/0/1/2/3/4 (see \ref OPT_MODE
@@ -2330,6 +2331,16 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
 *                  CST_33 description for further details). Otherwise, an error
 *                  is returned by \ref checkAllPreprocessorConstants function.
 *
+* \param[in] invPhi It must be exactly equal to 0.618033988749894848 (see \ref
+*                   INV_PHI description for further details). Otherwise, an
+*                   error is returned by the \ref checkAllPreprocessorConstants
+*                   function.
+*
+* \param[in] invPhi2 It must be exactly equal to 0.381966011250105152 (see \ref
+*                    INV_PHI2 description for further details). Otherwise, an
+*                    error is returned by the \ref checkAllPreprocessorConstants
+*                    function.
+*
 * \return It returns zero if an error is encountered. Otherwise, one is returned
 *         in case of success.
 *
@@ -2378,7 +2389,7 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
                                   double cstbb, double cstcc, double cstOne,
                                   double cstTwo, double cstThree, double cst1,
                                   double cst2, double cst3, double cst22,
-                                                                  double cst33);
+                                   double cst33, double invPhi, double invPhi2);
 
 /**
 * \fn int initialFileExists(char* fileLocation, int nameLength)
