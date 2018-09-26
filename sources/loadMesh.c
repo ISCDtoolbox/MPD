@@ -3985,12 +3985,12 @@ int updateDiscretizationParameters(Parameters* pParameters, Mesh* pMesh)
     deltaX=DEF_ABS(pMesh->pver[1].x-pMesh->pver[0].x);
     deltaY=DEF_ABS(pMesh->pver[1].y-pMesh->pver[0].y);
     deltaZ=DEF_ABS(pMesh->pver[1].z-pMesh->pver[0].z);
-    if (deltaX<1.e-16 && deltaY<1.e-16)
+    if (deltaX<1.e-15 && deltaY<1.e-15)
     {
         cx=DEF_ABS(pMesh->pver[2].x-pMesh->pver[1].x);
         cy=DEF_ABS(pMesh->pver[2].y-pMesh->pver[1].y);
         cz=DEF_ABS(pMesh->pver[2].z-pMesh->pver[1].z);
-        if (cx<1.e-16 && cy<1.e-16 && DEF_ABS(cz-deltaZ)<1.e-16)
+        if (cx<1.e-15 && cy<1.e-15 && DEF_ABS(cz-deltaZ)<1.e-15)
         {
             boolean=1;
             if (pParameters->verbose)

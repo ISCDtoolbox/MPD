@@ -7388,6 +7388,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             // Vizualize the mesh of the previous iteration
             if (iterationInTheLoop>1)
             {
+                if (pParameters->save_print>0)
                 {
                     if ((iterationInTheLoop-1)%pParameters->save_print==0)
                     {
