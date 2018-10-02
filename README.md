@@ -62,9 +62,9 @@ Then, execute the program, which takes inly one argument, the *.info file
 
 Similarly, the tetrahedra version can be tested by entering the exampleTetrahedra directory thanks to the cd command and then type
 
-	./../../bin/mpdProgram exHfHex.info
+	./../../bin/mpdProgram exHfTet.info
 
-At the end of a test, to vizualize a *.mesh file type (for example)
+At the end of a test, to vizualize a *.mesh file type (the given one for example)
 
 	./../../bin/medit ./../../inputFiles/exHfTetIni.mesh
 
