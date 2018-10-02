@@ -1,4 +1,4 @@
-# MPD
+# mpdProgram
 Maximizing optimal probability domain
 
 Version 2.0

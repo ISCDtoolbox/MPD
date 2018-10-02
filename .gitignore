@@ -1,5 +1,3 @@
-# Ignore the following files directory
-
 CMakeCache.txt
 CMakeFiles
 CMakeScripts
@@ -10,5 +8,30 @@ install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 build
+
 bin
+
+sources/advection/build
+sources/advection/include
+
+sources/commons/build
+sources/commons/include
+
+sources/elasticity/build
+sources/elasticity/include
+
+sources/medit/build
+sources/medit/include
+
+sources/mmg3d/build
+sources/mmg3d/include
+
+sources/mpd/build
+sources/mpd/include
+sources/mpd/documentation/html
+
+sources/mshdistance/build
+sources/mshdistance/include
+
 outputFiles
+

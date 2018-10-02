@@ -1,0 +1,5 @@
+opt_mode 0
+name_chem ./../../inputFiles/hf-tz.wfn
+nu_electrons 2
+
+end_data
