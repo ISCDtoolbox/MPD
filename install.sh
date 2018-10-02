@@ -54,6 +54,7 @@ cmake ..
 make
 make install
 
+cd ./../../../
 mkdir outputFiles
 cd ./outputFiles
 mkdir exampleTetrahedra
