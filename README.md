@@ -114,7 +114,11 @@ for optimizing the hexahedral mesh or write
 
 	opt_mode 1 
 
-for optimizing the tetrahedral one.
+for optimizing the tetrahedral one. write
+
+	n_cpu 4
+
+for prescribing (for example) 4 threads during the execution of the mpdProgram
 
 Finally, in order to launch mpdProgram the line command syntax is the following (we assume you are in the outputFiles directory)
 

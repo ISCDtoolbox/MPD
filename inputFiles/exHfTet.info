@@ -4,6 +4,4 @@ name_mesh ./../../inputFiles/exHfTetIni.mesh
 
 nu_electrons 2
 ls_type 1
-verbose 1
-n_cpu 4
 end_data
