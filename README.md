@@ -69,23 +69,23 @@ At the end of a test, to vizualize a *.mesh file type (the given one for example
 	./../../bin/medit ./../../inputFiles/exHfTetIni.mesh
 
 
-Let us recall some features of how to use medit
-The F1 key displays the plane cut and the mouse rotate the mesh around it. Type again F1 to remove the plane cut
+Let us recall some features of how to use medit.
+The F1 key displays the plane cut and the mouse rotate the mesh around it. Type again F1 to remove the plane cut.
 If the plane cut is displayed type F2 to change the mode of rotation. Now the plane cut moves and the mesh is fixed. Type again F2 to remove this mode. 
-By playing with F1 and F2 and the mouse we can rotate the computational box in order to display any part of the mesh (the direction can also be used)
+By playing with F1 and F2 and the mouse we can rotate the computational box in order to display any part of the mesh (the direction can also be used).
 
 Type 'h' to get a description of the major shortcut in the terminal window.
 Many option are available also by cliking on the right button of the mouse inside the medit window.
 Type 'i' to restart the view from the beginning (e.g if you are lost).
 Type 'z' the zoom and shift+z to dezoom.
-Combine shift and click on an element of the mesh to display its info in the terminal window
+Combine shift and click on an element of the mesh to display its info in the terminal window.
 When an element is selected type 'r' to remove all element of the same label. type shift+'r' to display them again.
-Combine ctrl and select a rectangular zone with the mouse then type 'z' to zoom on this zone
+Combine ctrl and select a rectangular zone with the mouse then type 'z' to zoom on this zone.
 
 
-The data result are saved in a *.data file. The user can restart a test by taking the *.restart and change the .restart extension by the .info one. The user can also see in this file all the different type of parameters that the mpdProgram can use. The default value of these parameters are set at the compilation by the preprocessor constants of sources/mpd/sources/loadParameters.h file. Everything placed after the (mandatory) end_data keyword is considered as a comment
+The data result are saved in a *.data file. The user can restart a test by taking the *.restart and change the .restart extension by the .info one. The user can also see in this file all the different type of parameters that the mpdProgram can use. The default value of these parameters are set at the compilation by the preprocessor constants of sources/mpd/sources/loadParameters.h file. Everything placed after the (mandatory) end_data keyword is considered as a comment.
 
-The mpdProgram program only takes one input argument: a *.info file (the file must have the .info extension this is important)
+The mpdProgram program only takes one input argument: a *.info file (the file must have the .info extension this is important).
 
 In this file (examples are provided in outputFile directory), the minimal
 configuration is to prescribe
