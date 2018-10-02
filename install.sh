@@ -57,7 +57,7 @@ make install
 mkdir outputFiles
 cd ./outputFiles
 mkdir exampleTetrahedra
-mv ./../../inputFiles/exHfTet.info ./exampleTetrahedra/
+mv ./../inputFiles/exHfTet.info ./exampleTetrahedra/
 mkdir exampleHexahedra
-mv ./../../inputFiles/exHfHex.info ./exampleHexahedra/
+mv ./../inputFiles/exHfHex.info ./exampleHexahedra/
 
