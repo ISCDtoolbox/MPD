@@ -372,7 +372,7 @@
 * We must have (double)\ref MET_ERR > 0.0. Although this condition is checked,
 * it will only be used if opt_mode==1/2/3/4 in the Parameters structure.
 */
-#define MET_ERR 0.01
+#define MET_ERR 0.005
 
 /**
 * \def MET_MIN
@@ -384,7 +384,7 @@
 * Although these conditions are checked, it will only be used if
 * opt_mode==1/2/3/4 in the Parameters structure.
 */
-#define MET_MIN 0.01
+#define MET_MIN 0.00001
 
 /**
 * \def MET_MAX
@@ -454,7 +454,7 @@
 * We must have (double)\ref ITER_TOLD0P >= 0.0 (zero means that it is not taken
 * into account in the stop criteria of the optimization loop).
 */
-#define ITER_TOLD0P 1.0e-6
+#define ITER_TOLD0P 1.0e-10
 
 /**
 * \def ITER_TOLD1P
@@ -470,7 +470,7 @@
 * \ref ITER_TOLD1P >= 0.0 (zero means that it is not taken into account in the
 * stop criteria of the optimization loop).
 */
-#define ITER_TOLD1P 1.0e-6
+#define ITER_TOLD1P 1.0e-10
 
 /**
 * \def ITER_TOLD2P
@@ -486,7 +486,7 @@
 * iterations. We must have (double) \ref ITER_TOLD2P >= 0.0 (zero means that it
 * is not taken into account in the stop criteria of the optimization loop).
 */
-#define ITER_TOLD2P 1.0e-6
+#define ITER_TOLD2P 1.0e-10
 
 // Related to the default saving of data
 /**
@@ -655,7 +655,7 @@
 * opt_mode=1/2/3/4 in the Parameters structure. We also recall that the mmg3d
 * software must have been previously installed.
 */
-#define HMIN_ISO 0.1
+#define HMIN_ISO 0.5
 
 /**
 * \def HMAX_ISO
@@ -668,7 +668,7 @@
 * checked, it will only be used if opt_mode=1/2/3/4 in the Parameters structure.
 * We also recall that the mmg3d software must have been previously installed.
 */
-#define HMAX_ISO 0.2
+#define HMAX_ISO 0.7
 
 /**
 * \def HAUSD_ISO
@@ -682,7 +682,7 @@
 * it will only be used if opt_mode=1/2/3/4 in the Parameters structure. We also
 * recall that the mmg3d software must have been previously installed.
 */
-#define HAUSD_ISO 0.01
+#define HAUSD_ISO 0.1
 
 /**
 * \def HGRAD_ISO
