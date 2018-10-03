@@ -72,9 +72,9 @@ At the end of a test, to vizualize a *.mesh file type (the given one for example
 
 	./../../bin/medit ./../../inputFiles/exHfTetIni.mesh
 
-Thanks to C. Dobrzynski, there is an inline HTML documentation available in french (https://www.ljll.math.upmc.fr/frey/logiciels/Docmedit.dir/index.html). There is also a technical report describing its main features (https://www.ljll.math.upmc.fr/frey/publications/RT-0253.pdf).
+Thanks to C. Dobrzynski, there is an inline HTML documentation for the medit software available in french (https://www.ljll.math.upmc.fr/frey/logiciels/Docmedit.dir/index.html). There is also a technical report describing its main features (https://www.ljll.math.upmc.fr/frey/publications/RT-0253.pdf).
 
-Let us recall some features of how to use medit.
+Let us recall briefly how to use medit.
 
 The F1 key displays the plane cut and the mouse allows to rotate the mesh around it. Type again F1 to remove the plane cut.
 
