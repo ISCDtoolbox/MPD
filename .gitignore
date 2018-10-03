@@ -22,6 +22,7 @@ sources/elasticity/include
 
 sources/medit/build
 sources/medit/include
+sources/medit/sources/compil.date
 
 sources/mmg3d/build
 sources/mmg3d/include

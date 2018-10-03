@@ -1,40 +1,45 @@
 # mpdProgram
-Maximizing optimal probability domain
+Maximizing Probability Domain
 
 Version 2.0
 
 September 2018
 
-The MPD program aims to compute the shape of the domain that maximizes the probability to find exactly a certain number of electrons inside it, given a chemical electronic structure.
+The MPD program aims to compute the shape of a domain that maximizes the probability to find exactly a certain number of electrons inside it, given a chemical electronic structure.
 
-In order to compile the program, it is recommended to have previously installed:
+In order to compile the mpdProgram, it is recommended to have previously installed:
 * gcc (version 5.4.0)
 * g++ (version 5.4.0)
 * make (version 4.1)
 * cmake (version 3.5.1)
 * git (version 2.7.4)
-* doxygen (version 1.8.11) (optional it is used for generating the documentation)
+* doxygen (version 1.8.11) (optional: it is only used for generating the code documentation)
 
-Then, open your terminal and locate yourself at the right position to download the files thanks to "ls" and "cd" command
-To clone the files, type
+Then, open your terminal and locate yourself in the directory where you want to download the files thanks to "ls" and "cd" commands. To clone the files with git, type
 
 	git clone https://github.com/ISCDtoolbox/MPD.git
 
-To enter the directory, type
+To enter the MPD/ directory, type
 
 	cd MPD
 
-To allow the execution of the install.sh file, you have to change permissions for the install.sh file.
+To allow the execution of the install.sh file, you may have to change the permissions for this file.
 
 	chmod 740 install.sh
 
-Then, just type
+Then, to execute the commands inside the install.sh file, just type
 
 	./install.sh
 
-and follow the instructions. The mpdProgram will be installed in the newly created bin directory. In addition, a certain number of other iscd softwares (https://github.com/ISCDtoolbox) will also be installed.
+and follow the instructions.
 
-In the case where the commands inside install.sh failed. We list belows the needed libraries:
+Remark 1: the commands written in this install.sh file are originally intended for Ubuntu 16.04.4. Please modify these commands, if you use use for example yum instead of apt for package management, su for sudo, etc.
+
+Remark 2: apart from the installed required libraries (OPENMP, GLUT, OPENGL, LAPACKE, SCOTCH), the install.sh file will only install the softwares, libraries and include files in the local MPD/ directory.
+
+The mpdProgram will be installed in the newly created bin/ directory. In addition, a certain number of other iscd softwares (https://github.com/ISCDtoolbox) will also be installed.
+
+In the case where the commands inside the install.sh file failed, we list precisely below the needed external libraries (and of course their dependencies):
 * libgomp1 (5.4.0-6ubuntu1~16.04.10) which is the GCC OpenMP (GOMP) support library
 * freeglut3-dev (version 2.8.1-2) which is the OpenGL Utility Toolkit development files
 * libxmu-dev (version 2:1.1.2-2) which is the X11 miscellaneous utility library (development headers)
@@ -42,25 +47,24 @@ In the case where the commands inside install.sh failed. We list belows the need
 * libptscotch-dev (version 5.1.12b.dfsg-2build4) which is the MPI programs and libraries for graph, mesh and hypergraph partitioning
 * liblapacke-dev (3.6.0-2ubuntu2) which is the Library of linear algebra routines 3 - Headers
 
-Moreover, as it can be seen in the sources directory, other softwares need to be installed (we still assume here that the commands in install.sh failed):
+Moreover, as it can be seen in the sources/ directory, other softwares need to be installed (we still assume here that the commands in install.sh failed):
 * medit to vizualize 3D mesh (see https://github.com/ISCDtoolbox/Medit)
 * mshdist to redistanciate level-set function (see https://github.com/ISCDtoolbox/Mshdist)
 * elastic to solve elasticity on 3D mesh (see https://github.com/ISCDtoolbox/LinearElasticity)
 * advect to advect a level-function function thanks to a vector field (see https://github.com/ISCDtoolbox/Advection)
 * mmg3d to adapt 3D mesh (see https://github.com/Mmgtools)
 
-Important remark: the version of mmg3d we need for the mpdProgram is a modified version of the official one. Hence, when you have downloaded the git repository from mmgTools, overwrite the src files with the ones given in sources/* then cmake the new files in order to get to the good version of mmg3d 	
+Important remark: the version of mmg3d we need for the mpdProgram is a modified version of the official one. Hence, in the case you have to download manually the git repository from Mmgtools, overwrite the src/mmg3d/* and src/common/* files with the ones given in sources/mmg3d/* and sources/common/* of our MPD git repository, respectively, then cmake the new files in order to get to the right version of mmg3d.
 
-
-Normally, at the end of the execution of the install.sh file, we end up in a newly-created outputFiles directory. Choose the example you want to try (let us say hexahedra). Type
+Normally, at the end of the execution of the install.sh file, we end up in a newly-created outputFiles/ directory. Choose the example you want to try (let us say an hexahedral mesh). Type
 
 	cd ./outputFiles/exampleHexahedra
 
-Then, execute the program, which takes inly one argument, the *.info file
+Then, execute the program, which takes inly one argument, the *.info file, by typing
 
 	./../../bin/mpdProgram exHfHex.info
 
-Similarly, the tetrahedra version can be tested by entering the exampleTetrahedra directory thanks to the cd command and then type
+Similarly, the tetrahedra version can be tested by entering the outputFiles/exampleTetrahedra/ directory thanks to the "cd" command and then type
 
 	./../../bin/mpdProgram exHfTet.info
 
@@ -68,22 +72,33 @@ At the end of a test, to vizualize a *.mesh file type (the given one for example
 
 	./../../bin/medit ./../../inputFiles/exHfTetIni.mesh
 
+Thanks to C. Dobrzynski, there is an inline HTML documentation available in french (https://www.ljll.math.upmc.fr/frey/logiciels/Docmedit.dir/index.html). There is also a technical report describing its main features (https://www.ljll.math.upmc.fr/frey/publications/RT-0253.pdf).
 
 Let us recall some features of how to use medit.
-The F1 key displays the plane cut and the mouse rotate the mesh around it. Type again F1 to remove the plane cut.
-If the plane cut is displayed type F2 to change the mode of rotation. Now the plane cut moves and the mesh is fixed. Type again F2 to remove this mode. 
-By playing with F1 and F2 and the mouse we can rotate the computational box in order to display any part of the mesh (the direction can also be used).
 
-Type 'h' to get a description of the major shortcut in the terminal window.
-Many option are available also by cliking on the right button of the mouse inside the medit window.
+The F1 key displays the plane cut and the mouse allows to rotate the mesh around it. Type again F1 to remove the plane cut.
+
+If the plane cut is displayed, type F2 to change the mode of rotation. Now the plane cut moves and the mesh is fixed. Type again F2 to remove this mode.
+ 
+By playing with F1 and F2 and the mouse we can rotate the computational box in order to display any part of the mesh (the direction up, down, right, left can also be used).
+
+Type 'h' to get a description of the major shortcuts in the terminal window. Many options are also available by cliking on the right button of the mouse inside the medit window.
+
 Type 'i' to restart the view from the beginning (e.g if you are lost).
-Type 'z' the zoom and shift+z to dezoom.
-Combine shift and click on an element of the mesh to display its info in the terminal window.
-When an element is selected type 'r' to remove all element of the same label. type shift+'r' to display them again.
-Combine ctrl and select a rectangular zone with the mouse then type 'z' to zoom on this zone.
 
+Type 'z' the zoom and shift+z (i.e. 'Z') to dezoom.
 
-The data result are saved in a *.data file. The user can restart a test by taking the *.restart and change the .restart extension by the .info one. The user can also see in this file all the different type of parameters that the mpdProgram can use. The default value of these parameters are set at the compilation by the preprocessor constants of sources/mpd/sources/loadParameters.h file. Everything placed after the (mandatory) end_data keyword is considered as a comment.
+Type shift+b (i.e. 'B') to display the computational bounding box. Type again shift+b (i.e. 'B') to remove it.
+
+Type shift+a (i.e. 'A') to display the axis of the frame. Type again shift+a (i.e. 'A') to remove them.
+
+Type shift+n (i.e. 'N') to display the normal vectors. Type again shift+n (i.e. 'N') to remove them.
+
+Combine shift and the click on an element of the mesh to display its info in the terminal window. When an element is selected type 'r' to remove all the elements the same label. type shift+r to display them again.
+
+Combine ctrl and the selection of a rectangular zone with the mouse then type 'z' to zoom on this zone.
+
+The main data computed by the mpdProgram are saved in a *.data file. The user can restart a test by taking the *.restart file and change the .restart extension by the .info one. The user can also see in this file all the different type of parameters that the mpdProgram can use. The default values of these parameters are set at the compilation by the preprocessor constants inside the sources/mpd/sources/loadParameters.h file. Everything placed after the (mandatory) end_data keyword in the *.info file is considered as a comment.
 
 The mpdProgram program only takes one input argument: a *.info file (the file must have the .info extension this is important).
 
@@ -110,27 +125,34 @@ whereas non-positive value concerns hexahedral meshes (little cubes). Hence, wri
 
 	opt_mode 0
 
-for optimizing the hexahedral mesh or write
+for optimizing the hexahedral mesh (opt_mode -1 uses the shape gradient to add or remove boundary hexahedra; opt_mode -2 tries to add or remove exhaustively the boundary hexahedra).
+
+Write
 
 	opt_mode 1 
 
-for optimizing the tetrahedral one. write
+for optimizing the tetrahedral one (opt_mode 2 performs Eulerian (level-set) perturbations; opt_mode 3 performs Lagrangian perturbations; opt_mode 4 defines the new domain as the positive part of the shape gradient of the previous domain in the optimization loop; should only be used for one iteration, very unstable mode, used to catch regions far from nuclei center with very low probability).
+
+Write
 
 	n_cpu 4
 
-for prescribing (for example) 4 threads during the execution of the mpdProgram
+for prescribing (for example) 4 threads during the execution of the mpdProgram.
 
-Finally, in order to launch mpdProgram the line command syntax is the following (we assume you are in the outputFiles directory)
+If no internal domain is precribed inside the mesh (or if no mesh is precribed), the ls_type keyword allows to define an initial cube (ls_type 0) or sphere (ls_type 1) defined by its center
+(ls_x, ls_y, and ls_z keywords) and size/radius (ls_r keyword).
+
+Finally, in order to launch the mpdProgram, the line command syntax is the following:
 
 	./*/mpdProgram *.info
 
-and checks if it works
+where the * symbol must be change depending on your where is located your mpdProgram and what is the name of your *.info file.
 
-The documentation can be generated with doxygen and the Doxyfile in the source/mpd/documentation directory. Otherwise, an html version can be found online at
+The documentation of the mpd code can be generated with doxygen and the Doxyfile in the source/mpd/documentation/ directory. Otherwise, an html version can be found online at
 
 http://pelikano.free.fr/mpd/
 
-Informations required (remove all underscore symbols '_' below ):
+Some informations are required (remove all underscore symbols '_' below):
 
 m_p_d_U_s_e_r 
 

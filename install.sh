@@ -58,7 +58,7 @@ cd ./../../../
 mkdir outputFiles
 cd ./outputFiles
 mkdir exampleTetrahedra
-mv ./../inputFiles/exHfTet.info ./exampleTetrahedra/
+cp ./../inputFiles/exHfTet.info ./exampleTetrahedra/
 mkdir exampleHexahedra
-mv ./../inputFiles/exHfHex.info ./exampleHexahedra/
+cp ./../inputFiles/exHfHex.info ./exampleHexahedra/
 
