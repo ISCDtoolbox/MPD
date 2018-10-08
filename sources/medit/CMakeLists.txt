@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
 set(CMAKE_INSTALL_RPATH "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/lib")
 #set(CMAKE_MACOSX_RPATH TRUE)
 
-
-
 macro(DATE RESULT)
   execute_process(COMMAND "date" "+%Y-%m-%d" OUTPUT_VARIABLE ${RESULT}
                                              OUTPUT_STRIP_TRAILING_WHITESPACE)

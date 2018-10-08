@@ -18,7 +18,7 @@ find_library(commons NAMES commons HINTS "${PROJECT_SOURCE_DIR}/../../bin/lib")
 
 # Set all target and properties of the elasticity library
 target_link_libraries(elasticity PUBLIC ${commons})
-target_include_directories(elasticity 
+target_include_directories(elasticity
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/sources>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../commons/include>)
@@ -28,7 +28,7 @@ set_property(TARGET elasticity PROPERTY C_STANDARD 99)
 install(TARGETS elasticity LIBRARY DESTINATION "${PROJECT_SOURCE_DIR}/../../bin/lib")
 install(FILES sources/ls_calls.h
               sources/elastic.h DESTINATION "${PROJECT_SOURCE_DIR}/include")
-  
+
 # Create and install the corresponding elastic executable
 project(elastic LANGUAGES C)
 set(CMAKE_BUILD_TYPE "Release")

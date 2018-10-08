@@ -23,7 +23,7 @@ add_library(mshdistance SHARED sources/boulep.c
 
 # Find the commons library
 find_library(commons NAMES commons HINTS "${PROJECT_SOURCE_DIR}/../../bin/lib")
-   
+
 # Set all target and properties of the mshdistance library
 target_link_libraries(mshdistance PUBLIC ${commons})
 target_include_directories(mshdistance
@@ -36,7 +36,7 @@ set_property(TARGET mshdistance PROPERTY C_STANDARD 99)
 install(TARGETS mshdistance LIBRARY DESTINATION "${PROJECT_SOURCE_DIR}/../../bin/lib")
 install(FILES sources/memory.h
               sources/mshdist.h DESTINATION "${PROJECT_SOURCE_DIR}/include")
-  
+
 # Create and install the corresponding mshdist executable
 project(mshdist LANGUAGES C)
 set(CMAKE_BUILD_TYPE "Release")

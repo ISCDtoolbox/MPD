@@ -26,15 +26,10 @@ target_include_directories(mpdProgram
     $<BUILD_INTERFACE:${LAPACKE_INCLUDE_DIRS}>)
 set_property(TARGET mpdProgram PROPERTY C_STANDARD 99)
 target_compile_definitions(mpdProgram PUBLIC USE_LAPACKE)
-target_link_libraries(mpdProgram PUBLIC ${M_LIB} 
+target_link_libraries(mpdProgram PUBLIC ${M_LIB}
                                         ${LAPACKE_LIBRARIES}
                                         ${OpenMP_C_FLAGS})
 
 # Install the executable
 install(TARGETS mpdProgram RUNTIME DESTINATION "${PROJECT_SOURCE_DIR}/../../bin")
-
-
- 
-
-
 

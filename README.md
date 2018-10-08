@@ -9,7 +9,6 @@ The MPD program aims to compute the shape of a domain that maximizes the probabi
 
 In order to compile the mpdProgram, it is recommended to have previously installed:
 * gcc (version 5.4.0)
-* g++ (version 5.4.0)
 * make (version 4.1)
 * cmake (version 3.5.1)
 * git (version 2.7.4)
@@ -33,13 +32,15 @@ Then, to execute the commands inside the install.sh file, just type
 
 and follow the instructions.
 
-Remark 1: the commands written in this install.sh file are originally intended for Ubuntu 16.04.4. Please modify these commands, if you use use for example yum instead of apt for package management, su for sudo, etc.
+Remark 1: the commands written in this install.sh file are originally intended for Ubuntu 16.04.4. Please modify these commands, if you use use for example yum instead of apt for package management (brew for mac), su for sudo, etc.
 
-Remark 2: apart from the installed required libraries (OPENMP, GLUT, OPENGL, LAPACKE, SCOTCH), the install.sh file will only install the softwares, libraries and include files in the local MPD/ directory.
+Remark 2: apart from the installed required libraries (PTHREAD, OPENMP, GLUT, OPENGL, SCOTCH, LAPACKE), the install.sh file will only install the softwares, libraries and include files in the local MPD/ directory.
 
 The mpdProgram will be installed in the newly created bin/ directory. In addition, a certain number of other iscd softwares (https://github.com/ISCDtoolbox) will also be installed.
 
 In the case where the commands inside the install.sh file failed, we list precisely below the needed external libraries (and of course their dependencies):
+
+* libpthread-stubs0-dev (0.3-4) which is the pthread stubs not provided by native libc, development files
 * libgomp1 (5.4.0-6ubuntu1~16.04.10) which is the GCC OpenMP (GOMP) support library
 * freeglut3-dev (version 2.8.1-2) which is the OpenGL Utility Toolkit development files
 * libxmu-dev (version 2:1.1.2-2) which is the X11 miscellaneous utility library (development headers)
@@ -55,6 +56,8 @@ Moreover, as it can be seen in the sources/ directory, other softwares need to b
 * mmg3d to adapt 3D mesh (see https://github.com/Mmgtools)
 
 Important remark: the version of mmg3d we need for the mpdProgram is a modified version of the official one. Hence, in the case you have to download manually the git repository from Mmgtools, overwrite the src/mmg3d/* and src/common/* files with the ones given in sources/mmg3d/* and sources/common/* of our MPD git repository, respectively, then cmake the new files in order to get to the right version of mmg3d.
+
+Remark: in order to install the advect and elastic software, the Commons library (https://github.com/ISCDtoolbox/Commons) must have been previously installed
 
 Normally, at the end of the execution of the install.sh file, we end up in a newly-created outputFiles/ directory. Choose the example you want to try (let us say an hexahedral mesh). Type
 
