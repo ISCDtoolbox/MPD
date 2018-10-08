@@ -111,7 +111,5 @@ set(CMAKE_BUILD_TYPE "Release")
 add_executable(mmg3d sources/mmg3d/mmg3d.c)
 target_link_libraries(mmg3d mmg)
 set_property(TARGET mmg3d PROPERTY C_STANDARD 99)
-target_compile_definitions(mmg PUBLIC USE_ELAS USE_SCOTCH)
-target_compile_options(mmg PUBLIC -Wno-char-subscripts)
 install(TARGETS mmg3d RUNTIME DESTINATION "${PROJECT_SOURCE_DIR}/../../bin")
 

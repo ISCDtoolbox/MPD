@@ -73,7 +73,7 @@ add_library(medit3d SHARED sources/animat.c
                              sources/zaldy1.c
                              sources/zaldy2.c)
 
-# Find the OpenGl and GLUT libraries (freeglut3-dev, libxmu-dev libxi-dev)
+# Find the OpenGl and GLUT libraries (freeglut3-dev, libxmu-dev and libxi-dev)
 find_package(GLUT REQUIRED)
 find_package(OpenGL REQUIRED)
 

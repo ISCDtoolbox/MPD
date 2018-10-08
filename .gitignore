@@ -33,6 +33,7 @@ sources/mpd/documentation/html
 
 sources/mshdistance/build
 sources/mshdistance/include
+sources/mshdistance/sources/compil.date
 
 outputFiles
 

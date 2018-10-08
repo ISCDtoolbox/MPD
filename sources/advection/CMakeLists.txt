@@ -32,7 +32,7 @@ install(FILES sources/ad_calls.h
 project(advect LANGUAGES C)
 set(CMAKE_BUILD_TYPE "Release")
 add_executable(advect sources/advect.c)
-target_link_libraries(advect PUBLIC advection ${commons})
+target_link_libraries(advect PUBLIC advection)
 set_property(TARGET advect PROPERTY C_STANDARD 99)
 install(TARGETS advect RUNTIME DESTINATION "${PROJECT_SOURCE_DIR}/../../bin")
 

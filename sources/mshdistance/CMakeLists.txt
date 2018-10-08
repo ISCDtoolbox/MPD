@@ -2,8 +2,23 @@ cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 #set(CMAKE_MACOSX_RPATH TRUE)
 
+macro(DATE RESULT)
+  execute_process(COMMAND "date" "+%Y-%m-%d" OUTPUT_VARIABLE ${RESULT}
+                                             OUTPUT_STRIP_TRAILING_WHITESPACE)
+endmacro()
+
+macro(TIME RESULT)
+  execute_process(COMMAND "date" "+%H:%M:%S" OUTPUT_VARIABLE ${RESULT}
+                                             OUTPUT_STRIP_TRAILING_WHITESPACE)
+endmacro()
+
 project(mshdistance LANGUAGES C)
 set(CMAKE_BUILD_TYPE "Release")
+
+# Write the compilation date in a file entitled compil.date in the sources directory
+DATE(day)
+TIME(hour)
+file(WRITE sources/compil.date "#define COMPIL \"${day} ${hour}\"")
 
 # Add the source files to the mshdistance library
 add_library(mshdistance SHARED sources/boulep.c
@@ -41,7 +56,7 @@ install(FILES sources/memory.h
 project(mshdist LANGUAGES C)
 set(CMAKE_BUILD_TYPE "Release")
 add_executable(mshdist sources/mshdist.c)
-target_link_libraries(mshdist PUBLIC mshdistance ${commons})
+target_link_libraries(mshdist PUBLIC mshdistance)
 set_property(TARGET mshdist PROPERTY C_STANDARD 99)
 install(TARGETS mshdist RUNTIME DESTINATION "${PROJECT_SOURCE_DIR}/../../bin")
 

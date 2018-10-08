@@ -33,7 +33,7 @@ install(FILES sources/ls_calls.h
 project(elastic LANGUAGES C)
 set(CMAKE_BUILD_TYPE "Release")
 add_executable(elastic sources/elastic.c)
-target_link_libraries(elastic PUBLIC elasticity ${commons})
+target_link_libraries(elastic PUBLIC elasticity)
 set_property(TARGET elastic PROPERTY C_STANDARD 99)
 install(TARGETS elastic RUNTIME DESTINATION "${PROJECT_SOURCE_DIR}/../../bin")
 
