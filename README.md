@@ -57,7 +57,7 @@ Moreover, as it can be seen in the sources/ directory, other softwares need to b
 
 Important remark: the version of mmg3d we need for the mpdProgram is a modified version of the official one. Hence, in the case you have to download manually the git repository from Mmgtools, overwrite the src/mmg3d/* and src/common/* files with the ones given in sources/mmg3d/* and sources/common/* of our MPD git repository, respectively, then cmake the new files in order to get to the right version of mmg3d.
 
-Remark: in order to install the advect and elastic software, the Commons library (https://github.com/ISCDtoolbox/Commons) must have been previously installed
+Remark: in order to install the advect, elastic and mshdist software, the Commons library (https://github.com/ISCDtoolbox/Commons) must have been previously installed
 
 Normally, at the end of the execution of the install.sh file, we end up in a newly-created outputFiles/ directory. Choose the example you want to try (let us say an hexahedral mesh). Type
 

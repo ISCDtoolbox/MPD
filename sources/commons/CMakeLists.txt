@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.5.1 FATAL_ERROR)
-#set(CMAKE_VERBOSE_MAKEFILE ON)
 
 project(commons LANGUAGES C)
 set(CMAKE_BUILD_TYPE "Release")
@@ -36,6 +35,7 @@ find_library (M_LIB m)
 target_include_directories(commons
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/sources>)
+target_compile_options(commons PUBLIC ${OpenMP_C_FLAGS})
 set_property(TARGET commons PROPERTY C_STANDARD 99)
 target_link_libraries(commons PUBLIC ${M_LIB}
                                      Threads::Threads

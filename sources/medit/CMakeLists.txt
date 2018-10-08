@@ -83,13 +83,9 @@ target_include_directories(medit3d
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/sources>
     $<BUILD_INTERFACE:${OpenGL_INCLUDE_DIRS}>
     $<BUILD_INTERFACE:${GLUT_INCLUDE_DIRS}>)
-#target_include_definitions(medit3d
-#  PUBLIC
-#    $<BUILD_INTERFACE:${OpenGL_DEFINITIONS}>
-#    $<BUILD_INTERFACE:${GLUT_DEFINITIONS}>)
 set_property(TARGET medit3d PROPERTY C_STANDARD 99)
 target_link_libraries(medit3d PUBLIC ${OPENGL_LIBRARIES}
-                                   ${GLUT_LIBRARIES})
+                                     ${GLUT_LIBRARIES})
 
 # Set the installation properties of the medit3d library
 install(TARGETS medit3d LIBRARY DESTINATION "${PROJECT_SOURCE_DIR}/../../bin/lib")
