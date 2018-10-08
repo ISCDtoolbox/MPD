@@ -2,8 +2,8 @@ sudo add-apt-repository main
 sudo add-apt-repository universe
 sudo apt-get update
 
-sudo apt-get install g++ gcc make cmake
-sudo apt-get install libgomp1 freeglut3-dev libxmu-dev libxi-dev libptscotch-dev liblapacke-dev
+sudo apt-get install gcc make cmake
+sudo apt-get install libpthread-stubs0-dev libgomp1 freeglut3-dev libxmu-dev libxi-dev libptscotch-dev liblapacke-dev
 
 cd ./sources/commons
 mkdir build

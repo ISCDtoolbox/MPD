@@ -11,8 +11,11 @@ In order to compile the mpdProgram, it is recommended to have previously install
 * gcc (version 5.4.0)
 * make (version 4.1)
 * cmake (version 3.5.1)
+* doxygen (version 1.8.11) (optional: it is only necessary if one wants to generate the code documentation)
+
+In order to download the source files of the mpd program, you have two options: either you can download the data compression file at http://pelikano.free.fr/mpd/MPD.tar.gz (the required informations can be found at the end of this file) and uncompress the downloaded file; or install the git package
+
 * git (version 2.7.4)
-* doxygen (version 1.8.11) (optional: it is only used for generating the code documentation)
 
 Then, open your terminal and locate yourself in the directory where you want to download the files thanks to "ls" and "cd" commands. To clone the files with git, type
 
@@ -38,7 +41,7 @@ Remark 2: apart from the installed required libraries (PTHREAD, OPENMP, GLUT, OP
 
 The mpdProgram will be installed in the newly created bin/ directory. In addition, a certain number of other iscd softwares (https://github.com/ISCDtoolbox) will also be installed.
 
-In the case where the commands inside the install.sh file failed, we list precisely below the needed external libraries (and of course their dependencies):
+In the case where the commands inside the install.sh file failed, we list precisely below the needed external libraries (and of course their dependencies, this is normally treated automatically with any package manager):
 
 * libpthread-stubs0-dev (0.3-4) which is the pthread stubs not provided by native libc, development files
 * libgomp1 (5.4.0-6ubuntu1~16.04.10) which is the GCC OpenMP (GOMP) support library
