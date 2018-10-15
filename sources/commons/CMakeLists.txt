@@ -27,6 +27,7 @@ add_library(commons SHARED sources/chrono.c
 #               compilation for threads. Tendancy is to add -pthread option instead of
 #               -lpthread
 find_package(OpenMP REQUIRED)
+set(CMAKE_THREAD_PREFER_PTHREAD ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package (Threads REQUIRED)
 find_library (M_LIB m)
