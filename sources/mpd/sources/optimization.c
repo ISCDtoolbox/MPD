@@ -4676,9 +4676,297 @@ int writingShapeSolFile(Parameters* pParameters, Mesh* pMesh)
 }
 
 /* ************************************************************************** */
+// The function writingObjFile writes into a *.obj file the 3 coordinates of the
+// vertices of an internal domain contained in pMesh, and also the boundary
+// triangles associated to it (labelled 10) with the right vertex connectivity.
+// The name of the *.obj file is the one stored in pParameters->name_mesh but
+// where the *.mesh extension has been replaced by the *.obj one (warning: it
+// reset and overwrites the file if it already exists). It has the Parameters*
+// and Mesh* variables (both defined in the main.h) as input arguments and it
+// returns zero if an error occurred, otherwise one on success
+/* ************************************************************************** */
+int writingObjFile(Parameters* pParameters, Mesh* pMesh)
+{
+    size_t lengthName=0;
+    char *fileLocation=NULL;
+    int i=0, j=0, iMax=0, nTri=0, *pTri=NULL;
+    FILE *objFile=NULL;
+
+    // Check the input pointers
+    if (pParameters==NULL || pMesh==NULL)
+    {
+        PRINT_ERROR("In writingObjFile: at least one of the input ");
+        fprintf(stderr,"variables (pParameters=%p, ",(void*)pParameters);
+        fprintf(stderr,"pMesh=%p) ",(void*)pMesh);
+        fprintf(stderr,"does not point to a valid address.\n");
+        return 0;
+    }
+
+    // Check that we are dealing with a tetrahedral mesh
+    if (pParameters->opt_mode<=0)
+    {
+        PRINT_ERROR("In writingObjFile: the function can only be used ");
+        fprintf(stderr,"if the pParameters->opt_mode variable ");
+        fprintf(stderr,"(=%d) is a positive integer.\n",pParameters->opt_mode);
+        return 0;
+    }
+
+    // Check the number of vertices
+    iMax=pMesh->nver;
+    if (iMax<1)
+    {
+        PRINT_ERROR("In writingObjFile: the total number of vertices ");
+        fprintf(stderr,"(=%d) in the tetrahedral mesh should be a ",iMax);
+        fprintf(stderr,"positive integer.\n");
+        return 0;
+    }
+
+    // Check the number of triangles
+    iMax=pMesh->ntri;
+    if (iMax<1)
+    {
+        PRINT_ERROR("In writingObjFile: the total number of boundary ");
+        fprintf(stderr," triangles (=%d) in the tetrahedral mesh should ",iMax);
+        fprintf(stderr,"be a positive integer.\n");
+        return 0;
+    }
+
+    // Check the corresponding pointers
+    if (pMesh->pver==NULL || pMesh->ptri==NULL)
+    {
+        PRINT_ERROR("In writingObjFile: one of the variables ");
+        fprintf(stderr,"pMesh->pver=%p or ",(void*)pMesh->pver);
+        fprintf(stderr,"pMesh->ptri=%p does not point ",(void*)pMesh->ptri);
+        fprintf(stderr,"a valid address.\n");
+        return 0;
+    }
+
+    // Check that an internal domain is encoded in the mesh
+    nTri=0;
+    for (i=0; i<iMax; i++)
+    {
+        if (pMesh->ptri[i].label==10)
+        {
+            nTri++;
+        }
+    }
+    if (nTri<1)
+    {
+        PRINT_ERROR("In writingObjFile: the tetrahedral mesh does not seem ");
+        fprintf(stderr,"to contain any internal domain. The number of ");
+        fprintf(stderr,"boundary triangles (=%d) labelled ten in the ",nTri);
+        fprintf(stderr,"current mesh should be a positive integer.\n"); 
+        return 0;
+    }
+
+    // Check the pParameters->name_mesh variable
+    if (getMeshFormat(pParameters->name_mesh,pParameters->name_length)!=1)
+    {
+        PRINT_ERROR("In writingObjFile: getMeshFormat function did not ");
+        fprintf(stderr,"return one, which was the expected value here.\n");
+        return 0;
+    }
+
+    // Allocate memory for fileLocation and checked if it worked
+    // calloc function returns a pointer to allocated memory, otherwise NULL
+    lengthName=pParameters->name_length;
+    fileLocation=(char*)calloc(lengthName,sizeof(char));
+    if (fileLocation==NULL)
+    {
+        PRINT_ERROR("In writingObjFile: could not allocate memory for ");
+        fprintf(stderr,"the (local) char* fileLocation variable.\n");
+        return 0;
+    }
+
+    // strncpy returns a pointer to the string (not used here)
+    // strlen function returns the length of the string not including the '\0'
+    strncpy(fileLocation,pParameters->name_mesh,lengthName);
+    lengthName=strlen(fileLocation);
+    fileLocation[lengthName-5]='.';
+    fileLocation[lengthName-4]='o';
+    fileLocation[lengthName-3]='b';
+    fileLocation[lengthName-2]='j';
+    fileLocation[lengthName-1]='\0';
+
+    // Opening *.obj file (warning: reset and overwrite file if already exists)
+    // fopen returns a FILE pointer on success, otherwise NULL is returned
+    if (pParameters->opt_mode!=1 || pParameters->verbose)
+    {
+        fprintf(stdout,"\nOpening %s file. ",fileLocation);
+    }
+    objFile=fopen(fileLocation,"w+");
+    if (objFile==NULL)
+    {
+        PRINT_ERROR("In writingObjFile: we were not able to open and ");
+        fprintf(stderr,"write into the %s file",fileLocation);
+        free(fileLocation);
+        fileLocation=NULL;
+        return 0;
+    }
+    if (pParameters->opt_mode!=1 || pParameters->verbose)
+    {
+        fprintf(stdout,"Start writing object data. ");
+    }
+
+    // Allocate memory for the adjacency table of triangles
+    pTri=(int*)calloc(3*pMesh->ntri,sizeof(int));
+    if (pTri==NULL)
+    {
+        PRINT_ERROR("In writingObjFile: could not allocate memory for the ");
+        fprintf(stderr,"local (int*) pTri variable.\n");
+        closeTheFile(&objFile);
+        free(fileLocation);
+        fileLocation=NULL;
+        return 0;
+    }
+    
+    // Write the vertices by setting a triangle adjacency
+    iMax=pMesh->ntri;
+    nTri=0;
+    for (i=0; i<iMax; i++)
+    {
+        if (pMesh->ptri[i].label==10)
+        {
+            // Check for repetition of p1 before saving the point
+            for (j=0; j<i; j++)
+            {
+                if (pMesh->ptri[j].label==10)
+                {
+                    if (pMesh->ptri[i].p1==pMesh->ptri[j].p1)
+                    {
+                        pTri[3*i]=pTri[3*j];
+                        break;
+                    }
+                    else if (pMesh->ptri[i].p1==pMesh->ptri[j].p2)
+                    {
+                        pTri[3*i]=pTri[3*j+1];
+                        break;
+                    }
+                    else if (pMesh->ptri[i].p1==pMesh->ptri[j].p3)
+                    {
+                        pTri[3*i]=pTri[3*j+2];
+                        break;
+                    }
+                }
+            }
+            if (j==i)
+            {
+                pTri[3*i]=nTri;
+                nTri++;
+                fprintf(objFile,"v %.8le ",pMesh->pver[pMesh->ptri[i].p1-1].x);
+                fprintf(objFile,"%.8le ",pMesh->pver[pMesh->ptri[i].p1-1].y);
+                fprintf(objFile,"%.8le \n",pMesh->pver[pMesh->ptri[i].p1-1].z);
+            }
+
+            // Check for repetition of p2 before saving the point
+            for (j=0; j<i; j++)
+            {
+                if (pMesh->ptri[j].label==10)
+                {
+                    if (pMesh->ptri[i].p2==pMesh->ptri[j].p1)
+                    {
+                        pTri[3*i+1]=pTri[3*j];
+                        break;
+                    }
+                    else if (pMesh->ptri[i].p2==pMesh->ptri[j].p2)
+                    {
+                        pTri[3*i+1]=pTri[3*j+1];
+                        break;
+                    }
+                    else if (pMesh->ptri[i].p2==pMesh->ptri[j].p3)
+                    {
+                        pTri[3*i+1]=pTri[3*j+2];
+                        break;
+                    }
+                }
+            }
+            if (j==i)
+            {
+                pTri[3*i+1]=nTri;
+                nTri++;
+                fprintf(objFile,"v %.8le ",pMesh->pver[pMesh->ptri[i].p2-1].x);
+                fprintf(objFile,"%.8le ",pMesh->pver[pMesh->ptri[i].p2-1].y);
+                fprintf(objFile,"%.8le \n",pMesh->pver[pMesh->ptri[i].p2-1].z);
+            }
+
+            // Check for repetition of p3 before saving the point
+            for (j=0; j<i; j++)
+            {
+                if (pMesh->ptri[j].label==10)
+                {
+                    if (pMesh->ptri[i].p3==pMesh->ptri[j].p1)
+                    {
+                        pTri[3*i+2]=pTri[3*j];
+                        break;
+                    }
+                    else if (pMesh->ptri[i].p3==pMesh->ptri[j].p2)
+                    {
+                        pTri[3*i+2]=pTri[3*j+1];
+                        break;
+                    }
+                    else if (pMesh->ptri[i].p3==pMesh->ptri[j].p3)
+                    {
+                        pTri[3*i+2]=pTri[3*j+2];
+                        break;
+                    }
+                }
+            }
+            if (j==i)
+            {
+                pTri[3*i+2]=nTri;
+                nTri++;
+                fprintf(objFile,"v %.8le ",pMesh->pver[pMesh->ptri[i].p3-1].x);
+                fprintf(objFile,"%.8le ",pMesh->pver[pMesh->ptri[i].p3-1].y);
+                fprintf(objFile,"%.8le \n",pMesh->pver[pMesh->ptri[i].p3-1].z);
+            }
+        }
+    }
+    fprintf(objFile,"\n");
+
+    // Saving triangles with the right adjacency
+    iMax=pMesh->ntri;
+    for (i=0; i<iMax; i++)
+    {
+        if (pMesh->ptri[i].label==10)
+        {
+            fprintf(objFile,"f %d %d ",pTri[3*i]+1,pTri[3*i+1]+1);
+            fprintf(objFile,"%d \n",pTri[3*i+2]+1);
+        }
+    }
+    fprintf(objFile,"\n");
+
+    // Free the memory allocated for pTri
+    free(pTri);
+    pTri=NULL;
+
+    // Closing the *.obj file: fclose function returns zero if the input FILE*
+    // variable is successfully closed, otherwise EOF (end-of-file) is returned
+    if (fclose(objFile))
+    {
+        PRINT_ERROR("In writingObjFile: the ");
+        fprintf(stderr,"%s file has not been closed properly.\n",fileLocation);
+        objFile=NULL;
+        free(fileLocation);
+        fileLocation=NULL;
+        return 0;
+    }
+    objFile=NULL;
+    if (pParameters->opt_mode!=1 || pParameters->verbose)
+    {
+        fprintf(stdout,"Closing file.\n");
+    }
+
+    // Free the memory allocated for fileLocation
+    free(fileLocation);
+    fileLocation=NULL;
+
+    return 1;
+}
+
+/* ************************************************************************** */
 // The function saveOrRemoveMeshInTheLoop is used in the optimization loop
-// to either save the mesh in the *.mesh and/or *.cube format according to the
-// pParameters->save_type and iterationInTheLoop variables, or remove the
+// to either save the mesh in the *.mesh and/or *.cube/*.obj format according to
+// the pParameters->save_type and iterationInTheLoop variables, or remove the
 // *.(iterationInTheLoop).mesh file if it already exists, depending if the
 // booleanForSave input variable is set to one or zero. In the latter case, the
 // file must already exists as well as its associated *.mesh one whose path
@@ -4835,6 +5123,79 @@ int saveOrRemoveMeshInTheLoop(Parameters* pParameters, Mesh* pMesh,
             pParameters->name_mesh[lengthName-2]='b';
             pParameters->name_mesh[lengthName-1]='e';
             pParameters->name_mesh[lengthName]='\0';
+
+            if (initialFileExists(fileLocation,pParameters->name_length)==1)
+            {
+                if (remove(fileLocation))
+                {
+                    PRINT_ERROR("In saveOrRemoveMeshInTheLoop: wrong return ");
+                    fprintf(stderr,"(=-1) of the standard remove c-function ");
+                    fprintf(stderr,"in the attempt of removing the ");
+                    fprintf(stderr,"%s file.\n",fileLocation);
+                    free(fileLocation);
+                    fileLocation=NULL;
+                    return 0;
+                }
+            }
+
+            if (!renameFileLocation(pParameters->name_mesh,
+                                         pParameters->name_length,fileLocation))
+            {
+                PRINT_ERROR("In saveOrRemoveMeshInTheLoop: ");
+                fprintf(stderr,"renameFileLocation function returned zero ");
+                fprintf(stderr,"instead of one.\n");
+                free(fileLocation);
+                fileLocation=NULL;
+                return 0;
+            }
+
+            lengthName=strlen(pParameters->name_mesh);
+            pParameters->name_mesh[lengthName-5]='.';
+            pParameters->name_mesh[lengthName-4]='m';
+            pParameters->name_mesh[lengthName-3]='e';
+            pParameters->name_mesh[lengthName-2]='s';
+            pParameters->name_mesh[lengthName-1]='h';
+            pParameters->name_mesh[lengthName]='\0';
+        }
+        else if (pParameters->opt_mode>0 && pParameters->save_type!=1)
+        {
+            if (!writingObjFile(pParameters,pMesh))
+            {
+                PRINT_ERROR("In saveOrRemoveMeshInTheLoop: writingObjFile ");
+                fprintf(stderr,"function returned zero instead of one.\n");
+                free(fileLocation);
+                fileLocation=NULL;
+                return 0;
+            }
+
+            if (!pParameters->save_type)
+            {
+                fprintf(stdout,"rm %s",fileLocation);
+                if (remove(fileLocation))
+                {
+                    PRINT_ERROR("In saveOrRemoveMeshInTheLoop: wrong return ");
+                    fprintf(stderr,"(=-1) of the standard remove c-function ");
+                    fprintf(stderr,"in the attempt of removing the ");
+                    fprintf(stderr,"%s file.\n",fileLocation);
+                    free(fileLocation);
+                    fileLocation=NULL;
+                    return 0;
+                }
+            }
+
+            lengthName=strlen(fileLocation);
+            fileLocation[lengthName-5]='.';
+            fileLocation[lengthName-4]='o';
+            fileLocation[lengthName-3]='b';
+            fileLocation[lengthName-2]='j';
+            fileLocation[lengthName-1]='\0';
+
+            lengthName=strlen(pParameters->name_mesh);
+            pParameters->name_mesh[lengthName-5]='.';
+            pParameters->name_mesh[lengthName-4]='o';
+            pParameters->name_mesh[lengthName-3]='b';
+            pParameters->name_mesh[lengthName-2]='j';
+            pParameters->name_mesh[lengthName-1]='\0';
 
             if (initialFileExists(fileLocation,pParameters->name_length)==1)
             {
@@ -6965,8 +7326,6 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 }
             }
 
-
-
             if (pMax>=p0)
             {
 
@@ -7532,5 +7891,4 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
 
     return 1;
 }
-
 

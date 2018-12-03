@@ -1604,6 +1604,41 @@ int shapeDerivative(Parameters* pParameters, Mesh* pMesh, Data* pData,
 int writingShapeSolFile(Parameters* pParameters, Mesh* pMesh);
 
 /**
+* \fn int writingObjFile(Parameters* pParameters, Mesh* pMesh)
+* \brief It writes into a *.obj file format the three coordinates of the
+*        vertices of an internal domain contained in the structure pointed by
+*        pMesh, and also the boundary triangles associated to it (labelled 10)
+*        with the right vertex connectivity. The name of the *.obj file is
+*        related to the associated *.mesh file whose path name is stored in the
+*        pParameters->name_mesh variable.
+*
+* \param[in] pParameters A pointer that points to the Parameters structure of
+*                        the \ref main function. Its name_mesh variable must
+*                        refer to the name of an existing *.mesh file otherwise
+*                        an error is returned by the \ref writingObjFile
+*                        function. We also recall that the name of the *.obj
+*                        file is built on the *.mesh file where the '.mesh'
+*                        extension has been replaced by the '.obj' one. We also
+*                        recall that if a *.obj file with a similar name already
+*                        exists, it will be reset and overwritten by the \ref
+*                        writingObjFile function.
+*
+* \param[in] pMesh A pointer that points to the Mesh structure of the \ref main
+*                  function. Each Point structure of pMesh->pver that belongs
+*                  to the boundary of the MPD domain (triangles labelled 10)
+*                  will be saved according to the *.obj file format ("v x y z"
+*                  followed by "f p1 p2 p3").
+*
+* \return It returns one if the surface mesh associated with the internal domain
+*         is successfully written by using the *.obj format. Otherwise, zero is
+*         returned if any error is encountered during the writing process.
+*
+* The \ref writingObjFile function should be static but has been defined as
+* non-static in order to perform unit-test on it.
+*/
+int writingObjFile(Parameters* pParameters, Mesh* pMesh);
+
+/**
 * \fn int saveOrRemoveMeshInTheLoop(Parameters* pParameters, Mesh* pMesh,
 *                                   ChemicalSystem* pChemicalSystem,
 *                                    int booleanForSave, int iterationInTheLoop)
@@ -1611,9 +1646,9 @@ int writingShapeSolFile(Parameters* pParameters, Mesh* pMesh);
 *        loop to either remove or save the *.(iterationInTheLoop).mesh file,
 *        depending on the fact that booleanForSave is set to zero or not,
 *        respectively. Depending on the pParameters->save_type variable, the
-*        mesh may be saved also (or only) in the *.cube format, which requires
-*        the charge and center coordinates of the nuclei associated with
-*        structure pointed by pChemicalSystem.
+*        mesh may be saved also (or only) in the *.cube/ *.obj format, which
+*        requires the charge and center coordinates of the nuclei associated
+*        with structure pointed by pChemicalSystem.
 *
 * \param[in] pParameters A pointer that points to the Parameters structure of
 *                        the \ref main function. Its name_mesh variable must
@@ -1621,7 +1656,10 @@ int writingShapeSolFile(Parameters* pParameters, Mesh* pMesh);
 *                        otherwise an error is returned by the \ref
 *                        saveOrRemoveMeshInTheLoop. Its save_type variable
 *                        rules if the mesh file is saved in the *.mesh format
-*                        (one), *.cube format (zero), or both formats (two).
+*                        (one), *.cube/ *.obj format (zero), or both formats
+*                        (two). The *.cube is created for hexahedral meshes
+*                        (if Parameters->opt_mode is not positive) whereas the
+*                        *.obj format is generated for tetrahedral ones.
 *
 * \param[in] pMesh A pointer that points to the Mesh structure of the \ref main
 *                  function. It contains the values that are intended to be
