@@ -676,7 +676,7 @@ typedef struct {
                              *    always correspond to the \ref path_length
                              *    value. */
 
-    char* path_mshdist;      /*!< Only used if \ref opt_mode=one/two/four:
+    char* path_mshdist;      /*!< Only used if \ref opt_mode=one/two/three/four:
                              *    pointer used to dynamically define the array
                              *    storing the path specification for the mshdist
                              *    software which must have been previously

@@ -173,7 +173,7 @@ do {                                                                           \
 int main(int argc, char *argv[])
 {
     time_t startLocalTimer=0, endLocalTimer=0;
-    int i=0, j=0, optMode=0, iStop=0;
+    int i=0, j=0, optMode=0, iStop=0, jPlus=0, jMoins=0;
     double d0p=0., d1p=0., d2p=0.;
     Parameters parameters;
     ChemicalSystem chemicalSystem;
@@ -255,18 +255,30 @@ int main(int argc, char *argv[])
             break;
 
         case 1:
+            if (!writingCubeFile(&parameters,&chemicalSystem,&mesh))
+            {
+                PRINT_ERROR("In main: writingCubeFile function returned zero ");
+                fprintf(stderr,"instead of one.\n");
+                FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,
+                                                                  EXIT_FAILURE);
+            }
+
             PRINT_LOCAL_TIME(-1,STR_PHASE,globalInitialTimer,endLocalTimer);
             fprintf(stdout,"PARAMETERS, CHEMISTRY, AND MESH STRUCTURES ");
             fprintf(stdout,"SUCCESSFULLY INITIALIZED.\n%s\n",STR_PHASE);
 
-            // Vizualize the mesh of the initial cube with medit (Warning: the
-            // medit software must have been previously installed)
-            if (!plotMeshWithMeditSoftware(&parameters))
+            // If pParameters->save_print==0, graphic and prompt mode is off
+            if (parameters.save_print)
             {
-                PRINT_ERROR("In main: plotMeshWithMeditSoftware function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,
+                // Vizualize the mesh of the initial cube with medit (Warning:
+                // the medit software must have been previously installed)
+                if (!plotMeshWithMeditSoftware(&parameters))
+                {
+                    PRINT_ERROR("In main: plotMeshWithMeditSoftware function ");
+                    fprintf(stderr,"returned zero instead of one.\n");
+                    FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,
                                                                   EXIT_FAILURE);
+                }
             }
         break;
 
@@ -314,8 +326,27 @@ int main(int argc, char *argv[])
 
         if (parameters.opt_mode==1 && i%3==0)
         {
-            optMode=1;
-            parameters.opt_mode=4;
+            jPlus=0;
+            jMoins=0;
+            // Check that the shape gradient changes sign to get new domain
+            // with opt_mode set to 4
+            for (j=0; j<mesh.nver; j++)
+            {
+                if (mesh.pver[j].value<0.)
+                {
+                    jMoins++;
+                }
+                else
+                {
+                    jPlus++;
+                }
+            }
+
+            if (jPlus && jMoins)
+            {
+                optMode=1;
+                parameters.opt_mode=4;
+            }
         }
 
         switch (optimization(&parameters,&mesh,&data,&chemicalSystem,i,

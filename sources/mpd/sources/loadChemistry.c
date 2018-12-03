@@ -1972,6 +1972,7 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
             orbRhf=readChemFileandAllocateChemicalSystem(pParameters->name_chem,
                                                        pParameters->name_length,
                                                                pChemicalSystem);
+
             // Check the pParameters->orb_rhf variable
             if (abs(orbRhf)!=1)
             {

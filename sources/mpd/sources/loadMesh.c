@@ -197,65 +197,95 @@ int initializeCubeDiscretization(Parameters* pParameters, Mesh* pMesh)
     fprintf(stdout,"\nGenerate default initial mesh for the ");
     fprintf(stdout,"computational box will take ");
     fprintf(stdout,"%d,%d Mo.\n",sizeMemory/1000000,sizeMemory%1000000);
-    fprintf(stdout,"Do you want to continue (y/n)? ");
 
-    // Manually confirm the discretization of the cube: getchar returns the
-    // character read as an unsigned char cast to an int or EOF in case of error
-    readChar=getchar();
-    switch (readChar)
+    // If pParameters->save_print equals zero, graphic and prompt mode is off
+    if (pParameters->save_print)
     {
-        case 'y':
-            fprintf(stdout,"Ok, we mesh the cube!\n");
+        fprintf(stdout,"Do you want to continue (y/n)? ");
 
-            // Set the structure to zero for variables and NULL for pointers
-            initializeMeshStructure(pMesh);
-
-            pMesh->nver=nVer;
-            if (pParameters->opt_mode>0)
-            {
-                pMesh->ncor=8;
-                pMesh->nnorm=nNorm;
-                pMesh->ntan=nTan;
-                pMesh->nedg=nEdg;
-                pMesh->ntri=nTri;
-                pMesh->ntet=nTet;
-            }
-            else
-            {
-                pMesh->nqua=nQua;
-                pMesh->nhex=nHex;
-            }
-
-            returnValue=1;
-            break;
-
-        case 'n':
-            fprintf(stdout,"Ok, leaving program.\n");
-            returnValue=-1;
-            break;
-
-        case EOF:
-            PRINT_ERROR("In initializeCubeDiscretization: wrong return ");
-            fprintf(stderr,"(=%d) of the standard getchar c-function in ",EOF);
-            fprintf(stderr,"the attempt of reading your answer ('y'=yes or ");
-            fprintf(stderr,"'n'=no).\n");
-            returnValue=0;
-            break;
-
-        default:
-            PRINT_ERROR("In initializeCubeDiscretization: expecting ");
-            fprintf(stderr,"'y'(=yes) or 'n'(=no) instead of '%c' ",readChar);
-            fprintf(stderr,"in your answer.\n");
-            returnValue=0;
-            break;
-    }
-
-    // Clean the input buffer of the standard input stream (stdin) in order to
-    // avoid buffer overflow later (warning here: be sure that it is not empty
-    // otherwise it will wait undefinitively for a non-empty input)
-    while (readChar!='\n' && readChar!=EOF)
-    {
+        // Manually confirm the discretization of the cube: getchar returns the
+        // character read as an unsigned char cast to an int or EOF for an error
         readChar=getchar();
+        switch (readChar)
+        {
+            case 'y':
+                fprintf(stdout,"Ok, we mesh the cube!\n");
+
+                // Set the structure to zero for variables and NULL for pointers
+                initializeMeshStructure(pMesh);
+
+                pMesh->nver=nVer;
+                if (pParameters->opt_mode>0)
+                {
+                    pMesh->ncor=8;
+                    pMesh->nnorm=nNorm;
+                    pMesh->ntan=nTan;
+                    pMesh->nedg=nEdg;
+                    pMesh->ntri=nTri;
+                    pMesh->ntet=nTet;
+                }
+                else
+                {
+                    pMesh->nqua=nQua;
+                    pMesh->nhex=nHex;
+                }
+
+                returnValue=1;
+                break;
+
+            case 'n':
+                fprintf(stdout,"Ok, leaving program.\n");
+                returnValue=-1;
+                break;
+
+            case EOF:
+                PRINT_ERROR("In initializeCubeDiscretization: wrong return ");
+                fprintf(stderr,"(=%d) of the standard getchar c-function ",EOF);
+                fprintf(stderr,"in the attempt of reading your answer ");
+                fprintf(stderr,"('y'=yes or 'n'=no).\n");
+                returnValue=0;
+                break;
+
+            default:
+                PRINT_ERROR("In initializeCubeDiscretization: expecting ");
+                fprintf(stderr,"'y'(=yes) or 'n'(=no) instead of ");
+                fprintf(stderr,"'%c' in your answer.\n",readChar);
+                returnValue=0;
+                break;
+        }
+
+        // Clean the input buffer of the standard input stream (stdin) in order
+        // to avoid buffer overflow later (warning here: be sure that it is not
+        // empty otherwise it will wait undefinitively for a non-empty input)
+        while (readChar!='\n' && readChar!=EOF)
+        {
+            readChar=getchar();
+        }
+    }
+    else
+    {
+        fprintf(stdout,"Ok, we mesh the cube!\n");
+
+        // Set the structure to zero for variables and NULL for pointers
+        initializeMeshStructure(pMesh);
+
+        pMesh->nver=nVer;
+        if (pParameters->opt_mode>0)
+        {
+            pMesh->ncor=8;
+            pMesh->nnorm=nNorm;
+            pMesh->ntan=nTan;
+            pMesh->nedg=nEdg;
+            pMesh->ntri=nTri;
+            pMesh->ntet=nTet;
+        }
+        else
+        {
+            pMesh->nqua=nQua;
+            pMesh->nhex=nHex;
+        }
+
+        returnValue=1;
     }
 
     return returnValue;
@@ -1383,14 +1413,25 @@ int writingMeshFile(Parameters* pParameters, Mesh* pMesh)
     // Check if memory has been allocated for the different types of elements
     if (pParameters->opt_mode>0)
     {
-        if (pMesh->pver==NULL || pMesh->pnorm==NULL || pMesh->ptan==NULL ||
-                    pMesh->pedg==NULL || pMesh->ptri==NULL || pMesh->ptet==NULL)
+        if (pMesh->pver==NULL || pMesh->ptri==NULL || pMesh->ptet==NULL ||
+                                       (pMesh->nnorm>0 && pMesh->pnorm==NULL) ||
+                                         (pMesh->ntan>0 && pMesh->ptan==NULL) ||
+                                           (pMesh->nedg>0 && pMesh->pedg==NULL))
         {
             PRINT_ERROR("In writingMeshFile: one of the following pointer\n");
             fprintf(stderr,"pMesh->pver=%p\n",(void*)pMesh->pver);
-            fprintf(stderr,"pMesh->pnorm=%p\n",(void*)pMesh->pnorm);
-            fprintf(stderr,"pMesh->ptan=%p\n",(void*)pMesh->ptan);
-            fprintf(stderr,"pMesh->pedg=%p\n",(void*)pMesh->pedg);
+            if (pMesh->nnorm>0)
+            {
+                fprintf(stderr,"pMesh->pnorm=%p\n",(void*)pMesh->pnorm);
+            }
+            if (pMesh->ntan>0)
+            {
+                fprintf(stderr,"pMesh->ptan=%p\n",(void*)pMesh->ptan);
+            }
+            if (pMesh->nedg>0)
+            {
+                fprintf(stderr,"pMesh->pedg=%p\n",(void*)pMesh->pedg);
+            }
             fprintf(stderr,"pMesh->ptri=%p\n",(void*)pMesh->ptri);
             fprintf(stderr,"pMesh->ptet=%p\n",(void*)pMesh->ptet);
             fprintf(stderr,"does not have a valid allocated adress.\n");
@@ -1897,11 +1938,11 @@ int writingMeshFile(Parameters* pParameters, Mesh* pMesh)
 
         // Check number of edges/ridges then write their descriptions
         iMax=pMesh->nedg;
-        if (iMax<1)
+        if (iMax<0)
         {
-            PRINT_ERROR("In writingMeshFile: expecting a positive number of ");
-            fprintf(stderr,"edges instead of %d stored in the structure ",iMax);
-            fprintf(stderr,"pointed by pMesh.\n");
+            PRINT_ERROR("In writingMeshFile: expecting a non-negative number ");
+            fprintf(stderr,"of edges instead of %d stored in the ",iMax);
+            fprintf(stderr,"structure pointed by pMesh.\n");
             fprintf(meshFile,"\nEnd");
             closeTheFile(&meshFile);
             free(fileLocation);
@@ -1909,34 +1950,38 @@ int writingMeshFile(Parameters* pParameters, Mesh* pMesh)
             return 0;
         }
 
-        fprintf(meshFile,"\nEdges\n%d\n",iMax);
-        for (i=0; i<iMax; i++)
+        if (iMax>1)
         {
-            pEdge=&pMesh->pedg[i];
-            if (pEdge->p1<1 || pEdge->p1>pMesh->nver || pEdge->p2<1 ||
-                                                          pEdge->p2>pMesh->nver)
+            fprintf(meshFile,"\nEdges\n%d\n",iMax);
+            for (i=0; i<iMax; i++)
             {
-                PRINT_ERROR("In writingMeshFile: the point references ");
-                fprintf(stderr,"(%d,%d,) associated with ",pEdge->p1,pEdge->p2);
-                fprintf(stderr,"the vertices of the %d-th edge must be ",i+1);
-                fprintf(stderr,"positive integers not (strictly) greater ");
-                fprintf(stderr,"than the total number of vertices ");
-                fprintf(stderr,"%d related to the mesh ",pMesh->nver);
-                fprintf(stderr,"discretization stored in the structure ");
-                fprintf(stderr,"pointed by pMesh.\n");
-                fprintf(meshFile,"\nEnd");
-                closeTheFile(&meshFile);
-                free(fileLocation);
-                fileLocation=NULL;
-                return 0;
+                pEdge=&pMesh->pedg[i];
+                if (pEdge->p1<1 || pEdge->p1>pMesh->nver || pEdge->p2<1 ||
+                                                          pEdge->p2>pMesh->nver)
+                {
+                    PRINT_ERROR("In writingMeshFile: the point references ");
+                    fprintf(stderr,"(%d,%d,) associated ",pEdge->p1,pEdge->p2);
+                    fprintf(stderr,"with the vertices of the %d-th edge ",i+1);
+                    fprintf(stderr,"must be positive integers not (strictly) ");
+                    fprintf(stderr,"greater than the total number of ");
+                    fprintf(stderr,"vertices %d related to the ",pMesh->nver);
+                    fprintf(stderr,"mesh discretization stored in the ");
+                    fprintf(stderr,"structure pointed by pMesh.\n");
+                    fprintf(meshFile,"\nEnd");
+                    closeTheFile(&meshFile);
+                    free(fileLocation);
+                    fileLocation=NULL;
+                    return 0;
+                }
+                fprintf(meshFile,"%d %d ",pEdge->p1,pEdge->p2);
+                fprintf(meshFile,"%d \n",pEdge->label);
             }
-            fprintf(meshFile,"%d %d %d \n",pEdge->p1,pEdge->p2,pEdge->label);
-        }
 
-        fprintf(meshFile,"\nRidges\n%d\n",iMax);
-        for (i=0; i<iMax; i++)
-        {
-            fprintf(meshFile,"%d \n",i+1);
+            fprintf(meshFile,"\nRidges\n%d\n",iMax);
+            for (i=0; i<iMax; i++)
+            {
+                fprintf(meshFile,"%d \n",i+1);
+            }
         }
 
         // Check number of corners/requiredVertices and write their descriptions
@@ -2029,11 +2074,11 @@ int writingMeshFile(Parameters* pParameters, Mesh* pMesh)
 
         // Check number of normal vectors then write their descriptions
         iMax=pMesh->nnorm;
-        if (iMax<1)
+        if (iMax<0)
         {
-            PRINT_ERROR("In writingMeshFile: expecting a positive number of ");
-            fprintf(stderr,"normal vectors instead of %d stored in the ",iMax);
-            fprintf(stderr,"structure pointed by pMesh.\n");
+            PRINT_ERROR("In writingMeshFile: expecting a non-negative number ");
+            fprintf(stderr,"of normal vectors instead of %d stored in ",iMax);
+            fprintf(stderr,"the structure pointed by pMesh.\n");
             fprintf(meshFile,"\nEnd");
             closeTheFile(&meshFile);
             free(fileLocation);
@@ -2041,43 +2086,47 @@ int writingMeshFile(Parameters* pParameters, Mesh* pMesh)
             return 0;
         }
 
-        fprintf(meshFile,"\nNormals\n%d\n",iMax);
-        for (i=0; i<iMax; i++)
+        if (iMax>1)
         {
-            pNormal=&pMesh->pnorm[i];
-            fprintf(meshFile,"%.8le %.8le ",pNormal->x,pNormal->y);
-            fprintf(meshFile,"%.8le \n",pNormal->z);
-        }
-        fprintf(meshFile,"\nNormalAtVertices\n%d\n",iMax);
-        for (i=0; i<iMax; i++)
-        {
-            pNormal=&pMesh->pnorm[i];
-            if (pNormal->p<1 || pNormal->p>pMesh->nver)
+            fprintf(meshFile,"\nNormals\n%d\n",iMax);
+            for (i=0; i<iMax; i++)
             {
-                PRINT_ERROR("In writingMeshFile: the point reference ");
-                fprintf(stderr,"(=%d) associated with the ",pNormal->p);
-                fprintf(stderr,"vertex where the %d-th normal vector ",i+1);
-                fprintf(stderr,"originated from must be positive integers ");
-                fprintf(stderr,"not (strictly) greater than the total number ");
-                fprintf(stderr,"of vertices %d related to the ",pMesh->nver);
-                fprintf(stderr,"mesh discretization stored in the structure ");
-                fprintf(stderr,"pointed by pMesh.\n");
-                fprintf(meshFile,"\nEnd");
-                closeTheFile(&meshFile);
-                free(fileLocation);
-                fileLocation=NULL;
-                return 0;
+                pNormal=&pMesh->pnorm[i];
+                fprintf(meshFile,"%.8le %.8le ",pNormal->x,pNormal->y);
+                fprintf(meshFile,"%.8le \n",pNormal->z);
             }
-            fprintf(meshFile,"%d %d \n",pNormal->p,i+1);
+            fprintf(meshFile,"\nNormalAtVertices\n%d\n",iMax);
+            for (i=0; i<iMax; i++)
+            {
+                pNormal=&pMesh->pnorm[i];
+                if (pNormal->p<1 || pNormal->p>pMesh->nver)
+                {
+                    PRINT_ERROR("In writingMeshFile: the point reference ");
+                    fprintf(stderr,"(=%d) associated with the ",pNormal->p);
+                    fprintf(stderr,"vertex where the %d-th normal vector ",i+1);
+                    fprintf(stderr,"originated from must be positive ");
+                    fprintf(stderr,"integers not (strictly) greater than the ");
+                    fprintf(stderr,"total number of vertices %d ",pMesh->nver);
+                    fprintf(stderr,"related to the mesh discretization ");
+                    fprintf(stderr,"stored in the structure pointed by ");
+                    fprintf(stderr,"pMesh.\n");
+                    fprintf(meshFile,"\nEnd");
+                    closeTheFile(&meshFile);
+                    free(fileLocation);
+                    fileLocation=NULL;
+                    return 0;
+                }
+                fprintf(meshFile,"%d %d \n",pNormal->p,i+1);
+            }
         }
 
         // Check number of tnagent vectors then write their descriptions
         iMax=pMesh->ntan;
-        if (iMax<1)
+        if (iMax<0)
         {
-            PRINT_ERROR("In writingMeshFile: expecting a positive number of ");
-            fprintf(stderr,"tangent vectors instead of %d stored in the ",iMax);
-            fprintf(stderr,"structure pointed by pMesh.\n");
+            PRINT_ERROR("In writingMeshFile: expecting a non-negative number ");
+            fprintf(stderr,"of tangent vectors instead of %d stored in ",iMax);
+            fprintf(stderr,"the structure pointed by pMesh.\n");
             fprintf(meshFile,"\nEnd");
             closeTheFile(&meshFile);
             free(fileLocation);
@@ -2085,34 +2134,38 @@ int writingMeshFile(Parameters* pParameters, Mesh* pMesh)
             return 0;
         }
 
-        fprintf(meshFile,"\nTangents\n%d\n",iMax);
-        for (i=0; i<iMax; i++)
+        if (iMax>1)
         {
-            pTangent=&pMesh->ptan[i];
-            if (pTangent->p<1 || pTangent->p>pMesh->nver)
+            fprintf(meshFile,"\nTangents\n%d\n",iMax);
+            for (i=0; i<iMax; i++)
             {
-                PRINT_ERROR("In writingMeshFile: the point reference ");
-                fprintf(stderr,"(=%d) associated with the ",pTangent->p);
-                fprintf(stderr,"vertex where the %d-th tangent vector ",i+1);
-                fprintf(stderr,"originated from must be positive integers ");
-                fprintf(stderr,"not (strictly) greater than the total number ");
-                fprintf(stderr,"of vertices %d related to the ",pMesh->nver);
-                fprintf(stderr,"mesh discretization stored in the structure ");
-                fprintf(stderr,"pointed by pMesh.\n");
-                fprintf(meshFile,"\nEnd");
-                closeTheFile(&meshFile);
-                free(fileLocation);
-                fileLocation=NULL;
-                return 0;
+                pTangent=&pMesh->ptan[i];
+                if (pTangent->p<1 || pTangent->p>pMesh->nver)
+                {
+                    PRINT_ERROR("In writingMeshFile: the point reference ");
+                    fprintf(stderr,"(=%d) associated with the ",pTangent->p);
+                    fprintf(stderr,"vertex where the %d-th tangent ",i+1);
+                    fprintf(stderr,"vector originated from must be positive ");
+                    fprintf(stderr,"integers not (strictly) greater than the ");
+                    fprintf(stderr,"total number of vertices %d ",pMesh->nver);
+                    fprintf(stderr,"related to the mesh discretization ");
+                    fprintf(stderr,"stored in the structure pointed by ");
+                    fprintf(stderr,"pMesh.\n");
+                    fprintf(meshFile,"\nEnd");
+                    closeTheFile(&meshFile);
+                    free(fileLocation);
+                    fileLocation=NULL;
+                    return 0;
+                }
+                fprintf(meshFile,"%.8le %.8le ",pTangent->x,pTangent->y);
+                fprintf(meshFile,"%.8le \n",pTangent->z);
             }
-            fprintf(meshFile,"%.8le %.8le ",pTangent->x,pTangent->y);
-            fprintf(meshFile,"%.8le \n",pTangent->z);
-        }
-        fprintf(meshFile,"\nTangentAtVertices\n%d\n",iMax);
-        for (i=0; i<iMax; i++)
-        {
-            pTangent=&pMesh->ptan[i];
-            fprintf(meshFile,"%d %d \n",pTangent->p,i+1);
+            fprintf(meshFile,"\nTangentAtVertices\n%d\n",iMax);
+            for (i=0; i<iMax; i++)
+            {
+                pTangent=&pMesh->ptan[i];
+                fprintf(meshFile,"%d %d \n",pTangent->p,i+1);
+            }
         }
     }
     fprintf(meshFile,"\nEnd");
@@ -5103,6 +5156,8 @@ int loadMesh(Parameters* pParameters, Mesh* pMesh)
         return 0;
     }
 
+    // This trick is used not to print the content of mmg3d output
+    // (see adaptMeshWithMmg3dSoftware function in main.c file)
     if (pParameters->opt_mode==1)
     {
         optMode=1;
@@ -5342,56 +5397,65 @@ int loadMesh(Parameters* pParameters, Mesh* pMesh)
                             fprintf(stdout,"file name by the '.mesh' ");
                             fprintf(stdout,"extension.");
                         }
-                        fprintf(stdout,"\nThe %s file may be ",fileLocation);
-                        fprintf(stdout,"overwritten later. Do you want to ");
-                        fprintf(stdout,"continue (y/n)? ");
 
-                        // Manually confirm the potential overwritting: getchar
-                        // returns the character read as an unsigned char cast
-                        // to an int or EOF in case of error
-                        readChar=getchar();
-                        switch (readChar)
+                        // If pParameters->save_print equals zero, then graphic
+                        // and prompt mode is off
+                        if (pParameters->save_print)
                         {
-                            case 'y':
-                                fprintf(stdout,"Ok, we can proceed further ");
-                                fprintf(stdout,"now.\n");
-                                break;
+                            fprintf(stdout,"\nThe %s file may ",fileLocation);
+                            fprintf(stdout,"be overwritten later. Do you ");
+                            fprintf(stdout,"want to continue (y/n)? ");
 
-                            case 'n':
-                                fprintf(stdout,"Ok, leaving program.\n");
-                                free(fileLocation);
-                                fileLocation=NULL;
-                                return -1;
-                                break;
-
-                            case EOF:
-                                PRINT_ERROR("In loadMesh: wrong return ");
-                                fprintf(stderr,"(=%d) of the standard ",EOF);
-                                fprintf(stderr,"getchar c-function in the ");
-                                fprintf(stderr,"attempt of reading your ");
-                                fprintf(stderr,"answer ('y'=yes or 'n'=no).\n");
-                                free(fileLocation);
-                                fileLocation=NULL;
-                                return 0;
-                                break;
-
-                            default:
-                                PRINT_ERROR("In loadMesh: expecting ");
-                                fprintf(stderr,"'y'(=yes) or 'n'(=no) ");
-                                fprintf(stderr,"instead of '%c' ",readChar);
-                                fprintf(stderr,"in your answer.\n");
-                                free(fileLocation);
-                                fileLocation=NULL;
-                                return 0;
-                                break;
-                        }
-                        // Clean the input buffer of the standard input stream
-                        // (stdin) in order to avoid buffer overflow later
-                        // (warning here: be sure that it is not empty otherwise
-                        // it will wait undefinitively for a non-empty input)
-                        while (readChar!='\n' && readChar!=EOF)
-                        {
+                            // Manually confirm the potential overwritting:
+                            // getcharreturns the character read as an unsigned
+                            // char cast to an int or EOF in case of error
                             readChar=getchar();
+                            switch (readChar)
+                            {
+                                case 'y':
+                                    fprintf(stdout,"Ok, we can proceed ");
+                                    fprintf(stdout,"further now.\n");
+                                    break;
+
+                                case 'n':
+                                    fprintf(stdout,"Ok, leaving program.\n");
+                                    free(fileLocation);
+                                    fileLocation=NULL;
+                                    return -1;
+                                    break;
+
+                                case EOF:
+                                    PRINT_ERROR("In loadMesh: wrong return ");
+                                    fprintf(stderr,"(=%d) of the ",EOF);
+                                    fprintf(stderr,"standard getchar ");
+                                    fprintf(stderr,"c-function in the ");
+                                    fprintf(stderr,"attempt of reading your ");
+                                    fprintf(stderr,"answer ('y'=yes or ");
+                                    fprintf(stderr,"'n'=no).\n");
+                                    free(fileLocation);
+                                    fileLocation=NULL;
+                                    return 0;
+                                    break;
+
+                                default:
+                                    PRINT_ERROR("In loadMesh: expecting ");
+                                    fprintf(stderr,"'y'(=yes) or 'n'(=no) ");
+                                    fprintf(stderr,"instead of '%c' ",readChar);
+                                    fprintf(stderr,"in your answer.\n");
+                                    free(fileLocation);
+                                    fileLocation=NULL;
+                                    return 0;
+                                    break;
+                            }
+                            // Clean the input buffer of the standard input
+                            // stream (stdin) in order to avoid buffer overflow 
+                            // later (warning here: be sure that it is not 
+                            // empty otherwise it will wait undefinitively for
+                            // a non-empty input)
+                            while (readChar!='\n' && readChar!=EOF)
+                            {
+                                readChar=getchar();
+                            }
                         }
                     }
                     else
@@ -5482,6 +5546,8 @@ int loadMesh(Parameters* pParameters, Mesh* pMesh)
             break;
     }
 
+    // This trick is used not to print the content of mmg3d output
+    // (see adaptMeshWithMmg3dSoftware function in main.c file)
     if (pParameters->opt_mode==3 && optMode==1)
     {
         pParameters->opt_mode=1;

@@ -608,7 +608,7 @@
 *
 * (char[])\ref PATH_MSHDIST must be a string of length (strictly) lower than
 * \ref PATH_LENGTH. Although this condition is checked, \ref PATH_MSHDIST will
-* only be used opt_mode=1/2/4 in the Parameters structure. We also recall that
+* only be used opt_mode=1/2/3/4 in the Parameters structure. We also recall that
 * the mshdist software must have been previously installed.
 */
 #define PATH_MSHDIST "./../../bin/mshdist"

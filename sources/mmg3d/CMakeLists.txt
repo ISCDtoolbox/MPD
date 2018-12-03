@@ -76,7 +76,7 @@ add_library(mmg SHARED sources/common/tools.c
 find_library(M_LIB m)
 set(SCOTCH_DIR "" CACHE PATH "Installation directory for scotch")
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
-find_package(Scotch REQUIRED)
+find_package(Scotch)
 
 find_path(ELAS_INCLUDE_DIR NAMES elastic.h HINTS "${PROJECT_SOURCE_DIR}/../elasticity/include")
 find_library(ELAS_LIBRARY NAMES elasticity HINTS "${PROJECT_SOURCE_DIR}/../../bin/lib")

@@ -2070,12 +2070,12 @@ int performLevelSetAdaptation(Parameters* pParameters, Mesh* pMesh,
         return 0;
     }
 
-    if (pParameters->opt_mode==2)
+    if (pParameters->opt_mode==2 && iterationInTheLoop)
     {
         fprintf(stdout,"\nSTEP 4: COMPUTE THE METRIC RELATED TO THE ");
         fprintf(stdout,"CHEMISTRY OF THE MOLECULAR ORBITALS.\n");
     }
-    else if (pParameters->opt_mode==4)
+    else if (pParameters->opt_mode==4 && iterationInTheLoop)
     {
         fprintf(stdout,"\nSTEP 2: COMPUTE THE METRIC RELATED TO THE ");
         fprintf(stdout,"CHEMISTRY OF THE MOLECULAR ORBITALS.\n");
@@ -2089,12 +2089,12 @@ int performLevelSetAdaptation(Parameters* pParameters, Mesh* pMesh,
         return 0;
     }
 
-    if (pParameters->opt_mode==2)
+    if (pParameters->opt_mode==2 && iterationInTheLoop)
     {
         fprintf(stdout,"\nSTEP 5: GET NEW DOMAIN BY ADAPTING MESH TO BOTH ");
         fprintf(stdout,"ADVECTED LEVEL-SET AND METRIC.\n");
     }
-    else if (pParameters->opt_mode==4)
+    else if (pParameters->opt_mode==4 && iterationInTheLoop)
     {
         fprintf(stdout,"\nSTEP 3: GET NEW DOMAIN BY ADAPTING MESH TO BOTH ");
         fprintf(stdout,"ADVECTED LEVEL-SET AND METRIC.\n");
@@ -2265,6 +2265,8 @@ int adaptMesh(Parameters* pParameters, Mesh* pMesh,
             }
             else
             {
+                // This trick is used not to print the content of mmg3d output
+                // (see adaptMeshWithMmg3dSoftware function in main.c file)
                 if (pParameters->opt_mode==1)
                 {
                     optMode=1;
@@ -2352,19 +2354,25 @@ int adaptMesh(Parameters* pParameters, Mesh* pMesh,
                     return 0;
                 }
 
+                // This trick is used not to print the content of mmg3d output
+                // (see adaptMeshWithMmg3dSoftware function in main.c file)
                 if (pParameters->opt_mode==3 && optMode==1)
                 {
                     pParameters->opt_mode=1;
                 }
             }
 
-            // Vizualize the mesh of the initial domain with medit (Warning: the
-            // medit software must have been previously installed)
-            if (!plotMeshWithMeditSoftware(pParameters))
+            // If pParameters->save_print==0, graphic and prompt mode is off
+            if (pParameters->save_print)
             {
-                PRINT_ERROR("In adaptMesh: plotMeshWithMeditSoftware ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                return 0;
+                // Vizualize the mesh of the initial domain with medit (Warning:
+                // the medit software must have been previously installed)
+                if (!plotMeshWithMeditSoftware(pParameters))
+                {
+                    PRINT_ERROR("In adaptMesh: plotMeshWithMeditSoftware ");
+                    fprintf(stderr,"function returned zero instead of one.\n");
+                    return 0;
+                }
             }
             break;
 

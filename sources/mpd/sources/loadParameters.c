@@ -2990,7 +2990,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"corresponding keywords in %s ",pParameters->name_info);
         fprintf(stderr,"file.\n");
         return 0;
-    }
+   }
 
    dx=(pParameters->x_max-pParameters->x_min)/(double)(pParameters->n_x-1);
    dy=(pParameters->y_max-pParameters->y_min)/(double)(pParameters->n_y-1);
@@ -3448,8 +3448,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
     }
 
     // Check pParameters->path_mshdist
-    if (pParameters->opt_mode==1 || pParameters->opt_mode==2 ||
-                                                       pParameters->opt_mode==4)
+    if (pParameters->opt_mode>0)
     {
         boolean=checkStringFromLength(pParameters->path_mshdist,2,
                                                       pParameters->path_length);
@@ -4593,6 +4592,6 @@ int loadParameters(Parameters* pParameters, char* nameInfo)
        return 0;
    }
 
-       return 1;
+   return 1;
 }
 

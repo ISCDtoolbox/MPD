@@ -6544,7 +6544,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
 {
     int i=0, counter=0, n=0, nMax=0;
     double tMin=0, tMax=0, t0=0., t1=0., *pShapeGradient=NULL, pMax=0., pMin=0.;
-    double p0=0., p1=0., h=0.;
+    double p0=0., p1=0., h=0., deltaT=0.;
 
     // Check the input pointers
     if (pParameters==NULL || pMesh==NULL || pData==NULL ||
@@ -6740,10 +6740,27 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 fprintf(stderr,"returned zero instead of one.\n");
                 return 0;
             }
+
             break;
 
 // Case where Omega_new=EulerianLevelSet_advection{dP/dOmega_old*Normal}
         case 2:
+
+            // Hacking with a temporary adaptative mode
+            if (pParameters->nu_spin)
+            {
+                pParameters->delta_t=deltaT;
+                if (pData->pnu[iterationInTheLoop-1]<=0.01)
+                {
+                    pParameters->delta_t=100.;
+                }
+                else
+                {
+                    pParameters->delta_t=1./pData->pnu[iterationInTheLoop-1];
+                }
+                fprintf(stdout,"\nAdaptative step: %lf.\n",
+                                                          pParameters->delta_t);
+            }
 
             // Save the shape gradient
             if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
@@ -6792,6 +6809,13 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 fprintf(stderr,"returned zero instead of one.\n");
                 return 0;
             }
+
+            // Hacking with a temporary adaptative mode
+            if (pParameters->nu_spin)
+            {
+                pParameters->delta_t=deltaT;
+            }
+
             break;
 
 // Golden search algorithm with Eulerian/Lagrangian perturbations
@@ -6872,7 +6896,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             pMax=pMin;
 
             counter=0;
-            while (pMax<p0)
+            while (pMax<p0 && counter<5)
             {
                 fprintf(stdout,"\nTRYING TO ENLARGE THE SEARCHING INTERVAL ");
                 fprintf(stdout,"[%lf, %lf].\n",tMax,t0);
@@ -6941,250 +6965,56 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 }
             }
 
-            tMax=t0;
-            pMax=p0;
+
+
+            if (pMax>=p0)
+            {
+
+                tMax=t0;
+                pMax=p0;
     
-            // Starting golden-line search on the initial interval
-            fprintf(stdout,"\nINITIAL INTERVAL FOUND: [%lf, %lf].\n",tMin,tMax);
-            fprintf(stdout,"STARTING THE GOLDEN-SECTION LINE SEARCH.\n");
+                // Starting golden-line search on the initial interval
+                fprintf(stdout,"\nINITIAL INTERVAL FOUND: ");
+                fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
+                fprintf(stdout,"STARTING THE GOLDEN-SECTION LINE SEARCH.\n");
 
-            h=tMax-tMin;
-            if (tMax==1.)
-            {
-                nMax=3;
-                //nMax=(int)(floor(log(1.e-1/h)/log(INV_PHI)));
-            }
-            else
-            {
-                nMax=0;
-            }
-
-            // Evaluation of p0 (t0<1. Lagrangian otherwise Eulerian approach)
-            t0=tMin+INV_PHI2*h;
-            for (i=0; i<pMesh->nver; i++)
-            {
-                pMesh->pver[i].value=t0*pShapeGradient[i];
-            }
-
-            // Save the shape gradient
-            if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
-            {
-                PRINT_ERROR("In optimization: saveTheShapeGradient function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            if (t0<1.)
-            {
-                // Advect the mesh thanks to Lagrangian mode of mmg3d software
-                if (!computeLagrangianMode(pParameters,pMesh,
-                                                            iterationInTheLoop))
+                h=tMax-tMin;
+                if (tMax==1.)
                 {
-                    PRINT_ERROR("In optimization: computeLagrangianMode ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
+                    nMax=3;
+                    //nMax=(int)(floor(log(1.e-1/h)/log(INV_PHI)));
+                }
+                else
+                {
+                    nMax=0;
+                }
+
+                // Evaluation of p0 (t0<1. Lagr. otherwise Eulerian approach)
+                t0=tMin+INV_PHI2*h;
+                for (i=0; i<pMesh->nver; i++)
+                {
+                    pMesh->pver[i].value=t0*pShapeGradient[i];
+                }
+
+                // Save the shape gradient
+                if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
+                {
+                    PRINT_ERROR("In optimization: saveTheShapeGradient");
+                    fprintf(stderr," function returned zero instead of one.\n");
                     free(pShapeGradient);
                     pShapeGradient=NULL;
                     return 0;
                 }
-            }
-            else
-            {
-                // Advect the mesh thanks to Eulerian mode (level-set approach)
-                if (!computeEulerianMode(pParameters,pMesh,iterationInTheLoop))
+
+                if (t0<1.)
                 {
-                    PRINT_ERROR("In optimization: computeEulerianMode ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-            }
-
-            // Adapt the mesh to both molecular orbitals and new domain geometry
-            if (!performLevelSetAdaptation(pParameters,pMesh,pChemicalSystem,
-                                                            iterationInTheLoop))
-            {
-                PRINT_ERROR("In optimization: performLevelSetAdaptation ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            // Compute p0 and reload the previous mesh
-            p0=computeProbabilityAndReloadPreviousMesh(pParameters,pMesh,pData,
-                                                       pChemicalSystem,
-                                                            iterationInTheLoop);
-            if (p0==-10000.)
-            {
-                PRINT_ERROR("In optimization: ");
-                fprintf(stderr,"computeProbabilityAndReloadPreviousMesh ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            // Evaluation of p1 (t1<1. Lagrangian otherwise Eulerian approach)
-            t1=tMin+INV_PHI*h;
-            fprintf(stdout,"\nFIRST EVALUATION ENDED: p(%lf). COMPUTING ",t0);
-            fprintf(stdout,"p(%lf).\n",t1);
-            for (i=0; i<pMesh->nver; i++)
-            {
-               pMesh->pver[i].value=t1*pShapeGradient[i];
-            }
-
-            // Save the shape gradient
-            if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
-            {
-                PRINT_ERROR("In optimization: saveTheShapeGradient function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            if (t1<1.)
-            {
-                // Advect the mesh thanks to Lagrangian mode of mmg3d software
-                if (!computeLagrangianMode(pParameters,pMesh,
-                                                            iterationInTheLoop))
-                {
-                    PRINT_ERROR("In optimization: computeLagrangianMode ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-            }
-            else
-            {
-                // Advect the mesh thanks to Eulerian mode (level-set approach)
-                if (!computeEulerianMode(pParameters,pMesh,iterationInTheLoop))
-                {
-                    PRINT_ERROR("In optimization: computeEulerianMode ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-            }
-
-            // Adapt the mesh to both molecular orbitals and new domain geometry
-            if (!performLevelSetAdaptation(pParameters,pMesh,pChemicalSystem,
-                                                            iterationInTheLoop))
-            {
-                PRINT_ERROR("In optimization: performLevelSetAdaptation ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            // Compute p1 and reload the previous mesh
-            p1=computeProbabilityAndReloadPreviousMesh(pParameters,pMesh,pData,
-                                                       pChemicalSystem,
-                                                            iterationInTheLoop);
-            if (p1==-10000.)
-            {
-                PRINT_ERROR("In optimization: ");
-                fprintf(stderr,"computeProbabilityAndReloadPreviousMesh ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
-
-            for (n=0; n<nMax; n++)
-            {
-                if (p0<p1)
-                {
-                    tMin=t0;
-                    pMin=p0;
-
-                    t0=t1;
-                    p0=p1;
-
-                    h*=INV_PHI;
-                    t1=tMin+INV_PHI*h;
-
-                    fprintf(stdout,"\nTRYING TO RESTRICT THE LINE SEARCH ON ");
-                    fprintf(stdout,"THE INTERVAL [%lf, %lf].\n",tMin,tMax);
-                    fprintf(stdout,"p(%lf)=%lf p(%lf)=%lf ",tMin,pMin,t0,p0);
-                    fprintf(stdout,"p(%lf)=%lf.\nCOMPUTING ",tMax,pMax);
-                    fprintf(stdout,"p(%lf).\n",t1);
-
-                    for (i=0; i<pMesh->nver; i++)
-                    {
-                        pMesh->pver[i].value=t1*pShapeGradient[i];
-                    }
-
-                   // Save the shape gradient
-                   if (!saveTheShapeGradient(pParameters,pMesh,
-                                                            iterationInTheLoop))
-                   {
-                       PRINT_ERROR("In optimization: saveTheShapeGradient ");
-                       fprintf(stderr,"function returned zero instead of ");
-                       fprintf(stderr,"one.\n");
-                       free(pShapeGradient);
-                       pShapeGradient=NULL;
-                       return 0;
-                   }
-
-                   if (t1<1.)
-                   {
-                        // Advect mesh thanks to Lagrangian mode of mmg3d
-                        if (!computeLagrangianMode(pParameters,pMesh,
-                                                            iterationInTheLoop))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"computeLagrangianMode function ");
-                            fprintf(stderr,"returned zero instead of one.\n");
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                    }
-                    else
-                    {
-                        // Advect mesh thanks to Eulerian mode (level-set mode)
-                        if (!computeEulerianMode(pParameters,pMesh,
-                                                            iterationInTheLoop))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"computeEulerianMode function ");
-                            fprintf(stderr,"returned zero instead of one.\n");
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                    }
-
-                    // Adapt mesh to both molecular orbitals and new domain
-                    if (!performLevelSetAdaptation(pParameters,pMesh,
-                                                   pChemicalSystem,
+                    // Advect mesh thanks to Lagrangian mode of mmg3d software
+                    if (!computeLagrangianMode(pParameters,pMesh,
                                                             iterationInTheLoop))
                     {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"performLevelSetAdaptation function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-
-                    // Compute p1 and reload the previous mesh
-                    p1=computeProbabilityAndReloadPreviousMesh(pParameters,
-                                                               pMesh,pData,
-                                                               pChemicalSystem,
-                                                            iterationInTheLoop);
-                    if (p1==-10000.)
-                    {
-                        PRINT_ERROR("In optimization: computeProbabilityAnd");
-                        fprintf(stderr,"ReloadPreviousMesh function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
+                        PRINT_ERROR("In optimization: computeLagrangianMode ");
+                        fprintf(stderr,"function returned zero instead of ");
+                        fprintf(stderr,"one.\n");
                         free(pShapeGradient);
                         pShapeGradient=NULL;
                         return 0;
@@ -7192,46 +7022,213 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 }
                 else
                 {
-                    tMax=t1;
-                    pMax=p1;
-
-                    t1=t0;
-                    p1=p0;
-
-                    h*=INV_PHI;
-                    t0=tMin+INV_PHI2*h;
-
-                    fprintf(stdout,"\nTRYING TO RESTRICT THE LINE SEARCH ON ");
-                    fprintf(stdout,"THE INTERVAL [%lf, %lf].\n",tMin,tMax);
-                    fprintf(stdout,"p(%lf)=%lf p(%lf)=%lf ",tMin,pMin,t1,p1);
-                    fprintf(stdout,"p(%lf)=%lf.\nCOMPUTING ",tMax,pMax);
-                    fprintf(stdout,"p(%lf).\n",t0);
-
-                    for (i=0; i<pMesh->nver; i++)
-                    {
-                        pMesh->pver[i].value=t0*pShapeGradient[i];
-                    }
-
-                   // Save the shape gradient
-                   if (!saveTheShapeGradient(pParameters,pMesh,
+                    // Advect mesh thanks to Eulerian mode (level-set approach)
+                    if (!computeEulerianMode(pParameters,pMesh,
                                                             iterationInTheLoop))
-                   {
-                       PRINT_ERROR("In optimization: saveTheShapeGradient ");
-                       fprintf(stderr,"function returned zero instead of ");
-                       fprintf(stderr,"one.\n");
-                       free(pShapeGradient);
-                       pShapeGradient=NULL;
-                       return 0;
-                   }
+                    {
+                        PRINT_ERROR("In optimization: computeEulerianMode ");
+                        fprintf(stderr,"function returned zero instead of ");
+                        fprintf(stderr,"one.\n");
+                        free(pShapeGradient);
+                        pShapeGradient=NULL;
+                        return 0;
+                    }
+                }
 
-                   if (t0<1.)
-                   {
-                        // Advect mesh thanks to Lagrangian mode of mmg3d
-                        if (!computeLagrangianMode(pParameters,pMesh,
+                // Adapt mesh to both molecular orbitals and new domain geometry
+                if (!performLevelSetAdaptation(pParameters,pMesh,
+                                            pChemicalSystem,iterationInTheLoop))
+                {
+                    PRINT_ERROR("In optimization: performLevelSetAdaptation ");
+                    fprintf(stderr,"function returned zero instead of one.\n");
+                    free(pShapeGradient);
+                    pShapeGradient=NULL;
+                    return 0;
+                }
+
+                // Compute p0 and reload the previous mesh
+                p0=computeProbabilityAndReloadPreviousMesh(pParameters,pMesh,
+                                                           pData,
+                                                           pChemicalSystem,
+                                                            iterationInTheLoop);
+                if (p0==-10000.)
+                {
+                    PRINT_ERROR("In optimization: ");
+                    fprintf(stderr,"computeProbabilityAndReloadPreviousMesh ");
+                    fprintf(stderr,"function returned zero instead of one.\n");
+                    free(pShapeGradient);
+                    pShapeGradient=NULL;
+                    return 0;
+                }
+
+                // Evaluation of p1 (t1<1. Lagr. otherwise Eulerian approach)
+                t1=tMin+INV_PHI*h;
+                fprintf(stdout,"\nFIRST EVALUATION ENDED: p(%lf)=%lf; ",t0,p0);
+                fprintf(stdout,"COMPUTING p(%lf).\n",t1);
+                for (i=0; i<pMesh->nver; i++)
+                {
+                    pMesh->pver[i].value=t1*pShapeGradient[i];
+                }
+
+                // Save the shape gradient
+                if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
+                {
+                    PRINT_ERROR("In optimization: saveTheShapeGradient ");
+                    fprintf(stderr,"function returned zero instead of one.\n");
+                    free(pShapeGradient);
+                    pShapeGradient=NULL;
+                    return 0;
+                }
+
+                if (t1<1.)
+                {
+                    // Advect mesh thanks to Lagrangian mode of mmg3d software
+                    if (!computeLagrangianMode(pParameters,pMesh,
+                                                            iterationInTheLoop))
+                    {
+                        PRINT_ERROR("In optimization: computeLagrangianMode ");
+                        fprintf(stderr,"function returned zero instead of ");
+                        fprintf(stderr,"one.\n");
+                        free(pShapeGradient);
+                        pShapeGradient=NULL;
+                        return 0;
+                    }
+                }
+                else
+                {
+                    // Advect mesh thanks to Eulerian mode (level-set approach)
+                    if (!computeEulerianMode(pParameters,pMesh,
+                                                            iterationInTheLoop))
+                    {
+                        PRINT_ERROR("In optimization: computeEulerianMode ");
+                        fprintf(stderr,"function returned zero instead of ");
+                        fprintf(stderr,"one.\n");
+                        free(pShapeGradient);
+                        pShapeGradient=NULL;
+                        return 0;
+                    }
+                }
+
+                // Adapt mesh to both molecular orbitals and new domain geometry
+                if (!performLevelSetAdaptation(pParameters,pMesh,
+                                               pChemicalSystem,
+                                                            iterationInTheLoop))
+                {
+                    PRINT_ERROR("In optimization: performLevelSetAdaptation ");
+                    fprintf(stderr,"function returned zero instead of one.\n");
+                    free(pShapeGradient);
+                    pShapeGradient=NULL;
+                    return 0;
+                }
+
+                // Compute p1 and reload the previous mesh
+                p1=computeProbabilityAndReloadPreviousMesh(pParameters,pMesh,
+                                                           pData,
+                                                           pChemicalSystem,
+                                                            iterationInTheLoop);
+                if (p1==-10000.)
+                {
+                    PRINT_ERROR("In optimization: ");
+                    fprintf(stderr,"computeProbabilityAndReloadPreviousMesh ");
+                    fprintf(stderr,"function returned zero instead of one.\n");
+                    free(pShapeGradient);
+                    pShapeGradient=NULL;
+                    return 0;
+                }
+
+                for (n=0; n<nMax; n++)
+                {
+                    if (p0<p1)
+                    {
+                        tMin=t0;
+                        pMin=p0;
+
+                        t0=t1;
+                        p0=p1;
+
+                        h*=INV_PHI;
+                        t1=tMin+INV_PHI*h;
+
+                        fprintf(stdout,"\nTRYING TO RESTRICT THE LINE SEARCH ");
+                        fprintf(stdout,"ON THE INTERVAL ");
+                        fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
+                        fprintf(stdout,"p(%lf)=%lf ",tMin,pMin);
+                        fprintf(stdout,"p(%lf)=%lf ",t0,p0);
+                        fprintf(stdout,"p(%lf)=%lf.\nCOMPUTING ",tMax,pMax);
+                        fprintf(stdout,"p(%lf).\n",t1);
+
+                        for (i=0; i<pMesh->nver; i++)
+                        {
+                            pMesh->pver[i].value=t1*pShapeGradient[i];
+                        }
+
+                       // Save the shape gradient
+                       if (!saveTheShapeGradient(pParameters,pMesh,
+                                                            iterationInTheLoop))
+                       {
+                           PRINT_ERROR("In optimization: ");
+                           fprintf(stderr,"saveTheShapeGradient function ");
+                           fprintf(stderr,"returned zero instead of one.\n");
+                           free(pShapeGradient);
+                           pShapeGradient=NULL;
+                           return 0;
+                       }
+
+                       if (t1<1.)
+                       {
+                            // Advect mesh thanks to Lagrangian mode of mmg3d
+                            if (!computeLagrangianMode(pParameters,pMesh,
+                                                            iterationInTheLoop))
+                            {
+                                PRINT_ERROR("In optimization: ");
+                                fprintf(stderr,"computeLagrangianMode ");
+                                fprintf(stderr,"function returned zero ");
+                                fprintf(stderr,"instead of one.\n");
+                                free(pShapeGradient);
+                                pShapeGradient=NULL;
+                                return 0;
+                            }
+                        }
+                        else
+                        {
+                            // Advect mesh thanks to Eul. mode (level-set mode)
+                            if (!computeEulerianMode(pParameters,pMesh,
+                                                            iterationInTheLoop))
+                            {
+                                PRINT_ERROR("In optimization: ");
+                                fprintf(stderr,"computeEulerianMode function ");
+                                fprintf(stderr,"returned zero instead of ");
+                                fprintf(stderr,"one.\n");
+                                free(pShapeGradient);
+                                pShapeGradient=NULL;
+                                return 0;
+                            }
+                        }
+
+                        // Adapt mesh to both molecular orbitals and new domain
+                        if (!performLevelSetAdaptation(pParameters,pMesh,
+                                                   pChemicalSystem,
                                                             iterationInTheLoop))
                         {
                             PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"computeLagrangianMode function ");
+                            fprintf(stderr,"performLevelSetAdaptation ");
+                            fprintf(stderr,"function returned zero instead ");
+                            fprintf(stderr,"of one.\n");
+                            free(pShapeGradient);
+                            pShapeGradient=NULL;
+                            return 0;
+                        }
+
+                        // Compute p1 and reload the previous mesh
+                        p1=computeProbabilityAndReloadPreviousMesh(pParameters,
+                                                                   pMesh,pData,
+                                                                pChemicalSystem,
+                                                            iterationInTheLoop);
+                        if (p1==-10000.)
+                        {
+                            PRINT_ERROR("In optimization: ");
+                            fprintf(stderr,"computeProbability");
+                            fprintf(stderr,"AndReloadPreviousMesh function ");
                             fprintf(stderr,"returned zero instead of one.\n");
                             free(pShapeGradient);
                             pShapeGradient=NULL;
@@ -7240,54 +7237,109 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     }
                     else
                     {
-                        // Advect mesh thanks to Eulerian mode (level-set mode)
-                        if (!computeEulerianMode(pParameters,pMesh,
+                        tMax=t1;
+                        pMax=p1;
+
+                        t1=t0;
+                        p1=p0;
+
+                        h*=INV_PHI;
+                        t0=tMin+INV_PHI2*h;
+
+                        fprintf(stdout,"\nTRYING TO RESTRICT THE LINE SEARCH ");
+                        fprintf(stdout,"ON THE INTERVAL ");
+                        fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
+                        fprintf(stdout,"p(%lf)=%lf ",tMin,pMin);
+                        fprintf(stdout,"p(%lf)=%lf ",t1,p1);
+                        fprintf(stdout,"p(%lf)=%lf.\nCOMPUTING ",tMax,pMax);
+                        fprintf(stdout,"p(%lf).\n",t0);
+
+                        for (i=0; i<pMesh->nver; i++)
+                        {
+                            pMesh->pver[i].value=t0*pShapeGradient[i];
+                        }
+
+                        // Save the shape gradient
+                        if (!saveTheShapeGradient(pParameters,pMesh,
                                                             iterationInTheLoop))
                         {
                             PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"computeEulerianMode function ");
+                            fprintf(stderr,"saveTheShapeGradient function ");
+                            fprintf(stderr,"returned zero instead of one.\n");
+                            free(pShapeGradient);
+                            pShapeGradient=NULL;
+                            return 0;
+                        }
+
+                        if (t0<1.)
+                        {
+                            // Advect mesh thanks to Lagrangian mode of mmg3d
+                            if (!computeLagrangianMode(pParameters,pMesh,
+                                                            iterationInTheLoop))
+                            {
+                                PRINT_ERROR("In optimization: ");
+                                fprintf(stderr,"computeLagrangianMode ");
+                                fprintf(stderr,"function returned zero ");
+                                fprintf(stderr,"instead of one.\n");
+                                free(pShapeGradient);
+                                pShapeGradient=NULL;
+                                return 0;
+                            }
+                        }
+                        else
+                        {
+                            // Advect mesh thanks to Eul. mode (level-set mode)
+                            if (!computeEulerianMode(pParameters,pMesh,
+                                                            iterationInTheLoop))
+                            {
+                                PRINT_ERROR("In optimization: ");
+                                fprintf(stderr,"computeEulerianMode function ");
+                                fprintf(stderr,"returned zero instead of ");
+                                fprintf(stderr,"one.\n");
+                                free(pShapeGradient);
+                                pShapeGradient=NULL;
+                                return 0;
+                            }
+                        }
+
+                        // Adapt mesh to both molecular orbitals and new domain
+                        if (!performLevelSetAdaptation(pParameters,pMesh,
+                                                       pChemicalSystem,
+                                                            iterationInTheLoop))
+                        {
+                            PRINT_ERROR("In optimization: ");
+                            fprintf(stderr,"performLevelSetAdaptation ");
+                            fprintf(stderr,"function returned zero instead ");
+                            fprintf(stderr,"of one.\n");
+                            free(pShapeGradient);
+                            pShapeGradient=NULL;
+                            return 0;
+                        }
+
+                        // Compute p0 and reload the previous mesh
+                        p0=computeProbabilityAndReloadPreviousMesh(pParameters,
+                                                                   pMesh,pData,
+                                                                pChemicalSystem,
+                                                            iterationInTheLoop);
+                        if (p0==-10000.)
+                        {
+                            PRINT_ERROR("In optimization: ");
+                            fprintf(stderr,"computeProbabilityAnd");
+                            fprintf(stderr,"ReloadPreviousMesh function ");
                             fprintf(stderr,"returned zero instead of one.\n");
                             free(pShapeGradient);
                             pShapeGradient=NULL;
                             return 0;
                         }
                     }
-
-                    // Adapt mesh to both molecular orbitals and new domain
-                    if (!performLevelSetAdaptation(pParameters,pMesh,
-                                                   pChemicalSystem,
-                                                            iterationInTheLoop))
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"performLevelSetAdaptation function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-
-                    // Compute p0 and reload the previous mesh
-                    p0=computeProbabilityAndReloadPreviousMesh(pParameters,
-                                                               pMesh,pData,
-                                                               pChemicalSystem,
-                                                            iterationInTheLoop);
-                    if (p0==-10000.)
-                    {
-                        PRINT_ERROR("In optimization: computeProbabilityAnd");
-                        fprintf(stderr,"ReloadPreviousMesh function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
+                }
+                if (p0<p1)
+                {
+                    t0=t1;
                 }
             }
 
             // Finally compute the optimal line search
-            if (p0<p1)
-            {
-                t0=t1;
-            }
             fprintf(stdout,"\nOPTIMAL STEP FOUND: %lf.\nCOMPUTING THE ",t0);
             fprintf(stdout,"CORRESPONDING ADVECTED DOMAIN.\n");
 
