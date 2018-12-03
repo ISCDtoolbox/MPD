@@ -324,7 +324,8 @@ int main(int argc, char *argv[])
     {
         time(&startLocalTimer);
 
-        if (parameters.opt_mode==1 && i%3==0)
+        if (i%3==0 && (parameters.opt_mode==1 || 
+                                (parameters.opt_mode==2 && parameters.nu_spin)))
         {
             jPlus=0;
             jMoins=0;
@@ -344,8 +345,17 @@ int main(int argc, char *argv[])
 
             if (jPlus && jMoins)
             {
-                optMode=1;
-                parameters.opt_mode=4;
+                if (parameters.opt_mode==1)
+                {
+                    optMode=1;
+                    parameters.opt_mode=4;
+                }
+                else if (parameters.opt_mode==2 && parameters.nu_spin &&
+                                                             data.d1p[i]<=1.e-6)
+                {
+                    optMode=2;
+                    parameters.opt_mode=4;
+                }
             }
         }
 
@@ -356,10 +366,11 @@ int main(int argc, char *argv[])
                 PRINT_LOCAL_TIME(i,STR_PHASE,startLocalTimer,endLocalTimer);
                 fprintf(stdout,"PROBABILITY RESIDUAL: %.8le",data.d1p[i]);
                 fprintf(stdout,"\n%s\n",STR_PHASE);
-                if (optMode==1 && parameters.opt_mode==4 && i%3==0)
+                if (i%3==0 && parameters.opt_mode==4 &&
+                                                     (optMode==1 || optMode==2))
                 {
                     optMode=-1;
-                    parameters.opt_mode=1;
+                    parameters.opt_mode=optMode;
 
                     // Rescale the shape gradient by -1 to avoid domaininversion
                     for (j=0; j<mesh.nver; j++)
