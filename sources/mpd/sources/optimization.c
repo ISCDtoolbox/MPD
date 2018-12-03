@@ -5223,12 +5223,12 @@ int saveOrRemoveMeshInTheLoop(Parameters* pParameters, Mesh* pMesh,
             }
 
             lengthName=strlen(pParameters->name_mesh);
-            pParameters->name_mesh[lengthName-5]='.';
-            pParameters->name_mesh[lengthName-4]='m';
-            pParameters->name_mesh[lengthName-3]='e';
-            pParameters->name_mesh[lengthName-2]='s';
-            pParameters->name_mesh[lengthName-1]='h';
-            pParameters->name_mesh[lengthName]='\0';
+            pParameters->name_mesh[lengthName-4]='.';
+            pParameters->name_mesh[lengthName-3]='m';
+            pParameters->name_mesh[lengthName-2]='e';
+            pParameters->name_mesh[lengthName-1]='s';
+            pParameters->name_mesh[lengthName]='h';
+            pParameters->name_mesh[lengthName+1]='\0';
         }
     }
 

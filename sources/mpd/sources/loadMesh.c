@@ -5575,7 +5575,7 @@ int writingCubeFile(Parameters* pParameters, ChemicalSystem* pChemicalSystem,
 {
     size_t lengthName=0;
     char *fileLocation=NULL;
-    int i=0, iMax=0;
+    int i=0, iMax=0, boolean=0;
     double delta=0.;
     FILE *cubeFile=NULL;
 
@@ -5759,9 +5759,14 @@ int writingCubeFile(Parameters* pParameters, ChemicalSystem* pChemicalSystem,
     }
 
     // Check discretization in the first-coordinate direction
-    delta=(pParameters->x_max-pParameters->x_min)/(double)(pParameters->n_x-1);
-    if (pParameters->n_x<3 || pParameters->x_min>=pParameters->x_max ||
-                                    DEF_ABS(pParameters->delta_x-delta)>=1.e-16)
+    boolean=(pParameters->n_x<3 || pParameters->x_min>=pParameters->x_max);
+    if (pParameters->opt_mode<=0)
+    {
+        delta=(pParameters->x_max-pParameters->x_min)/
+                                                   (double)(pParameters->n_x-1);
+        boolean=(boolean || DEF_ABS(pParameters->delta_x-delta)>=1.e-16);
+    }
+    if (boolean)                    
     {
         PRINT_ERROR("In writingCubeFile: incorrect discretization of the ");
         fprintf(stderr,"cube in the first-coordinate direction: expecting\n");
@@ -5777,9 +5782,14 @@ int writingCubeFile(Parameters* pParameters, ChemicalSystem* pChemicalSystem,
     }
 
     // Check discretization in the second-coordinate direction
-    delta=(pParameters->y_max-pParameters->y_min)/(double)(pParameters->n_y-1);
-    if (pParameters->n_y<3 || pParameters->y_min>=pParameters->y_max ||
-                                    DEF_ABS(pParameters->delta_y-delta)>=1.e-16)
+    boolean=(pParameters->n_y<3 || pParameters->y_min>=pParameters->y_max);
+    if (pParameters->opt_mode<=0)
+    {
+        delta=(pParameters->y_max-pParameters->y_min)/
+                                                   (double)(pParameters->n_y-1);
+        boolean=(boolean || DEF_ABS(pParameters->delta_y-delta)>=1.e-16);
+    }
+    if (boolean)
     {
         PRINT_ERROR("In writingCubeFile: incorrect discretization of the ");
         fprintf(stderr,"cube in the second-coordinate direction: expecting\n");
@@ -5795,9 +5805,14 @@ int writingCubeFile(Parameters* pParameters, ChemicalSystem* pChemicalSystem,
     }
 
     // Check discretization in the third-coordinate direction
-    delta=(pParameters->z_max-pParameters->z_min)/(double)(pParameters->n_z-1);
-    if (pParameters->n_z<3 || pParameters->z_min>=pParameters->z_max ||
-                                    DEF_ABS(pParameters->delta_z-delta)>=1.e-16)
+    boolean=(pParameters->n_z<3 || pParameters->z_min>=pParameters->z_max);
+    if (pParameters->opt_mode<=0)
+    {
+        delta=(pParameters->z_max-pParameters->z_min)/
+                                                   (double)(pParameters->n_z-1);
+        boolean=(boolean || DEF_ABS(pParameters->delta_z-delta)>=1.e-16);
+    }
+    if (boolean)
     {
         PRINT_ERROR("In writingCubeFile: incorrect discretization of the ");
         fprintf(stderr,"cube in the third-coordinate direction: expecting\n");
