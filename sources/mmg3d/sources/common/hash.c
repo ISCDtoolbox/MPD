@@ -116,7 +116,10 @@ int _MMG5_mmgHashTria(MMG5_pMesh mesh, int *adjt, _MMG5_Hash *hash, int chkISO) 
           }
           /* non-manifold case */
           else if ( adja[i] != 3*jel+j ) {
-            if ( chkISO && ( (pt->ref == MG_ISO) || (pt->ref < 0)) ) {
+//////////////// A patch is available here
+         //    if (0 && chkISO && ( (pt->ref == MG_ISO) || (pt->ref < 0)) ) {
+// original line
+              if ( chkISO && ( (pt->ref == MG_ISO) || (pt->ref < 0)) ) {
               lel = adjt[3*(jel-1)+1+j]/3;
               l   = adjt[3*(jel-1)+1+j]%3;
               adjt[3*(lel-1)+1+l] = 0;
