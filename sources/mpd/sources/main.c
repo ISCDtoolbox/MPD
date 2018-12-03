@@ -369,8 +369,8 @@ int main(int argc, char *argv[])
                 if (i%3==0 && parameters.opt_mode==4 &&
                                                      (optMode==1 || optMode==2))
                 {
-                    optMode=-1;
                     parameters.opt_mode=optMode;
+                    optMode=-1;
 
                     // Rescale the shape gradient by -1 to avoid domaininversion
                     for (j=0; j<mesh.nver; j++)
