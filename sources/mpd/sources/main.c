@@ -323,7 +323,6 @@ int main(int argc, char *argv[])
     for (i=1; i<=parameters.iter_max; i++)
     {
         time(&startLocalTimer);
-
         if (i%3==0 && (parameters.opt_mode==1 || 
                                 (parameters.opt_mode==2 && parameters.nu_spin)))
         {
@@ -342,7 +341,6 @@ int main(int argc, char *argv[])
                     jPlus++;
                 }
             }
-
             if (jPlus && jMoins)
             {
                 if (parameters.opt_mode==1)
@@ -369,8 +367,8 @@ int main(int argc, char *argv[])
                 if (i%3==0 && parameters.opt_mode==4 &&
                                                      (optMode==1 || optMode==2))
                 {
-                    optMode=-1;
                     parameters.opt_mode=optMode;
+                    optMode=-1;
 
                     // Rescale the shape gradient by -1 to avoid domaininversion
                     for (j=0; j<mesh.nver; j++)

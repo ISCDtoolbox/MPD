@@ -7340,7 +7340,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 h=tMax-tMin;
                 if (tMax==1.)
                 {
-                    nMax=3;
+                    nMax=2;
                     //nMax=(int)(floor(log(1.e-1/h)/log(INV_PHI)));
                 }
                 else
