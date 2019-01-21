@@ -1698,7 +1698,7 @@ int adaptMeshWithMmg3dSoftware(Parameters* pParameters, char adaptMode[4])
     {
         if (pParameters->verbose)
         {
-            strcat(commandLine," -v 1"); // Error detected mmg3d_O3 -v 10 or not
+            strcat(commandLine," -v 10"); // Error detected mmg3d_O3 -v 10 or not
         }
         else
         {
