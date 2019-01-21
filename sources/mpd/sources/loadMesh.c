@@ -2009,23 +2009,36 @@ int writingMeshFile(Parameters* pParameters, Mesh* pMesh)
             }
         }
 
-        fprintf(meshFile,"\nCorners\n%d\n",8);
-        iMax=pMesh->nver;
+        iMax=0;
         for (i=0; i<iMax; i++)
         {
             pVertex=&pMesh->pver[i];
             if (pVertex->label>100)
             {
-                fprintf(meshFile,"%d \n",i+1);
+                iMax++;
             }
         }
-        fprintf(meshFile,"\nRequiredVertices\n%d\n",8);
-        for (i=0; i<iMax; i++)
+
+        if (iMax==8)
         {
-            pVertex=&pMesh->pver[i];
-            if (pVertex->label>100)
+            fprintf(meshFile,"\nCorners\n%d\n",8);
+            iMax=pMesh->nver;
+            for (i=0; i<iMax; i++)
             {
-                fprintf(meshFile,"%d \n",i+1);
+                pVertex=&pMesh->pver[i];
+                if (pVertex->label>100)
+                {
+                    fprintf(meshFile,"%d \n",i+1);
+                }
+            }
+            fprintf(meshFile,"\nRequiredVertices\n%d\n",8);
+            for (i=0; i<iMax; i++)
+            {
+                pVertex=&pMesh->pver[i];
+                if (pVertex->label>100)
+                {
+                    fprintf(meshFile,"%d \n",i+1);
+                }
             }
         }
 
