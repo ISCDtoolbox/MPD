@@ -365,7 +365,7 @@ int main(int argc, char *argv[])
                 PRINT_LOCAL_TIME(i,STR_PHASE,startLocalTimer,endLocalTimer);
                 fprintf(stdout,"PROBABILITY RESIDUAL: %.8le",data.d1p[i]);
                 fprintf(stdout,"\n%s\n",STR_PHASE);
-                if (i%4==0 && parameters.opt_mode==4 &&
+                if (i%3==0 && parameters.opt_mode==4 &&
                                                      (optMode==1 || optMode==2))
                 {
                     parameters.opt_mode=optMode;
