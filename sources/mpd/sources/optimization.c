@@ -7111,13 +7111,15 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             if (pParameters->nu_spin)
             {
                 pParameters->delta_t=deltaT;
-                if (pData->pnu[iterationInTheLoop-1]<=0.01)
+                if (pData->d0p[iterationInTheLoop-1]<
+                                         1.e-6*pData->d1p[iterationInTheLoop-1])
                 {
-                    pParameters->delta_t=100.;
+                    pParameters->delta_t=1.e-6;
                 }
                 else
                 {
-                    pParameters->delta_t=1./pData->pnu[iterationInTheLoop-1];
+                    pParameters->delta_t=pData->d0p[iterationInTheLoop-1]/
+                                               pData->d1p[iterationInTheLoop-1];
                 }
                 fprintf(stdout,"\nAdaptative step: %lf.\n",
                                                           pParameters->delta_t);
@@ -7180,6 +7182,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             break;
 
 // Golden search algorithm with Eulerian/Lagrangian perturbations
+// now Armijo-Goldstein
         case 1:
 
             // Save the initial shape gradient computed at the mesh vertices
@@ -7190,13 +7193,254 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 fprintf(stderr,"the local double* pShapeGradient variable.\n");
                 return 0;
             }
-
             for (i=0; i<pMesh->nver; i++)
             {
                 pShapeGradient[i]=pMesh->pver[i].value;
             }
 
-            tMax=1.;
+            // Initialize extremal value of tMin: we known that for tMax
+            // Armijo's rule is not satisfied (thus Goldstein yes) with
+            // parameters 0.25 (Armijo) and 0.75 (Goldstein)
+            p0=pData->pnu[iterationInTheLoop-1];
+            h=pData->d1p[iterationInTheLoop-1];
+            tMin=DEF_ABS(p0)/h;
+            tMax=4.*DEF_ABS(1.-p0)/h;
+            t1=2.;
+            if (tMin>=tMax)
+            {
+                PRINT_ERROR("In optimization: the previous probability ");
+                fprintf(stderr,"(=%lf) should be ",p0);
+                fprintf(stderr,"(strictly) less than 0.8 in order to use ");
+                fprintf(stderr,"this optimization mode (tMin=%lf ",tMin);
+                fprintf(stderr,"should not be greater than tMax=%lf).\n",tMax);
+                free(pShapeGradient);
+                pShapeGradient=NULL;
+                return 0;
+            }
+
+            while (t1==2.)
+            {
+                // Perform an initial perturbation with intenesity tMin
+                // (tMin>=1 Eulerian perturbations, <1 Lagrangian's ones)
+                fprintf(stdout,"\nSEARCHING THE STARTING INTERVAL FOR THE ");
+                fprintf(stdout,"OPTIMAL STEP.\nCOMPUTING p(%lf).\n",tMin);
+                for (i=0; i<pMesh->nver; i++)
+                {
+                    pMesh->pver[i].value=tMin*pShapeGradient[i];
+                }
+
+                // Save the shape gradient
+                if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
+                {
+                    PRINT_ERROR("In optimization: saveTheShapeGradient ");
+                    fprintf(stderr,"function returned zero instead of one.\n");
+                    free(pShapeGradient);
+                    pShapeGradient=NULL;
+                    return 0;
+                }
+
+                if (tMin<1.)
+                {
+                    // Advect mesh thanks to Lagrangian mode of mmg3d software
+                    if (!computeLagrangianMode(pParameters,pMesh,
+                                                            iterationInTheLoop))
+                    {
+                        PRINT_ERROR("In optimization: computeLagrangianMode ");
+                        fprintf(stderr,"function returned zero instead of ");
+                        fprintf(stderr,"one.\n");
+                        free(pShapeGradient);
+                        pShapeGradient=NULL;
+                        return 0;
+                    }
+                }
+                else
+                {
+                    // Advect mesh thanks to Eulerian mode (level-set approach)
+                    if (!computeEulerianMode(pParameters,pMesh,
+                                                            iterationInTheLoop))
+                    {
+                        PRINT_ERROR("In optimization: computeEulerianMode ");
+                        fprintf(stderr,"function returned zero instead of ");
+                        fprintf(stderr,"one.\n");
+                        free(pShapeGradient);
+                        pShapeGradient=NULL;
+                        return 0;
+                    }
+                }
+
+                // Adapt mesh to both molecular orbitals and new domain geometry
+                if (!performLevelSetAdaptation(pParameters,pMesh,
+                                            pChemicalSystem,iterationInTheLoop))
+                {
+                    PRINT_ERROR("In optimization: performLevelSetAdaptation ");
+                    fprintf(stderr,"function returned zero instead of one.\n");
+                    free(pShapeGradient);
+                    pShapeGradient=NULL;
+                    return 0;
+                }
+
+                // Compute pMin and reload the previous mesh
+                pMin=computeProbabilityAndReloadPreviousMesh(pParameters,pMesh,
+                                                            pData,
+                                                            pChemicalSystem,
+                                                            iterationInTheLoop);
+                if (pMin==-10000.)
+                {
+                    PRINT_ERROR("In optimization: ");
+                    fprintf(stderr,"computeProbabilityAndReloadPreviousMesh ");
+                    fprintf(stderr,"function returned zero instead of one.\n");
+                    free(pShapeGradient);
+                    pShapeGradient=NULL;
+                    return 0;
+                }
+
+                // Look if pMin satisfied Armijo's rule or not
+                if (pMin>=p0+.25*tMin*h)
+                {
+                    // Then look if Goldstein rule is satisfied or not
+                    if (pMin<=p0+.75*tMin*h)
+                    {
+                        t1=tMin;
+                    }
+                    else
+                    {
+                        t1=.5*(tMin+tMax);
+                    }
+                }
+                else
+                {
+                    tMax=tMin;
+                    tMin=tMax/100.;
+                }
+            }
+
+            // Now Armijo's rule is satisfied for tMin and not for tMax
+            if (t1!=tMin)
+            {
+                fprintf(stdout,"\nINITIAL INTERVAL FOUND: ");
+                fprintf(stdout,"[%lf, %lf]\n",tMin,tMax);
+                fprintf(stdout,"STARTING THE ARMIJO-GOLDSTEIN LINE SEARCH.\n");
+                while (tMin!=tMax)
+                {
+                    for (i=0; i<pMesh->nver; i++)
+                    {
+                        pMesh->pver[i].value=t1*pShapeGradient[i];
+                    }
+
+                    // Save the shape gradient
+                    if (!saveTheShapeGradient(pParameters,pMesh,
+                                                            iterationInTheLoop))
+                    {
+                        PRINT_ERROR("In optimization: saveTheShapeGradient ");
+                        fprintf(stderr,"function returned zero instead of ");
+                        fprintf(stderr,"one.\n");
+                        free(pShapeGradient);
+                        pShapeGradient=NULL;
+                        return 0;
+                    }
+
+                    if (t1<1.)
+                    {
+                        // Advect mesh thanks to Lagrangian mode of mmg3d
+                        if (!computeLagrangianMode(pParameters,pMesh,
+                                                            iterationInTheLoop))
+                        {
+                            PRINT_ERROR("In optimization: ");
+                            fprintf(stderr,"computeLagrangianMode function ");
+                            fprintf(stderr,"returned zero instead of one.\n");
+                            free(pShapeGradient);
+                            pShapeGradient=NULL;
+                            return 0;
+                        }
+                    }
+                    else
+                    {
+                        // Advect mesh with Eulerian mode (level-set approach)
+                        if (!computeEulerianMode(pParameters,pMesh,
+                                                            iterationInTheLoop))
+                        {
+                            PRINT_ERROR("In optimization: ");
+                            fprintf(stderr,"computeEulerianMode function ");
+                            fprintf(stderr,"returned zero instead of one.\n");
+                            free(pShapeGradient);
+                            pShapeGradient=NULL;
+                            return 0;
+                        }
+                    }
+
+                    // Adapt mesh to molecular orbitals and new domain geometry
+                    if (!performLevelSetAdaptation(pParameters,pMesh,
+                                            pChemicalSystem,iterationInTheLoop))
+                    {
+                        PRINT_ERROR("In optimization: ");
+                        fprintf(stderr,"performLevelSetAdaptation function ");
+                        fprintf(stderr,"returned zero instead of one.\n");
+                        free(pShapeGradient);
+                        pShapeGradient=NULL;
+                        return 0;
+                    }
+
+                    // Compute p1 and reload the previous mesh
+                    p1=computeProbabilityAndReloadPreviousMesh(pParameters,
+                                                            pMesh,
+                                                            pData,
+                                                            pChemicalSystem,
+                                                            iterationInTheLoop);
+                    if (p1==-10000.)
+                    {
+                        PRINT_ERROR("In optimization: ");
+                        fprintf(stderr,
+                                    "computeProbabilityAndReloadPreviousMesh ");
+                        fprintf(stderr,"function returned zero instead of ");
+                        fprintf(stderr,"one.\n");
+                        free(pShapeGradient);
+                        pShapeGradient=NULL;
+                        return 0;
+                    }
+
+                    // Look if pMin satisfied Armijo's rule or not
+                    if (p1>=p0+.25*t1*h)
+                    {
+                        // Then look if Goldstein rule is satisfied or not
+                        if (p1<=p0+.75*t1*h)
+                        {
+                            tMin=t1;
+                            tMax=t1;
+                        }
+                        else
+                        {
+                            tMin=t1;
+                            t1=.5*(tMax+tMin);
+                            fprintf(stdout,"\nRESTRICTING THE LINE SEARCH ");
+                            fprintf(stdout,"TO THE INTERVAL ");
+                            fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
+                            fprintf(stdout,"p(%lf)=%lf AND ",tMin,p1);
+                            fprintf(stdout,"COMPUTING p(%lf).\n",t1);
+
+                        }
+                    }
+                    else
+                    {
+                        tMax=t1;
+                        t1=.5*(tMax+tMin);
+                        fprintf(stdout,"\nRESTRICTING THE LINE SEARCH ");
+                        fprintf(stdout,"TO THE INTERVAL ");
+                        fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
+                        fprintf(stdout,"p(%lf)=%lf AND ",tMax,p1);
+                        fprintf(stdout,"COMPUTING p(%lf).\n",t1);
+                    }
+                }
+            }
+
+            // The optimal step has been found
+            t0=t1;
+
+
+            
+
+
+
+/*            tMax=1.;
             tMin=0.;
             pMin=pData->pnu[iterationInTheLoop-1];
 
@@ -7697,6 +7941,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     t0=t1;
                 }
             }
+*/
 
             // Finally compute the optimal line search
             fprintf(stdout,"\nOPTIMAL STEP FOUND: %lf.\nCOMPUTING THE ",t0);
