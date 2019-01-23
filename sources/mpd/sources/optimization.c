@@ -6903,7 +6903,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                  time_t* pGlobalInitialTimer, time_t* pStartLocalTimer,
                                                          time_t* pEndLocalTimer)
 {
-    int i=0, counter=0, n=0, nMax=0;
+    int i=0, counter=0, n=0, nMax=0, boolean=0;
     double tMin=0, tMax=0, t0=0., t1=0., *pShapeGradient=NULL, pMax=0., pMin=0.;
     double p0=0., p1=0., h=0., deltaT=0.;
 
@@ -6935,26 +6935,53 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
     }
 
     // Check the stop criteria
+    boolean=0;
     if (pParameters->iter_told0p>0.)
     {
         if (DEF_ABS(pData->d0p[iterationInTheLoop-1])<pParameters->iter_told0p)
         {
-            return -1;
+            boolean++;
         }
     }
+    else
+    {
+        return -1;
+    }
+
     if (pParameters->iter_told1p>0.)
     {
         if (DEF_ABS(pData->d1p[iterationInTheLoop-1])<pParameters->iter_told1p)
         {
-            return -1;
+            boolean++;
         }
     }
+    else
+    {
+        return -1;
+    }
+
     if (pParameters->iter_told2p>0.)
     {
         if (DEF_ABS(pData->d2p[iterationInTheLoop-1])<pParameters->iter_told2p)
         {
-            return -1;
+            if (pParameters->opt_mode<=0)
+            {
+                return -1;
+            }
+            else
+            {
+                boolean++;
+            }
         }
+    }
+    else
+    {
+        return -1;
+    }
+
+    if (boolean==3)
+    {
+        return -1;
     }
 
     switch (pParameters->opt_mode)
@@ -7239,9 +7266,10 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     return 0;
                 }
 
-                if (tMin<1.)
+                if (tMin*h<1.)
                 {
                     // Advect mesh thanks to Lagrangian mode of mmg3d software
+                    fprintf(stdout,"\nLagrangian mode.\n");
                     if (!computeLagrangianMode(pParameters,pMesh,
                                                             iterationInTheLoop))
                     {
@@ -7256,6 +7284,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 else
                 {
                     // Advect mesh thanks to Eulerian mode (level-set approach)
+                    fprintf(stdout,"\nEulerian mode (level-set).\n");
                     if (!computeEulerianMode(pParameters,pMesh,
                                                             iterationInTheLoop))
                     {
@@ -7315,7 +7344,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             }
 
             // Now Armijo's rule is satisfied for tMin and not for tMax
-            if (t1!=tMin)
+            if (t1!=tMin && pMin-p0>=pParameters->iter_told0p)
             {
                 fprintf(stdout,"\nINITIAL INTERVAL FOUND: ");
                 fprintf(stdout,"[%lf, %lf]\n",tMin,tMax);
@@ -7339,9 +7368,10 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                         return 0;
                     }
 
-                    if (t1<1.)
+                    if (t1*h<1.)
                     {
                         // Advect mesh thanks to Lagrangian mode of mmg3d
+                        fprintf(stderr,"\nLagrangian mode.\n");
                         if (!computeLagrangianMode(pParameters,pMesh,
                                                             iterationInTheLoop))
                         {
@@ -7356,6 +7386,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     else
                     {
                         // Advect mesh with Eulerian mode (level-set approach)
+                        fprintf(stdout,"\nEulerian mode (level-set).\n");
                         if (!computeEulerianMode(pParameters,pMesh,
                                                             iterationInTheLoop))
                         {
@@ -7434,11 +7465,6 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
 
             // The optimal step has been found
             t0=t1;
-
-
-            
-
-
 
 /*            tMax=1.;
             tMin=0.;
@@ -7967,7 +7993,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 return 0;
             }
 
-            if (t0<1.)
+            if (t0*h<1.)
             {
                 pParameters->opt_mode=3;
                 // Advect mesh thanks to Lagrangian mode of mmg3d
