@@ -7250,17 +7250,9 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             nMax=8;
             while (t1==2. && counter<nMax)
             {
-                fprintf(stdout,"\nSEARCHING THE STARTING INTERVAL FOR THE ");
-                fprintf(stdout,"OPTIMAL STEP.\n");
-                if (counter)
-                {
-                    fprintf(stdout,"p(%lf)=%lf AND NOW COMPUTING p(%lf).\n",tMax,pMin,tMin);
-                }
-                else
-                {
-                    fprintf(stdout,"p(0.0)=%lf AND NOW COMPUTING p(%lf).\n",p0,tMin);
-                }
                 counter++;
+                fprintf(stdout,"\nSEARCHING THE STARTING INTERVAL FOR THE ");
+                fprintf(stdout,"OPTIMAL STEP.\nCOMPUTING p(%lf).\n",tMin);
 
                 // Perform an initial perturbation with intenesity tMin
                 // (tMin too big Eulerian perturbations, else Lagrangian's ones)
@@ -7366,7 +7358,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             if (t1!=tMin && pMin-p0>=pParameters->iter_told0p)
             {
                 fprintf(stdout,"\nINITIAL INTERVAL FOUND: ");
-                fprintf(stdout,"[%lf, %lf] (WITH p(%lf)=%lf).\n",tMin,tMax,tMin,pMin);
+                fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
                 fprintf(stdout,"STARTING THE ARMIJO-GOLDSTEIN LINE SEARCH.\n");
                 while (tMin!=tMax)
                 {
