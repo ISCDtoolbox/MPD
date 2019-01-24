@@ -7230,10 +7230,11 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             // parameters 0.25 (Armijo) and 0.75 (Goldstein)
             p0=pData->pnu[iterationInTheLoop-1];
             h=pData->d1p[iterationInTheLoop-1];
+            hMin=.5*(pParameters->hmin_ls+pParameters->hmin_lag);
+
+            t1=-2.;
             tMin=DEF_ABS(p0)/h;
             tMax=4.*DEF_ABS(1.-p0)/h;
-            t1=2.;
-            hMin=.5*(pParameters->hmin_ls+pParameters->hmin_lag);
             if (tMin>=tMax)
             {
                 PRINT_ERROR("In optimization: the previous probability ");
@@ -7246,16 +7247,16 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 return 0;
             }
 
-            counter=0;
-            nMax=8;
-            while (t1==2. && counter<nMax)
+            nMax=5;
+            counter=-1;
+            do
             {
                 counter++;
-                fprintf(stdout,"\nSEARCHING THE STARTING INTERVAL FOR THE ");
-                fprintf(stdout,"OPTIMAL STEP.\nCOMPUTING p(%lf).\n",tMin);
 
-                // Perform an initial perturbation with intenesity tMin
+                // Perform an initial perturbation with intensity tMin
                 // (tMin too big Eulerian perturbations, else Lagrangian's ones)
+                fprintf(stdout,"\nSEARCHING THE STARTING INTERVAL FOR ");
+                fprintf(stdout,"OPTIMAL STEP.\nCOMPUTING p(%lf).\n",tMin);
                 for (i=0; i<pMesh->nver; i++)
                 {
                     pMesh->pver[i].value=tMin*pShapeGradient[i];
@@ -7346,21 +7347,22 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     tMax=tMin;
                     tMin=tMax/100.;
                 }
-            }
 
-            // Case where numerical errors does not yield Armijo's condition
-            if (t1==2. && counter==nMax)
+            } while (t1==-2. && counter<nMax);
+
+            // Case where numerical errors does not yield to Armijo's condition
+            if (t1==-2. && counter==nMax)
             {
                 t1=tMin;
             }
 
             // Now Armijo's rule is satisfied for tMin and not for tMax
-            if (t1!=tMin && pMin-p0>=pParameters->iter_told0p)
+            if (t1!=tMin)
             {
                 fprintf(stdout,"\nINITIAL INTERVAL FOUND: ");
                 fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
                 fprintf(stdout,"STARTING THE ARMIJO-GOLDSTEIN LINE SEARCH.\n");
-                while (tMin!=tMax)
+                do
                 {
                     for (i=0; i<pMesh->nver; i++)
                     {
@@ -7452,29 +7454,37 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                         else
                         {
                             tMin=t1;
-                            t1=.5*(tMax+tMin);
-                            fprintf(stdout,"\nRESTRICTING THE LINE SEARCH ");
-                            fprintf(stdout,"TO THE INTERVAL ");
-                            fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
-                            fprintf(stdout,"p(%lf)=%lf AND ",tMin,p1);
-                            fprintf(stdout,"COMPUTING p(%lf).\n",t1);
+                            if (p1<p0+pParameters->iter_told0p)
+                            {
+                                // Case where num. errors never yield Golstein
+                                tMax=tMin;
+                            }
+                            else
+                            {
+                                t1=.5*(tMax+tMin);
+                                fprintf(stdout,"\nRESTRICTING LINE SEARCH ");
+                                fprintf(stdout,"TO THE INTERVAL ");
+                                fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
+                                fprintf(stdout,"p(%lf)=%lf AND ",tMin,p1);
+                                fprintf(stdout,"COMPUTING p(%lf).\n",t1);
 
+                            }
                         }
                     }
                     else
                     {
                         tMax=t1;
-                        t1=.5*(tMax+tMin);
-                        fprintf(stdout,"\nRESTRICTING THE LINE SEARCH ");
+                        t1=.5*(tMax+tMin);                     
+                        fprintf(stdout,"\nRESTRICTING LINE SEARCH ");
                         fprintf(stdout,"TO THE INTERVAL ");
                         fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
                         fprintf(stdout,"p(%lf)=%lf AND ",tMax,p1);
                         fprintf(stdout,"COMPUTING p(%lf).\n",t1);
                     }
-                }
+                } while (tMin!=tMax);
             }
 
-            // The optimal step has been found, update t0
+            // The optimal step has been found, update t0 (used after comments)
             t0=t1;
 
 /*            tMax=1.;
