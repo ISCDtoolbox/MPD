@@ -7246,16 +7246,24 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 return 0;
             }
 
-            counter=1;
+            counter=0;
             nMax=8;
             while (t1==2. && counter<nMax)
             {
+                fprintf(stdout,"\nSEARCHING THE STARTING INTERVAL FOR THE ");
+                fprintf(stdout,"OPTIMAL STEP.\n");
+                if (counter)
+                {
+                    fprintf(stdout,"p(%lf)=%lf AND NOW COMPUTING p(%lf).\n",tMax,pMin,tMin);
+                }
+                else
+                {
+                    fprintf(stdout,"p(0)=%lf AND NOW COMPUTING p(%lf).\n",p0,tMin);
+                }
                 counter++;
 
                 // Perform an initial perturbation with intenesity tMin
                 // (tMin too big Eulerian perturbations, else Lagrangian's ones)
-                fprintf(stdout,"\nSEARCHING THE STARTING INTERVAL FOR THE ");
-                fprintf(stdout,"OPTIMAL STEP.\nCOMPUTING p(%lf).\n",tMin);
                 for (i=0; i<pMesh->nver; i++)
                 {
                     pMesh->pver[i].value=tMin*pShapeGradient[i];
@@ -7358,7 +7366,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             if (t1!=tMin && pMin-p0>=pParameters->iter_told0p)
             {
                 fprintf(stdout,"\nINITIAL INTERVAL FOUND: ");
-                fprintf(stdout,"[%lf, %lf]\n",tMin,tMax);
+                fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
                 fprintf(stdout,"STARTING THE ARMIJO-GOLDSTEIN LINE SEARCH.\n");
                 while (tMin!=tMax)
                 {
@@ -7453,7 +7461,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                         {
                             tMin=t1;
                             t1=.5*(tMax+tMin);
-                            fprintf(stdout,"\nRESTRICTING THE LINE SEARCH ");
+                            fprintf(stdout,"\nRESTRICTING LINE SEARCH ");
                             fprintf(stdout,"TO THE INTERVAL ");
                             fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
                             fprintf(stdout,"p(%lf)=%lf AND ",tMin,p1);
@@ -7465,7 +7473,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     {
                         tMax=t1;
                         t1=.5*(tMax+tMin);
-                        fprintf(stdout,"\nRESTRICTING THE LINE SEARCH ");
+                        fprintf(stdout,"\nRESTRICTING LINE SEARCH ");
                         fprintf(stdout,"TO THE INTERVAL ");
                         fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
                         fprintf(stdout,"p(%lf)=%lf AND ",tMax,p1);
