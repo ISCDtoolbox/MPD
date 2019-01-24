@@ -7338,7 +7338,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     }
                     else
                     {
-                        t1=DEF_MIN(10.*tMin,.5*(tMax+tMin));
+                        t1=.5*(tMax+tMin);
                     }
                 }
                 else
