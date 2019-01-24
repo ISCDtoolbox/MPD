@@ -7258,7 +7258,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 }
                 else
                 {
-                    fprintf(stdout,"p(0)=%lf AND NOW COMPUTING p(%lf).\n",p0,tMin);
+                    fprintf(stdout,"p(0.0)=%lf AND NOW COMPUTING p(%lf).\n",p0,tMin);
                 }
                 counter++;
 
@@ -7366,7 +7366,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             if (t1!=tMin && pMin-p0>=pParameters->iter_told0p)
             {
                 fprintf(stdout,"\nINITIAL INTERVAL FOUND: ");
-                fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
+                fprintf(stdout,"[%lf, %lf] (WITH p(%lf)=%lf).\n",tMin,tMax,tMin,pMin);
                 fprintf(stdout,"STARTING THE ARMIJO-GOLDSTEIN LINE SEARCH.\n");
                 while (tMin!=tMax)
                 {
@@ -7461,7 +7461,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                         {
                             tMin=t1;
                             t1=.5*(tMax+tMin);
-                            fprintf(stdout,"\nRESTRICTING LINE SEARCH ");
+                            fprintf(stdout,"\nRESTRICTING THE LINE SEARCH ");
                             fprintf(stdout,"TO THE INTERVAL ");
                             fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
                             fprintf(stdout,"p(%lf)=%lf AND ",tMin,p1);
@@ -7473,7 +7473,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     {
                         tMax=t1;
                         t1=.5*(tMax+tMin);
-                        fprintf(stdout,"\nRESTRICTING LINE SEARCH ");
+                        fprintf(stdout,"\nRESTRICTING THE LINE SEARCH ");
                         fprintf(stdout,"TO THE INTERVAL ");
                         fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
                         fprintf(stdout,"p(%lf)=%lf AND ",tMax,p1);
