@@ -7249,7 +7249,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             while (t1==2.)
             {
                 // Perform an initial perturbation with intenesity tMin
-                // (tMin>=1 Eulerian perturbations, <1 Lagrangian's ones)
+                // (tMin too big Eulerian perturbations, else Lagrangian's ones)
                 fprintf(stdout,"\nSEARCHING THE STARTING INTERVAL FOR THE ");
                 fprintf(stdout,"OPTIMAL STEP.\nCOMPUTING p(%lf).\n",tMin);
                 for (i=0; i<pMesh->nver; i++)
