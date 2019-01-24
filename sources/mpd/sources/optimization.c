@@ -7246,8 +7246,12 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 return 0;
             }
 
-            while (t1==2.)
+            counter=1;
+            nMax=8;
+            while (t1==2. && counter<nMax)
             {
+                counter++;
+
                 // Perform an initial perturbation with intenesity tMin
                 // (tMin too big Eulerian perturbations, else Lagrangian's ones)
                 fprintf(stdout,"\nSEARCHING THE STARTING INTERVAL FOR THE ");
@@ -7334,7 +7338,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     }
                     else
                     {
-                        t1=.5*(tMin+tMax);
+                        t1=DEF_MIN(10.*tMin,.5*(tMax+tMin));
                     }
                 }
                 else
@@ -7342,6 +7346,12 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     tMax=tMin;
                     tMin=tMax/100.;
                 }
+            }
+
+            // Case where numerical errors does not yield Armijo's condition
+            if (t1==2. && counter==nMax)
+            {
+                t1=tMin;
             }
 
             // Now Armijo's rule is satisfied for tMin and not for tMax
@@ -7464,7 +7474,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 }
             }
 
-            // The optimal step has been found
+            // The optimal step has been found, update t0
             t0=t1;
 
 /*            tMax=1.;
