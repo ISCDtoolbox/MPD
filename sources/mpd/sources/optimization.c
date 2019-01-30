@@ -7272,7 +7272,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     return 0;
                 }
 
-                if (tMin*h<hMin)
+                if (tMin*sqrt(h)<hMin*hMin)
                 {
                     // Advect mesh thanks to Lagrangian mode of mmg3d software
                     fprintf(stdout,"\nLagrangian mode.\n");
@@ -7381,7 +7381,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                         return 0;
                     }
 
-                    if (t1*h<hMin)
+                    if (t1*sqrt(h)<hMin*hMin)
                     {
                         // Advect mesh thanks to Lagrangian mode of mmg3d
                         fprintf(stderr,"\nLagrangian mode.\n");
@@ -8014,7 +8014,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 return 0;
             }
 
-            if (t0*h<hMin)
+            if (t0*sqrt(h)<hMin*hMin)
             {
                 pParameters->opt_mode=3;
                 // Advect mesh thanks to Lagrangian mode of mmg3d
