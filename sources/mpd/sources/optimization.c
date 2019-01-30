@@ -7272,7 +7272,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     return 0;
                 }
 
-                if (tMin*sqrt(h)<hMin*hMin)
+                /* if (tMin*sqrt(h)<hMin*hMin)
                 {
                     // Advect mesh thanks to Lagrangian mode of mmg3d software
                     fprintf(stdout,"\nLagrangian mode.\n");
@@ -7288,7 +7288,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     }
                 }
                 else
-                {
+                { */
                     // Advect mesh thanks to Eulerian mode (level-set approach)
                     fprintf(stdout,"\nEulerian mode (level-set).\n");
                     if (!computeEulerianMode(pParameters,pMesh,
@@ -7301,7 +7301,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                         pShapeGradient=NULL;
                         return 0;
                     }
-                }
+                //}
 
                 // Adapt mesh to both molecular orbitals and new domain geometry
                 if (!performLevelSetAdaptation(pParameters,pMesh,
@@ -7381,7 +7381,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                         return 0;
                     }
 
-                    if (t1*sqrt(h)<hMin*hMin)
+                    /* if (t1*sqrt(h)<hMin*hMin)
                     {
                         // Advect mesh thanks to Lagrangian mode of mmg3d
                         fprintf(stderr,"\nLagrangian mode.\n");
@@ -7397,7 +7397,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                         }
                     }
                     else
-                    {
+                    { */
                         // Advect mesh with Eulerian mode (level-set approach)
                         fprintf(stdout,"\nEulerian mode (level-set).\n");
                         if (!computeEulerianMode(pParameters,pMesh,
@@ -7410,7 +7410,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                             pShapeGradient=NULL;
                             return 0;
                         }
-                    }
+                    //}
 
                     // Adapt mesh to molecular orbitals and new domain geometry
                     if (!performLevelSetAdaptation(pParameters,pMesh,
@@ -8014,7 +8014,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 return 0;
             }
 
-            if (t0*sqrt(h)<hMin*hMin)
+            /* if (t0*sqrt(h)<hMin*hMin)
             {
                 pParameters->opt_mode=3;
                 // Advect mesh thanks to Lagrangian mode of mmg3d
@@ -8027,7 +8027,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 }
             }
             else
-            {
+            { */
                 // Advect mesh thanks to Eulerian mode (level-set mode)
                 if (!computeEulerianMode(pParameters,pMesh,iterationInTheLoop))
                 {
@@ -8035,7 +8035,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     fprintf(stderr,"function returned zero instead of one.\n");
                     return 0;
                 }
-            }
+            //}
 
             // Adapt mesh to both molecular orbitals and new domain
             if (!performLevelSetAdaptation(pParameters,pMesh,pChemicalSystem,
