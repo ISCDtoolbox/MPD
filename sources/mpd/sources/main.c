@@ -1250,7 +1250,7 @@ int copyFileLocation(char* fileLocation, int nameLength,
         return 0;
     }
 
-    // Check that the input fileLocationForCopy variable is pointing to NULL
+    // Check that the input fileLocationForCopy variable is not pointing to NULL
     if (fileLocationForCopy==NULL)
     {
         PRINT_ERROR("In copyFileLocation: the input (char*) ");
@@ -1273,7 +1273,7 @@ int copyFileLocation(char* fileLocation, int nameLength,
     }
 
     // Dynamically allocate memory for the local commandLine variable
-    length=2*nameLength+5;
+    length=2*nameLength+10;
     commandLine=(char*)calloc(length,sizeof(char));
     if (commandLine==NULL)
     {

@@ -127,6 +127,7 @@ int getChemicalFormat(char* fileLocation, int nameLength)
         fprintf(stderr,"than the '.chem' or '.wfn' extension.\n");
         return 0;
     }
+    // Remark here: if the file is entitled 'A.wfn' the mpdProgram will fail
 
     // Distinguish the *.chem from *.wfn format
     if (fileLocation[length-4]=='.' && fileLocation[length-3]=='w' &&
@@ -774,7 +775,7 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
     size_t length=0;
     char readStringIn[18]={'\0'}, *readStringOut=NULL;
     int readIntegerIn=0, readIntegerOut=0, readChar=0, i=0, iMax=0, j=0, jMax=0;
-    int returnValue=0;
+    int returnValue=0, deltaSpin=0;
     double readDouble=0.;
     MolecularOrbital *pMolecularOrbital=NULL, *pMolecularOrbitalI=NULL;
     FILE *wfnFile=NULL;
@@ -1107,7 +1108,7 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
             return 0;
         }
 
-        // Read the charge number of charge of the current nucleus
+        // Read the charge number of the current nucleus
         readStringOut=fgets(readStringIn,7,wfnFile);
         readIntegerOut=fscanf(wfnFile," = %lf ",&readDouble);
 
@@ -1410,6 +1411,7 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
 
     // Save in pChemicalSystem->pmorb[i].coeff i=0..pChemicalSystem->nmorb-1
     // the different primitives coefficients related to the different orbitals
+    deltaSpin=0;
     iMax=pChemicalSystem->nmorb;
     jMax=pChemicalSystem->ngauss;
     for (i=0; i<iMax; i++)
@@ -1430,26 +1432,34 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
             return 0;
         }
 
-        if (strcmp(readStringIn,"MO") || readIntegerIn<1 || readIntegerIn>iMax)
+        if (strcmp(readStringIn,"MO"))
         {
             PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: expecting ");
-            fprintf(stderr,"MO %d instead of %s ",i+1,readStringIn);
-            fprintf(stderr,"%d (positive value strictly less ",readIntegerIn);
-            fprintf(stderr,"than %d) while attempting to read ",iMax);
-            fprintf(stderr,"primitive coefficients of the %d-th ",i+1);
-            fprintf(stderr,"MolecularOrbital structure.\n");
+            fprintf(stderr,"the MO keyword instead of the %s ",readStringIn);
+            fprintf(stderr,"one, while attempting to read the primitive ");
+            fprintf(stderr,"coefficients of the %d-th MolecularOrbital ",i+1);
+            fprintf(stderr,"structure.\n");
             closeTheFile(&wfnFile);
             return 0;
         }
 
-        if (readIntegerIn!=i+1)
+        // Update (only one time allowed) deltaSpin if a gap in MO if observed
+        if (readIntegerIn!=i+1 && !deltaSpin)
         {
-            fprintf(stdout,"\nWarning in ");
-            fprintf(stdout,"readWfnFileAndAllocateChemicalSystem function: ");
-            fprintf(stdout,"the primitive coefficients are not defined in ");
-            fprintf(stdout,"increasing order (the %d-th MolecularOrbital ",i+1);
-            fprintf(stdout,"data are numbered as the %d-th ",readIntegerIn);
-            fprintf(stdout,"one).\n");
+            deltaSpin=readIntegerIn-i;
+        }
+
+        // Check the readIntegerIn(-deltaSpin) variable
+        if (readIntegerIn-deltaSpin!=i)
+            PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: expecting ");
+            fprintf(stderr,"a positive value (strictly) less than ");
+            fprintf(stderr,"%d instead of %d ",iMax+deltaSpin,readIntegerIn);
+            fprintf(stderr,"for the integer associated with the MO keyword, ");
+            fprintf(stderr,"in the attempt of reading the primitive ");
+            fprintf(stderr,"coefficients of the %d-th MolecularOrbital ",i+1);
+            fprintf(stderr,"structure.\n");
+            closeTheFile(&wfnFile);
+            return 0;
         }
 
         readStringOut=fgets(readStringIn,3,wfnFile);
@@ -1508,14 +1518,21 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
         // Temporarily save the occupation number of the (readInteger)-th
         // molecular orbital in ChemicalSystem->pmorb[readIntegerIn-1].spin in
         // order to potentially duplicate the molecular orbital (2 spins) later
-        pMolecularOrbitalI=&pChemicalSystem->pmorb[readIntegerIn-1];
+        pMolecularOrbitalI=&pChemicalSystem->pmorb[i];
         if (readDouble==2.)
         {
             pMolecularOrbitalI->spin=2;
         }
         else
         {
-            pMolecularOrbitalI->spin=1;
+            if (deltaSpin)
+            {
+                pMolecularOrbitalI->spin=-1;
+            }
+            else
+            {
+                pMolecularOrbitalI->spin=1;
+            }
         }
 
         readStringOut=fgets(readStringIn,12,wfnFile);
@@ -1914,8 +1931,8 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
     {
         PRINT_ERROR("In loadChemistry: at least one of the input pParameters ");
         fprintf(stderr,"%p or pChemicalSystem ",(void*)pParameters);
-        fprintf(stderr,"%p variable does not have a ",(void*)pChemicalSystem);
-        fprintf(stderr,"valid address.\n");
+        fprintf(stderr,"%p variable does not point to ",(void*)pChemicalSystem);
+        fprintf(stderr,"a valid address.\n");
         return 0;
     }
 
@@ -1928,8 +1945,8 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
         fprintf(stderr,"after having checked that the char* name_info ");
         fprintf(stderr,"variable of the structure pointed by pParameters is ");
         fprintf(stderr,"not a string of length (strictly) less than ");
-        fprintf(stderr,"%d (and more than 5 in ",pParameters->name_length);
-        fprintf(stderr,"order to store at least something more than the ");
+        fprintf(stderr,"%d (and strcitly more than ",pParameters->name_length);
+        fprintf(stderr,"5 in order to store at least something more than the ");
         fprintf(stderr,"*.info extension).\n");
         return 0;
     }
@@ -2254,5 +2271,4 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
 
     return 1;
 }
-
 
