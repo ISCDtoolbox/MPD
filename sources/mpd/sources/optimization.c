@@ -7237,14 +7237,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             tMax=4.*DEF_ABS(1.-p0)/h;
             if (tMin>=tMax)
             {
-                PRINT_ERROR("In optimization: the previous probability ");
-                fprintf(stderr,"(=%lf) should be ",p0);
-                fprintf(stderr,"(strictly) less than 0.8 in order to use ");
-                fprintf(stderr,"this optimization mode (tMin=%lf ",tMin);
-                fprintf(stderr,"should not be greater than tMax=%lf).\n",tMax);
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
+                tMin=tMax/10.;
             }
 
             nMax=5;
@@ -7272,10 +7265,13 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     return 0;
                 }
 
-                /* if (tMin*sqrt(h)<hMin*hMin)
+                // Advect mesh thanks to Eulerian mode (level-set approach)
+                fprintf(stdout,"\nEulerian mode (level-set).\n");
+                if (!computeEulerianMode(pParameters,pMesh,iterationInTheLoop))
                 {
                     // Advect mesh thanks to Lagrangian mode of mmg3d software
-                    fprintf(stdout,"\nLagrangian mode.\n");
+                    fprintf(stdout,"\nLevel-set mode in mmg3d failed. ");
+                    fprintf(stdout,"Trying Lagrangian mode instead.\n");
                     if (!computeLagrangianMode(pParameters,pMesh,
                                                             iterationInTheLoop))
                     {
@@ -7287,21 +7283,19 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                         return 0;
                     }
                 }
+                /* if (tMin*sqrt(h)<hMin*hMin)
+                {
+
+                }
                 else
-                { */
-                    // Advect mesh thanks to Eulerian mode (level-set approach)
-                    fprintf(stdout,"\nEulerian mode (level-set).\n");
-                    if (!computeEulerianMode(pParameters,pMesh,
-                                                            iterationInTheLoop))
-                    {
+                {
                         PRINT_ERROR("In optimization: computeEulerianMode ");
                         fprintf(stderr,"function returned zero instead of ");
                         fprintf(stderr,"one.\n");
                         free(pShapeGradient);
                         pShapeGradient=NULL;
                         return 0;
-                    }
-                //}
+                } */
 
                 // Adapt mesh to both molecular orbitals and new domain geometry
                 if (!performLevelSetAdaptation(pParameters,pMesh,
@@ -7381,10 +7375,14 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                         return 0;
                     }
 
-                    /* if (t1*sqrt(h)<hMin*hMin)
+                    // Advect mesh thanks to Eulerian mode (level-set approach)
+                    fprintf(stdout,"\nEulerian mode (level-set).\n");
+                    if (!computeEulerianMode(pParameters,pMesh,
+                                                            iterationInTheLoop))
                     {
                         // Advect mesh thanks to Lagrangian mode of mmg3d
-                        fprintf(stderr,"\nLagrangian mode.\n");
+                        fprintf(stdout,"\nLevel-set mode in mmg3d failed. ");
+                        fprintf(stdout,"Trying Lagrangian mode instead.\n");
                         if (!computeLagrangianMode(pParameters,pMesh,
                                                             iterationInTheLoop))
                         {
@@ -7396,21 +7394,20 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                             return 0;
                         }
                     }
+
+                    /* if (t1*sqrt(h)<hMin*hMin)
+                    {
+
+                    }
                     else
-                    { */
-                        // Advect mesh with Eulerian mode (level-set approach)
-                        fprintf(stdout,"\nEulerian mode (level-set).\n");
-                        if (!computeEulerianMode(pParameters,pMesh,
-                                                            iterationInTheLoop))
-                        {
+                    {
                             PRINT_ERROR("In optimization: ");
                             fprintf(stderr,"computeEulerianMode function ");
                             fprintf(stderr,"returned zero instead of one.\n");
                             free(pShapeGradient);
                             pShapeGradient=NULL;
                             return 0;
-                        }
-                    //}
+                    } */
 
                     // Adapt mesh to molecular orbitals and new domain geometry
                     if (!performLevelSetAdaptation(pParameters,pMesh,
@@ -8014,28 +8011,38 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 return 0;
             }
 
-            /* if (t0*sqrt(h)<hMin*hMin)
+            // Advect mesh thanks to Eulerian mode (level-set approach)
+            fprintf(stdout,"\nEulerian mode (level-set).\n");
+            if (!computeEulerianMode(pParameters,pMesh,iterationInTheLoop))
             {
-                pParameters->opt_mode=3;
                 // Advect mesh thanks to Lagrangian mode of mmg3d
+                fprintf(stdout,"\nLevel-set mode in mmg3d failed. ");
+                fprintf(stdout,"Trying Lagrangian mode instead.\n");
                 if (!computeLagrangianMode(pParameters,pMesh,
                                                             iterationInTheLoop))
                 {
-                    PRINT_ERROR("In optimization: computeLagrangianMode ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
+                    PRINT_ERROR("In optimization: ");
+                    fprintf(stderr,"computeLagrangianMode function ");
+                    fprintf(stderr,"returned zero instead of one.\n");
+                    free(pShapeGradient);
+                    pShapeGradient=NULL;
                     return 0;
                 }
             }
+
+            /* if (t0*sqrt(h)<hMin*hMin)
+            {
+
+            }
             else
-            { */
-                // Advect mesh thanks to Eulerian mode (level-set mode)
-                if (!computeEulerianMode(pParameters,pMesh,iterationInTheLoop))
-                {
-                    PRINT_ERROR("In optimization: computeEulerianMode ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
+            {
+                    PRINT_ERROR("In optimization: ");
+                    fprintf(stderr,"computeEulerianMode function ");
+                    fprintf(stderr,"returned zero instead of one.\n");
+                    free(pShapeGradient);
+                    pShapeGradient=NULL;
                     return 0;
-                }
-            //}
+            } */
 
             // Adapt mesh to both molecular orbitals and new domain
             if (!performLevelSetAdaptation(pParameters,pMesh,pChemicalSystem,
@@ -8046,7 +8053,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 return 0;
             }
 
-            if (t0*h<hMin)
+            if (t0*sqrt(h)<hMin*hMin)
             {
                 fprintf(stdout,"\nSTEP 3: COMPUTE PROBABILITY, POPULATION ");
                 fprintf(stdout,"AND SHAPE GRADIENT ON THE NEW DOMAIN.\n");
