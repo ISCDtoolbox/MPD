@@ -1572,6 +1572,10 @@ int writingMeshFile(Parameters* pParameters, Mesh* pMesh)
             fileLocation[lengthName-2]='s';
             fileLocation[lengthName-1]='h';
             fileLocation[lengthName]='\0';
+
+            // Update the name of the *.cube file so it has the *.mesh extension
+            strncpy(pParameters->name_mesh,fileLocation,
+                                                      pParameters->name_length);
         }
         else if (pParameters->name_mesh[lengthName-5]=='.' &&
                                     pParameters->name_mesh[lengthName-4]=='m' &&
