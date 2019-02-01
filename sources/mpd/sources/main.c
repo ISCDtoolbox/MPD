@@ -432,6 +432,13 @@ int main(int argc, char *argv[])
                     {
                         mesh.pver[j].value*=-1.;
                     }
+
+                    // Stop the optimization if difference in probability before
+                    // and after opt_mode=4 is on (unstable) is below told0p
+                    if (data.d0p[i]<parameters.iter_told0p)
+                    {
+                        i=parameters.iter_max+1;
+                    }
                 }
                 break;
 
