@@ -4967,8 +4967,8 @@ int readCubeFileAndAllocateMesh(Parameters* pParameters, Mesh* pMesh)
             fprintf(stdout,"\nWarning in readCubeFileAndAllocateMesh ");
             fprintf(stdout,"function: no Hexahedron label has been saved ");
             fprintf(stdout,"in the %s file. By ",pParameters->name_mesh);
-            fprintf(stdout,"default, the labels of the mesh that is going to ");
-            fprintf(stdout,"by build will be set to zero.\n");
+            fprintf(stdout,"default, the labels of the mesh elements that ");
+            fprintf(stdout,"are going to be build will be set to zero.\n");
         }
     }
     else
@@ -5315,7 +5315,7 @@ int loadMesh(Parameters* pParameters, Mesh* pMesh)
             // by the *.mesh one. If such a default name and the original one
             // are identical, a manual confirmation of the user is needed to
             // to potentially overwrite the *.mesh file later in the algorithm
-
+            // (except if save_print is set to zero, because bash mode is off)
 
             // Hence, we start by checking the pParameters->name_info variable
             if (!checkStringFromLength(pParameters->name_info,7,

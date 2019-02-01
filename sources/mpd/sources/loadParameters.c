@@ -2990,11 +2990,11 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"corresponding keywords in %s ",pParameters->name_info);
         fprintf(stderr,"file.\n");
         return 0;
-   }
+    }
 
-   dx=(pParameters->x_max-pParameters->x_min)/(double)(pParameters->n_x-1);
-   dy=(pParameters->y_max-pParameters->y_min)/(double)(pParameters->n_y-1);
-   dz=(pParameters->z_max-pParameters->z_min)/(double)(pParameters->n_z-1);
+    dx=(pParameters->x_max-pParameters->x_min)/(double)(pParameters->n_x-1);
+    dy=(pParameters->y_max-pParameters->y_min)/(double)(pParameters->n_y-1);
+    dz=(pParameters->z_max-pParameters->z_min)/(double)(pParameters->n_z-1);
 
     boolean=(DEF_ABS(pParameters->delta_x-dx)<1.e-16);
     boolean=(boolean && DEF_ABS(pParameters->delta_y-dy)<1.e-16);
