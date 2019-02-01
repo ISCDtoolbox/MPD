@@ -7332,8 +7332,8 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     }
                     else
                     {
-                        // OLD:Try to get better hMax to avoid big advections
-                        t1=.5*(tMax+tMin);//10.*tMin;
+                        // Try to get better guess for t1 to avoid big advections
+                        t1=.1*(tMax+tMin);
                         /*if (t1>tMin && t1<tMax)
                         {
                             if (t1>.5*(tMax+tMin))
