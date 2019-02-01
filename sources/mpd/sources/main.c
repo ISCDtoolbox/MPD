@@ -173,6 +173,8 @@ do {                                                                           \
 int main(int argc, char *argv[])
 {
     time_t startLocalTimer=0, endLocalTimer=0;
+    size_t length=0;
+    char* inputFileLocation=NULL;
     int i=0, j=0, optMode=0, iStop=0, jPlus=0, jMoins=0;
     double d0p=0., d1p=0., d2p=0.;
     Parameters parameters;
@@ -1699,8 +1701,8 @@ int adaptMeshWithMmg3dSoftware(Parameters* pParameters, char adaptMode[4])
     {
         if (pParameters->verbose)
         {
-            strcat(commandLine," -v 10"); // Error detected mmg3d_O3 -v 10 or not
-                                          // (should be solved now)
+            strcat(commandLine," -v 10"); // Error detected mmg3d_O3 -v 10 or
+                                          // not (should be solved now)
         }
         else
         {
