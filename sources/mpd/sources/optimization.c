@@ -6905,7 +6905,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
 {
     int i=0, counter=0, n=0, nMax=0, boolean=0;
     double tMin=0, tMax=0, t0=0., t1=0., *pShapeGradient=NULL, pMax=0., pMin=0.;
-    double p0=0., p1=0., h=0., deltaT=0., hMin=0., hMax=0.;
+    double p0=0., p1=0., h=0., deltaT=0., hMin=0.;
 
     // Check the input pointers
     if (pParameters==NULL || pMesh==NULL || pData==NULL ||
@@ -7334,8 +7334,8 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     else
                     {
                         // Try to estimate better hMax to avoid big advections 
-                        t1=10.*tMin;
-                        if (t1>tMin && t1<tMax)
+                        t1=.5*(tMax+tMin);//10.*tMin;
+                        /*if (t1>tMin && t1<tMax)
                         {
                             if (t1>.5*(tMax+tMin))
                             {
@@ -7345,7 +7345,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                         else
                         {
                             t1=.5*(tMax+tMin);
-                        }
+                        }*/
                     }
                 }
                 else
