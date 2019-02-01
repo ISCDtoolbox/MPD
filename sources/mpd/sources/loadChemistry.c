@@ -2249,15 +2249,16 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
     free(fileLocation);
     fileLocation=NULL;
 
-    fprintf(stdout,"\nChemical system (");
+    fprintf(stdout,"\nChemical system ");
     if (pParameters->orb_rhf)
     {
-        fprintf(stdout,"restricted Hartree-Fock) successfully loaded:\n");
+        fprintf(stdout,"(restricted Hartree-Fock) ");
     }
     else
     {
-        fprintf(stdout,"unrestricted Hartree-Fock) successfully loaded:\n");
+        fprintf(stdout,"(unrestricted or open-shell Hartree-Fock) ");
     }
+    fprintf(stdout,"successfully loaded:\n");
     fprintf(stdout,"%d Molecular Orbitals, ",pChemicalSystem->nmorb);
     fprintf(stdout,"%d Primitives, ",pChemicalSystem->ngauss);
     fprintf(stdout,"and %d Nuclei.\n",pChemicalSystem->nnucl);
