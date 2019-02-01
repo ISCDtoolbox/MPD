@@ -7231,7 +7231,6 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             p0=pData->pnu[iterationInTheLoop-1];
             h=pData->d1p[iterationInTheLoop-1];
             hMin=.5*(pParameters->hmin_ls+pParameters->hmin_lag);
-            hMax=.5*(pParameters->hmax_ls+pParameters->hmax_lag);
 
             t1=-2.;
             tMin=DEF_ABS(p0)/h;
@@ -7333,7 +7332,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     }
                     else
                     {
-                        // Try to estimate better hMax to avoid big advections 
+                        // OLD:Try to get better hMax to avoid big advections
                         t1=.5*(tMax+tMin);//10.*tMin;
                         /*if (t1>tMin && t1<tMax)
                         {
