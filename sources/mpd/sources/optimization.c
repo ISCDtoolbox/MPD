@@ -7334,7 +7334,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     else
                     {
                         // Try to estimate better hMax to avoid big advections 
-                        t1=hMin*hMax/sqrt(h);
+                        t1=10.*tMin;
                         if (t1>tMin && t1<tMax)
                         {
                             if (t1>.5*(tMax+tMin))
@@ -8009,6 +8009,15 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             free(pShapeGradient);
             pShapeGradient=NULL; 
 
+            if (t0*sqrt(h)<hMin*hMin)
+            {
+                pParameters->opt_mode=3;
+            }
+            else
+            {
+                pParameters->opt_mode=2;
+            }
+
             // Save the shape gradient
             if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
             {
@@ -8021,8 +8030,6 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             if (t0*sqrt(h)<hMin*hMin)
             {
                 // Advect mesh thanks to Lagrangian mode of mmg3d software
-                pParameters->opt_mode=3;
-                fprintf(stdout,"\nLagrangian mode.\n");
                 if (!computeLagrangianMode(pParameters,pMesh,
                                                             iterationInTheLoop))
                 {
@@ -8038,7 +8045,6 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             {
                 // Advect mesh thanks to Eulerian mode (level-set approach)
                 pParameters->opt_mode=2;
-                fprintf(stdout,"\nEulerian mode (level-set).\n");
                 if (!computeEulerianMode(pParameters,pMesh,iterationInTheLoop))
                 {
                     PRINT_ERROR("In optimization: ");
