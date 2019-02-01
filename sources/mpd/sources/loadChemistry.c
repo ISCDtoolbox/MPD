@@ -2063,6 +2063,10 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
                         return 0;
                     }
                 }
+                // Warning here: an error is returned if the *.chem file 
+                // prescribed by name_chem and the default one built from the
+                // *.info file name (saved in fileLocation) have different 
+                // names but point to the same file like './*.chem' and '*.chem'
                 if (!copyFileLocation(pParameters->name_chem,
                                          pParameters->name_length,fileLocation))
                 {
@@ -2165,7 +2169,8 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
                     fprintf(stderr,"restricted Hartree-fock was suggested), ");
                     fprintf(stderr,"whereas in the %s ",pParameters->name_chem);
                     fprintf(stderr,"file, the chemical data correspond to ");
-                    fprintf(stderr,"an unrestricted Hartree-Fock structure.\n");
+                    fprintf(stderr,"an unrestricted (or a restricted ");
+                    fprintf(stderr,"open-shell) Hartree-Fock structure.\n");
                     fprintf(stderr,"Pleace check the files and modify the ");
                     fprintf(stderr,"value accordingly after the 'orb_rhf' ");
                     fprintf(stderr,"keyword in the %s ",pParameters->name_info);

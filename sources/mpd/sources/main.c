@@ -1358,7 +1358,7 @@ int renameFileLocation(char* fileLocation, int nameLength,
     }
 
     // Dynamically allocate memory for the local commandLine variable
-    length=2*nameLength+5;
+    length=2*nameLength+10;
     commandLine=(char*)calloc(length,sizeof(char));
     if (commandLine==NULL)
     {
@@ -1378,6 +1378,7 @@ int renameFileLocation(char* fileLocation, int nameLength,
     strcat(commandLine,newFileLocation);
 
     // system returns is -1 on error, otherwise the return status of the command
+    // commandLine is only printed at start when moving *.temp file into *.chem 
     if (commandLine[length-4]=='t')
     {
         fprintf(stdout,"\n%s\n",commandLine);
