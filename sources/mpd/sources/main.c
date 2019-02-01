@@ -173,8 +173,8 @@ do {                                                                           \
 int main(int argc, char *argv[])
 {
     time_t startLocalTimer=0, endLocalTimer=0;
-    size_t length=0;
-    char* inputFileLocation=NULL;
+    size_t lengthName=0;
+    char* fileLocation=NULL;
     int i=0, j=0, optMode=0, iStop=0, jPlus=0, jMoins=0;
     double d0p=0., d1p=0., d2p=0.;
     Parameters parameters;
@@ -225,13 +225,67 @@ int main(int argc, char *argv[])
         FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
     }
 
+    // NEW: change if necessary the name of the *.input file into a *.info one
+    // calloc returns a pointer to the allocated memory, or NULL if it fails
+    // strlen returns the length of the string but not including the '\0'
+    // strncpy function returns a pointer to the resulting string
+    lengthName=strlen(argv[1]);
+    fileLocation=(char*)calloc(lengthName+1,sizeof(char));
+    if (fileLocation==NULL)
+    {
+        PRINT_ERROR("In main: could not allocate memory for the local ");
+        fprintf(stderr,"fileLocation (char*) variable.\n");
+        FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
+    }
+    strncpy(fileLocation,argv[1],lengthName+1);
+    if (fileLocation[lengthName-6]=='.' && fileLocation[lengthName-5]=='i' && 
+          fileLocation[lengthName-4]=='n' && fileLocation[lengthName-3]=='p' && 
+          fileLocation[lengthName-2]=='u' && fileLocation[lengthName-1]=='t' &&
+                                                 fileLocation[lengthName]=='\0')
+    {
+        fileLocation[lengthName-6]='.';
+        fileLocation[lengthName-5]='i';
+        fileLocation[lengthName-4]='n';
+        fileLocation[lengthName-3]='f';
+        fileLocation[lengthName-2]='o';
+        fileLocation[lengthName-1]='\0';
+        if (initialFileExists(fileLocation,lengthName+1)==1)
+        {
+            // remove returns 0 on success, otherwise -1
+            // free function does not return any value
+            if (remove(fileLocation))
+            {
+                PRINT_ERROR("In main: wrong return (=-1) of the standard ");
+                fprintf(stderr,"remove c-function in the attempt of removing ");
+                fprintf(stderr,"removing the %s file.\n",fileLocation);
+                free(fileLocation);
+                fileLocation=NULL;
+                FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,
+                                                                  EXIT_FAILURE);
+            }
+        }
+        if (!copyFileLocation(argv[1],lengthName+1,fileLocation))
+        {
+            PRINT_ERROR("In main: copyFileLocation function returned zero ");
+            fprintf(stderr,"instead of one.\n");
+            free(fileLocation);
+            fileLocation=NULL;
+            FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,
+                                                                  EXIT_FAILURE);
+        }
+    }
+
     // Load parameters from a *.info (input) file pointed by argv[1]
-    if (!loadParameters(&parameters,argv[1]))
+    if (!loadParameters(&parameters,fileLocation))
     {
         PRINT_ERROR("In main: loadParameters function returned zero instead ");
         fprintf(stderr,"of one.\n");
+        free(fileLocation);
+        fileLocation=NULL;
         FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
     }
+    free(fileLocation);
+    fileLocation=NULL;
 
     // Load chemistry from a *.chem/ *.wfn file pointed by parameters.name_chem
     if (!loadChemistry(&parameters,&chemicalSystem))
