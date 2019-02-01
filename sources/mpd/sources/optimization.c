@@ -7333,7 +7333,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     else
                     {
                         // Try to get better guess for t1 to avoid big advections
-                        t1=.1*(tMax+tMin);
+                        t1=.1*(tMax+9.*tMin);
                         /*if (t1>tMin && t1<tMax)
                         {
                             if (t1>.5*(tMax+tMin))
