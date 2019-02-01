@@ -6905,7 +6905,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
 {
     int i=0, counter=0, n=0, nMax=0, boolean=0;
     double tMin=0, tMax=0, t0=0., t1=0., *pShapeGradient=NULL, pMax=0., pMin=0.;
-    double p0=0., p1=0., h=0., deltaT=0., hMin=0.;
+    double p0=0., p1=0., h=0., deltaT=0., hMin=0., hMax=0.;
 
     // Check the input pointers
     if (pParameters==NULL || pMesh==NULL || pData==NULL ||
@@ -7231,6 +7231,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             p0=pData->pnu[iterationInTheLoop-1];
             h=pData->d1p[iterationInTheLoop-1];
             hMin=.5*(pParameters->hmin_ls+pParameters->hmin_lag);
+            hMax=.5*(pParameters->hmax_ls+pParameters->hmax_lag);
 
             t1=-2.;
             tMin=DEF_ABS(p0)/h;
@@ -7332,7 +7333,19 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     }
                     else
                     {
-                        t1=.5*(tMax+tMin);
+                        // Try to estimate better hMax to avoid big advections 
+                        t1=hMin*hMax/sqrt(h);
+                        if (t1>tMin && t1<tMax)
+                        {
+                            if (t1>.5*(tMax+tMin))
+                            {
+                                t1=.5*(tMax+tMin);
+                            }
+                        }
+                        else
+                        {
+                            t1=.5*(tMax+tMin);
+                        }
                     }
                 }
                 else
@@ -7992,8 +8005,6 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 pMesh->pver[i].value=t0*pShapeGradient[i];
             }
 
-            pParameters->opt_mode=2;
-
             // Free the memory allocated for pShapeGradient
             free(pShapeGradient);
             pShapeGradient=NULL; 
@@ -8010,6 +8021,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             if (t0*sqrt(h)<hMin*hMin)
             {
                 // Advect mesh thanks to Lagrangian mode of mmg3d software
+                pParameters->opt_mode=3;
                 fprintf(stdout,"\nLagrangian mode.\n");
                 if (!computeLagrangianMode(pParameters,pMesh,
                                                             iterationInTheLoop))
@@ -8025,6 +8037,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             else
             {
                 // Advect mesh thanks to Eulerian mode (level-set approach)
+                pParameters->opt_mode=2;
                 fprintf(stdout,"\nEulerian mode (level-set).\n");
                 if (!computeEulerianMode(pParameters,pMesh,iterationInTheLoop))
                 {
