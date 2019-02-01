@@ -1444,18 +1444,18 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
         }
 
         // Update (only one time allowed) deltaSpin if a gap in MO if observed
+        // It happens for UHF wave functions to indicate spin in MO enumeration
         if (readIntegerIn!=i+1 && !deltaSpin)
         {
-            deltaSpin=readIntegerIn-i;
+            deltaSpin=readIntegerIn-i-1;
         }
 
         // Check the readIntegerIn(-deltaSpin) variable
-        if (readIntegerIn-deltaSpin!=i)
+        if (readIntegerIn-deltaSpin!=i+1)
+        {
             PRINT_ERROR("In readWfnFileAndAllocateChemicalSystem: expecting ");
-            fprintf(stderr,"a positive value (strictly) less than ");
-            fprintf(stderr,"%d instead of %d ",iMax+deltaSpin,readIntegerIn);
-            fprintf(stderr,"for the integer associated with the MO keyword, ");
-            fprintf(stderr,"in the attempt of reading the primitive ");
+            fprintf(stderr,"MO %d instead of %d, ",i+1+deltaSpin,readIntegerIn);
+            fprintf(stderr,"while attempting to read the primitive ");
             fprintf(stderr,"coefficients of the %d-th MolecularOrbital ",i+1);
             fprintf(stderr,"structure.\n");
             closeTheFile(&wfnFile);
