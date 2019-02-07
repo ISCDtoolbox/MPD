@@ -1055,7 +1055,7 @@ int computeOverlapMatrix(Parameters* pParameters, Mesh* pMesh, Data* pData,
             }
 
             integralK=0.;
-#pragma omp parallel for reduction(+:integralK) private(integral,volumeTetrahedron,value,ip1,ip2,ip3,ip4,pp1,pp2,pp3,pp4,px,py,pz)
+#pragma omp parallel for default(shared) private(integral,volumeTetrahedron,value,ip1,ip2,ip3,ip4,pp1,pp2,pp3,pp4,px,py,pz) reduction(+:integralK)
             for (k=0; k<nTet; k++)
             {
                 // Skip the label labelToAvoid for tetrahedra
@@ -1211,7 +1211,7 @@ int computeOverlapMatrix(Parameters* pParameters, Mesh* pMesh, Data* pData,
 
         // Treat the particular case i=j
         integralK=0.;
-#pragma omp parallel for reduction(+:integralK) private(integral,volumeTetrahedron,value,ip1,ip2,ip3,ip4,pp1,pp2,pp3,pp4,px,py,pz)
+#pragma omp parallel for default(shared) private(integral,volumeTetrahedron,value,ip1,ip2,ip3,ip4,pp1,pp2,pp3,pp4,px,py,pz) reduction(+:integralK)
         for (k=0; k<nTet; k++)
         {
             // Skip the label labelToAvoid for tetrahedra
@@ -2118,7 +2118,7 @@ int computeOverlapMatrixOnGrid(Parameters* pParameters, Mesh* pMesh,
             }
 
             integralK=0.;
-#pragma omp parallel for reduction(+:integralK) private(integral,lI,lJ)
+#pragma omp parallel for default(shared) private(integral,lI,lJ) reduction(+:integralK)
             for (k=0; k<nHex; k++)
             {
                 integral=0.;
