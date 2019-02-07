@@ -1026,7 +1026,7 @@ int computeOverlapMatrix(Parameters* pParameters, Mesh* pMesh, Data* pData,
     pOmega=(int*)calloc(nTet,sizeof(int));
     if (pOmega==NULL)
     {
-        PRINT_ERROR("In computeOverlapMatrix: could not allocate memory ");
+        PRINT_ERROR("In computeOverlapMatrix: we could not allocate memory ");
         fprintf(stderr,"for the local (int*) variable pOmega.\n");
         return 0;
     }
@@ -1903,7 +1903,8 @@ int computeOverlapMatrixOnGrid(Parameters* pParameters, Mesh* pMesh,
                                int labelToConsiderOrAvoid,
                                                          int iterationInTheLoop)
 {
-    int i=0, j=0, k=0, lI=0, lJ=0, nHex=0, nMorb=0, nGauss=0;
+    int i=0, j=0, k=0, lI=0, lJ=0, nHex=0, nMorb=0, nGauss=0, kMax=0;
+    int *pOmega=NULL;
     double integral=0., integralK=0.;
     MolecularOrbital *pMolecularOrbitalI=NULL, *pMolecularOrbitalJ=NULL;
     OverlapMatrix *pOverlapMatrix=NULL, *pOverlapMatrixOld=NULL;
@@ -2060,6 +2061,38 @@ int computeOverlapMatrixOnGrid(Parameters* pParameters, Mesh* pMesh,
         }
     }
 
+    // Initialization of the vector containing only the hexahedra indices
+    // with a label that is (or not) the one given by labelToConsiderOrAvoid
+    pOmega=(int*)calloc(nHex,sizeof(int));
+    if (pOmega==NULL)
+    {
+        PRINT_ERROR("In computeOverlapMatrixOnGrid: we could not allocate ");
+        fprintf(stderr,"memory for the local (int*) variable pOmega.\n");
+        return 0;
+    }
+
+    kMax=0;
+    for (k=0; k<nHex; k++)
+    {
+        // Skip or consider the labelToConsiderOrAvoid for hexahedra
+        if (labelToConsiderOrAvoid<-1)
+        {
+            if (pMesh->phex[k].label==labelToConsiderOrAvoid)
+            {
+                kMax++;
+                pOmega[kMax-1]=k;
+            }
+        }
+        else
+        {
+            if (pMesh->phex[k].label!=labelToConsiderOrAvoid)
+            {
+                kMax++;
+                pOmega[kMax-1]=k;
+            }
+        }
+    }
+
     // Evaluation of the symmetric overlap matrix S
     for (i=0; i<nMorb; i++)
     {
@@ -2102,6 +2135,8 @@ int computeOverlapMatrixOnGrid(Parameters* pParameters, Mesh* pMesh,
                         fprintf(stderr,"(=%d) ",pParameters->trick_matrix);
                         fprintf(stderr,"is not active.\n");
                     }
+                    free(pOmega);
+                    pOmega=NULL;
                     return 0;
                 }
 
@@ -2133,25 +2168,9 @@ int computeOverlapMatrixOnGrid(Parameters* pParameters, Mesh* pMesh,
 
             integralK=0.;
 #pragma omp parallel for default(shared) private(integral,lI,lJ) reduction(+:integralK)
-            for (k=0; k<nHex; k++)
+            for (k=0; k<kMax; k++)
             {
                 integral=0.;
-
-                // Skip or consider the labelToConsiderOrAvoid for hexahedra
-                if (labelToConsiderOrAvoid<-1)
-                {
-                    if (pMesh->phex[k].label!=labelToConsiderOrAvoid)
-                    {
-                        continue;
-                    }
-                }
-                else
-                {
-                    if (pMesh->phex[k].label==labelToConsiderOrAvoid)
-                    {
-                        continue;
-                    }
-                }
 
                 // Compute the three-dimensional integral analytically
                 for (lI=0; lI<nGauss; lI++)
@@ -2162,7 +2181,7 @@ int computeOverlapMatrixOnGrid(Parameters* pParameters, Mesh* pMesh,
                                                            pChemicalSystem,
                                                            pMolecularOrbitalI,
                                                            pMolecularOrbitalJ,
-                                                                       lI,lJ,k);
+                                                               lI,lJ,pOmega[k]);
                     }
                 }
                 integralK=integralK+integral;
@@ -2191,6 +2210,10 @@ int computeOverlapMatrixOnGrid(Parameters* pParameters, Mesh* pMesh,
             }
         }
     }
+
+    // Free the memory allocated for pOmega
+    free(pOmega);
+    pOmega=NULL;
 
     // Normally, we do not need to complete the matrix which is symmetric
     // since LAPACK_dsyev function only need a triangular part. Warning:
