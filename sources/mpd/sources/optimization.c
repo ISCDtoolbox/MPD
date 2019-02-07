@@ -852,6 +852,7 @@ int computeOverlapMatrix(Parameters* pParameters, Mesh* pMesh, Data* pData,
                                                          int iterationInTheLoop)
 {
     int i=0, j=0, k=0, ip1=0, ip2=0, ip3=0, ip4=0, nTet=0, nMorb=0, nGauss=0;
+    int *pOmega=NULL, kMax=0;
     double integral=0., integralK=0., volumeTetrahedron=0., value=0., px=0.;
     double py=0., pz=0.;
     MolecularOrbital *pMolecularOrbitalI=NULL, *pMolecularOrbitalJ=NULL;
@@ -917,7 +918,6 @@ int computeOverlapMatrix(Parameters* pParameters, Mesh* pMesh, Data* pData,
         {
             fprintf(stdout,"65 %% done.\n");
         }
-        
     }
 
     // Set the pointer for the overlap matrix
@@ -1021,6 +1021,26 @@ int computeOverlapMatrix(Parameters* pParameters, Mesh* pMesh, Data* pData,
         }
     }
 
+    // Initialization of the vector containing only the tetrahedra indices
+    // with a label that is not the one given by the labelToAvoid input variable
+    pOmega=(int*)calloc(nTet,sizeof(int));
+    if (pOmega==NULL)
+    {
+        PRINT_ERROR("In computeOverlapMatrix: could not allocate memory ");
+        fprintf(stderr,"for the local (int*) variable pOmega.\n");
+        return 0;
+    }
+
+    kMax=0;
+    for (k=0; k<nTet; k++)
+    {
+        if (pMesh->ptet[k].label!=labelToAvoid)
+        {
+            kMax++;
+            pOmega[kMax-1]=k;
+        }
+    }
+
     // Evaluation of the symmetric overlap matrix S
     for (i=0; i<nMorb; i++)
     {
@@ -1056,19 +1076,14 @@ int computeOverlapMatrix(Parameters* pParameters, Mesh* pMesh, Data* pData,
 
             integralK=0.;
 #pragma omp parallel for default(shared) private(integral,volumeTetrahedron,value,ip1,ip2,ip3,ip4,pp1,pp2,pp3,pp4,px,py,pz) reduction(+:integralK)
-            for (k=0; k<nTet; k++)
+            for (k=0; k<kMax; k++)
             {
-                // Skip the label labelToAvoid for tetrahedra
-                if (pMesh->ptet[k].label==labelToAvoid)
-                {
-                    continue;
-                }
-
-                // Get the adresses of the vertices of the k-th tetrahedron
-                ip1=pMesh->ptet[k].p1;
-                ip2=pMesh->ptet[k].p2;
-                ip3=pMesh->ptet[k].p3;
-                ip4=pMesh->ptet[k].p4;
+                // Get the vertex adresses of the k-th tetrahedron with a label
+                // different from the labelToAvoid variable (faster with OpenMP)
+                ip1=pMesh->ptet[pOmega[k]].p1;
+                ip2=pMesh->ptet[pOmega[k]].p2;
+                ip3=pMesh->ptet[pOmega[k]].p3;
+                ip4=pMesh->ptet[pOmega[k]].p4;
 
                 // Warning here: we have stored point reference as given
                 // in the *.mesh file so do not forget to remove one from these
@@ -1212,19 +1227,14 @@ int computeOverlapMatrix(Parameters* pParameters, Mesh* pMesh, Data* pData,
         // Treat the particular case i=j
         integralK=0.;
 #pragma omp parallel for default(shared) private(integral,volumeTetrahedron,value,ip1,ip2,ip3,ip4,pp1,pp2,pp3,pp4,px,py,pz) reduction(+:integralK)
-        for (k=0; k<nTet; k++)
+        for (k=0; k<kMax; k++)
         {
-            // Skip the label labelToAvoid for tetrahedra
-            if (pMesh->ptet[k].label==labelToAvoid)
-            {
-                continue;
-            }
-
-            // Get the adresses of the vertices of the k-th tetrahedron
-            ip1=pMesh->ptet[k].p1;
-            ip2=pMesh->ptet[k].p2;
-            ip3=pMesh->ptet[k].p3;
-            ip4=pMesh->ptet[k].p4;
+            // Get the vertex adresses of the k-th tetrahedron with a label
+            // different from the labelToAvoid variable (faster with OpenMP)
+            ip1=pMesh->ptet[pOmega[k]].p1;
+            ip2=pMesh->ptet[pOmega[k]].p2;
+            ip3=pMesh->ptet[pOmega[k]].p3;
+            ip4=pMesh->ptet[pOmega[k]].p4;
 
             // Warning here: we have stored point reference as given in the
             // *.mesh file so do not forget to remove one from these integers
@@ -1338,7 +1348,7 @@ int computeOverlapMatrix(Parameters* pParameters, Mesh* pMesh, Data* pData,
 
         // End of the parallelization for the loop for
         pOverlapMatrix->coef[i*nMorb+i]=integralK;
-        if (pParameters->opt_mode!=1 || pParameters->verbose || 
+        if (pParameters->opt_mode!=1 || pParameters->verbose ||
                                                             !iterationInTheLoop)
         {
             if (pParameters->orb_rhf)
@@ -1353,6 +1363,10 @@ int computeOverlapMatrix(Parameters* pParameters, Mesh* pMesh, Data* pData,
             }
         }
     }
+
+    // Free the memory allocated for pOmega
+    free(pOmega);
+    pOmega=NULL;
 
     // Normally, we do not need to complete the matrix which is symmetric
     // since LAPACK_dsyev function only need a triangular part. Warning:
@@ -2607,7 +2621,7 @@ int computeProbability(Parameters* pParameters, Data* pData,
     if ((pParameters->opt_mode!=-2 && pParameters->opt_mode!=1) ||
                                                             !iterationInTheLoop)
     {
-        if (pParameters->verbose)    
+        if (pParameters->verbose)
         {
             for (i=0; i<nProb; i++)
             {
@@ -4755,7 +4769,7 @@ int writingObjFile(Parameters* pParameters, Mesh* pMesh)
         PRINT_ERROR("In writingObjFile: the tetrahedral mesh does not seem ");
         fprintf(stderr,"to contain any internal domain. The number of ");
         fprintf(stderr,"boundary triangles (=%d) labelled ten in the ",nTri);
-        fprintf(stderr,"current mesh should be a positive integer.\n"); 
+        fprintf(stderr,"current mesh should be a positive integer.\n");
         return 0;
     }
 
@@ -4819,7 +4833,7 @@ int writingObjFile(Parameters* pParameters, Mesh* pMesh)
         fileLocation=NULL;
         return 0;
     }
-    
+
     // Write the vertices by setting a triangle adjacency
     iMax=pMesh->ntri;
     nTri=0;
@@ -5579,7 +5593,7 @@ int saveDataInTheLoop(Parameters* pParameters, Mesh* pMesh, Data* pData,
 // quantities (probability, ...), save them in the *.data file given by
 // the pParameters->name_data variable, and save also the mesh in a *.0.mesh
 // file. It allows the user to always keep track of all the parameters with the
-// *.info file, always get the initial mesh saved before the optimization loop, 
+// *.info file, always get the initial mesh saved before the optimization loop,
 // and terminates the setting up of the initialization process of the MPD
 // algorithm. It has the Parameters*, Mesh*, Data*, ChemicalSystem* structures
 // (both defined in main.h) as input arguments, and also the three time_t*
@@ -6080,7 +6094,7 @@ int exhaustiveSearchAlgorithm(Parameters* pParameters, Mesh* pMesh,
                 return 0;
             }
 
-            // Compute probabilities and total population in the domain 
+            // Compute probabilities and total population in the domain
             if (!computeProbability(pParameters,pData,iterationInTheLoop))
             {
                 PRINT_ERROR("In exhaustiveSearchAlgorithm: ");
@@ -6140,7 +6154,7 @@ int exhaustiveSearchAlgorithm(Parameters* pParameters, Mesh* pMesh,
         return 0;
     }
 
-    // Compute probabilities and total population in the domain 
+    // Compute probabilities and total population in the domain
     if (!computeProbability(pParameters,pData,iterationInTheLoop))
     {
         PRINT_ERROR("In exhaustiveSearchAlgorithm: computeProbability ");
@@ -6550,7 +6564,7 @@ int computeEulerianMode(Parameters* pParameters, Mesh* pMesh,
         fprintf(stdout,"\nSTEP 3: ADVECT THE LEVEL-SET FUNCTION ");
         fprintf(stdout,"ACCORDING TO THE EXTENDED SHAPE GRADIENT.\n");
     }
-         
+
     // Advect the level-set function according to the parameters
     if (!advectLevelSetWithAdvectSoftware(pParameters))
     {
@@ -6730,7 +6744,7 @@ int computeLagrangianMode(Parameters* pParameters, Mesh* pMesh,
 // main.h), and the int interationInTheLoop variables as input arguments. It
 // returns the value of the probability on success otherwise -10000 for an error
 /* ************************************************************************** */
-double computeProbabilityAndReloadPreviousMesh(Parameters* pParameters, 
+double computeProbabilityAndReloadPreviousMesh(Parameters* pParameters,
                                                Mesh* pMesh, Data* pData,
                                                ChemicalSystem* pChemicalSystem,
                                                          int iterationInTheLoop)
@@ -7175,7 +7189,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 PRINT_ERROR("In optimization: performLevelSetAdaptation ");
                 fprintf(stderr,"function returned zero instead of one.\n");
                 return 0;
-            } 
+            }
 
             fprintf(stdout,"\nSTEP 6: COMPUTE PROBABILITY, POPULATION ");
             fprintf(stdout,"AND SHAPE GRADIENT ON THE NEW DOMAIN.\n");
@@ -7479,7 +7493,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     else
                     {
                         tMax=t1;
-                        t1=.5*(tMax+tMin);                     
+                        t1=.5*(tMax+tMin);
                         fprintf(stdout,"\nRESTRICTING LINE SEARCH ");
                         fprintf(stdout,"TO THE INTERVAL ");
                         fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
@@ -7627,7 +7641,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
 
                 tMax=t0;
                 pMax=p0;
-    
+
                 // Starting golden-line search on the initial interval
                 fprintf(stdout,"\nINITIAL INTERVAL FOUND: ");
                 fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
@@ -8006,7 +8020,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
 
             // Free the memory allocated for pShapeGradient
             free(pShapeGradient);
-            pShapeGradient=NULL; 
+            pShapeGradient=NULL;
 
             if (t0*sqrt(h)<hMin*hMin)
             {
