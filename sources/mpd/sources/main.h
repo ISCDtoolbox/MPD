@@ -75,244 +75,244 @@ do {                                                                           \
 // of Gaussian software)
 /* ************************************************************************** */
 /**
-* \def ORB_1S
-* \brief Used to distinguish the 1s-type basis-set function.
+* \def ORB_S
+* \brief Used to distinguish the s-type basis-set function.
 *
 * It follows the standard nomenclature (.wfn/.wfx format, outputs of Gaussian
 * software) for basis-set functions in the expansion of molecular orbitals into
 * a sum of Gaussian-type primitives.
 */
-#define ORB_1S 1
+#define ORB_S 1
 
 /**
-* \def ORB_2PX
-* \brief Used to distinguish the 2px-type basis-set function.
+* \def ORB_PX
+* \brief Used to distinguish the px-type basis-set function.
 *
 * It follows the standard nomenclature (.wfn/.wfx format, outputs of Gaussian
 * software) for basis-set functions in the expansion of molecular orbitals into
 * a sum of Gaussian-type primitives.
 */
-#define ORB_2PX 2
+#define ORB_PX 2
 
 /**
-* \def ORB_2PY
-* \brief Used to distinguish the 2py-type basis-set function.
+* \def ORB_PY
+* \brief Used to distinguish the py-type basis-set function.
 *
 * It follows the standard nomenclature (.wfn/.wfx format, outputs of Gaussian
 * software) for basis-set functions in the expansion of molecular orbitals into
 * a sum of Gaussian-type primitives.
 */
-#define ORB_2PY 3
+#define ORB_PY 3
 
 /**
-* \def ORB_2PZ
-* \brief Used to distinguish the 2pz-type basis-set function.
+* \def ORB_PZ
+* \brief Used to distinguish the pz-type basis-set function.
 *
 * It follows the standard nomenclature (.wfn/.wfx format, outputs of Gaussian
 * software) for basis-set functions in the expansion of molecular orbitals into
 * a sum of Gaussian-type primitives.
 */
-#define ORB_2PZ 4
+#define ORB_PZ 4
 
 /**
-* \def ORB_3DXX
-* \brief Used to distinguish the 3dxx-type basis-set function.
+* \def ORB_DXX
+* \brief Used to distinguish the dxx-type basis-set function.
 *
 * It follows the standard nomenclature (.wfn/.wfx format, outputs of Gaussian
 * software) for basis-set functions in the expansion of molecular orbitals into
 * a sum of Gaussian-type primitives.
 */
-#define ORB_3DXX 5
+#define ORB_DXX 5
 
 /**
-* \def ORB_3DYY
-* \brief Used to distinguish the 3dyy-type basis-set function.
+* \def ORB_DYY
+* \brief Used to distinguish the dyy-type basis-set function.
 *
 * It follows the standard nomenclature (.wfn/.wfx format, outputs of Gaussian
 * software) for basis-set functions in the expansion of molecular orbitals into
 * a sum of Gaussian-type primitives.
 */
-#define ORB_3DYY 6
+#define ORB_DYY 6
 
 /**
-* \def ORB_3DZZ
-* \brief Used to distinguish the 3dzz-type basis-set function.
+* \def ORB_DZZ
+* \brief Used to distinguish the dzz-type basis-set function.
 *
 * It follows the standard nomenclature (.wfn/.wfx format, outputs of Gaussian
 * software) for basis-set functions in the expansion of molecular orbitals into
 * a sum of Gaussian-type primitives.
 */
-#define ORB_3DZZ 7
+#define ORB_DZZ 7
 
 /**
-* \def ORB_3DXY
-* \brief Used to distinguish the 3dxy-type basis-set function.
+* \def ORB_DXY
+* \brief Used to distinguish the dxy-type basis-set function.
 *
 * It follows the standard nomenclature (.wfn/.wfx format, outputs of Gaussian
 * software) for basis-set functions in the expansion of molecular orbitals into
 * a sum of Gaussian-type primitives.
 */
-#define ORB_3DXY 8
+#define ORB_DXY 8
 
 /**
-* \def ORB_3DXZ
-* \brief Used to distinguish the 3dxz-type basis-set function.
+* \def ORB_DXZ
+* \brief Used to distinguish the dxz-type basis-set function.
 *
 * It follows the standard nomenclature (.wfn/.wfx format, outputs of Gaussian
 * software) for basis-set functions in the expansion of molecular orbitals into
 * a sum of Gaussian-type primitives.
 */
-#define ORB_3DXZ 9
+#define ORB_DXZ 9
 
 /**
-* \def ORB_3DYZ
-* \brief Used to distinguish the 3dyz-type basis-set function.
+* \def ORB_DYZ
+* \brief Used to distinguish the dyz-type basis-set function.
 *
 * It follows the standard nomenclature (.wfn/.wfx format, outputs of Gaussian
 * software) for basis-set functions in the expansion of molecular orbitals into
 * a sum of Gaussian-type primitives.
 */
-#define ORB_3DYZ 10
+#define ORB_DYZ 10
 
 /**
-* \def ORB_4FXXX
-* \brief Used to distinguish the 4fxxx-type basis-set function.
+* \def ORB_FXXX
+* \brief Used to distinguish the fxxx-type basis-set function.
 *
 * It follows the standard nomenclature (.wfn/.wfx format, outputs of Gaussian
 * software) for basis-set functions in the expansion of molecular orbitals into
 * a sum of Gaussian-type primitives.
 */
-#define ORB_4FXXX 11
+#define ORB_FXXX 11
 
 /**
-* \def ORB_4FYYY
-* \brief Used to distinguish the 4fyyy-type basis-set function.
+* \def ORB_FYYY
+* \brief Used to distinguish the fyyy-type basis-set function.
 *
 * It follows the standard nomenclature (.wfn/.wfx format, outputs of Gaussian
 * software) for basis-set functions in the expansion of molecular orbitals into
 * a sum of Gaussian-type primitives.
 */
-#define ORB_4FYYY 12
+#define ORB_FYYY 12
 
 /**
-* \def ORB_4FZZZ
-* \brief Used to distinguish the 4fzzz-type basis-set function.
+* \def ORB_FZZZ
+* \brief Used to distinguish the fzzz-type basis-set function.
 *
 * It follows the standard nomenclature (.wfn/.wfx format, outputs of Gaussian
 * software) for basis-set functions in the expansion of molecular orbitals into
 * a sum of Gaussian-type primitives.
 */
-#define ORB_4FZZZ 13
+#define ORB_FZZZ 13
 
 /**
-* \def ORB_4FXXY
-* \brief Used to distinguish the 4fxxy-type basis-set function.
+* \def ORB_FXXY
+* \brief Used to distinguish the fxxy-type basis-set function.
 *
 * It follows the standard nomenclature (.wfn/.wfx format, outputs of Gaussian
 * software) for basis-set functions in the expansion of molecular orbitals into
 * a sum of Gaussian-type primitives.
 */
-#define ORB_4FXXY 14
+#define ORB_FXXY 14
 
 /**
-* \def ORB_4FXXZ
-* \brief Used to distinguish the 4fxxz-type basis-set function.
+* \def ORB_FXXZ
+* \brief Used to distinguish the fxxz-type basis-set function.
 *
 * It follows the standard nomenclature (.wfn/.wfx format, outputs of Gaussian
 * software) for basis-set functions in the expansion of molecular orbitals into
 * a sum of Gaussian-type primitives.
 */
-#define ORB_4FXXZ 15
+#define ORB_FXXZ 15
 
 /**
-* \def ORB_4FYYZ
-* \brief Used to distinguish the 4fyyz-type basis-set function.
+* \def ORB_FYYZ
+* \brief Used to distinguish the fyyz-type basis-set function.
 *
 * It follows the standard nomenclature (.wfn/.wfx format, outputs of Gaussian
 * software) for basis-set functions in the expansion of molecular orbitals into
 * a sum of Gaussian-type primitives.
 */
-#define ORB_4FYYZ 16
+#define ORB_FYYZ 16
 
 /**
-* \def ORB_4FXYY
-* \brief Used to distinguish the 4fxyy-type basis-set function.
+* \def ORB_FXYY
+* \brief Used to distinguish the fxyy-type basis-set function.
 *
 * It follows the standard nomenclature (.wfn/.wfx format, outputs of Gaussian
 * software) for basis-set functions in the expansion of molecular orbitals into
 * a sum of Gaussian-type primitives.
 */
-#define ORB_4FXYY 17
+#define ORB_FXYY 17
 
 /**
-* \def ORB_4FXZZ
-* \brief Used to distinguish the 4fxzz-type basis-set function.
+* \def ORB_FXZZ
+* \brief Used to distinguish the fxzz-type basis-set function.
 *
 * It follows the standard nomenclature (.wfn/.wfx format, outputs of Gaussian
 * software) for basis-set functions in the expansion of molecular orbitals into
 * a sum of Gaussian-type primitives.
 */
-#define ORB_4FXZZ 18
+#define ORB_FXZZ 18
 
 /**
-* \def ORB_4FYZZ
-* \brief Used to distinguish the 4fyzz-type basis-set function.
+* \def ORB_FYZZ
+* \brief Used to distinguish the fyzz-type basis-set function.
 *
 * It follows the standard nomenclature (.wfn/.wfx format, outputs of Gaussian
 * software) for basis-set functions in the expansion of molecular orbitals into
 * a sum of Gaussian-type primitives.
 */
-#define ORB_4FYZZ 19
+#define ORB_FYZZ 19
 
 /**
-* \def ORB_4FXYZ
-* \brief Used to distinguish the 4fxyz-type basis-set function.
+* \def ORB_FXYZ
+* \brief Used to distinguish the fxyz-type basis-set function.
 *
 * It follows the standard nomenclature (.wfn/.wfx format, outputs of Gaussian
 * software) for basis-set functions in the expansion of molecular orbitals into
 * a sum of Gaussian-type primitives.
 */
-#define ORB_4FXYZ 20
+#define ORB_FXYZ 20
 
 /*
 // Not used in the current version of the program (but we save the values here
 // just in case they might be needed later)
-#define ORB_5GXXXX 21
-#define ORB_5GYYYY 22
-#define ORB_5GZZZZ 23
-#define ORB_5GXXXY 24
-#define ORB_5GXXXZ 25
-#define ORB_5GXYYY 26
-#define ORB_5GYYYZ 27
-#define ORB_5GXZZZ 28
-#define ORB_5GYZZZ 29
-#define ORB_5GXXYY 30
-#define ORB_5GXXZZ 31
-#define ORB_5GYYZZ 32
-#define ORB_5GXXYZ 33
-#define ORB_5GXYYZ 34
-#define ORB_5GXYZZ 35
-#define ORB_6HZZZZZ 36
-#define ORB_6HYZZZZ 37
-#define ORB_6HYYZZZ 38
-#define ORB_6HYYYZZ 39
-#define ORB_6HYYYYZ 40
-#define ORB_6HYYYYY 41
-#define ORB_6HXZZZZ 42
-#define ORB_6HXYZZZ 43
-#define ORB_6HXYYZZ 44
-#define ORB_6HXYYYZ 45
-#define ORB_6HXYYYY 46
-#define ORB_6HXXZZZ 47
-#define ORB_6HXXYZZ 48
-#define ORB_6HXXYYZ 49
-#define ORB_6HXXYYY 50
-#define ORB_6HXXXZZ 51
-#define ORB_6HXXXYZ 52
-#define ORB_6HXXXYY 53
-#define ORB_6HXXXXZ 54
-#define ORB_6HXXXXY 55
-#define ORB_6HXXXXX 56
+#define ORB_GXXXX 21
+#define ORB_GYYYY 22
+#define ORB_GZZZZ 23
+#define ORB_GXXXY 24
+#define ORB_GXXXZ 25
+#define ORB_GXYYY 26
+#define ORB_GYYYZ 27
+#define ORB_GXZZZ 28
+#define ORB_GYZZZ 29
+#define ORB_GXXYY 30
+#define ORB_GXXZZ 31
+#define ORB_GYYZZ 32
+#define ORB_GXXYZ 33
+#define ORB_GXYYZ 34
+#define ORB_GXYZZ 35
+#define ORB_HZZZZZ 36
+#define ORB_HYZZZZ 37
+#define ORB_HYYZZZ 38
+#define ORB_HYYYZZ 39
+#define ORB_HYYYYZ 40
+#define ORB_HYYYYY 41
+#define ORB_HXZZZZ 42
+#define ORB_HXYZZZ 43
+#define ORB_HXYYZZ 44
+#define ORB_HXYYYZ 45
+#define ORB_HXYYYY 46
+#define ORB_HXXZZZ 47
+#define ORB_HXXYZZ 48
+#define ORB_HXXYYZ 49
+#define ORB_HXXYYY 50
+#define ORB_HXXXZZ 51
+#define ORB_HXXXYZ 52
+#define ORB_HXXXYY 53
+#define ORB_HXXXXZ 54
+#define ORB_HXXXXY 55
+#define ORB_HXXXXX 56
 */
 
 /* ************************************************************************** */
@@ -976,8 +976,8 @@ typedef struct {
                              *    not pointing to NULL, the values of the array
                              *    it is pointing to should always be positive
                              *    and not (strictly) greater than twenty (i.e. a
-                             *    value referenced between \ref ORB_1S and \ref
-                             *    ORB_4FXYZ), while its size should always
+                             *    value referenced between \ref ORB_S and \ref
+                             *    ORB_FXYZ), while its size should always
                              *    correspond to the ngauss variable of the
                              *    ChemicalSystem structure. */
 } MolecularOrbital;
@@ -2181,83 +2181,83 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
 *                  for further details). Otherwise, an error is returned by \ref
 *                  checkAllPreprocessorConstants function.
 *
-* \param[in] orb1 It must be set to 1 (see \ref ORB_1S description for further
+* \param[in] orb1 It must be set to 1 (see \ref ORB_S description for further
 *                 details). Otherwise, an error is returned by \ref
 *                 checkAllPreprocessorConstants function.
 *
-* \param[in] orb2 It must be set to 2 (see \ref ORB_2PX description for further
+* \param[in] orb2 It must be set to 2 (see \ref ORB_PX description for further
 *                 details). Otherwise, an error is returned by \ref
 *                 checkAllPreprocessorConstants function.
 *
-* \param[in] orb3 It must be set to 3 (see \ref ORB_2PY description for further
+* \param[in] orb3 It must be set to 3 (see \ref ORB_PY description for further
 *                 details). Otherwise, an error is returned by \ref
 *                 checkAllPreprocessorConstants function.
 *
-* \param[in] orb4 It must be set to 4 (see \ref ORB_2PZ description for further
+* \param[in] orb4 It must be set to 4 (see \ref ORB_PZ description for further
 *                 details). Otherwise, an error is returned by \ref
 *                 checkAllPreprocessorConstants function.
 *
-* \param[in] orb5 It must be set to 5 (see \ref ORB_3DXX description for further
+* \param[in] orb5 It must be set to 5 (see \ref ORB_DXX description for further
 *                 details). Otherwise, an error is returned by \ref
 *                 checkAllPreprocessorConstants function.
 *
-* \param[in] orb6 It must be set to 6 (see \ref ORB_3DYY description for further
+* \param[in] orb6 It must be set to 6 (see \ref ORB_DYY description for further
 *                 details). Otherwise, an error is returned by \ref
 *                 checkAllPreprocessorConstants function.
 *
-* \param[in] orb7 It must be set to 7 (see \ref ORB_3DZZ description for further
+* \param[in] orb7 It must be set to 7 (see \ref ORB_DZZ description for further
 *                 details). Otherwise, an error is returned by \ref
 *                 checkAllPreprocessorConstants function.
 *
-* \param[in] orb8 It must be set to 8 (see \ref ORB_3DXY description for further
+* \param[in] orb8 It must be set to 8 (see \ref ORB_DXY description for further
 *                 details). Otherwise, an error is returned by \ref
 *                 checkAllPreprocessorConstants function.
 *
-* \param[in] orb9 It must be set to 9 (see \ref ORB_3DXZ description for further
+* \param[in] orb9 It must be set to 9 (see \ref ORB_DXZ description for further
 *                 details). Otherwise, an error is returned by \ref
 *                 checkAllPreprocessorConstants function.
 *
-* \param[in] orb10 It must be set to 10 (see \ref ORB_3DYZ description for
+* \param[in] orb10 It must be set to 10 (see \ref ORB_DYZ description for
 *                  further details). Otherwise, an error is returned by \ref
 *                  checkAllPreprocessorConstants function.
 *
-* \param[in] orb11 It must be set to 11 (see \ref ORB_4FXXX description for
+* \param[in] orb11 It must be set to 11 (see \ref ORB_FXXX description for
 *                  further details). Otherwise, an error is returned by \ref
 *                  checkAllPreprocessorConstants function.
 *
-* \param[in] orb12 It must be set to 12 (see \ref ORB_4FYYY description for
+* \param[in] orb12 It must be set to 12 (see \ref ORB_FYYY description for
 *                  further details). Otherwise, an error is returned by \ref
 *                  checkAllPreprocessorConstants function.
 *
-* \param[in] orb13 It must be set to 13 (see \ref ORB_4FZZZ description for
+* \param[in] orb13 It must be set to 13 (see \ref ORB_FZZZ description for
 *                  further details). Otherwise, an error is returned by \ref
 *                  checkAllPreprocessorConstants function.
 *
-* \param[in] orb14 It must be set to 14 (see \ref ORB_4FXXY description for
+* \param[in] orb14 It must be set to 14 (see \ref ORB_FXXY description for
 *                  further details). Otherwise, an error is returned by \ref
 *                  checkAllPreprocessorConstants function.
 *
-* \param[in] orb15 It must be set to 15 (see \ref ORB_4FXXZ description for
+* \param[in] orb15 It must be set to 15 (see \ref ORB_FXXZ description for
 *                  further details). Otherwise, an error is returned by \ref
 *                  checkAllPreprocessorConstants function.
 *
-* \param[in] orb16 It must be set to 16 (see \ref ORB_4FYYZ description for
+* \param[in] orb16 It must be set to 16 (see \ref ORB_FYYZ description for
 *                  further details). Otherwise, an error is returned by \ref
 *                  checkAllPreprocessorConstants function.
 *
-* \param[in] orb17 It must be set to 17 (see \ref ORB_4FXYY description for
+* \param[in] orb17 It must be set to 17 (see \ref ORB_FXYY description for
 *                  further details). Otherwise, an error is returned by \ref
 *                  checkAllPreprocessorConstants function.
 *
-* \param[in] orb18 It must be set to 18 (see \ref ORB_4FXZZ description for
+* \param[in] orb18 It must be set to 18 (see \ref ORB_FXZZ description for
 *                  further details). Otherwise, an error is returned by \ref
 *                  checkAllPreprocessorConstants function.
 *
-* \param[in] orb19 It must be set to 19 (see \ref ORB_4FYZZ description for
+* \param[in] orb19 It must be set to 19 (see \ref ORB_FYZZ description for
 *                  further details). Otherwise, an error is returned by \ref
 *                  checkAllPreprocessorConstants function.
 *
-* \param[in] orb20 It must be set to 20 (see \ref ORB_4FXYZ description for
+* \param[in] orb20 It must be set to 20 (see \ref ORB_FXYZ description for
 *                  further details). Otherwise, an error is returned by \ref
 *                  checkAllPreprocessorConstants function.
 *

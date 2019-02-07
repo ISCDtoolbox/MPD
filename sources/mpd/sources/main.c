@@ -210,15 +210,14 @@ int main(int argc, char *argv[])
                                        HMIN_LS,HMAX_LS,HAUSD_LS,HGRAD_LS,
                                        HMODE_LAG,HMIN_LAG,HMAX_LAG,HAUSD_LAG,
                                        HGRAD_LAG,N_ITER,RESIDUAL,DELTA_T,NO_CFL,
-                                       ORB_1S,ORB_2PX,ORB_2PY,ORB_2PZ,ORB_3DXX,
-                                       ORB_3DYY,ORB_3DZZ,ORB_3DXY,ORB_3DXZ,
-                                       ORB_3DYZ,ORB_4FXXX,ORB_4FYYY,ORB_4FZZZ,
-                                       ORB_4FXXY,ORB_4FXXZ,ORB_4FYYZ,ORB_4FXYY,
-                                       ORB_4FXZZ,ORB_4FYZZ,ORB_4FXYZ,CST_A,
-                                       CST_B,CST_C,CST_a,CST_b,CST_c,CST_aa,
-                                       CST_bb,CST_cc,CST_ONE,CST_TWO,CST_THREE,
-                                       CST_1,CST_2,CST_3,CST_22,CST_33,INV_PHI,
-                                                                      INV_PHI2))
+                                       ORB_S,ORB_PX,ORB_PY,ORB_PZ,ORB_DXX,
+                                       ORB_DYY,ORB_DZZ,ORB_DXY,ORB_DXZ,ORB_DYZ,
+                                       ORB_FXXX,ORB_FYYY,ORB_FZZZ,ORB_FXXY,
+                                       ORB_FXXZ,ORB_FYYZ,ORB_FXYY,ORB_FXZZ,
+                                       ORB_FYZZ,ORB_FXYZ,CST_A,CST_B,CST_C,
+                                       CST_a,CST_b,CST_c,CST_aa,CST_bb,CST_cc,
+                                       CST_ONE,CST_TWO,CST_THREE,CST_1,CST_2,
+                                          CST_3,CST_22,CST_33,INV_PHI,INV_PHI2))
     {
         PRINT_ERROR("In main: checkAllPreprocessorConstants function ");
         fprintf(stderr,"returned zero instead of one.\n");
@@ -1090,21 +1089,21 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
     if (!boolean)
     {
         PRINT_ERROR("In checkAllPreprocessorConstants: expecting\n");
-        fprintf(stderr,"(ORB_1S=%d) == 1\n(ORB_2PX=%d) == 2\n",orb1,orb2);
-        fprintf(stderr,"(ORB_2PY=%d) == 3\n(ORB_2PZ=%d) == 4\n",orb3,orb4);
-        fprintf(stderr,"(ORB_3DXX=%d) == 5\n(ORB_3DYY=%d) == 6\n",orb5,orb6);
-        fprintf(stderr,"(ORB_3DZZ=%d) == 7\n(ORB_3DXY=%d) == 8\n",orb7,orb8);
-        fprintf(stderr,"(ORB_3DXZ=%d) == 9\n(ORB_3DYZ=%d) == 10\n",orb9,orb10);
-        fprintf(stderr,"(ORB_4FXXX=%d) == 11\n",orb11);
-        fprintf(stderr,"(ORB_4FYYY=%d) == 12\n",orb12);
-        fprintf(stderr,"(ORB_4FZZZ=%d) == 13\n",orb13);
-        fprintf(stderr,"(ORB_4FXXY=%d) == 14\n",orb14);
-        fprintf(stderr,"(ORB_4FXXZ=%d) == 15\n",orb15);
-        fprintf(stderr,"(ORB_4FYYZ=%d) == 16\n",orb16);
-        fprintf(stderr,"(ORB_4FXYY=%d) == 17\n",orb17);
-        fprintf(stderr,"(ORB_4FXZZ=%d) == 18\n",orb18);
-        fprintf(stderr,"(ORB_4FYZZ=%d) == 19\n",orb19);
-        fprintf(stderr,"(ORB_4FXYZ=%d) == 20\nPlease modify the ",orb20);
+        fprintf(stderr,"(ORB_S=%d) == 1\n(ORB_PX=%d) == 2\n",orb1,orb2);
+        fprintf(stderr,"(ORB_PY=%d) == 3\n(ORB_PZ=%d) == 4\n",orb3,orb4);
+        fprintf(stderr,"(ORB_DXX=%d) == 5\n(ORB_DYY=%d) == 6\n",orb5,orb6);
+        fprintf(stderr,"(ORB_DZZ=%d) == 7\n(ORB_DXY=%d) == 8\n",orb7,orb8);
+        fprintf(stderr,"(ORB_DXZ=%d) == 9\n(ORB_DYZ=%d) == 10\n",orb9,orb10);
+        fprintf(stderr,"(ORB_FXXX=%d) == 11\n",orb11);
+        fprintf(stderr,"(ORB_FYYY=%d) == 12\n",orb12);
+        fprintf(stderr,"(ORB_FZZZ=%d) == 13\n",orb13);
+        fprintf(stderr,"(ORB_FXXY=%d) == 14\n",orb14);
+        fprintf(stderr,"(ORB_FXXZ=%d) == 15\n",orb15);
+        fprintf(stderr,"(ORB_FYYZ=%d) == 16\n",orb16);
+        fprintf(stderr,"(ORB_FXYY=%d) == 17\n",orb17);
+        fprintf(stderr,"(ORB_FXZZ=%d) == 18\n",orb18);
+        fprintf(stderr,"(ORB_FYZZ=%d) == 19\n",orb19);
+        fprintf(stderr,"(ORB_FXYZ=%d) == 20\nPlease modify the ",orb20);
         fprintf(stderr,"preprocessor constants accordingly in main.h file.\n");
         return 0;
     }

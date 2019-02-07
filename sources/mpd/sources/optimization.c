@@ -635,82 +635,82 @@ double evaluatingPrimitiveAtVertices(double px, double py, double pz,
     {
         // These preprocessor constants are defined in main.h (hence common to
         // all *.h files) because it is also used in optimization.c functions
-        case ORB_1S:
+        case ORB_S:
             break;
 
-        case ORB_2PX:
+        case ORB_PX:
             function*=dx;
             break;
 
-        case ORB_2PY:
+        case ORB_PY:
             function*=dy;
             break;
 
-        case ORB_2PZ:
+        case ORB_PZ:
             function*=dz;
             break;
 
-        case ORB_3DXX:
+        case ORB_DXX:
             function*=dx*dx;
             break;
 
-        case ORB_3DYY:
+        case ORB_DYY:
             function*=dy*dy;
             break;
 
-        case ORB_3DZZ:
+        case ORB_DZZ:
             function*=dz*dz;
             break;
 
-        case ORB_3DXY:
+        case ORB_DXY:
             function*=dx*dy;
             break;
 
-        case ORB_3DXZ:
+        case ORB_DXZ:
             function*=dx*dz;
             break;
 
-        case ORB_3DYZ:
+        case ORB_DYZ:
             function*=dy*dz;
             break;
 
-        case ORB_4FXXX:
+        case ORB_FXXX:
             function*=dx*dx*dx;
             break;
 
-        case ORB_4FYYY:
+        case ORB_FYYY:
             function*=dy*dy*dy;
             break;
 
-        case ORB_4FZZZ:
+        case ORB_FZZZ:
             function*=dz*dz*dz;
             break;
 
-        case ORB_4FXXY:
+        case ORB_FXXY:
             function*=dx*dx*dy;
             break;
 
-        case ORB_4FXXZ:
+        case ORB_FXXZ:
             function*=dx*dx*dz;
             break;
 
-        case ORB_4FYYZ:
+        case ORB_FYYZ:
             function*=dy*dy*dz;
             break;
 
-        case ORB_4FXYY:
+        case ORB_FXYY:
             function*=dx*dy*dy;
             break;
 
-        case ORB_4FXZZ:
+        case ORB_FXZZ:
             function*=dx*dz*dz;
             break;
 
-        case ORB_4FYZZ:
+        case ORB_FYZZ:
             function*=dy*dz*dz;
             break;
 
-        case ORB_4FXYZ:
+        case ORB_FXYZ:
             function*=dx*dy*dz;
             break;
 
@@ -719,7 +719,7 @@ double evaluatingPrimitiveAtVertices(double px, double py, double pz,
             fprintf(stdout,"function: the local type (=%d) variable ",type);
             fprintf(stdout,"should be a (positive) integer not (strictly) ");
             fprintf(stdout,"greater than twenty here. We have treated it as ");
-            fprintf(stdout,"if it was equal to one (1s-type orbital).\n");
+            fprintf(stdout,"if it was equal to one (s-type orbital).\n");
             break;
     }
 
@@ -1405,84 +1405,84 @@ int convertingType(int type)
             fprintf(stdout,"type variable (=%d) should be a positive ",type);
             fprintf(stdout,"integer not (strictly) greater than twenty here. ");
             fprintf(stdout,"We have treated it as if it was equal to one ");
-            fprintf(stdout,"(1s-type orbital).\n");
-        case ORB_1S:
+            fprintf(stdout,"(s-type orbital).\n");
+        case ORB_S:
             returnValue=0;
             break;
 
-        case ORB_2PX:
+        case ORB_PX:
             returnValue=1;
             break;
 
-        case ORB_2PY:
+        case ORB_PY:
             returnValue=10;
             break;
 
-        case ORB_2PZ:
+        case ORB_PZ:
             returnValue=100;
             break;
 
-        case ORB_3DXX:
+        case ORB_DXX:
             returnValue=2;
             break;
 
-        case ORB_3DYY:
+        case ORB_DYY:
             returnValue=20;
             break;
 
-        case ORB_3DZZ:
+        case ORB_DZZ:
             returnValue=200;
             break;
 
-        case ORB_3DXY:
+        case ORB_DXY:
             returnValue=11;
             break;
 
-        case ORB_3DXZ:
+        case ORB_DXZ:
             returnValue=101;
             break;
 
-        case ORB_3DYZ:
+        case ORB_DYZ:
             returnValue=110;
             break;
 
-        case ORB_4FXXX:
+        case ORB_FXXX:
             returnValue=3;
             break;
 
-        case ORB_4FYYY:
+        case ORB_FYYY:
             returnValue=30;
             break;
 
-        case ORB_4FZZZ:
+        case ORB_FZZZ:
             returnValue=300;
             break;
 
-        case ORB_4FXXY:
+        case ORB_FXXY:
             returnValue=12;
             break;
 
-        case ORB_4FXXZ:
+        case ORB_FXXZ:
             returnValue=102;
             break;
 
-        case ORB_4FXYY:
+        case ORB_FXYY:
             returnValue=21;
             break;
 
-        case ORB_4FYYZ:
+        case ORB_FYYZ:
             returnValue=120;
             break;
 
-        case ORB_4FXZZ:
+        case ORB_FXZZ:
             returnValue=201;
             break;
 
-        case ORB_4FYZZ:
+        case ORB_FYZZ:
             returnValue=210;
             break;
 
-        case ORB_4FXYZ:
+        case ORB_FXYZ:
             returnValue=111;
             break;
     }
@@ -1572,7 +1572,7 @@ double evaluateOneIntegralIJ(int expI, int expJ, double cI, double cJ,
             fprintf(stdout,"Warning in evaluateOneIntegralIJ function: ");
             fprintf(stdout,"the input expI variable (=%d) should only ",expI);
             fprintf(stdout,"be set to zero, one, two, or three. We have ");
-            fprintf(stdout,"treated it as zero (1s-type orbital).\n");
+            fprintf(stdout,"treated it as zero (s-type orbital).\n");
         case 0:
             switch (expJ)
             {
@@ -1581,7 +1581,7 @@ double evaluateOneIntegralIJ(int expI, int expJ, double cI, double cJ,
                     fprintf(stdout,"function: the input expJ variable ");
                     fprintf(stdout,"(=%d) should only be set to zero, ",expJ);
                     fprintf(stdout,"one, two, or three. We have treated it ");
-                    fprintf(stdout,"as zero (1s-type orbital).\n");
+                    fprintf(stdout,"as zero (s-type orbital).\n");
                 case 0:
                     integral=evaluateGaussianIntegral(0,t0,t1);
                     break;
@@ -1614,7 +1614,7 @@ double evaluateOneIntegralIJ(int expI, int expJ, double cI, double cJ,
                     fprintf(stdout,"function: the input expJ variable ");
                     fprintf(stdout,"(=%d) should only be set to zero, ",expJ);
                     fprintf(stdout,"one, two, or three. We have treated it ");
-                    fprintf(stdout,"as zero (1s-type orbital).\n");
+                    fprintf(stdout,"as zero (s-type orbital).\n");
                 case 0:
                     integral=evaluateGaussianIntegral(1,t0,t1);
                     integral-=cI*evaluateGaussianIntegral(0,t0,t1);
@@ -1652,7 +1652,7 @@ double evaluateOneIntegralIJ(int expI, int expJ, double cI, double cJ,
                     fprintf(stdout,"function: the input expJ variable ");
                     fprintf(stdout,"(=%d) should only be set to zero, ",expJ);
                     fprintf(stdout,"one, two, or three. We have treated it ");
-                    fprintf(stdout,"as zero (1s-type orbital).\n");
+                    fprintf(stdout,"as zero (s-type orbital).\n");
                 case 0:
                     integral=evaluateGaussianIntegral(2,t0,t1);
                     integral-=2.*cI*evaluateGaussianIntegral(1,t0,t1);
@@ -1698,7 +1698,7 @@ double evaluateOneIntegralIJ(int expI, int expJ, double cI, double cJ,
                     fprintf(stdout,"function: the input expJ variable ");
                     fprintf(stdout,"(=%d) should only be set to zero, ",expJ);
                     fprintf(stdout,"one, two, or three. We have treated it ");
-                    fprintf(stdout,"as zero (1s-type orbital).\n");
+                    fprintf(stdout,"as zero (s-type orbital).\n");
                 case 0:
                     integral=evaluateGaussianIntegral(3,t0,t1);
                     integral-=3.*cI*evaluateGaussianIntegral(2,t0,t1);

@@ -230,7 +230,7 @@ int getLevelSetQuadrilaterals(Parameters* pParameters, Mesh* pMesh);
 *         the process, if the coefficient of the primitive is zero, the function
 *         immediatly returns zero. For similar reasons, if the type of the
 *         primitive is not between one and twenty, the type is treated by
-*         default as an 1s-type (see \ref ORB_1S for further details) and a
+*         default as an s-type (see \ref ORB_S for further details) and a
 *         a warning is displayed in the standard output stream.
 *
 * The \ref evaluatingHessianAtVertices function should be static but has been

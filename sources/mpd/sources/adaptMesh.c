@@ -1140,11 +1140,11 @@ double evaluatingHessianAtVertices(ChemicalSystem* pChemicalSystem,
             fprintf(stdout,"function: the local type (=%d) variable ",type);
             fprintf(stdout,"should be a (positive) integer not (strictly) ");
             fprintf(stdout,"greater than twenty here. We have treated it as ");
-            fprintf(stdout,"if it was equal to one (1s-type orbital).\n");
+            fprintf(stdout,"if it was equal to one (s-type orbital).\n");
 
         // These preprocessor constants are defined in main.h (hence common to
         // all *.h files) because it is also used in optimization.c functions
-        case ORB_1S:
+        case ORB_S:
             value*=exponent2;
             gradient[0]-=value*dx;
             gradient[1]-=value*dy;
@@ -1157,7 +1157,7 @@ double evaluatingHessianAtVertices(ChemicalSystem* pChemicalSystem,
             hessian[5]+=value*dyz;
             break;
 
-        case ORB_2PX:
+        case ORB_PX:
             function*=(dxx-1.);
             gradient[0]-=function;
             function*=exponent2;
@@ -1174,7 +1174,7 @@ double evaluatingHessianAtVertices(ChemicalSystem* pChemicalSystem,
             hessian[5]+=value*dyz;
             break;
 
-        case ORB_2PY:
+        case ORB_PY:
             function*=(dyy-1.);
             gradient[1]-=function;
             function*=exponent2;
@@ -1191,7 +1191,7 @@ double evaluatingHessianAtVertices(ChemicalSystem* pChemicalSystem,
             hessian[4]+=value*dxz;
             break;
 
-        case ORB_2PZ:
+        case ORB_PZ:
             function*=(dzz-1.);
             gradient[2]-=function;
             function*=exponent2;
@@ -1208,7 +1208,7 @@ double evaluatingHessianAtVertices(ChemicalSystem* pChemicalSystem,
             hessian[3]+=value*dxy;
             break;
 
-        case ORB_3DXX:
+        case ORB_DXX:
             hessian[0]+=value*(2.+dxx*(dxx-5.));
             function*=dx*(dxx-2.);
             gradient[0]-=function;
@@ -1225,7 +1225,7 @@ double evaluatingHessianAtVertices(ChemicalSystem* pChemicalSystem,
             hessian[5]+=value*dyz;
             break;
 
-        case ORB_3DYY:
+        case ORB_DYY:
             hessian[1]+=value*(2.+dyy*(dyy-5.));
             function*=dy*(dyy-2.);
             gradient[1]-=function;
@@ -1242,7 +1242,7 @@ double evaluatingHessianAtVertices(ChemicalSystem* pChemicalSystem,
             hessian[4]+=value*dxz;
             break;
 
-        case ORB_3DZZ:
+        case ORB_DZZ:
             hessian[2]+=value*(2.+dzz*(dzz-5.));
             function*=dz*(dzz-2.);
             gradient[2]-=function;
@@ -1259,7 +1259,7 @@ double evaluatingHessianAtVertices(ChemicalSystem* pChemicalSystem,
             hessian[3]+=value*dxy;
             break;
 
-        case ORB_3DXY:
+        case ORB_DXY:
             hessian[3]+=value*(dyy-1.)*(dxx-1.);
             function*=dy*(dxx-1.);
             gradient[0]-=function;
@@ -1277,7 +1277,7 @@ double evaluatingHessianAtVertices(ChemicalSystem* pChemicalSystem,
             hessian[2]+=value*(dzz-1.);
             break;
 
-        case ORB_3DXZ:
+        case ORB_DXZ:
             hessian[4]+=value*(dxx-1.)*(dzz-1.);
             function*=dz*(dxx-1.);
             gradient[0]-=function;
@@ -1295,7 +1295,7 @@ double evaluatingHessianAtVertices(ChemicalSystem* pChemicalSystem,
             hessian[2]+=value*(dzz-3.);
             break;
 
-        case ORB_3DYZ:
+        case ORB_DYZ:
             hessian[5]+=value*(dyy-1.)*(dzz-1.);
             function*=dz*(dyy-1.);
             gradient[1]-=function;
@@ -1313,7 +1313,7 @@ double evaluatingHessianAtVertices(ChemicalSystem* pChemicalSystem,
             hessian[2]+=value*(dzz-3.);
             break;
 
-        case ORB_4FXXX:
+        case ORB_FXXX:
             hessian[0]+=value*dx*(6.+dxx*(dxx-7.));
             value*=dx*dx;
             function=value*(dxx-3.);
@@ -1330,7 +1330,7 @@ double evaluatingHessianAtVertices(ChemicalSystem* pChemicalSystem,
             hessian[5]+=value*dyz;
             break;
 
-        case ORB_4FYYY:
+        case ORB_FYYY:
             hessian[1]+=value*dy*(6.+dyy*(dyy-7.));
             value*=dy*dy;
             function=value*(dyy-3.);
@@ -1347,7 +1347,7 @@ double evaluatingHessianAtVertices(ChemicalSystem* pChemicalSystem,
             hessian[4]+=value*dxz;
             break;
 
-        case ORB_4FZZZ:
+        case ORB_FZZZ:
             hessian[2]+=value*dz*(6.+dzz*(dzz-7.));
             value*=dz*dz;
             function=value*(dzz-3.);
@@ -1364,7 +1364,7 @@ double evaluatingHessianAtVertices(ChemicalSystem* pChemicalSystem,
             hessian[3]+=value*dxy;
             break;
 
-        case ORB_4FXXY:
+        case ORB_FXXY:
             hessian[0]+=value*dy*(2.+dxx*(dxx-5.));
             function*=dx*(dxx-2.);
             hessian[3]+=function*(dyy-1.);
@@ -1383,7 +1383,7 @@ double evaluatingHessianAtVertices(ChemicalSystem* pChemicalSystem,
             hessian[2]+=value*(dzz-1.);
             break;
 
-        case ORB_4FXXZ:
+        case ORB_FXXZ:
             hessian[0]+=value*dz*(2.+dxx*(dxx-5.));
             function*=dx*(dxx-2.);
             hessian[4]+=function*(dzz-1.);
@@ -1402,7 +1402,7 @@ double evaluatingHessianAtVertices(ChemicalSystem* pChemicalSystem,
             hessian[2]+=value*(dzz-3.);
             break;
 
-        case ORB_4FYYZ:
+        case ORB_FYYZ:
             hessian[1]+=value*dz*(2.+dyy*(dyy-5.));
             function*=dy*(dyy-2.);
             hessian[5]+=function*(2.*exponent*dz*dz-1.);
@@ -1421,7 +1421,7 @@ double evaluatingHessianAtVertices(ChemicalSystem* pChemicalSystem,
             hessian[2]+=value*(dzz-3.);
             break;
 
-        case ORB_4FXYY:
+        case ORB_FXYY:
             hessian[1]+=value*dx*(2.+dyy*(dyy-5.));
             function*=dy*(dyy-2.);
             hessian[3]+=function*(dxx-1.);
@@ -1440,7 +1440,7 @@ double evaluatingHessianAtVertices(ChemicalSystem* pChemicalSystem,
             hessian[2]+=value*(dzz-1.);
             break;
 
-        case ORB_4FXZZ:
+        case ORB_FXZZ:
             hessian[2]+=value*dx*(2.+dzz*(dzz-5.));
             function*=dz*(dzz-2.);
             hessian[4]+=function*(dxx-1.);
@@ -1459,7 +1459,7 @@ double evaluatingHessianAtVertices(ChemicalSystem* pChemicalSystem,
             hessian[1]+=value*(dyy-1.);
             break;
 
-        case ORB_4FYZZ:
+        case ORB_FYZZ:
             hessian[2]+=value*dy*(2.+dzz*(dzz-5.));
             function*=dz*(dzz-2.);
             hessian[5]+=function*(dyy-1.);
@@ -1478,7 +1478,7 @@ double evaluatingHessianAtVertices(ChemicalSystem* pChemicalSystem,
             hessian[1]+=value*(dyy-3.);
             break;
 
-        case ORB_4FXYZ:
+        case ORB_FXYZ:
             function*=dx*dy*dz;
             gradient[0]+=value*dy*dz*(1.-dxx);
             gradient[1]+=value*dx*dz*(1.-dyy);

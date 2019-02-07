@@ -402,7 +402,7 @@ int addLengthForFileName(Parameters* pParameters, int additionalLength);
 *         the process, if the coefficient of the primitive is zero, the function
 *         immediatly returns zero. For similar reasons, if the type of the
 *         primitive is not between one and twenty, the type is treated by
-*         default as an 1s-type (see \ref ORB_1S for further details) and a
+*         default as an s-type (see \ref ORB_S for further details) and a
 *         a warning is displayed in the standard output stream.
 *
 * The \ref evaluatingPrimitiveAtVertices function should be static but has been
@@ -673,17 +673,17 @@ int computeOverlapMatrix(Parameters* pParameters, Mesh* pMesh, Data* pData,
 *        *.wfn format into an integer defined by a+10b+100c, where a, b, and c
 *        stands for the number of x, y, and z in the electronic layer in
 *        consideration, respectively. For example, the type of the layer
-*        \ref ORB_4FXXY is converted into 12, while \ref ORB_3DXZ gives 101.
+*        \ref ORB_FXXY is converted into 12, while \ref ORB_DXZ gives 101.
 *
 * \param[in] type An integer comprised between one and twenty (i.e. equal to one
 *                 of the ORB_* preprocessor constants defined in main.h).
 *                 Otherwise, for not slowing the computational time, a warning
 *                 message is displayed in the standard output stream and the
-*                 integer is treated as if it was equal to the \ref ORB_1S
+*                 integer is treated as if it was equal to the \ref ORB_S
 *                 preprocessor constant.
 *
 * \return It returns the converted type (or zero i.e. the results for
-*         type=\ref ORB_1S if the type variable is not comprised between one
+*         type=\ref ORB_S if the type variable is not comprised between one
 *         and twenty).
 *
 * The \ref convertingType function should be static but has been defined as
@@ -740,7 +740,7 @@ double evaluateGaussianIntegral(int exp0, double t0, double t1);
 *                 one-dimensional integral we aim to compute here. It must be
 *                 comprised between zero and three, otherwise the \ref
 *                 evaluateOneIntegralIJ function consider it is equal to zero
-*                 (case of a 1s-type orbital).
+*                 (case of a s-type orbital).
 *
 * \param[in] expJ An integer referring to the exponent associated with the
 *                 the input variable primitiveJ of \ref evaluateTripleIntegralIJ
@@ -748,7 +748,7 @@ double evaluateGaussianIntegral(int exp0, double t0, double t1);
 *                 one-dimensional integral we aim to compute here. It must be
 *                 comprised between zero and three, otherwise the \ref
 *                 evaluateOneIntegralIJ function consider it is equal to zero
-*                 (case of a 1s-type orbital).
+*                 (case of a s-type orbital).
 *
 * \param[in] cI It corresponds to the center obtained after the change of
 *               variables performed in the \ref evaluateTripleIntegralIJ
