@@ -217,7 +217,17 @@ int readChemFileandAllocateChemicalSystem(char* fileLocation, int nameLength,
     // white space characters in the input up to the next character that is not
     // white space. One white space character in format-string matches any
     // combination of white space characters in the input
-    fscanf(chemicalFile," ");
+    readIntegerOut=fscanf(chemicalFile," ");
+    if (readIntegerOut)
+    {
+        PRINT_ERROR("In readChemFileandAllocateChemicalSystem: wrong return ");
+        fprintf(stderr,"(=%d) of the fscanf function ",readIntegerOut);
+        fprintf(stderr,"(EOF=%d) while attempting to read the ",EOF);
+        fprintf(stderr,"first white space characters (in case there was ");
+        fprintf(stderr,"some) of the %s file.\n",fileLocation);
+        closeTheFile(&chemicalFile);
+        return 0;
+    }
 
     // Read number of molecular orbitals and store it in pChemicalSystem->nmorb
     // fgets returns NULL if it fails, otherwise the same (char*) input address
@@ -417,7 +427,18 @@ int readChemFileandAllocateChemicalSystem(char* fileLocation, int nameLength,
     // For each MocularOrbital, read and save successively the spin followed
     // by the enumeration of the gaussian coefficients, exponents, center
     // references, and associated types
-    fscanf(chemicalFile," ");
+    readIntegerOut=fscanf(chemicalFile," ");
+    if (readIntegerOut)
+    {
+        PRINT_ERROR("In readChemFileandAllocateChemicalSystem: wrong return ");
+        fprintf(stderr,"(=%d) of the fscanf function ",readIntegerOut);
+        fprintf(stderr,"(EOF=%d) while attempting to read the ",EOF);
+        fprintf(stderr,"white space characters (in case there was some) ");
+        fprintf(stderr,"after the keywords %s.\n",readStringIn);
+        closeTheFile(&chemicalFile);
+        return 0;
+    }
+
     iMax=pChemicalSystem->nmorb;
     for (i=0; i<iMax; i++)
     {
@@ -1019,9 +1040,19 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
         return 0;
     }
 
-
     // Saving the Nucleus data in pMesh->pnucl and check if it worked
-    fscanf(wfnFile," ");
+    readIntegerOut=fscanf(wfnFile," ");
+    if (readIntegerOut)
+    {
+        PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong return ");
+        fprintf(stderr,"(=%d) of the fscanf function ",readIntegerOut);
+        fprintf(stderr,"(EOF=%d) while attempting to read the ",EOF);
+        fprintf(stderr,"white space characters (in case there was some) ");
+        fprintf(stderr,"after the number of nuclei (=%d).\n",readIntegerIn);
+        closeTheFile(&wfnFile);
+        return 0;
+    }
+
     iMax=readIntegerIn;
     for (i=0; i<iMax; i++)
     {
@@ -1176,7 +1207,19 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
                 closeTheFile(&wfnFile);
                 return 0;
             }
-            fscanf(wfnFile," ");
+
+            readIntegerOut=fscanf(wfnFile," ");
+            if (readIntegerOut)
+            {
+                PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong ");
+                fprintf(stderr,"return (=%d) of the fscanf ",readIntegerOut);
+                fprintf(stderr,"function (EOF=%d) while attempting to ",EOF);
+                fprintf(stderr,"read the white space characters (in case ");
+                fprintf(stderr,"there was some) after the %d-th keyword ",j+1);
+                fprintf(stderr,"C%s.\n",readStringIn);
+                closeTheFile(&wfnFile);
+                return 0;
+            }
         }
         else
         {
@@ -1267,7 +1310,19 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
                 closeTheFile(&wfnFile);
                 return 0;
             }
-            fscanf(wfnFile," ");
+
+            readIntegerOut=fscanf(wfnFile," ");
+            if (readIntegerOut)
+            {
+                PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong ");
+                fprintf(stderr,"return (=%d) of the fscanf ",readIntegerOut);
+                fprintf(stderr,"function (EOF=%d) while attempting to ",EOF);
+                fprintf(stderr,"read the white space characters (in case ");
+                fprintf(stderr,"there was some) after the %d-th keyword ",j+1);
+                fprintf(stderr,"T%s.\n",readStringIn);
+                closeTheFile(&wfnFile);
+                return 0;
+            }
         }
         else
         {
@@ -1357,7 +1412,19 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
                 closeTheFile(&wfnFile);
                 return 0;
             }
-            fscanf(wfnFile," ");
+
+            readIntegerOut=fscanf(wfnFile," ");
+            if (readIntegerOut)
+            {
+                PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: wrong ");
+                fprintf(stderr,"return (=%d) of the fscanf ",readIntegerOut);
+                fprintf(stderr,"function (EOF=%d) while attempting to ",EOF);
+                fprintf(stderr,"read the white space characters (in case ");
+                fprintf(stderr,"there was some) after the %d-th keyword ",j+1);
+                fprintf(stderr,"E%s.\n",readStringIn);
+                closeTheFile(&wfnFile);
+                return 0;
+            }
         }
         else
         {

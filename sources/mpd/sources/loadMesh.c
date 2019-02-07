@@ -4312,7 +4312,17 @@ int checkCompatibilityOfChemicalData(char* fileLocation, int nameLength,
     // white space characters in the input up to the next character that is not
     // white space. One white space character in format-string matches any
     // combination of white space characters in the input
-    fscanf(chemicalFile," ");
+    readIntegerOut=fscanf(chemicalFile," ");
+    if (readIntegerOut)
+    {
+        PRINT_ERROR("In checkCompatibilityOfChemicalData: wrong return ");
+        fprintf(stderr,"(=%d) of the fscanf function ",readIntegerOut);
+        fprintf(stderr,"(EOF=%d) while attempting to read the first ",EOF);
+        fprintf(stderr,"white space characters (in case there was some) ");
+        fprintf(stderr,"of the %s file.\n",fileLocation);
+        closeTheFile(&chemicalFile);
+        return 0;
+    }
 
     // Read number of molecular orbitals: fgets returns NULL if it fails,
     // otherwise the same (char*) input address

@@ -2118,7 +2118,20 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
     }
     fprintf(stdout,"Reading parameters. ");
 
-    fscanf(infoFile," ");
+    readIntegerOut=fscanf(infoFile," ");
+    if (readIntegerOut)
+    {
+        PRINT_ERROR("In readInfoFileAndGetParameters: wrong return ");
+        fprintf(stderr,"(=%d) of the fscanf function ",readIntegerOut);
+        fprintf(stderr,"(EOF=%d) while attempting to read the ",EOF);
+        fprintf(stderr,"first white space characters (in case there was ");
+        fprintf(stderr,"some) of the %s file.\n",fileName);
+        closeTheFile(&infoFile);
+        free(readStringIn);
+        readStringIn=NULL;
+        return 0;
+    }
+
     counter=0;
     while (counter<70)
     {
@@ -2377,7 +2390,27 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
                 }
 
                 // Start reading the name of the path, character by character
-                fscanf(infoFile," ");
+                readIntegerOut=fscanf(infoFile," ");
+                if (readIntegerOut)
+                {
+                    PRINT_ERROR("In readInfoFileAndGetParameters: wrong ");
+                    fprintf(stderr,"return (=%d) of the ",readIntegerOut);
+                    fprintf(stderr,"fscanf function (EOF=%d) while ",EOF);
+                    fprintf(stderr,"attempting to read the white space ");
+                    fprintf(stderr,"characters (in case there was some) ");
+                    fprintf(stderr,"after the %d-th keyword ",counter);
+                    fprintf(stderr,"(=%s%s",keywordBeginning,keywordMiddle);
+                    if (lengthEnd>1)
+                    {
+                        fprintf(stderr,"%s",keywordEnd);
+                    }
+                    fprintf(stderr,").\n");
+                    closeTheFile(&infoFile);
+                    free(readStringIn);
+                    readStringIn=NULL;
+                    return 0;
+                }
+
                 i=0;
                 do {
                     readChar=fgetc(infoFile);
@@ -2430,7 +2463,29 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
                     readStringIn[i]='\0';
                     i++;
                 }
-                fscanf(infoFile," ");
+
+                readIntegerOut=fscanf(infoFile," ");
+                if (readIntegerOut)
+                {
+                    PRINT_ERROR("In readInfoFileAndGetParameters: wrong ");
+                    fprintf(stderr,"return (=%d) of the ",readIntegerOut);
+                    fprintf(stderr,"fscanf function (EOF=%d) while ",EOF);
+                    fprintf(stderr,"attempting to read the white space ");
+                    fprintf(stderr,"characters (in case there was some) ");
+                    fprintf(stderr,"after the string (=%s) ",readStringIn);
+                    fprintf(stderr,"associated with the %d-th ",counter);
+                    fprintf(stderr,"keyword ");
+                    fprintf(stderr,"(=%s%s",keywordBeginning,keywordMiddle);
+                    if (lengthEnd>1)
+                    {
+                        fprintf(stderr,"%s",keywordEnd);
+                    }
+                    fprintf(stderr,").\n");
+                    closeTheFile(&infoFile);
+                    free(readStringIn);
+                    readStringIn=NULL;
+                    return 0;
+                }
                 break;
 
             default:
