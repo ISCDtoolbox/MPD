@@ -1882,17 +1882,15 @@ int saveDataInTheLoop(Parameters* pParameters, Mesh* pMesh, Data* pData,
                                time_t* pStartLocalTimer, time_t* pEndLocalTimer)
 * \brief It allocates memory for the saving of pData, enlarge of 10 letters the
 *        maximal length allowed for path names, reallocates memory accordingly
-*        for the pParameters->name_* variables, write an *.input file
+*        for the pParameters->name_* variables, write an *.restart file
 *        recapitulating all the parameters used (both default ones and those
-*        prescribed by the user in the *.info (input) file, set up the number
-*        of threads/cpu for the parallel calculations (stored in the 
-*        pParameters->n_cpu variable), compute all the quantities
-*        (probability, ...), save them in the *.data file given by
+*        prescribed by the user in the *.info (input) file, compute all the
+*        quantities (probability, ...), save them in the *.data file given by
 *        the pParameters->name_data variable, and save also the mesh in a
 *        *.0.mesh file. It allows the user to always keep track of all the
 *        current parameters with the *.input file (its path name is generated
 *        from the *.info one but where the'.info' extension is replace by the
-*       'input' one, file is overwritten if it already exists), always get the
+*       'restart' one, file is overwritten if it already exists), always get the
 *        initial mesh saved, and terminates the setting up of the initialization
 *        process of the MPD algorithm.
 *
@@ -1946,25 +1944,15 @@ int saveDataInTheLoop(Parameters* pParameters, Mesh* pMesh, Data* pData,
 * The \ref setupInitialData function successively executes the \ref
 * allocateMemoryForData, \ref addLengthForFileName, \ref writingRestartFile, 
 * \ref shapeDerivative, \ref saveDataInTheLoop functions. We refer to their
-* descriptions description for further details. We emphasize here the fact that
-* the \ref setupInitialData function contains the omp_set_num_threads function
-* of the openmp library. Hence, in order to use this function, the omp.h header
-* file must not be put in comment in the main.h file. Furthermore, the -fopenmp
-* option must be set when compiling the program with gcc (or link correctly the
-* openmp library for other compilers and architectures). For not using the
-* parallelization used during the computation of the overlap matrix by the \ref
-* computeOverlapMatrix or \ref computeOverlapMatrixOnGrid function, just put in
-* comment in the \ref setupInitialData function the line containing the
-* execution omp_set_num_threads (there should be only one in all *.c/ *.h files
-* related to the mpd program and it is contained in this function). In addition,
-* let us only mention that the \ref setupInitialData function calls the \ref
-* shapeDerivative function, which uses standard mathematical functions,
-* parallelize with openmp the evaluation of the overlap matrix, and diagonalize
-* it thanks to the dsyev routine of the lapacke library (LAPACK interface for
-* C). Hence, in order to use this function, the -lm -llapacke -fopenmp options
-* must be set at compilation with gcc (or link properly the math.h, lapacke.h
-* and omp.h aasociated libraries) and the math.h omp.h and lapacke.h files must
-* of course not be put in comment in the main.h file.
+* descriptions description for further details. In addition, let us only mention
+* that the \ref setupInitialData function calls the \ref shapeDerivative
+* function, which uses standard mathematical functions, parallelize with openmp
+* the evaluation of the overlap matrix, and diagonalize it thanks to the dsyev
+* routine of the lapacke library (LAPACK interface for C). Hence, in order to
+* use this function, the -lm -llapacke -fopenmp options must be set at
+* compilation with gcc (or link properly the math.h, lapacke.h and omp.h
+* associated libraries) and the math.h omp.h and lapacke.h files must of course
+* not be put in comment in the main.h file.
 */
 int setupInitialData(Parameters* pParameters, Mesh* pMesh, Data* pData,
                      ChemicalSystem* pChemicalSystem,

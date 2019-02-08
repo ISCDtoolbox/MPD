@@ -5608,14 +5608,13 @@ int saveDataInTheLoop(Parameters* pParameters, Mesh* pMesh, Data* pData,
 // The function setupInitialData successively allocates memory for the structure
 // pointed by pData i.e. for the saving of data, enlarge of 10 letters the
 // maximal length allowed for path names, reallocates the memory accordingly
-// in the structure pointed by pParameters, write an *.input file recapitulating
+// in the structure pointed by pParameters, write an *.restart file restating
 // all the parameters used (default ones and those prescribed by the user in
 // the *.info file, the name being similar but where the '.info' extension is
-// replaced by the '.input' one), set up the number of threads/cpu for the
-// parallel calculations (pParameters->n_cpu variable), compute all the
-// quantities (probability, ...), save them in the *.data file given by
-// the pParameters->name_data variable, and save also the mesh in a *.0.mesh
-// file. It allows the user to always keep track of all the parameters with the
+// replaced by the '.restart one), compute all the quantities
+// (probability, ...), save them in the *.data file given by the
+// pParameters->name_data variable, and save also the mesh in a *.0.mesh file.
+// It allows the user to always keep track of all the parameters with the
 // *.info file, always get the initial mesh saved before the optimization loop,
 // and terminates the setting up of the initialization process of the MPD
 // algorithm. It has the Parameters*, Mesh*, Data*, ChemicalSystem* structures
@@ -5669,16 +5668,6 @@ int setupInitialData(Parameters* pParameters, Mesh* pMesh, Data* pData,
         fprintf(stderr,"returned zero instead of one.\n");
         return 0;
     }
-
-    // Set the number of threads for the parallelization
-    if (pParameters->n_cpu<1)
-    {
-        PRINT_ERROR("In setupInitialData: the number of threads ");
-        fprintf(stderr,"(=%d) for the parallelization ",pParameters->n_cpu);
-        fprintf(stderr,"should be a positive integer.\n");
-        return 0;
-    }
-    omp_set_num_threads(pParameters->n_cpu);
 
     // Compute the overlap matrix, probability, shape gradient, and residual
     // for the initial domain

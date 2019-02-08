@@ -1506,11 +1506,11 @@ double evaluatingHessianAtVertices(ChemicalSystem* pChemicalSystem,
 int evaluatingMetricOnMesh(Parameters* pParameters, Mesh* pMesh,
                                                 ChemicalSystem* pChemicalSystem)
 {
-    int i=0, j=0, k=0, l=0, nVer=0, nGauss=0, nMorb=0, info=0;
+    int i=0, j=0, k=0, l=0, nVer=0, nGauss=0, nMorb=0, info=0, boolean=0;
     double value=0., lambda=0., hessian[9]={0.}, eigenvalues[3]={0.};
-    double *pHessian=&(hessian[0]), *pEigenvalues=&(eigenvalues[0]);
-    double functionI=0., functionJ=0., gradientI[3]={0.}, gradientJ[3]={0.};
-    double hessianI[6]={0.}, hessianJ[6]={0.};
+    double hessianI[6]={0.}, hessianJ[6]={0.}, *pHessian=NULL;
+    double *pEigenvalues=NULL, functionI=0., functionJ=0., gradientI[3]={0.};
+    double gradientJ[3]={0.};
     MolecularOrbital *pMolecularOrbitalI=NULL, *pMolecularOrbitalJ=NULL;
     Point *pPoint=NULL;
 
@@ -1589,6 +1589,15 @@ int evaluatingMetricOnMesh(Parameters* pParameters, Mesh* pMesh,
     for (i=0; i<nMorb; i++)
     {
         pMolecularOrbitalI=&pChemicalSystem->pmorb[i];
+
+        if (pParameters->orb_rhf)
+        {
+            if (pMolecularOrbitalI->spin!=1)
+            {
+                continue;
+            }
+        }
+/*
         for (j=0; j<i; j++)
         {
             pMolecularOrbitalJ=&pChemicalSystem->pmorb[j];
@@ -1611,6 +1620,7 @@ int evaluatingMetricOnMesh(Parameters* pParameters, Mesh* pMesh,
 
             // Point evaluation of the Hessian matrix of Orbital(i)*Orbital(j)
             // (stored as 0->xx 1->yy 2->zz 3->xy,yx 4->xz,zx 5->yz,zy)
+#pragma omp parallel for default(shared) private(pPoint,functionI,functionJ,l,gradientI,gradientJ,hessianI,hessianJ,hessian,eigenvalues,pHessian,pEigenvalues,info,lambda,value)
             for (k=0; k<nVer; k++)
             {
                 pPoint=&pMesh->pver[k];
@@ -1645,12 +1655,13 @@ int evaluatingMetricOnMesh(Parameters* pParameters, Mesh* pMesh,
                     functionI+=evaluatingHessianAtVertices(pChemicalSystem,
                                                            pMolecularOrbitalI,
                                                            pPoint,gradientI,
-                                                           hessianI,l);
+                                                                    hessianI,l);
                     functionJ+=evaluatingHessianAtVertices(pChemicalSystem,
                                                            pMolecularOrbitalJ,
                                                            pPoint,gradientJ,
-                                                           hessianJ,l);
+                                                                    hessianJ,l);
                 }
+
                 // Evaluating Hessian of Orb(i)*Orb(j) for computing metric
                 hessian[0]=hessianI[0]*functionJ+2.*gradientI[0]*gradientJ[0]
                                                          +functionI*hessianJ[0];
@@ -1668,14 +1679,13 @@ int evaluatingMetricOnMesh(Parameters* pParameters, Mesh* pMesh,
                 // Diagonalize using lapacke library (lapack interface for c)
                 // LAPACKE_dsyev returns zero if successfull; we refer to
                 // diagonalizeOverlapMatrix in optimization.c file for details
+                pHessian=&(hessian[0]);
+                pEigenvalues=&(eigenvalues[0]);
                 info=LAPACKE_dsyev(LAPACK_COL_MAJOR,'N','L',3,pHessian,3,
                                                                   pEigenvalues);
                 if (info)
                 {
-                    PRINT_ERROR("In evaluatingMetricOnMesh: dsyev function ");
-                    fprintf(stderr,"in Lapacke library returned %d ",info);
-                    fprintf(stderr,"instead of zero.\n");
-                    return 0;
+                    boolean++;
                 }
 
                 // Get the normalized highest eigenvalues
@@ -1697,8 +1707,17 @@ int evaluatingMetricOnMesh(Parameters* pParameters, Mesh* pMesh,
                     pPoint->value=value;
                 }
             }
+            if (boolean)
+            {
+                PRINT_ERROR("In evaluatingMetricOnMesh: dsyev function ");
+                fprintf(stderr,"in Lapacke library did not succeed (zero ");
+                fprintf(stderr,"return value) %d times (at least).\n",boolean);
+                return 0;
+            }
         }
+*/
 
+#pragma omp parallel for default(shared) private(pPoint,functionI,l,gradientI,hessianI,hessian,eigenvalues,pHessian,pEigenvalues,info,lambda,value)
         // We now treat the case where i=j
         for (k=0; k<nVer; k++)
         {
@@ -1730,7 +1749,7 @@ int evaluatingMetricOnMesh(Parameters* pParameters, Mesh* pMesh,
                 functionI+=evaluatingHessianAtVertices(pChemicalSystem,
                                                        pMolecularOrbitalI,
                                                        pPoint,gradientI,
-                                                       hessianI,l);
+                                                                    hessianI,l);
             }
 
             // Evaluating Hessian of Orb(i)^2 for computing metric
@@ -1744,14 +1763,13 @@ int evaluatingMetricOnMesh(Parameters* pParameters, Mesh* pMesh,
             // Diagonalize using lapacke library (lapack interface for c)
             // LAPACKE_dsyev returns zero if successfull; we refer to
             // diagonalizeOverlapMatrix in optimization.c file for details
+            pHessian=&(hessian[0]);
+            pEigenvalues=&(eigenvalues[0]);
             info=LAPACKE_dsyev(LAPACK_COL_MAJOR,'N','L',3,pHessian,3,
                                                                   pEigenvalues);
             if (info)
             {
-                PRINT_ERROR("In evaluatingMetricOnMesh: dsyev function ");
-                fprintf(stderr,"in Lapacke library returned %d ",info);
-                fprintf(stderr,"instead of zero.\n");
-                return 0;
+                boolean++;
             }
 
             // Get the normalized highest eigenvalues
@@ -1772,6 +1790,13 @@ int evaluatingMetricOnMesh(Parameters* pParameters, Mesh* pMesh,
             {
                 pPoint->value=value;
             }
+        }
+        if (boolean)
+        {
+            PRINT_ERROR("In evaluatingMetricOnMesh: dsyev function ");
+            fprintf(stderr,"in Lapacke library did not succeed (zero ");
+            fprintf(stderr,"return value) %d times (at least).\n",boolean);
+            return 0;
         }
     }
 

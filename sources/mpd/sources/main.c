@@ -286,6 +286,16 @@ int main(int argc, char *argv[])
     free(fileLocation);
     fileLocation=NULL;
 
+    // Set the number of threads for the parallelization
+    if (parameters.n_cpu<1)
+    {
+        PRINT_ERROR("In main: the number of threads ");
+        fprintf(stderr,"(=%d) for the parallelization ",parameters.n_cpu);
+        fprintf(stderr,"should be a positive integer.\n");
+        FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
+    }
+    omp_set_num_threads(parameters.n_cpu);
+
     // Load chemistry from a *.chem/ *.wfn file pointed by parameters.name_chem
     if (!loadChemistry(&parameters,&chemicalSystem))
     {
