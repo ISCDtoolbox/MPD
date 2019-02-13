@@ -4513,9 +4513,10 @@ int readCubeFileAndAllocateMesh(Parameters* pParameters, Mesh* pMesh)
 {
     size_t length=0;
     int readIntegerIn=0, readIntegerOut=0, readChar=0, *pLabel=NULL, i=0;
-    int iMax=0, nNucl=0, nX=0, nY=0, nZ=0;
+    int iMax=0, nNucl=0, nX=0, nY=0, nZ=0, iCube=0, nTri=0, j=0, k=0;
     double readDouble=0.;
     Nucleus *pNucl=NULL;
+    Triangle *pTriangle=NULL;
     FILE *cubeFile=NULL;
 
     // Check if the input variables are not pointing to NULL
@@ -5112,6 +5113,227 @@ int readCubeFileAndAllocateMesh(Parameters* pParameters, Mesh* pMesh)
                 else
                 {
                     pMesh->ptet[i].label=3;
+                }
+            }
+
+            // Updating the number of triangles for internal domain
+            nTri=0;
+            iMax=pMesh->ntet;
+            for (i=0; i<iMax; i+=6)
+            {
+                iCube=i/6;
+                k=iCube%(nZ-1);
+                j=iCube/(nZ-1);
+                iCube=j/(nY-1);
+                j%=(nY-1);
+
+                if (iCube>0)
+                {
+                    if (pMesh->ptet[6*(((iCube-1)*(nY-1)+j)*(nZ-1)+k)].label==2
+                         && pMesh->ptet[6*((iCube*(nY-1)+j)*(nZ-1)+k)].label==3)
+                    {
+                        nTri+=2;
+                    }
+                }
+                if (iCube<nX-2)
+                {
+                    if (pMesh->ptet[6*(((iCube+1)*(nY-1)+j)*(nZ-1)+k)].label==2
+                         && pMesh->ptet[6*((iCube*(nY-1)+j)*(nZ-1)+k)].label==3)
+                    {
+                        nTri+=2;
+                    }
+                }
+                if (j>0)
+                {
+                    if (pMesh->ptet[6*((iCube*(nY-1)+(j-1))*(nZ-1)+k)].label==2
+                         && pMesh->ptet[6*((iCube*(nY-1)+j)*(nZ-1)+k)].label==3)
+                    {
+                        nTri+=2;
+                    }
+                }
+                if (j<nY-2)
+                {
+                    if (pMesh->ptet[6*((iCube*(nY-1)+(j+1))*(nZ-1)+k)].label==2
+                         && pMesh->ptet[6*((iCube*(nY-1)+j)*(nZ-1)+k)].label==3)
+                    {
+                        nTri+=2;
+                    }
+                }
+                if (k>0)
+                {
+                    if (pMesh->ptet[6*((iCube*(nY-1)+j)*(nZ-1)+(k-1))].label==2
+                         && pMesh->ptet[6*((iCube*(nY-1)+j)*(nZ-1)+k)].label==3)
+                    {
+                        nTri+=2;
+                    }
+                }
+                if (k<nZ-2)
+                {
+                    if (pMesh->ptet[6*((iCube*(nY-1)+j)*(nZ-1)+(k+1))].label==2
+                         && pMesh->ptet[6*((iCube*(nY-1)+j)*(nZ-1)+k)].label==3)
+                    {
+                        nTri+=2;
+                    }
+                }
+            }
+
+            if (nTri>0)
+            {
+fprintf(stdout,"ntri=%d",nTri);
+                pTriangle=(Triangle*)realloc(pMesh->ptri,
+                                           (nTri+pMesh->ntri)*sizeof(Triangle));
+                if (pTriangle==NULL)
+                {
+                    PRINT_ERROR("In readCubeFileAndAllocateMesh: we could ");
+                    fprintf(stderr,"not reallocate memory for %d ",nTri);
+                    fprintf(stderr,"additional triangles in pMesh->ptri.\n");
+                    free(pLabel);
+                    pLabel=NULL;
+                    return 0;
+                }
+                pMesh->ptri=pTriangle;
+                iMax=pMesh->ntri;
+                pMesh->ntri+=nTri;
+                nTri=iMax;
+
+                iMax=pMesh->ntet;
+                for (i=0; i<iMax; i+=6)
+                {
+                    iCube=i/6;
+                    k=iCube%(nZ-1);
+                    j=iCube/(nZ-1);
+                    iCube=j/(nY-1);
+                    j%=(nY-1);
+
+                    if (iCube>0)
+                    {
+                        if (pMesh->ptet
+                                 [6*(((iCube-1)*(nY-1)+j)*(nZ-1)+k)].label==2 &&
+                            pMesh->ptet[6*((iCube*(nY-1)+j)*(nZ-1)+k)].label==3)
+                        {
+                            // Triangle 154
+                            pMesh->ptri[nTri].p1=1+(iCube*nY+j)*nZ+k;
+                            pMesh->ptri[nTri].p2=1+(iCube*nY+j)*nZ+(k+1);
+                            pMesh->ptri[nTri].p3=1+(iCube*nY+(j+1))*nZ+k;
+                            pMesh->ptri[nTri].label=10;
+                            nTri++;
+
+                            // Triangle 458
+                            pMesh->ptri[nTri].p1=1+(iCube*nY+(j+1))*nZ+k;
+                            pMesh->ptri[nTri].p2=1+(iCube*nY+j)*nZ+(k+1);
+                            pMesh->ptri[nTri].p3=1+(iCube*nY+(j+1))*nZ+(k+1);
+                            pMesh->ptri[nTri].label=10;
+                            nTri++;
+                        }
+                    }
+                    if (iCube<nX-2)
+                    {
+                        if (pMesh->ptet
+                                 [6*(((iCube+1)*(nY-1)+j)*(nZ-1)+k)].label==2 &&
+                            pMesh->ptet[6*((iCube*(nY-1)+j)*(nZ-1)+k)].label==3)
+                        {
+                            // Triangle 236
+                            pMesh->ptri[nTri].p1=1+((iCube+1)*nY+j)*nZ+k;
+                            pMesh->ptri[nTri].p2=1+((iCube+1)*nY+(j+1))*nZ+k;
+                            pMesh->ptri[nTri].p3=1+((iCube+1)*nY+j)*nZ+(k+1);
+                            pMesh->ptri[nTri].label=10;
+                            nTri++;
+
+                            // Triangle 376
+                            pMesh->ptri[nTri].p1=1+((iCube+1)*nY+(j+1))*nZ+k;
+                            pMesh->ptri[nTri].p2=
+                                                1+((iCube+1)*nY+(j+1))*nZ+(k+1);
+                            pMesh->ptri[nTri].p3=1+((iCube+1)*nY+j)*nZ+(k+1);
+                            pMesh->ptri[nTri].label=10;
+                            nTri++;
+                        }
+                    }
+                    if (j>0)
+                    {
+                        if (pMesh->ptet
+                                 [6*((iCube*(nY-1)+(j-1))*(nZ-1)+k)].label==2 &&
+                            pMesh->ptet[6*((iCube*(nY-1)+j)*(nZ-1)+k)].label==3)
+                        {
+                            // Triangle 125
+                            pMesh->ptri[nTri].p1=1+(iCube*nY+j)*nZ+k;
+                            pMesh->ptri[nTri].p2=1+((iCube+1)*nY+j)*nZ+k;
+                            pMesh->ptri[nTri].p3=1+(iCube*nY+j)*nZ+(k+1);
+                            pMesh->ptri[nTri].label=10;
+                            nTri++;
+
+                            // Triangle 265
+                            pMesh->ptri[nTri].p1=1+((iCube+1)*nY+j)*nZ+k;
+                            pMesh->ptri[nTri].p2=1+((iCube+1)*nY+j)*nZ+(k+1);
+                            pMesh->ptri[nTri].p3=1+(iCube*nY+j)*nZ+(k+1);
+                            pMesh->ptri[nTri].label=10;
+                            nTri++;
+                        }
+                    }
+                    if (j<nY-2)
+                    {
+                        if (pMesh->ptet
+                                 [6*((iCube*(nY-1)+(j+1))*(nZ-1)+k)].label==2 &&
+                            pMesh->ptet[6*((iCube*(nY-1)+j)*(nZ-1)+k)].label==3)
+                        {
+                            // Triangle 348
+                            pMesh->ptri[nTri].p1=1+((iCube+1)*nY+(j+1))*nZ+k;
+                            pMesh->ptri[nTri].p2=1+(iCube*nY+(j+1))*nZ+k;
+                            pMesh->ptri[nTri].p3=1+(iCube*nY+(j+1))*nZ+(k+1);
+                            pMesh->ptri[nTri].label=10;
+                            nTri++;
+
+                            // Triangle 387
+                            pMesh->ptri[nTri].p1=1+((iCube+1)*nY+(j+1))*nZ+k;
+                            pMesh->ptri[nTri].p2=1+(iCube*nY+(j+1))*nZ+(k+1);
+                            pMesh->ptri[nTri].p3=
+                                                1+((iCube+1)*nY+(j+1))*nZ+(k+1);
+                            pMesh->ptri[nTri].label=10;
+                            nTri++;
+                        }
+                    }
+                    if (k>0)
+                    {
+                        if (pMesh->ptet
+                                 [6*((iCube*(nY-1)+j)*(nZ-1)+(k-1))].label==2 &&
+                            pMesh->ptet[6*((iCube*(nY-1)+j)*(nZ-1)+k)].label==3)
+                        {
+                            // Triangle 142
+                            pMesh->ptri[nTri].p1=1+(iCube*nY+j)*nZ+k;
+                            pMesh->ptri[nTri].p2=1+(iCube*nY+(j+1))*nZ+k;
+                            pMesh->ptri[nTri].p3=1+((iCube+1)*nY+j)*nZ+k;
+                            pMesh->ptri[nTri].label=10;
+                            nTri++;
+
+                            // Triangle 243
+                            pMesh->ptri[nTri].p1=1+((iCube+1)*nY+j)*nZ+k;
+                            pMesh->ptri[nTri].p2=1+(iCube*nY+(j+1))*nZ+k;
+                            pMesh->ptri[nTri].p3=1+((iCube+1)*nY+(j+1))*nZ+k;
+                            pMesh->ptri[nTri].label=10;
+                            nTri++;
+                        }
+                    }
+                    if (k<nZ-2)
+                    {
+                        if (pMesh->ptet
+                                 [6*((iCube*(nY-1)+j)*(nZ-1)+(k+1))].label==2 &&
+                            pMesh->ptet[6*((iCube*(nY-1)+j)*(nZ-1)+k)].label==3)
+                        {
+                            // Triangle 568
+                            pMesh->ptri[nTri].p1=1+(iCube*nY+j)*nZ+(k+1);
+                            pMesh->ptri[nTri].p2=1+((iCube+1)*nY+j)*nZ+(k+1);
+                            pMesh->ptri[nTri].p3=1+(iCube*nY+(j+1))*nZ+(k+1);
+                            pMesh->ptri[nTri].label=10;
+                            nTri++;
+
+                            // Triangle 678
+                            pMesh->ptri[nTri].p1=1+((iCube+1)*nY+j)*nZ+(k+1);
+                            pMesh->ptri[nTri].p2=
+                                                1+((iCube+1)*nY+(j+1))*nZ+(k+1);
+                            pMesh->ptri[nTri].p3=1+(iCube*nY+(j+1))*nZ+(k+1);
+                            pMesh->ptri[nTri].label=10;
+                            nTri++;
+                        }
+                    }
                 }
             }
         }
