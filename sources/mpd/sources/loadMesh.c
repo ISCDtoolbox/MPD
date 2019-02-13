@@ -4513,11 +4513,19 @@ int readCubeFileAndAllocateMesh(Parameters* pParameters, Mesh* pMesh)
 {
     size_t length=0;
     int readIntegerIn=0, readIntegerOut=0, readChar=0, *pLabel=NULL, i=0;
-    int iMax=0, nNucl=0, nX=0, nY=0, nZ=0, iCube=0, nTri=0, j=0, k=0;
+    int iMax=0, nNucl=0, nX=0, nY=0, nZ=0, iCube=0, nTri=0, j=0, k=0, nNorm=0;
     double readDouble=0.;
     Nucleus *pNucl=NULL;
     Triangle *pTriangle=NULL;
+    Vector *pNormal=NULL;
     FILE *cubeFile=NULL;
+
+    // Define a normal vector in case we need to re-order the mesh ones
+    Vector normal;
+    normal.p=0;
+    normal.x=0.;
+    normal.y=0.;
+    normal.z=0.;
 
     // Check if the input variables are not pointing to NULL
     if (pParameters==NULL || pMesh==NULL)
@@ -5179,7 +5187,7 @@ int readCubeFileAndAllocateMesh(Parameters* pParameters, Mesh* pMesh)
 
             if (nTri>0)
             {
-fprintf(stdout,"ntri=%d",nTri);
+                // Setting up adjacency of internal triangles
                 pTriangle=(Triangle*)realloc(pMesh->ptri,
                                            (nTri+pMesh->ntri)*sizeof(Triangle));
                 if (pTriangle==NULL)
@@ -5216,6 +5224,9 @@ fprintf(stdout,"ntri=%d",nTri);
                             pMesh->ptri[nTri].p2=1+(iCube*nY+j)*nZ+(k+1);
                             pMesh->ptri[nTri].p3=1+(iCube*nY+(j+1))*nZ+k;
                             pMesh->ptri[nTri].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p1-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p2-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p3-1].label=10;
                             nTri++;
 
                             // Triangle 458
@@ -5223,6 +5234,9 @@ fprintf(stdout,"ntri=%d",nTri);
                             pMesh->ptri[nTri].p2=1+(iCube*nY+j)*nZ+(k+1);
                             pMesh->ptri[nTri].p3=1+(iCube*nY+(j+1))*nZ+(k+1);
                             pMesh->ptri[nTri].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p1-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p2-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p3-1].label=10;
                             nTri++;
                         }
                     }
@@ -5237,6 +5251,9 @@ fprintf(stdout,"ntri=%d",nTri);
                             pMesh->ptri[nTri].p2=1+((iCube+1)*nY+(j+1))*nZ+k;
                             pMesh->ptri[nTri].p3=1+((iCube+1)*nY+j)*nZ+(k+1);
                             pMesh->ptri[nTri].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p1-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p2-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p3-1].label=10;
                             nTri++;
 
                             // Triangle 376
@@ -5245,6 +5262,9 @@ fprintf(stdout,"ntri=%d",nTri);
                                                 1+((iCube+1)*nY+(j+1))*nZ+(k+1);
                             pMesh->ptri[nTri].p3=1+((iCube+1)*nY+j)*nZ+(k+1);
                             pMesh->ptri[nTri].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p1-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p2-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p3-1].label=10;
                             nTri++;
                         }
                     }
@@ -5259,6 +5279,9 @@ fprintf(stdout,"ntri=%d",nTri);
                             pMesh->ptri[nTri].p2=1+((iCube+1)*nY+j)*nZ+k;
                             pMesh->ptri[nTri].p3=1+(iCube*nY+j)*nZ+(k+1);
                             pMesh->ptri[nTri].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p1-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p2-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p3-1].label=10;
                             nTri++;
 
                             // Triangle 265
@@ -5266,6 +5289,9 @@ fprintf(stdout,"ntri=%d",nTri);
                             pMesh->ptri[nTri].p2=1+((iCube+1)*nY+j)*nZ+(k+1);
                             pMesh->ptri[nTri].p3=1+(iCube*nY+j)*nZ+(k+1);
                             pMesh->ptri[nTri].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p1-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p2-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p3-1].label=10;
                             nTri++;
                         }
                     }
@@ -5280,6 +5306,9 @@ fprintf(stdout,"ntri=%d",nTri);
                             pMesh->ptri[nTri].p2=1+(iCube*nY+(j+1))*nZ+k;
                             pMesh->ptri[nTri].p3=1+(iCube*nY+(j+1))*nZ+(k+1);
                             pMesh->ptri[nTri].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p1-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p2-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p3-1].label=10;
                             nTri++;
 
                             // Triangle 387
@@ -5288,6 +5317,9 @@ fprintf(stdout,"ntri=%d",nTri);
                             pMesh->ptri[nTri].p3=
                                                 1+((iCube+1)*nY+(j+1))*nZ+(k+1);
                             pMesh->ptri[nTri].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p1-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p2-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p3-1].label=10;
                             nTri++;
                         }
                     }
@@ -5302,6 +5334,9 @@ fprintf(stdout,"ntri=%d",nTri);
                             pMesh->ptri[nTri].p2=1+(iCube*nY+(j+1))*nZ+k;
                             pMesh->ptri[nTri].p3=1+((iCube+1)*nY+j)*nZ+k;
                             pMesh->ptri[nTri].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p1-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p2-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p3-1].label=10;
                             nTri++;
 
                             // Triangle 243
@@ -5309,6 +5344,9 @@ fprintf(stdout,"ntri=%d",nTri);
                             pMesh->ptri[nTri].p2=1+(iCube*nY+(j+1))*nZ+k;
                             pMesh->ptri[nTri].p3=1+((iCube+1)*nY+(j+1))*nZ+k;
                             pMesh->ptri[nTri].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p1-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p2-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p3-1].label=10;
                             nTri++;
                         }
                     }
@@ -5323,6 +5361,9 @@ fprintf(stdout,"ntri=%d",nTri);
                             pMesh->ptri[nTri].p2=1+((iCube+1)*nY+j)*nZ+(k+1);
                             pMesh->ptri[nTri].p3=1+(iCube*nY+(j+1))*nZ+(k+1);
                             pMesh->ptri[nTri].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p1-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p2-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p3-1].label=10;
                             nTri++;
 
                             // Triangle 678
@@ -5331,9 +5372,173 @@ fprintf(stdout,"ntri=%d",nTri);
                                                 1+((iCube+1)*nY+(j+1))*nZ+(k+1);
                             pMesh->ptri[nTri].p3=1+(iCube*nY+(j+1))*nZ+(k+1);
                             pMesh->ptri[nTri].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p1-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p2-1].label=10;
+                            pMesh->pver[pMesh->ptri[nTri].p3-1].label=10;
                             nTri++;
                         }
                     }
+                }
+            }
+
+            // Updating the number of normal vectors for internal domain
+            nNorm=0;
+            iMax=pMesh->nver;
+            for (i=0; i<iMax; i++)
+            {
+                if (pMesh->pver[i].label!=10)
+                {
+                    continue;
+                }
+
+                k=i%nZ;
+                j=i/nZ;
+                iCube=j/nY;
+                j%=nY;
+
+                if (iCube>0 && iCube<nX-1 && j>0 && j<nY-1 && k>0 && k<nZ-1)
+                {
+                    if (pMesh->pver[((iCube+1)*nY+j)*nZ+k].label==10 &&
+                                 pMesh->pver[((iCube-1)*nY+j)*nZ+k].label==10 &&
+                                 pMesh->pver[(iCube*nY+(j+1))*nZ+k].label==10 &&
+                                   pMesh->pver[(iCube*nY+(j-1))*nZ+k].label==10)
+                    {
+                        nNorm++;
+                    }
+                    else if (pMesh->pver[((iCube+1)*nY+j)*nZ+k].label==10 &&
+                                 pMesh->pver[((iCube-1)*nY+j)*nZ+k].label==10 &&
+                                 pMesh->pver[(iCube*nY+j)*nZ+(k+1)].label==10 &&
+                                   pMesh->pver[(iCube*nY+j)*nZ+(k-1)].label==10)
+                    {
+                        nNorm++;
+                    }
+                    else if (pMesh->pver[(iCube*nY+(j+1))*nZ+k].label==10 &&
+                                 pMesh->pver[(iCube*nY+(j-1))*nZ+k].label==10 &&
+                                 pMesh->pver[(iCube*nY+j)*nZ+(k+1)].label==10 &&
+                                   pMesh->pver[(iCube*nY+j)*nZ+(k-1)].label==10)
+                    {
+                        nNorm++;
+                    }
+                }
+            }
+
+            if (nNorm>0)
+            {
+                // Setting up adjacency of the internal normal vectors
+                pNormal=(Vector*)realloc(pMesh->pnorm,
+                                           (nNorm+pMesh->nnorm)*sizeof(Vector));
+                if (pNormal==NULL)
+                {
+                    PRINT_ERROR("In readCubeFileAndAllocateMesh: we could ");
+                    fprintf(stderr,"not reallocate memory for %d ",nNorm);
+                    fprintf(stderr,"additional normal vectors in ");
+                    fprintf(stderr,"pMesh->pnorm.\n");
+                    free(pLabel);
+                    pLabel=NULL;
+                    return 0;
+                }
+                pMesh->pnorm=pNormal;
+                iMax=pMesh->nnorm;
+                pMesh->nnorm+=nNorm;
+                nNorm=iMax;
+
+                iMax=pMesh->nver;
+                for (i=0; i<iMax; i++)
+                {
+                    if (pMesh->pver[i].label!=10)
+                    {
+                        continue;
+                    }
+
+                    k=i%nZ;
+                    j=i/nZ;
+                    iCube=j/nY;
+                    j%=nY;
+
+                    if (iCube>0 && iCube<nX-1 && j>0 && j<nY-1 && k>0 && k<nZ-1)
+                    {
+                        if (pMesh->pver[((iCube+1)*nY+j)*nZ+k].label==10 &&
+                                 pMesh->pver[((iCube-1)*nY+j)*nZ+k].label==10 &&
+                                 pMesh->pver[(iCube*nY+(j+1))*nZ+k].label==10 &&
+                                   pMesh->pver[(iCube*nY+(j-1))*nZ+k].label==10)
+                        {
+                            pMesh->pnorm[nNorm].p=i+1;
+                            pMesh->pnorm[nNorm].x=0.;
+                            pMesh->pnorm[nNorm].y=0.;
+                            pMesh->pnorm[nNorm].z=1.;
+                            if (pMesh->ptet
+                                   [6*((iCube*(nY-1)+j)*(nZ-1)+(k-1))].label==2)
+                            {
+                                pMesh->pnorm[nNorm].z=-1.;
+                            }
+                            nNorm++;
+                        }
+                        else if (pMesh->pver[((iCube+1)*nY+j)*nZ+k].label==10 &&
+                                 pMesh->pver[((iCube-1)*nY+j)*nZ+k].label==10 &&
+                                 pMesh->pver[(iCube*nY+j)*nZ+(k+1)].label==10 &&
+                                   pMesh->pver[(iCube*nY+j)*nZ+(k-1)].label==10)
+                        {
+                            pMesh->pnorm[nNorm].p=i+1;
+                            pMesh->pnorm[nNorm].x=0.;
+                            pMesh->pnorm[nNorm].y=1.;
+                            pMesh->pnorm[nNorm].z=0.;
+                            if (pMesh->ptet
+                                   [6*((iCube*(nY-1)+(j-1))*(nZ-1)+k)].label==2)
+                            {
+                                pMesh->pnorm[nNorm].z=-1.;
+                            }
+                            nNorm++;
+                        }
+                        else if (pMesh->pver[(iCube*nY+(j+1))*nZ+k].label==10 &&
+                                 pMesh->pver[(iCube*nY+(j-1))*nZ+k].label==10 &&
+                                 pMesh->pver[(iCube*nY+j)*nZ+(k+1)].label==10 &&
+                                   pMesh->pver[(iCube*nY+j)*nZ+(k-1)].label==10)
+                        {
+                            pMesh->pnorm[nNorm].p=i+1;
+                            pMesh->pnorm[nNorm].x=1.;
+                            pMesh->pnorm[nNorm].y=0.;
+                            pMesh->pnorm[nNorm].z=0.;
+                            if (pMesh->ptet
+                                   [6*(((iCube-1)*(nY-1)+j)*(nZ-1)+k)].label==2)
+                            {
+                                pMesh->pnorm[nNorm].z=-1.;
+                            }
+                            nNorm++;
+                        }
+                    }
+                }
+            }
+
+            // re-ordering the normal vectors in increasing order
+            // This step could be optimized
+            fprintf(stdout,"Re-ordering normal vectors at boundary points.\n");
+            iMax=pMesh->nnorm;
+            for (i=0; i<iMax-1; i++)
+            {
+                k=i;
+                for (j=i+1; j<iMax; j++)
+                {
+                    if (pMesh->pnorm[j].p<pMesh->pnorm[k].p)
+                    {
+                        k=j;
+                    }
+                }
+                if (k>i)
+                {
+                    normal.p=pMesh->pnorm[i].p;
+                    normal.x=pMesh->pnorm[i].x;
+                    normal.y=pMesh->pnorm[i].y;
+                    normal.z=pMesh->pnorm[i].z;
+
+                    pMesh->pnorm[i].p=pMesh->pnorm[k].p;
+                    pMesh->pnorm[i].x=pMesh->pnorm[k].x;
+                    pMesh->pnorm[i].y=pMesh->pnorm[k].y;
+                    pMesh->pnorm[i].z=pMesh->pnorm[k].z;
+
+                    pMesh->pnorm[k].p=normal.p;
+                    pMesh->pnorm[k].x=normal.x;
+                    pMesh->pnorm[k].y=normal.y;
+                    pMesh->pnorm[k].z=normal.z;
                 }
             }
         }
