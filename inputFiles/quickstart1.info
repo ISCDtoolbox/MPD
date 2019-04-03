@@ -1,0 +1,25 @@
+opt_mode 1
+n_cpu 8
+
+name_chem /home/khalifa/MPD/inputFiles/h2o-def2tzvp-rhf.wfn
+nu_electrons 2
+
+ls_type 1
+ls_z 0.22188395
+
+save_type 2
+
+iter_told0p 5.e-5
+iter_told1p 5.e-4
+iter_told2p 5.e-3
+
+path_medit /home/khalifa/MPD/bin/medit
+path_mmg3d /home/khalifa/MPD/bin/mmg3d
+path_mshdist /home/khalifa/MPD/bin/mshdist
+path_elastic /home/khalifa/MPD/bin/elastic
+path_advect /home/khalifa/MPD/bin/advect
+
+end_data
+
+name_mesh /home/khalifa/MPD/inputFiles/quickstart1.ini.mesh
+
