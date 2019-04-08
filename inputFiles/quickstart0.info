@@ -1,21 +1,20 @@
-opt_mode 0
-n_cpu 8
+opt_mode 0 
+n_cpu 8 
 
-name_chem /home/khalifa/MPD/inputFiles/h2o-def2tzvp-rhf.wfn
-nu_electrons 2
+name_chem ../../../inputFiles/h2o-def2tzvp-rhf.wfn 
+nu_electrons 2 
 
-ls_y 1.43154464
-ls_z -0.88753579
-ls_r 2
+ls_y 1.43154464 
+ls_z -0.88753579 
+ls_r 2 
 
-save_type 2
-save_mesh 25
+save_type 2 
+save_mesh 25 
 
-iter_max 500
-path_medit /home/khalifa/MPD/bin/medit
+iter_max 500 
+path_medit ../../../bin/medit 
 
-end_data
+end_data 
 
-name_mesh /home/khalifa/MPD/inputFiles/quickstart0.ini.mesh
-
+name_mesh ../../../inputFiles/quickstart0.ini.cube 
 
