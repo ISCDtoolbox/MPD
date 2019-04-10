@@ -1,5 +1,5 @@
 opt_mode 0 
-n_cpu 8 
+n_cpu 1 
 
 name_chem ../../../inputFiles/h2o-def2tzvp-rhf.wfn 
 nu_electrons 2 
