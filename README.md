@@ -1,5 +1,5 @@
 # mpdProgram
-Maximizing Probability Domain
+Maximizing Probability Domains
 
 Version 2.0
 
@@ -13,7 +13,11 @@ In order to compile the mpdProgram, it is recommended to have previously install
 * cmake (version 3.5.1)
 * doxygen (version 1.8.11) (optional: it is only necessary if one wants to generate the code documentation)
 
-In order to download the source files of the mpd program, you have two options: either you can download the data compression file at http://pelikano.free.fr/mpd/MPD.tar.gz (the required informations can be found at the end of this file) and uncompress the downloaded file; or install the git package
+In order to download the source files of the mpd program, you have two options: either you can download the data compression file at
+
+https://github.com/ISCDtoolbox/MPD/archive/master.zip
+
+and uncompress the downloaded file; or install the git package
 
 * git (version 2.7.4)
 
@@ -35,7 +39,7 @@ Then, to execute the commands inside the install.sh file, just type
 
 and follow the instructions.
 
-Remark 1: the commands written in this install.sh file are originally intended for Ubuntu 16.04.4. Please modify these commands, if you use use for example yum instead of apt for package management (brew for mac), su for sudo, etc.
+Remark 1: the commented commands written in this install.sh file are originally intended for Ubuntu 16.04.4. Please modify these commands, if you use use for example yum instead of apt for package management (brew for mac), su for sudo, etc.
 
 Remark 2: apart from the installed required libraries (PTHREAD, OPENMP, GLUT, OPENGL, SCOTCH, LAPACKE), the install.sh file will only install the softwares, libraries and include files in the local MPD/ directory.
 
@@ -62,21 +66,25 @@ Important remark: the version of mmg3d we need for the mpdProgram is a modified 
 
 Remark: in order to install the advect, elastic and mshdist software, the Commons library (https://github.com/ISCDtoolbox/Commons) must have been previously installed
 
-Normally, at the end of the execution of the install.sh file, we end up in a newly-created outputFiles/ directory. Choose the example you want to try (let us say an hexahedral mesh). Type
+Normally, at the end of the execution of the install.sh file, we end up in a newly-created outputFiles/ directory. A quickstart guide is available at 
 
-	cd ./outputFiles/exampleHexahedra
+https://github.com/ISCDtoolbox/MPD/blob/master/mpdProgram_quickstart_guide.pdf
 
-Then, execute the program, which takes inly one argument, the *.info file, by typing
+Choose the example you want to try (let us say the terahedral mesh). Type
 
-	./../../bin/mpdProgram exHfHex.info
+	cd ./outputFiles/quickstartTests/test1/
 
-Similarly, the tetrahedra version can be tested by entering the outputFiles/exampleTetrahedra/ directory thanks to the "cd" command and then type
+Then, execute the program, which takes only one argument, the *.info file, by typing
 
-	./../../bin/mpdProgram exHfTet.info
+	../../../bin/mpdProgram quickstart1.info
 
-At the end of a test, to vizualize a *.mesh file type (the given one for example)
+Similarly, the hexahedra version can be tested by entering the outputFiles/quickstartTests/test0/ directory thanks to the "cd" command and then type
 
-	./../../bin/medit ./../../inputFiles/exHfTetIni.mesh
+	../../../bin/mpdProgram quickstart0.info
+
+At the end of a test, to vizualize a *.mesh file, you can type for example
+
+	../../../bin/medit ../../../inputFiles/quickstart1.ini.mesh
 
 Thanks to C. Dobrzynski, there is an inline HTML documentation for the medit software available in french (https://www.ljll.math.upmc.fr/frey/logiciels/Docmedit.dir/index.html). There is also a technical report describing its main features (https://www.ljll.math.upmc.fr/frey/publications/RT-0253.pdf).
 
@@ -100,9 +108,9 @@ Type shift+a (i.e. 'A') to display the axis of the frame. Type again shift+a (i.
 
 Type shift+n (i.e. 'N') to display the normal vectors. Type again shift+n (i.e. 'N') to remove them.
 
-Combine shift and the click on an element of the mesh to display its info in the terminal window. When an element is selected type 'r' to remove all the elements the same label. type shift+r to display them again.
+Combine shift and the click on an element of the mesh to display its info in the terminal window. When an element is selected type 'r' to remove all the elements with the same label. type shift+r to display them again.
 
-Combine ctrl and the selection of a rectangular zone with the mouse then type 'z' to zoom on this zone.
+Combine ctrl and the selection of a rectangular zone with the mouse then type 'z' to zoom on this selected zone.
 
 The main data computed by the mpdProgram are saved in a *.data file. The user can restart a test by taking the *.restart file and change the .restart extension by the .info one. The user can also see in this file all the different type of parameters that the mpdProgram can use. The default values of these parameters are set at the compilation by the preprocessor constants inside the sources/mpd/sources/loadParameters.h file. Everything placed after the (mandatory) end_data keyword in the *.info file is considered as a comment.
 
@@ -111,7 +119,7 @@ The mpdProgram program only takes one input argument: a *.info file (the file mu
 In this file (examples are provided in outputFile directory), the minimal
 configuration is to prescribe
 
-* a *.wfn/ *.chem file (see example in the inputFile directory)
+* a *.wfn/ *.chem file (see example in the inputFiles directory)
 
 * the number of electrons to look for
  
@@ -163,4 +171,9 @@ Some informations are required (remove all underscore symbols '_' below):
 m_p_d_U_s_e_r 
 
 m_p_d_2_0_1_8_*_0_7_j_d_a_l_p_h_i_n 
+
+Finally, we recall that a quickstart guide is available at 
+
+https://github.com/ISCDtoolbox/MPD/blob/master/mpdProgram_quickstart_guide.pdf
+
 
