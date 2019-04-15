@@ -7257,7 +7257,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
 //            if (!computeMetric(pParameters,pMesh,pChemicalSystem,
 //                                                          iterationInTheLoop))
 //            {
-//                PRINT_ERROR("In performLevelSetAdaptation: computeMetric ");
+//                PRINT_ERROR("In optimization: computeMetric ");
 //                fprintf(stderr,"function returned zero instead of one.\n");
 //                return 0;
 //            }
@@ -7338,17 +7338,38 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 if (!performLevelSetAdaptation(pParameters,pMesh,
                                             pChemicalSystem,iterationInTheLoop))
                 {
-                    pMin=p0;
+//                    pMin=p0;
                     fprintf(stdout,"\nWarning in optimization function: ");
                     fprintf(stdout,"performLevelSetAdaptation failed.\n");
+
+                    // Read the new *.mesh file
+                    if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
+                    {
+                        PRINT_ERROR("In optimization: ");
+                        fprintf(stderr,"readMeshFileAndAllocateMesh function ");
+                        fprintf(stderr,"returned zero instead of one.\n");
+                        return 0;
+                    }
+
+                    // Update the parameters related to the computational box
+                    if (!updateDiscretizationParameters(pParameters,pMesh))
+                    {
+                        PRINT_ERROR("In optimization: ");
+                        fprintf(stderr,"updateDiscretizationParameters ");
+                        fprintf(stderr,"function returned zero instead of ");
+                        fprintf(stderr,"one.\n");
+                        return 0;
+                    }
+
+
 //                   PRINT_ERROR("In optimization: performLevelSetAdaptation ");
 //                   fprintf(stderr,"function returned zero instead of one.\n");
 //                    free(pShapeGradient);
 //                    pShapeGradient=NULL;
 //                    return 0;
                 }
-                else
-                {
+//                else
+//                {
                     // Compute pMin and reload the previous mesh
                     pMin=computeProbabilityAndReloadPreviousMesh(pParameters,
                                                             pMesh,
@@ -7366,7 +7387,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                         pShapeGradient=NULL;
                         return 0;
                     }
-                }
+//                }
 
                 // Look if pMin satisfied Armijo's rule or not
                 if (pMin>=p0+.25*tMin*h)
@@ -7467,9 +7488,30 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     if (!performLevelSetAdaptation(pParameters,pMesh,
                                             pChemicalSystem,iterationInTheLoop))
                     {
-                        p1=p0;
+//                        p1=p0;
                         fprintf(stdout,"\nWarning in optimization function: ");
                         fprintf(stdout,"performLevelSetAdaptation failed.\n");
+
+                        // Read the new *.mesh file
+                        if (!readMeshFileAndAllocateMesh(pParameters,pMesh))
+                        {
+                            PRINT_ERROR("In optimization: ");
+                            fprintf(stderr,"readMeshFileAndAllocateMesh ");
+                            fprintf(stderr,"function returned zero instead ");
+                            fprintf(stderr,"of one.\n");
+                            return 0;
+                        }
+
+                        // Update the parameters of the computational box
+                        if (!updateDiscretizationParameters(pParameters,pMesh))
+                        {
+                            PRINT_ERROR("In optimization: ");
+                            fprintf(stderr,"updateDiscretizationParameters ");
+                            fprintf(stderr,"function returned zero instead ");
+                            fprintf(stderr,"of one.\n");
+                            return 0;
+                        }
+
 //                        PRINT_ERROR("In optimization: ");
 //                        fprintf(stderr,"performLevelSetAdaptation function ");
 //                        fprintf(stderr,"returned zero instead of one.\n");
@@ -7477,8 +7519,8 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
 //                        pShapeGradient=NULL;
 //                        return 0;
                     }
-                    else
-                    {
+//                    else
+//                    {
                         // Compute p1 and reload the previous mesh
                         p1=computeProbabilityAndReloadPreviousMesh(pParameters,
                                                             pMesh,
@@ -7496,7 +7538,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                             pShapeGradient=NULL;
                             return 0;
                         }
-                    }
+//                    }
 
                     // Look if pMin satisfied Armijo's rule or not
                     if (p1>=p0+.25*t1*h)
