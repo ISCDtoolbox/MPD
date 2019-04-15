@@ -7339,6 +7339,8 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                                             pChemicalSystem,iterationInTheLoop))
                 {
                     pMin=p0;
+                    fprintf(stdout,"\nWarning in optimization function: ");
+                    fprintf(stdout,"performLevelSetAdaptation failed.\n");
 //                   PRINT_ERROR("In optimization: performLevelSetAdaptation ");
 //                   fprintf(stderr,"function returned zero instead of one.\n");
 //                    free(pShapeGradient);
@@ -7466,6 +7468,8 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                                             pChemicalSystem,iterationInTheLoop))
                     {
                         p1=p0;
+                        fprintf(stdout,"\nWarning in optimization function: ");
+                        fprintf(stdout,"performLevelSetAdaptation failed.\n");
 //                        PRINT_ERROR("In optimization: ");
 //                        fprintf(stderr,"performLevelSetAdaptation function ");
 //                        fprintf(stderr,"returned zero instead of one.\n");
