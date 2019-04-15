@@ -7361,7 +7361,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                         fprintf(stderr,
                                     "computeProbabilityAndReloadPreviousMesh ");
                         fprintf(stderr,"function returned zero instead of ");
-                        fprintf(stderr"one.\n");
+                        fprintf(stderr,"one.\n");
                         free(pShapeGradient);
                         pShapeGradient=NULL;
                         return 0;
