@@ -5351,15 +5351,17 @@ int saveDataInTheLoop(Parameters* pParameters, Mesh* pMesh, Data* pData,
     // Update the d0p and d1p variables of the structure pointed by pData
     if (!iterationInTheLoop)
     {
-        pData->d0p[iterationInTheLoop]=pData->pnu[iterationInTheLoop];
-        if (pParameters->opt_mode>0)
-        {
-            pData->d2p[iterationInTheLoop]=pData->d1p[iterationInTheLoop];
-        }
-        else
-        {
-            pData->d2p[iterationInTheLoop]=pData->d0p[iterationInTheLoop];
-        }
+        pData->d0p[iterationInTheLoop]=pParameters->iter_told0p;
+        pData->d2p[iterationInTheLoop]=pParameters->iter_told2p;
+
+//        if (pParameters->opt_mode>0)
+//        {
+//            pData->d2p[iterationInTheLoop]=pData->d1p[iterationInTheLoop];
+//        }
+//        else
+//        {
+//            pData->d2p[iterationInTheLoop]=pData->d0p[iterationInTheLoop];
+//        }
     }
     else
     {
@@ -5661,7 +5663,7 @@ int setupInitialData(Parameters* pParameters, Mesh* pMesh, Data* pData,
         return 0;
     }
 
-    // Write the *.input file before starting the optimization loop
+    // Write the *.restart file before starting the optimization loop
     if (!writingRestartFile(pParameters))
     {
         PRINT_ERROR("In setupInitialData: writingRestartFile function ");
@@ -7251,6 +7253,16 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 pShapeGradient[i]=pMesh->pver[i].value;
             }
 
+//            // Evaluate the metric associated with the molecular orbitals
+//            if (!computeMetric(pParameters,pMesh,pChemicalSystem,
+//                                                          iterationInTheLoop))
+//            {
+//                PRINT_ERROR("In performLevelSetAdaptation: computeMetric ");
+//                fprintf(stderr,"function returned zero instead of one.\n");
+//                return 0;
+//            }
+
+
             // Initialize extremal value of tMin: we known that for tMax
             // Armijo's rule is not satisfied (thus Goldstein yes) with
             // parameters 0.25 (Armijo) and 0.75 (Goldstein)
@@ -7326,26 +7338,32 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                 if (!performLevelSetAdaptation(pParameters,pMesh,
                                             pChemicalSystem,iterationInTheLoop))
                 {
-                    PRINT_ERROR("In optimization: performLevelSetAdaptation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
+                    pMin=p0;
+//                   PRINT_ERROR("In optimization: performLevelSetAdaptation ");
+//                   fprintf(stderr,"function returned zero instead of one.\n");
+//                    free(pShapeGradient);
+//                    pShapeGradient=NULL;
+//                    return 0;
                 }
-
-                // Compute pMin and reload the previous mesh
-                pMin=computeProbabilityAndReloadPreviousMesh(pParameters,pMesh,
+                else
+                {
+                    // Compute pMin and reload the previous mesh
+                    pMin=computeProbabilityAndReloadPreviousMesh(pParameters,
+                                                            pMesh,
                                                             pData,
                                                             pChemicalSystem,
                                                             iterationInTheLoop);
-                if (pMin==-10000.)
-                {
-                    PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"computeProbabilityAndReloadPreviousMesh ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
+                    if (pMin==-10000.)
+                    {
+                        PRINT_ERROR("In optimization: ");
+                        fprintf(stderr,
+                                    "computeProbabilityAndReloadPreviousMesh ");
+                        fprintf(stderr,"function returned zero instead of ");
+                        fprintf(stderr"one.\n");
+                        free(pShapeGradient);
+                        pShapeGradient=NULL;
+                        return 0;
+                    }
                 }
 
                 // Look if pMin satisfied Armijo's rule or not
@@ -7358,7 +7376,7 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     }
                     else
                     {
-                        // Try to get better guess for t1 to avoid big advections
+                        //Try to get better guess for t1 to avoid big advections
                         t1=.1*(tMax+9.*tMin);
                         /*if (t1>tMin && t1<tMax)
                         {
@@ -7447,30 +7465,33 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     if (!performLevelSetAdaptation(pParameters,pMesh,
                                             pChemicalSystem,iterationInTheLoop))
                     {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,"performLevelSetAdaptation function ");
-                        fprintf(stderr,"returned zero instead of one.\n");
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
+                        p1=p0;
+//                        PRINT_ERROR("In optimization: ");
+//                        fprintf(stderr,"performLevelSetAdaptation function ");
+//                        fprintf(stderr,"returned zero instead of one.\n");
+//                        free(pShapeGradient);
+//                        pShapeGradient=NULL;
+//                        return 0;
                     }
-
-                    // Compute p1 and reload the previous mesh
-                    p1=computeProbabilityAndReloadPreviousMesh(pParameters,
+                    else
+                    {
+                        // Compute p1 and reload the previous mesh
+                        p1=computeProbabilityAndReloadPreviousMesh(pParameters,
                                                             pMesh,
                                                             pData,
                                                             pChemicalSystem,
                                                             iterationInTheLoop);
-                    if (p1==-10000.)
-                    {
-                        PRINT_ERROR("In optimization: ");
-                        fprintf(stderr,
+                        if (p1==-10000.)
+                        {
+                            PRINT_ERROR("In optimization: ");
+                            fprintf(stderr,
                                     "computeProbabilityAndReloadPreviousMesh ");
-                        fprintf(stderr,"function returned zero instead of ");
-                        fprintf(stderr,"one.\n");
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
+                            fprintf(stderr,"function returned zero instead ");
+                            fprintf(stderr,"of one.\n");
+                            free(pShapeGradient);
+                            pShapeGradient=NULL;
+                            return 0;
+                        }
                     }
 
                     // Look if pMin satisfied Armijo's rule or not

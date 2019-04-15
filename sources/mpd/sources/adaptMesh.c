@@ -2106,13 +2106,17 @@ int performLevelSetAdaptation(Parameters* pParameters, Mesh* pMesh,
         fprintf(stdout,"CHEMISTRY OF THE MOLECULAR ORBITALS.\n");
     }
 
+ //   if (!iterationInTheLoop || pParameters->opt_mode!=1)
+ //   {
+
     // Evaluate the metric associated with the molecular orbitals
     if (!computeMetric(pParameters,pMesh,pChemicalSystem,iterationInTheLoop))
     {
-        PRINT_ERROR("In performLevelSetAdaptation: computeMetric function ");
-        fprintf(stderr,"returned zero instead of one.\n");
+        PRINT_ERROR("In performLevelSetAdaptation: computeMetric ");
+        fprintf(stderr,"function returned zero instead of one.\n");
         return 0;
     }
+ //   }
 
     if (pParameters->opt_mode==2 && iterationInTheLoop)
     {
