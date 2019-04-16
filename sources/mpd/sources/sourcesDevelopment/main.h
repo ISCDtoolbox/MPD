@@ -5,8 +5,8 @@
 * \file main.h
 * \brief Shared macros, structures, and prototypes of the MPD program.
 * \author Jeremy DALPHIN
-* \version 3.0
-* \date May 1st, 2019
+* \version 2.0
+* \date September 1st, 2018
 *
 * This file contains the description of all the different macro functions,
 * preprocessor constants, structures, and non-static function prototypes that
@@ -15,8 +15,8 @@
 
 /* ************************************************************************** */
 // Standard header files to deal respectively with input/output, general basic
-// functions, arrays of characters, date/time, different signals, math functions
-// and LAPACK library (lapacke is the c-interface) as well as the OPENMP one
+// functions, arrays of characters, date/time, different signals, and math
+// functions
 /* ************************************************************************** */
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,12 +24,10 @@
 #include <time.h>
 #include <signal.h>
 
-//#include <math.h>    // if it is not in comment add -lm with gcc command
-//#include <lapacke.h> // if it is not in comment add -llapacke with gcc command
+#include <math.h>    // if it is not in comment add -lm with gcc command
+#include <lapacke.h> // if it is not in comment add -llapacke with gcc command
+#include <omp.h>     // if it is not in comment add -fopenmp with gcc command
 
-#ifdef _OPENMP
-    #include <omp.h> // if it is not in comment add -fopenmp with gcc command
-#endif
 
 /* ************************************************************************** */
 // Macro functions to initialize the diagnostic of an error, to get the
@@ -37,7 +35,7 @@
 /* ************************************************************************** */
 /**
 * \def PRINT_ERROR(stringToPrint)
-* \brief Used to initialize the diagnostic of an error in the MPD program.
+* \brief Used to initialize the diagnostic of an error in the program.
 *
 * It prints in the standard error stream the date, time, line, and file in which
 * the error occurred. An additional stringToPrint message is also displayed,
@@ -277,8 +275,8 @@ do {                                                                           \
 #define ORB_FXYZ 20
 
 /*
-// Not used in the current version of the MPD program (but we save the values
-// here just in case they might be needed later)
+// Not used in the current version of the program (but we save the values here
+// just in case they might be needed later)
 #define ORB_GXXXX 21
 #define ORB_GYYYY 22
 #define ORB_GZZZZ 23
@@ -318,27 +316,26 @@ do {                                                                           \
 */
 
 /* ************************************************************************** */
-// Definition of the structure storing the 74 parameters used in the algorithm
+// Definition of the structure storing the 7à parameters used in the algorithm
 /* ************************************************************************** */
 /**
 * \struct Parameters main.h
-* \brief It can store all the different 74 parameters used in the MPD algorithm.
+* \brief It can store all the different 70 parameters used in the MPD algorithm.
 */
 typedef struct {
     int opt_mode;            /*!< This parameter rules the type of optimization
-                             *    mode used in the MPD algorithm; positive
-                             *    values concern tetrahedral meshes whereas
+                             *    used in the MPD algorithm; positive values
+                             *    concern tetrahedral meshes whereas
                              *    non-positive values concern hexahedral meshes;
-                             *    if set to minus one/two,
-                             *    shape-gradient/exhaustive perturbations are
-                             *    performed on hexahedral meshes in order to
-                             *    maximize the probability; if set to zero, the
-                             *    algorithm starts with level-set (global)
-                             *    perturbations, then changes to an exhaustive
-                             *    (local) search when the hexahedral domain no
-                             *    longer evolves; if set to four, then each new
-                             *    tetrahedral domain represents the positive
-                             *    part of the shape gradient associated
+                             *    if set to minus one/two, shape-gradient/random
+                             *    perturbations are performed on hexahedral
+                             *    meshes in order to maximize the probability;
+                             *    if set to zero, the algorithm starts with
+                             *    level-set (global) perturbations, then changes
+                             *    to random (local) ones when the hexahedral
+                             *    domain no longer evolves; if set to four, then
+                             *    each new tetrahedral domain represents the
+                             *    positive part of the shape gradient associated
                              *    with the old one in the optimization loop; if
                              *    set to two/three, then an approach of
                              *    Eulerian(level-set)/Lagrangian type is
@@ -365,23 +362,22 @@ typedef struct {
     // Parameters ruling the different file names
     int name_length;         /*!< Maximal length allowed for storing the
                              *    different file names: it must be (strictly)
-                             *    greater than seven (to be able to store at
+                             *    greater than six (to be able to store at
                              *    least a name that contains something more than
-                             *    the *.input extension); for any \ref
-                             *    name_info, \ref name_data, \ref name_chem,
-                             *    \ref name_mesh, and \ref name_elas variable
-                             *    that is not pointing to NULL, \ref name_length
-                             *    should always correspond to the (common) size
-                             *    of the array such a variable is pointing
-                             *    to. */
+                             *    the *.info extension); for any \ref name_info,
+                             *    \ref name_data, \ref name_chem, \ref
+                             *    name_mesh, and \ref name_elas variable that is
+                             *    not pointing to NULL, \ref name_length should
+                             *    always correspond to the (common) size of the
+                             *    array such a variable is pointing to. */
 
-    char* name_input;        /*!< Pointer used to dynamically define the array
-                             *    storing the name of the *.input file that
-                             *    contains the informations needed for filling
-                             *    the Parameters structure; if it is not
-                             *    pointing to NULL, the size of the array it is
-                             *    pointing to should always correspond to the
-                             *    \ref name_length value. */
+    char* name_info;         /*!< Pointer used to dynamically define the array
+                             *    storing the name of the (input) *.info file
+                             *    that contains the informations needed for
+                             *    filling the Parameters structure; if it is
+                             *    not pointing to NULL, the size of the array
+                             *    it is pointing to should always correspond to
+                             *    the \ref name_length value. */
 
     char* name_data;         /*!< Pointer used to dynamically define the array
                              *    storing the name of the (output) *.data file
@@ -422,9 +418,10 @@ typedef struct {
     int nu_electrons;        /*!< The number of electrons to look for: it must
                              *    be positive (zero returns an error) and not
                              *    (strictly) greater than the total number of
-                             *    electrons in the chemical system stored in
-                             *    the ne variable of the ChemicalSystem
-                             *    structure). */
+                             *    electrons in the chemical system, which
+                             *    corresponds here to the total number of
+                             *    orbitals (stored in the nmorb variable
+                             *    of the ChemicalSystem structure). */
 
     int nu_spin;             /*!< If set to zero, the MPD program will maximize
                              *    the probability to find exactly \ref
@@ -437,13 +434,13 @@ typedef struct {
                              *    and \ref nu_electrons - |\ref nu_spin| having
                              *    spin up/down; other values are forbidden. */
 
-//  int orb_rhf;             /*!< If set to one, then it means that restricted
-//                           *    Hartree-Fock orbitals are used (and in
-//                           *    particular, \ref nu_electrons must be an even
-//                           *    number in this case), i.e. all molecular
-//                           *    orbitals have an occupation number that equals
-//                           *    two in the *.wfn file and must be duplicated;
-//                           *    otherwise, it must be set to zero. */
+    int orb_rhf;             /*!< If set to one, then it means that restricted
+                             *    Hartree-Fock orbitals are used (and in
+                             *    particular, \ref nu_electrons must be an even
+                             *    number in this case), i.e. all molecular
+                             *    orbitals have an occupation number that equals
+                             *    two in the *.wfn file and must be duplicated;
+                             *    otherwise, it must be set to zero. */
 
 
     // Parameters ruling the computational box (if a *.mesh file is not given)

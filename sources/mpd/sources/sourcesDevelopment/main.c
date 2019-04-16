@@ -2,45 +2,45 @@
 * \file main.c
 * \brief Main and shared functions of the MPD program.
 * \author Jeremy DALPHIN
-* \version 3.0
-* \date May 1st, 2019
+* \version 2.0
+* \date September 1st, 2018
 *
 * This file contains the \ref main function of the MPD program and also all the
 * functions that are shared by all the files related to the MPD program.
 */
 
-/** \mainpage Maximizing optimal probability domains
+/** \mainpage Maximizing optimal probability domain
 *
-* The MPD program aims to compute the shape of a domain that maximizes the
+* The MPD program aims to compute the shape of the domain that maximizes the
 * probability to find exactly a certain number of electrons inside it, given a
 * chemical electronic structure.
 *
-* In addition, a certain number of other ISCD softwares
-* (https://github.com/ISCDtoolbox) must have been previously installed:
-* medit to vizualize 3D meshes (see https://github.com/ISCDtoolbox/Medit);
-* mshdist to redistanciate level-set functions
-* (see https://github.com/ISCDtoolbox/Mshdist);
-* elastic to solve the linear elasticity on 3D meshes
-* (see https://github.com/ISCDtoolbox/LinearElasticity);
-* advect to advect a level-function function with respect to a vector field
-* (see https://github.com/ISCDtoolbox/Advection);
-* mmg3d to adapt 3D meshes (see https://github.com/Mmgtools).
+* In addition, a certain number of other iscd softwares
+* (https://github.com/ISCDtoolbox) must have been previously installed
+* medit to vizualize 3D mesh (see https://github.com/ISCDtoolbox/Medit)
+* mshdist to redistanciate level-set function
+* (see https://github.com/ISCDtoolbox/Mshdist)
+* elastic to solve elasticity on 3D mesh
+* (see https://github.com/ISCDtoolbox/LinearElasticity)
+* advect to advect a level-function function thanks to a vector field
+* (see https://github.com/ISCDtoolbox/Advection)
+* mmg3d_03 to adapt 3D mesh (see https://github.com/Mmgtools)
 *
 * Important remark: the version of mmg3d we need for the mpdProgram is a
 * modified version of the official one.
 */
 
 #include "main.h"
-//#include "loadParameters.h"
-//#include "loadChemistry.h"
-//#include "loadMesh.h"
-//#include "adaptMesh.h"
-//#include "optimization.h"
+#include "loadParameters.h"
+#include "loadChemistry.h"
+#include "loadMesh.h"
+#include "adaptMesh.h"
+#include "optimization.h"
 //#include "test.h"
 
 /**
 * \var globalInitialTimer
-* \brief Global variable used to store the time at which the MPD program starts.
+* \brief Global variable used to store the time at which the program starts.
 */
 time_t globalInitialTimer=0;
 
@@ -55,19 +55,19 @@ time_t globalInitialTimer=0;
 * \def STR_RELEASE
 * \brief Used to specify the current date of release of the MPD program.
 */
-#define STR_RELEASE "May 1st, 2019"
+#define STR_RELEASE "September 1st, 2018"
 
 /**
 * \def STR_VERSION
 * \brief Used to specify the current version of the MPD program.
 */
-#define STR_VERSION "3.0"
+#define STR_VERSION "2.0"
 
 /**
 * \def STR_COPYRIGHT
 * \brief Used to specify the copyright informations of the MPD program.
 */
-#define STR_COPYRIGHT "2019, ISCD-Sorbonne Universite"
+#define STR_COPYRIGHT "2018, ISCD-Sorbonne Universités"
 
 /**
 * \def STR_AUTHOR
@@ -182,7 +182,6 @@ int main(int argc, char *argv[])
     Data data;
     Mesh mesh;
 
-/*
     // Initialize the main structures to zero (nothing should be placed before)
     INITIALIZE_MAIN_STRUCTURES(&parameters,&chemicalSystem,&data,&mesh,argc);
     if (argc!=2)
@@ -500,8 +499,6 @@ int main(int argc, char *argv[])
         data.d1p[iStop]=d1p;
         data.d2p[iStop]=d2p;
     }
-
-*/
 
     FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_SUCCESS);
 }
