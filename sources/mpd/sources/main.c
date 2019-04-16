@@ -392,9 +392,16 @@ int main(int argc, char *argv[])
         if (data.pnu[i-1]<0.15 && parameters.opt_mode==1)
         {
             optMode=parameters.opt_mode;
-            parameters.opt_mode=3;
+            parameters.opt_mode=2;
             deltaT=parameters.delta_t;
-            parameters.delta_t=100.*data.pnu[i-1];
+            if (data.pnu[i-1]<1.e-5)
+            {
+                parameters.delta_t=100000.;
+            }
+            else
+            {
+                parameters.delta_t=1./data.pnu[i-1];
+            }
         }
 
 
@@ -439,7 +446,7 @@ int main(int argc, char *argv[])
                 PRINT_LOCAL_TIME(i,STR_PHASE,startLocalTimer,endLocalTimer);
                 fprintf(stdout,"PROBABILITY RESIDUAL: %.8le",data.d1p[i]);
                 fprintf(stdout,"\n%s\n",STR_PHASE);
-                if (data.pnu[i-1]<0.15 && parameters.opt_mode==3 && optMode==1)
+                if (data.pnu[i-1]<0.15 && parameters.opt_mode==2 && optMode==1)
                 {
                     parameters.opt_mode=optMode;
                     optMode=-1;
