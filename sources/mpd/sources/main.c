@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
     size_t lengthName=0;
     char* fileLocation=NULL;
     int i=0, j=0, optMode=0, iStop=0, jPlus=0, jMoins=0;
-    double d0p=0., d1p=0., d2p=0.;
+    double d0p=0., d1p=0., d2p=0., deltaT=0.;
     Parameters parameters;
     ChemicalSystem chemicalSystem;
     Data data;
@@ -389,6 +389,15 @@ int main(int argc, char *argv[])
     {
         time(&startLocalTimer);
 
+        if (data.pnu[i-1]<0.15 && parameters.opt_mode==1)
+        {
+            optMode=parameters.opt_mode;
+            parameters.opt_mode=3;
+            deltaT=parameters.delta_t;
+            parameters.delta_t=100.*data.pnu[i-1];
+        }
+
+
         if (i%3==0 && (parameters.opt_mode==1 || 
                                 (parameters.opt_mode==2 && parameters.nu_spin)))
         {
@@ -430,6 +439,12 @@ int main(int argc, char *argv[])
                 PRINT_LOCAL_TIME(i,STR_PHASE,startLocalTimer,endLocalTimer);
                 fprintf(stdout,"PROBABILITY RESIDUAL: %.8le",data.d1p[i]);
                 fprintf(stdout,"\n%s\n",STR_PHASE);
+                if (data.pnu[i-1]<0.15 && parameters.opt_mode==3 && optMode==1)
+                {
+                    parameters.opt_mode=optMode;
+                    optMode=-1;
+                    parameters.delta_t=deltaT;
+                }
                 if (i%3==0 && parameters.opt_mode==4 &&
                                                      (optMode==1 || optMode==2))
                 {
