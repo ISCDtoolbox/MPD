@@ -29,7 +29,7 @@
 //#include <lapacke.h> // if it is not in comment add -llapacke with gcc command
 
 #ifdef _OPENMP
-    #include <omp.h> // if it is not in comment add -fopenmp with gcc command
+    #include <omp.h> // take it into account by adding -fopenmp with gcc command
 #endif
 
 /* ************************************************************************** */

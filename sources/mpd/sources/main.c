@@ -31,10 +31,10 @@
 */
 
 #include "main.h"
-//#include "loadParameters.h"
-//#include "loadChemistry.h"
-//#include "loadMesh.h"
-//#include "adaptMesh.h"
+#include "loadParameters.h"
+#include "loadChemistry.h"
+#include "loadMesh.h"
+#include "adaptMesh.h"
 //#include "optimization.h"
 //#include "test.h"
 
@@ -501,9 +501,10 @@ int main(int argc, char *argv[])
         data.d2p[iStop]=d2p;
     }
 
+    FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_SUCCESS);
 */
 
-    FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_SUCCESS);
+    return EXIT_SUCCESS;
 }
 
 /* ************************************************************************** */
@@ -1483,6 +1484,7 @@ int renameFileLocation(char* fileLocation, int nameLength,
 // must already exist). It has the Parameters* (defined in main.h) as input
 // argument and it returns one on success otherwise zero is returned
 /* ************************************************************************** */
+/*
 int plotMeshWithMeditSoftware(Parameters* pParameters)
 {
     size_t length=0;
@@ -1573,6 +1575,7 @@ int plotMeshWithMeditSoftware(Parameters* pParameters)
 
     return 1;
 }
+*/
 
 /* ************************************************************************** */
 // The function adaptMeshWithMmg3dSoftware tries to execute (thanks to the
@@ -1583,6 +1586,7 @@ int plotMeshWithMeditSoftware(Parameters* pParameters)
 // It has the Parameters* (defined in main.h) and the char[4] adaptMode as
 // input arguments and it returns one on success otherwise zero is returned
 /* ************************************************************************** */
+/*
 int adaptMeshWithMmg3dSoftware(Parameters* pParameters, char adaptMode[4])
 {
     size_t length=0;
@@ -1843,6 +1847,7 @@ int adaptMeshWithMmg3dSoftware(Parameters* pParameters, char adaptMode[4])
 
     return 1;
 }
+*/
 
 /* ************************************************************************** */
 // The function renormalizeWithMshdistSoftware tries to execute (thanks to the
@@ -1853,6 +1858,7 @@ int adaptMeshWithMmg3dSoftware(Parameters* pParameters, char adaptMode[4])
 // It has the Parameters* (defined in main.h) and the char[4] mode as
 // input arguments and it returns one on success otherwise zero is returned
 /* ************************************************************************** */
+/*
 int renormalizeWithMshdistSoftware(Parameters* pParameters, char mode[4])
 {
     size_t length=0;
@@ -2073,6 +2079,7 @@ int renormalizeWithMshdistSoftware(Parameters* pParameters, char mode[4])
 
     return 1;
 }
+*/
 
 /* ************************************************************************** */
 // The function extendShapeGradientWithElasticSoftware tries to execute (thanks
@@ -2084,6 +2091,7 @@ int renormalizeWithMshdistSoftware(Parameters* pParameters, char mode[4])
 // by pParameters. It has the Parameters* (defined in main.h) as input arguments
 // and it returns one on success otherwise zero is returned in case of error
 /* ************************************************************************** */
+/*
 int extendShapeGradientWithElasticSoftware(Parameters* pParameters)
 {
     size_t length=0;
@@ -2241,6 +2249,7 @@ int extendShapeGradientWithElasticSoftware(Parameters* pParameters)
 
     return 1;
 }
+*/
 
 /* ************************************************************************** */
 // The function advectLevelSetWithAdvectSoftware tries to execute (thanks to
@@ -2251,6 +2260,7 @@ int extendShapeGradientWithElasticSoftware(Parameters* pParameters)
 // pParameters. It has the Parameters* (defined in main.h) as input arguments
 // and it returns one on success otherwise zero is returned
 /* ************************************************************************** */
+/*
 int advectLevelSetWithAdvectSoftware(Parameters* pParameters)
 {
     size_t length=0;
@@ -2402,5 +2412,5 @@ int advectLevelSetWithAdvectSoftware(Parameters* pParameters)
 
     return 1;
 }
-
+*/
 
