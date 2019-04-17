@@ -15,14 +15,15 @@
 
 /* ************************************************************************** */
 // Standard header files to deal respectively with input/output, general basic
-// functions, arrays of characters, date/time, different signals, math functions
-// and LAPACK library (lapacke is the c-interface) as well as the OPENMP one
+// functions, arrays of characters, date/time, different signals, complex
+// numbers, math functions, LAPACK and OPENMP libraries
 /* ************************************************************************** */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <signal.h>
+#include <complex.h>
 
 //#include <math.h>    // if it is not in comment add -lm with gcc command
 //#include <lapacke.h> // if it is not in comment add -llapacke with gcc command
@@ -318,11 +319,11 @@ do {                                                                           \
 */
 
 /* ************************************************************************** */
-// Definition of the structure storing the 74 parameters used in the algorithm
+// Definition of the structure storing the 77 parameters used in the algorithm
 /* ************************************************************************** */
 /**
 * \struct Parameters main.h
-* \brief It can store all the different 74 parameters used in the MPD algorithm.
+* \brief It can store all the different 77 parameters used in the MPD algorithm.
 */
 typedef struct {
     int opt_mode;            /*!< This parameter rules the type of optimization
@@ -349,8 +350,9 @@ typedef struct {
                              *    order to get a converged MPD domain; other
                              *    values are forbidden. */
 
-    int verbose;             /*!< If set to one, then it prints every execution
-                             *    details in the standard output stream;
+    int verbose;             /*!< If set to two, then it prints every execution
+                             *    details in the standard output stream; if set
+                             *    to one, then a little less is displayed;
                              *    otherwise, it must be set to zero and very
                              *    little is shown during the execution of the
                              *    MPD algorithm. */
@@ -361,6 +363,10 @@ typedef struct {
                              *    must have been previously installed): it must
                              *    be positive. */
 
+    double rho_opt;          /*!< Only used if \ref opt_mode=1/2/3/4: scaling
+                             *    factor that is multiplying the shape gradient
+                             *    during the optimization algorithm. */
+
 
     // Parameters ruling the different file names
     int name_length;         /*!< Maximal length allowed for storing the
@@ -368,7 +374,7 @@ typedef struct {
                              *    greater than seven (to be able to store at
                              *    least a name that contains something more than
                              *    the *.input extension); for any \ref
-                             *    name_info, \ref name_data, \ref name_chem,
+                             *    name_input, \ref name_result, \ref name_chem,
                              *    \ref name_mesh, and \ref name_elas variable
                              *    that is not pointing to NULL, \ref name_length
                              *    should always correspond to the (common) size
@@ -383,14 +389,15 @@ typedef struct {
                              *    pointing to should always correspond to the
                              *    \ref name_length value. */
 
-    char* name_data;         /*!< Pointer used to dynamically define the array
-                             *    storing the name of the (output) *.data file
-                             *    that will contain the data saved during the
-                             *    MPD algorithm (we refer to the description of
-                             *    the Data structure for further details); if it
-                             *    is not pointing to NULL, the size of the array
-                             *    it is pointing to should always correspond to
-                             *    the \ref name_length value. */
+    char* name_result;       /*!< Pointer used to dynamically define the array
+                             *    storing the name of the (output) *.result file
+                             *    that will contain a summary of the data saved
+                             *    during the MPD algorithm (we refer to the
+                             *    description of the Data structure for further
+                             *    details); if it is not pointing to NULL, the
+                             *    size of the array it is pointing to should
+                             *    always correspond to the \ref name_length
+                             *    value. */
 
     char* name_chem;         /*!< Pointer used to dynamically define the array
                              *    storing the name of the *.wfn/ *.chem file
@@ -423,30 +430,62 @@ typedef struct {
                              *    be positive (zero returns an error) and not
                              *    (strictly) greater than the total number of
                              *    electrons in the chemical system stored in
-                             *    the ne variable of the ChemicalSystem
-                             *    structure). */
+                             *    the \ref ne_electrons variable. */
 
-    int nu_spin;             /*!< If set to zero, the MPD program will maximize
-                             *    the probability to find exactly \ref
-                             *    nu_electrons in the domain; if set to a
-                             *    negative/positive value that is not (strictly)
-                             *    lower/greater than (-/+) \ref nu_electrons, it
-                             *    will maximize the probability to find exactly
-                             *    \ref nu_electrons in the domain, with exactly
-                             *    |\ref nu_spin| electrons having spin down/up
-                             *    and \ref nu_electrons - |\ref nu_spin| having
-                             *    spin up/down; other values are forbidden. */
+//  int nu_spin;             /*!< If set to zero, the MPD program will maximize
+//                           *    the probability to find exactly \ref
+//                           *    nu_electrons in the domain; if set to a
+//                           *    negative/positive value that is not (strictly)
+//                           *    lower/greater than (-/+) \ref nu_electrons, it
+//                           *    also computes the probability to find exactly
+//                           *    \ref nu_electrons in the domain, with exactly
+//                           *    |\ref nu_spin| electrons having spin down/up
+//                           *    and \ref nu_electrons - |\ref nu_spin| having
+//                           *    spin up/down; other values are forbidden. */
 
-//  int orb_rhf;             /*!< If set to one, then it means that restricted
-//                           *    Hartree-Fock orbitals are used (and in
-//                           *    particular, \ref nu_electrons must be an even
-//                           *    number in this case), i.e. all molecular
-//                           *    orbitals have an occupation number that equals
-//                           *    two in the *.wfn file and must be duplicated;
-//                           *    otherwise, it must be set to zero. */
+    int bohr_unit;           /*!< If set to one, then the unit used in the
+                             *    *.wfn / *.chem file for locating the centers
+                             *    of the nuclei is assumed to be in Bohrs;
+                             *    otherwise it must be set to zero. */
+
+    double select_orb;       /*!< If set to a positive value, then a selection
+                             *    of the molecular orbitals will be performed
+                             *    to retain only those that are acting inside
+                             *    the computational box with a L2-value greater
+                             *    than the one given; otherwise it must be set
+                             *    to zero and no selection is done. */
+
+    int orb_ortho;           /*!< If set to one, then the molecular orbitals
+                             *    are expected to form an L2-orthonormal basis
+                             *    basis set over the three-dimensional space;
+                             *    otherwise it must be set to zero. */
+    
+    int ne_electrons;        /*!< The total number of electrons of the chemical
+                             *    system considered inside the computational
+                             *    box, which must be positive and equal to the
+                             *    ne variable stored in the ChemicalSystem
+                             *    structure. */
+
+    int multi_det;           /*!< If set to one, then a multi-determinant wave
+                             *    function is considered in the ChemicalSystem
+                             *    structure; otherwise it must be set to 
+                             *    zero. */
+  
+    int orb_rhf;             /*!< If set to one, then it means that restricted
+                             *    Hartree-Fock orbitals are used (and in
+                             *    particular, \ref ne_electrons must be an even
+                             *    number in this case), i.e. all molecular
+                             *    orbitals have an occupation number that equals
+                             *    two in the *.wfn file and must be duplicated;
+                             *    otherwise, it must be set to zero. */
 
 
     // Parameters ruling the computational box (if a *.mesh file is not given)
+    int select_box;          /*!< If set to one, the default computational box
+                             *    is built so that it contains all the nuclei
+                             *    given in the *.wfn/ *.chem files; otherwise,
+                             *    it must be set to zero. */
+
     double x_min;            /*!< Minimal coordinate in the first-coordinate
                              *    direction: it must be (strictly) lower than
                              *    \ref x_max and \ref delta_x must be equal to
@@ -577,6 +616,13 @@ typedef struct {
 
 
     // Parameters ruling the stop criteria in the optimization loop
+    int iter_ini;            /*!< A non-negative integer referring to the
+                             *    iteration at which the optimization loop will
+                             *    start (in case the MPD program is restarted
+                             *    with a different optimization mode for
+                             *    example): it must not be greater than the \ref
+                             *    iter_max variable. */ 
+
     int iter_max;            /*!< Maximum number of iterations allowed in the
                              *    optimization loop: it must not be negative
                              *    (zero means that no optimization loop is
@@ -612,10 +658,11 @@ typedef struct {
     // Parameters ruling the saving of data in the optimization loop
     int save_type;           /*!< If set to one, then the mesh is saved using
                              *    the *.mesh format; if set to zero, then the
-                             *    mesh is saved using the *.cube format;
-                             *    otherwise, it must be set to two, and in this
-                             *    case, the mesh is saved in both *.cube and
-                             *    *.mesh format. */
+                             *    mesh is saved using the *.cube/*.obj format
+                             *    (*.cube for hexahedral meshes and *.obj for
+                             *    tetrahedral ones); otherwise, it must be set
+                             *    to two, and in this case, the mesh is saved
+                             *    in both *.cube/*.obj and *.mesh format. */
 
     int save_mesh;           /*!< Frequency at which the mesh is saved in the
                              *    optimization loop: it cannot be negative
@@ -640,9 +687,8 @@ typedef struct {
                              *    certain values should be used depending on
                              *    what kind of data is available or not):
                              *    one=metric, two=level-set function,
-                             *    three/four=shape gradient (before/after
-                             *    relabelling), five=extension of shape
-                             *    gradient by using the elasticity equations,
+                             *    three/four=shape gradient (scalar/vectorial
+                             *    form), five=extension of the shape gradient,
                              *    six=advection of the level-set function, and
                              *    seven=advected domain; other values are
                              *    forbidden. */
@@ -944,7 +990,7 @@ typedef struct {
                              *    of (Gaussian-type) primitives; if it is not
                              *    pointing to NULL, the size of the array it is
                              *    pointing to should always correspond to the
-                             *    ngauss variable of the ChemicalSystem
+                             *    nprim variable of the ChemicalSystem
                              *    structure. */
 
     double* exp;             /*!< Pointer used to dynamically define the array
@@ -953,7 +999,7 @@ typedef struct {
                              *    of (Gaussian-type) primitives; if it is not
                              *    pointing to NULL, the values of the array it
                              *    pointing to should always be positive and its
-                             *    size should always correspond to the ngauss
+                             *    size should always correspond to the nprim
                              *    variable of the ChemicalSystem structure. */
 
     int* nucl;               /*!< Pointer used to dynamically define the array
@@ -969,7 +1015,7 @@ typedef struct {
                              *    nuclei in the chemical system (stored in the
                              *    nnucl variable of the ChemicalSystem
                              *    structure), while its size should always
-                             *    correspond to the ngauss variable of the
+                             *    correspond to the nprim variable of the
                              *    ChemicalSystem structure. */
 
     int* type;               /*!< Pointer used to dynamically define the array
@@ -981,15 +1027,114 @@ typedef struct {
                              *    and not (strictly) greater than twenty (i.e. a
                              *    value referenced between \ref ORB_S and \ref
                              *    ORB_FXYZ), while its size should always
-                             *    correspond to the ngauss variable of the
+                             *    correspond to the nprim variable of the
                              *    ChemicalSystem structure. */
+
+    int ngauss;              /*!< Number of non-zero primitives associated with
+                             *    the current MolecularOrbital structure, which
+                             *    should always correspond to the size of the
+                             *    array \ref pgauss is pointing to: it should
+                             *    always be positive and not greater than the
+                             *    total number of primitives (nprim variable)
+                             *    stored in the ChemicalSystem structure. */
+
+    int* pgauss;             /*!< Pointer used to dynamically define the array
+                             *    storing the position of the non-zero
+                             *    primitives in the arrays pointed by \ref
+                             *    coeff, \ref exp, \ref nucl, and \ref type;
+                             *    if it is not pointing to NULL, its size should
+                             *    always be given by the \ref ngauss value. */
 } MolecularOrbital;
+
+/**
+* \struct Determinant main.h
+* \brief It can store all the informations needed to build a determinant
+*        of molecular orbitals that can appear in the wave function of the
+*        chemical system (pre-factor, molecular orbitals concerned).
+*/
+typedef struct {
+    int rhf;                 /*!< If set to one, then it means that the current
+                             *    Determinant structure admits a restricted 
+                             *    Hartree-Fock-like simplification; otherwise,
+                             *    it must be set to zero. */
+
+    double cdet;             /*!< Coefficient acting as a multiplicating
+                             *    pre-factor of the Determinant structure in
+                             *    the decomposition of the wave function as a
+                             *    finite linear combinaison of determinants. */
+
+    int* vmorb;               /*!< Pointer used to dynamically define the array
+                              *    storing the vector of molecular orbitals
+                              *    constituting the Determinant structure
+                              *    referred to as their positions in the array
+                              *    pointed by the pmorb variable of the 
+                              *    ChemicalSystem structure; if it is not
+                              *    pointing to NULL, its size should always be
+                              *    given by the ne variable of the
+                              *    ChemicalSystem structure. */
+} Determinant;
+
+/**
+* \struct OverlapMatrix main.h
+* \brief It can store the principal informations (coefficients, eigenvalues,
+*        eigenvectors) related to the different generalized overlap matrices.
+*/
+typedef struct {
+    int nmat;                /*!< Positive integer referring to the size of the
+                             *    (nmat)x(nmat)-matrix the current OverlapMatrix
+                             *    structure is referring to. */
+
+    int rhf;                 /*!< If set to one, then it means that the current
+                             *    OverlapMatrix structure admits a restricted 
+                             *    Hartree-Fock-like simplification  (and in
+                             *    particular, \ref nmat must be an even
+                             *    number in this case); otherwise, it must be
+                             *    set to zero. */
+
+    double cmat;             /*!< Coefficient acting as a multiplicating
+                             *    pre-factor in the decomposition of the
+                             *    probability as a finite linear combinaison
+                             *    of determinants of generalized overlap
+                             *    matrices. */
+
+    double* coef;            /*!< Pointer used to dynamically define the array
+                             *    storing the (real) coefficients of the
+                             *    current OverlapMatrix structure; if it
+                             *    not pointing to NULL, the size of the array it
+                             *    is pointing to should always correspond to
+                             *    the (\ref nmat )x(\ref nmat ) value.*/
+
+    double complex* diag;    /*!< Pointer used to dynamically define the array
+                             *    storing the (complex) eigenvalues of the
+                             *    current OverlapMatrix structure (according to
+                             *    the generalized Schur decomposition); if it
+                             *    not pointing to NULL, the size of the array it
+                             *    is pointing to should always correspond to
+                             *    the \ref nmat value.*/
+
+    double complex* lvect;   /*!< Pointer used to dynamically define the array
+                             *    storing the left eigenvectors of the current
+                             *    OverlapMatrix structure (according to the
+                             *    generalized Schur decomposition); if it not
+                             *    pointing to NULL, the size of the array it is
+                             *    pointing to should always correspond to the
+                             *    (\ref nmat )x(\ref nmat ) value.*/
+
+    double complex* rvect;   /*!< Pointer used to dynamically define the array
+                             *    storing the right eigenvectors of the current
+                             *    OverlapMatrix structure (according to the
+                             *    generalized Schur decomposition); if it not
+                             *    pointing to NULL, the size of the array it is
+                             *    pointing to should always correspond to the
+                             *    (\ref nmat )x(\ref nmat ) value.*/
+} OverlapMatrix;
 
 /**
 * \struct ChemicalSystem main.h
 * \brief It can store all the chemical informations of the electronic system
 *        needed for the MPD algorithm (number of nucleus, primitives and
-*        molecular orbitals; description of nuclei and molecular orbitals).
+*        molecular orbitals; description of nuclei, molecular orbitals, and
+*       determinants constituting the wave function).
 */
 typedef struct {
     int nnucl;               /*!< Number of nuclei in the chemical system: it
@@ -1004,14 +1149,14 @@ typedef struct {
                              *    NULL, its size should always be given by the
                              *    \ref nnucl value. */
 
-    int ngauss;              /*!< Number of primitives used in the expansion of
+    int nprim;               /*!< Number of primitives used in the expansion of
                              *    the molecular orbitals into a sum of
                              *    (Gaussian-type) primitives: it should always
                              *    be positive; if \ref pmorb is not pointing to
                              *    NULL, for any coeff, exp, nucl, and type
                              *    variable of the MolecularOrbital structures
                              *    that is not pointing to NULL and stored in the
-                             *    array pointed by \ref pmorb, \ref ngauss
+                             *    array pointed by \ref pmorb, \ref nprim
                              *    should always correspond to the (common) size
                              *    of the array such a variable is pointing
                              *    to. */
@@ -1029,69 +1174,65 @@ typedef struct {
                              *    the chemical system; if it is not pointing to
                              *    NULL, its size should always be given by the
                              *    \ref nmorb value. */
+
+    int ne;                  /*!< The total number of electrons of the chemical
+                             *    system considered inside the computational
+                             *    box, which must be positive. */
+
+    int nu;                  /*!< The number of electrons to look for: it must
+                             *    be positive and not greater than \ref ne. */
+
+    int ndet;                /*!< Number of determinants that constitutes the
+                             *    wave function, which should always be positive
+                             *    and correspond to the size of the array \ref
+                             *    pdet is pointing to. */
+
+    Determinant* pdet;       /*!< Pointer used to dynamically define the array
+                             *    storing the determinants of the wave function
+                             *    that is characterizing the chemical system;
+                             *    if it is not pointing to NULL, its size should
+                             *    always be given by the \ref ndet value. */
+
+    OverlapMatrix* pmat;     /*!< Pointer used to dynamically define the array
+                             *    storing all the informations related to the
+                             *    different generalized overlap matrices
+                             *    computed over the whole real three-dimensional
+                             *    space; if it is not pointing to NULL, its size
+                             *    should always be given by the
+                             *    (\ref ndet )x(\ref ndet ) value. */
 } ChemicalSystem;
 
 /* ************************************************************************** */
 // Definition of the structures used to save the data in the MPD algorithm
 /* ************************************************************************** */
-/**
-* \struct OverlapMatrix main.h
-* \brief It can store the principal informations (coefficients, eigenvalues,
-*        eigenvectors) associated with a (symmetric) overlap matrix.
-*/
-typedef struct {
-    double* coef;            /*!< Pointer used to dynamically define the array
-                             *    storing the coefficients of the overlap
-                             *    matrix; if it is not pointing to NULL, the
-                             *    size of the array it is pointing to should
-                             *    always correspond to (nmat)x(nmat) value,
-                             *    where the nmat variable refers to the one
-                             *    given in the Data structure. */
-
-    double* diag;            /*!< Pointer used to dynamically define the array
-                             *    storing the eigenvalues of the (symmetric)
-                             *    overlap matrix; if it is not pointing to NULL,
-                             *    the size of the array it is pointing to should
-                             *    always correspond to the nmat variable of the
-                             *    Data structure. */
-
-    double* vect;            /*!< Pointer used to dynamically define the array
-                             *    storing the eigenvectors of the (symmetric)
-                             *    overlap matrix; if it is not pointing to NULL,
-                             *    the size of the array it is pointing to should
-                             *    always correspond to (nmat)x(nmat) value,
-                             *    where the nmat variable refers to the one
-                             *    given in the Data structure. */
-} OverlapMatrix;
-
-/**
-* \struct Probabilities main.h
-* \brief It can store all the different types of probabilities to find exactly
-*        a certain number of electrons in a given domain.
-*/
-typedef struct {
-    double* pk;              /*!< Pointer used to dynamically define the array
-                             *    storing at the k-th position the probability
-                             *    to find exactly k electrons in a given domain;
-                             *    if it is not pointing to NULL, the values of
-                             *    the array it is pointing to should never be
-                             *    negative and (strictly) greater than one,
-                             *    while its size should always correspond to the
-                             *    nprob variable of the Data structure. */
-
-    double* pkl;             /*!< Pointer used to dynamically define the array
-                             *    storing the matrix coefficients whose (k,l)-th
-                             *    one represents the (spin-dependant)
-                             *    probability to find exactly (k+l) electrons
-                             *    in a given domain, with exactly k spin-up and
-                             *    l spin-down ones; if it is not pointing to
-                             *    NULL, the values of the array it is pointing
-                             *    to should never be negative and (strictly)
-                             *    greater than one, while its size should always
-                             *    correspond to the (nprob)x(nprob) value, where
-                             *    the nprob variable refers to the one of
-                             *    the Data structure. */
-} Probabilities;
+// /**
+//* \struct Probabilities main.h
+//* \brief It can store all the different types of probabilities to find exactly
+//*        a certain number of electrons in a given domain.
+// */
+//typedef struct {
+//  double* pk;              /*!< Pointer used to dynamically define the array
+//                           *    storing at the k-th position the probability
+//                           *    to find exactly k electrons in a given domain;
+//                           *    if it is not pointing to NULL, the values of
+//                           *    the array it is pointing to should never be
+//                           *    negative and (strictly) greater than one,
+//                           *    while its size should always correspond to the
+//                           *    nprob variable of the Data structure. */
+//
+//  double* pkl;             /*!< Pointer used to dynamically define the array
+//                           *    storing the matrix coefficients whose (k,l)-th
+//                           *    one represents the (spin-dependant)
+//                           *    probability to find exactly (k+l) electrons
+//                           *    in a given domain, with exactly k spin-up and
+//                           *    l spin-down ones; if it is not pointing to
+//                           *    NULL, the values of the array it is pointing
+//                           *    to should never be negative and (strictly)
+//                           *    greater than one, while its size should always
+//                           *    correspond to the (nprob)x(nprob) value, where
+//                           *    the nprob variable refers to the one of
+//                           *    the Data structure. */
+//} Probabilities;
 
 /**
 * \struct Data main.h
@@ -1104,12 +1245,12 @@ typedef struct {
                              *    of iterations allowed in the optimization loop
                              *    of the MPD algorithm (stored in the iter_max
                              *    variable of the Parameters structure); for any
-                             *    \ref pnu, \ref pop, \ref d0p, \ref d1p, \ref
-                             *    d2p, \ref tim, \ref ctim, \ref pprob, and \ref
-                             *    pmat variable that is not pointing to NULL,
-                             *    \ref ndata should always correspond to the
-                             *    (common) size of the array such a variable is
-                             *    pointing to. */
+                             *    \ref pnu, \ref pop, \ref vol, \ref d0p, \ref
+                             *    d1p, \ref d2p, \ref tim, \ref ctim, \ref
+                             *    pprob, and \ref pmat variable that is not
+                             *    pointing to NULL, \ref ndata should always
+                             *    correspond to the (common) size of the array
+                             *    such a variable is pointing to. */
 
     int niter;               /*!< Number of iterations properly saved in the
                              *    Data Structure since the MPD program is
@@ -1124,15 +1265,11 @@ typedef struct {
                              *    number of electrons prescribed by the user
                              *    (stored in the nu_electrons of the Parameters
                              *    structure) in the domain during the iterative
-                             *    process (if the nu_spin variable of the
-                             *    Parameters structure is non-zero
-                             *    (active), then it stores the adequate
-                             *    spin-dependant probability); if it is not
-                             *    pointing to NULL, the values of the array it
-                             *    is pointing to should never be negative and
-                             *    (strictly) greater than one, while its size
-                             *    should always correspond to the \ref ndata
-                             *    value. */
+                             *    process; if it is not pointing to NULL, the
+                             *    values of the array it is pointing to should
+                             *    never be negative and (strictly) greater than
+                             *    one, while its size should always correspond
+                             *    to the \ref ndata value. */
 
     double* pop;             /*!< Pointer used to dynamically define the array
                              *    storing the total population of electrons
@@ -1141,10 +1278,18 @@ typedef struct {
                              *    values of the array it is pointing to should
                              *    never be negative and (strictly) greater than
                              *    the total number of electrons in the chemical
-                             *    system (stored in the nmorb variable of the
+                             *    system (stored in the ne variable of the
                              *    ChemicalSystem structure), while its size
                              *    should always correspond to the \ref ndata
                              *    value. */
+
+    double* vol;             /*!< Pointer used to dynamically define the array
+                             *    storing the volume of the domain taken inside 
+                             *    the computational box during the iterative
+                             *    process; if it is not pointing to NULL, the
+                             *    values of the array it is pointing to should
+                             *    never be negative, while its size should
+                             *    always correspond to the \ref ndata value. */
 
     double* d0p;             /*!< Pointer used to dynamically define the array
                              *    storing the (absolute) probability difference
@@ -1193,39 +1338,47 @@ typedef struct {
                              *    always be positive and its size should
                              *    always correspond to the \ref ndata value. */
 
-    int nprob;               /*!< Common value used to size the arrays pointed
-                             *    by the non-NULL variables pk and pkl of the
-                             *    Probabilities structures stored in the array
-                             *    pointed by \ref pprob (if \ref pprob is not
-                             *    NULL); it should always be positive and
-                             *    correspond to the total number of electrons
-                             *    plus one (the total number of electrons is
-                             *    stored in the nmorb variable of the
-                             *    ChemicalSystem structure). */
+    int nprob;               /*!< Common size the arrays pointed by the \ref
+                             *    pprob variable (if not set to NULL); it should
+                             *    always be positive and  correspond to the
+                             *    total number of electrons plus one (the total
+                             *    number of electrons is stored in the ne
+                             *    variable of the ChemicalSystem structure). */
 
-    Probabilities* pprob;    /*!< Pointer used to dynamically define the array
-                             *    storing all the different types of
-                             *    probabilities during the iterative process; if
-                             *    it is not pointing to NULL, the size of the
-                             *    array it is pointing to should always
-                             *    correspond to the \ref ndata value. */
+    double** pprob;          /*!< Pointer used to dynamically define an array of
+                             *    probability array during the iterative
+                             *    process, each one storing at the k-th position
+                             *    the probability to find exactly k electrons
+                             *    inside the current domain; if it is not
+                             *    pointing to NULL, the values stored in
+                             *    the arrays it is pointing to should never be
+                             *    negative and (strictly) greater than one,
+                             *    while its size should always correspond to the
+                             *    \ref ndata value. */
 
-    int nmat;                /*!< Common value used to size the arrays pointed
-                             *    by the non-NULL variables coef, diag, and vect
-                             *    of the OverlapMatrix structures stored in the
-                             *    array pointed by \ref pmat (if \ref pmat is
-                             *    not NULL); it should always be positive and
-                             *    correspond to the total number of electrons
-                             *    (stored in the nmorb variable of the
-                             *    ChemicalSystem structure). */
+//  Probabilities* pprob;    /*!< Pointer used to dynamically define the array
+//                           *    storing all the different types of
+//                           *    probabilities during the iterative process; if
+//                           *    it is not pointing to NULL, the size of the
+//                           *    array it is pointing to should always
+//                           *    correspond to the \ref ndata value. */
 
-    OverlapMatrix* pmat;     /*!< Pointer used to dynamically define the array
-                             *    storing all the overlap-matrix coefficients,
-                             *    eigenvalues, and eigenvectors during the
-                             *    iterative process; if it is not pointing to
-                             *    NULL, the size of the  array it is pointing to
-                             *    should always correspond to the \ref ndata
-                             *    value. */
+//  int nmat;                /*!< Common value used to size the arrays pointed
+//                           *    by the non-NULL variables coef, diag, lvect
+//                           *    and rvect of the OverlapMatrix structures
+//                           *    stored in the array pointed by \ref pmat (if
+//                           *    \ref pmat is not NULL); it should always be
+//                           *    positive and correspond to the value
+//                           *    (ndet)x(ndet)x(ne)x(ne) where the ndet and ne
+//                           *    variables are stored in the ChemicalSystem
+//                           *    structure). */
+
+    OverlapMatrix** pmat;    /*!< Pointer used to dynamically define an array of
+                             *    OverlapMatrix array during the iterative
+                             *    process, each one storing all the informations
+                             *    related to the different generalized overlap
+                             *    matrices; its size should always correspond to
+                             *    the \ref ndata value. */
 } Data;
 
 /* ************************************************************************** */
@@ -1524,15 +1677,15 @@ typedef struct {
     int ncor;                /*!< Number of corners in the mesh (only used if
                              *    opt_mode=one/two/three/four in Parameters
                              *    structure); its value should always be
-                             *    positive and not (strictly) greater than the
-                             *    \ref nver value. */
+                             *    non-negative and not (strictly) greater than
+                             *    the \ref nver value. */
 
     int nnorm;               /*!< Number of normal vectors defined at some
                              *    (boundary) vertices of the mesh (only used if
                              *    opt_mode=one/two/three/four in Parameters
                              *    structure); its value should always be
-                             *    positive and not (strictly) greater than the
-                             *    \ref nver value; if \ref pnorm is not
+                             *    positive and not (strictly) greater than
+                             *    the \ref nver value; if \ref pnorm is not
                              *    pointing to NULL, \ref nnorm should always
                              *    correspond to the size of the array \ref
                              *    pnorm is pointing to. */
@@ -1549,8 +1702,8 @@ typedef struct {
                              *    (boundary) vertices of the mesh (only used if
                              *    opt_mode=one/two/three/four in Parameters
                              *    structure); its value should always be
-                             *    positive and not (strictly) greater than the
-                             *    \ref nver value; if \ref ptan is not
+                             *    positive and not (strictly) greater than
+                             *    the \ref nver value; if \ref ptan is not
                              *    pointing to NULL, \ref ntan should always
                              *    correspond to the size of the array \ref ptan
                              *    is pointing to. */
@@ -1566,8 +1719,8 @@ typedef struct {
     int nedg;                /*!< Number of (boundary) edges in the mesh (only
                              *    used if opt_mode=one/two/three/four in
                              *    Parameters structure); its value should always
-                             *    be positive and not (strictly) greater than
-                             *    the \ref nver value; if \ref pedg is not
+                             *    be non-negative and not (strictly) greater
+                             *    than the \ref nver value; if \ref pedg is not
                              *    pointing to NULL, \ref nedg should always
                              *    correspond to the size of the array \ref pedg
                              *    is pointing to. */
@@ -1612,6 +1765,50 @@ typedef struct {
                              *    structure); if it is not pointing to NULL, the
                              *    size of the array it is pointing to should
                              *    always correspond to the \ref ntet value. */
+
+    int ndom;                /*!< Number of boundary triangles in the mesh
+                             *    (only used if opt_mode=one/two/three/four in
+                             *    Parameters structure) that constitutes
+                             *    the boundary of the domain inside the
+                             *    computational box; its value should always be
+                             *    non-negative and not (strictly) greater than
+                             *    the \ref ntri variable; if \ref pdom is not
+                             *    pointing to NULL, \ref ndom should always
+                             *    correspond to the size of the array \ref pdom
+                             *    is pointing to. */
+
+    int* pdom;               /*!< Pointer used to dynamically define the array
+                             *    storing the positions of the boundary
+                             *    triangles in \ref ptri (only used if
+                             *    opt_mode=one/two/three/four in Parameters
+                             *    structure) that constitutes the boundary of
+                             *    the domain inside the computational box; if it
+                             *    is not pointing to NULL, the size of the array
+                             *    it is pointing to should always correspond to
+                             *    the \ref ndom value. */
+
+    int nbox;                /*!< Number of boundary triangles in the mesh
+                             *    (only used if opt_mode=one/two/three/four in
+                             *    Parameters structure) that constitutes
+                             *    the intersection of the domain with the
+                             *    boundary of the computational box (if there is
+                             *    one); its value should always be non-negative
+                             *    and not (strictly) greater than the \ref ntri
+                             *    variable; if \ref pbox is not pointing to
+                             *    NULL, \ref nbox should always correspond to
+                             *    the size of the array \ref pbox is pointing
+                             *    to. */
+
+    int* pbox;               /*!< Pointer used to dynamically define the array
+                             *    storing the positions of the boundary
+                             *    triangles in \ref ptri (only used if
+                             *    opt_mode=one/two/three/four in Parameters
+                             *    structure) that constitutes the intersection
+                             *    of the domain with the boundary of the
+                             *    computational box (if there is one); if it
+                             *    is not pointing to NULL, the size of the array
+                             *    it is pointing to should always correspond to
+                             *    the \ref nbox value. */
 
 
     // Only used if opt_mode=-2/-1/0 (the mesh is made of vertices, hexahedra,
