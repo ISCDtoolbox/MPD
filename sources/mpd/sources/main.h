@@ -13,11 +13,11 @@
 * are shared by all files in the MPD program.
 */
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // Standard header files to deal respectively with input/output, general basic
 // functions, arrays of characters, date/time, different signals, complex
 // numbers, math functions, LAPACK and OPENMP libraries
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,10 +32,10 @@
     #include <omp.h> // take it into account by adding -fopenmp with gcc command
 #endif
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // Macro functions to initialize the diagnostic of an error, to get the
 // minimum/maximum of two values, and also the absolute value of a double number
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 /**
 * \def PRINT_ERROR(stringToPrint)
 * \brief Used to initialize the diagnostic of an error in the MPD program.
@@ -71,12 +71,12 @@ do {                                                                           \
 */
 #define DEF_ABS(a) (((a) > 0.0) ? (a) : (-(a)))
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // Preprocessor constants used to distinguish the different types of basis-set
 // functions in the expansion of molecular orbitals into a sum of Gaussian-type
 // primitives, according to the standard nomenclature (.wfn/.wfx format, outputs
 // of Gaussian software)
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 /**
 * \def ORB_S
 * \brief Used to distinguish the s-type basis-set function.
@@ -318,9 +318,9 @@ do {                                                                           \
 #define ORB_HXXXXX 56
 */
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // Definition of the structure storing the 77 parameters used in the algorithm
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 /**
 * \struct Parameters main.h
 * \brief It can store all the different 77 parameters used in the MPD algorithm.
@@ -459,7 +459,7 @@ typedef struct {
                              *    are expected to form an L2-orthonormal basis
                              *    basis set over the three-dimensional space;
                              *    otherwise it must be set to zero. */
-    
+
     int ne_electrons;        /*!< The total number of electrons of the chemical
                              *    system considered inside the computational
                              *    box, which must be positive and equal to the
@@ -468,9 +468,9 @@ typedef struct {
 
     int multi_det;           /*!< If set to one, then a multi-determinant wave
                              *    function is considered in the ChemicalSystem
-                             *    structure; otherwise it must be set to 
+                             *    structure; otherwise it must be set to
                              *    zero. */
-  
+
     int orb_rhf;             /*!< If set to one, then it means that restricted
                              *    Hartree-Fock orbitals are used (and in
                              *    particular, \ref ne_electrons must be an even
@@ -621,7 +621,7 @@ typedef struct {
                              *    start (in case the MPD program is restarted
                              *    with a different optimization mode for
                              *    example): it must not be greater than the \ref
-                             *    iter_max variable. */ 
+                             *    iter_max variable. */
 
     int iter_max;            /*!< Maximum number of iterations allowed in the
                              *    optimization loop: it must not be negative
@@ -957,9 +957,9 @@ typedef struct {
                              *    can appear and alter the final solution). */
 } Parameters;
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // Definitions of the different chemical structures used in the MPD program
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 /**
 * \struct Nucleus main.h
 * \brief It can store the position and charge of a nucleus.
@@ -1054,7 +1054,7 @@ typedef struct {
 */
 typedef struct {
     int rhf;                 /*!< If set to one, then it means that the current
-                             *    Determinant structure admits a restricted 
+                             *    Determinant structure admits a restricted
                              *    Hartree-Fock-like simplification; otherwise,
                              *    it must be set to zero. */
 
@@ -1067,7 +1067,7 @@ typedef struct {
                               *    storing the vector of molecular orbitals
                               *    constituting the Determinant structure
                               *    referred to as their positions in the array
-                              *    pointed by the pmorb variable of the 
+                              *    pointed by the pmorb variable of the
                               *    ChemicalSystem structure; if it is not
                               *    pointing to NULL, its size should always be
                               *    given by the ne variable of the
@@ -1085,7 +1085,7 @@ typedef struct {
                              *    structure is referring to. */
 
     int rhf;                 /*!< If set to one, then it means that the current
-                             *    OverlapMatrix structure admits a restricted 
+                             *    OverlapMatrix structure admits a restricted
                              *    Hartree-Fock-like simplification  (and in
                              *    particular, \ref nmat must be an even
                              *    number in this case); otherwise, it must be
@@ -1202,9 +1202,9 @@ typedef struct {
                              *    (\ref ndet )x(\ref ndet ) value. */
 } ChemicalSystem;
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // Definition of the structures used to save the data in the MPD algorithm
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // /**
 //* \struct Probabilities main.h
 //* \brief It can store all the different types of probabilities to find exactly
@@ -1284,7 +1284,7 @@ typedef struct {
                              *    value. */
 
     double* vol;             /*!< Pointer used to dynamically define the array
-                             *    storing the volume of the domain taken inside 
+                             *    storing the volume of the domain taken inside
                              *    the computational box during the iterative
                              *    process; if it is not pointing to NULL, the
                              *    values of the array it is pointing to should
@@ -1381,9 +1381,9 @@ typedef struct {
                              *    the \ref ndata value. */
 } Data;
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // Definitions of the structures used to store the mesh in the MPD program
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 /**
 * \struct Point main.h
 * \brief It can store the position, label and a value associated with a point.
@@ -1865,10 +1865,10 @@ typedef struct {
                              *    value. */
 } Mesh;
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // Prototype of non-static functions (many functions here sould be static but
 // they are defined as non-static in order to unit-test them)
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 /**
 * \fn void printTimer(time_t finalTimer, time_t initialTimer)
 * \brief It takes the time difference between the finalTimer and initialTimer
@@ -1909,7 +1909,7 @@ void endTimerAtExit(void);
 * \brief Function called only by \ref PRINT_ERROR to print the date and time at
 *        which an error occurs in the program or by the \ref saveDataInTheLoop
 *        function if its input iterationInTheLoop variable is set to zero so
-*        as to print the local date and time at the beginning of the *.data
+*        as to print the local date and time at the beginning of the *.result
 *        file.
 *
 * \return Ir returns the local date and time as a string (output of the standard
@@ -2743,7 +2743,7 @@ int renameFileLocation(char* fileLocation, int nameLength,
 * to the standard system c-function. In particular, the medit sofware must have
 * been previously installed at a location that must be either given by the
 * default \ref PATH_MEDIT preprocessor constant, or by a valid path name
-* specified in the input *.info file (preceded by the path_medit keyword).
+* specified in the *.input file (preceded by the path_medit keyword).
 * Similarly, the mesh to be read must be an existing file written in the *.mesh
 * format and stored in the name_mesh variable of the structure pointed by
 * pParameters.
@@ -2791,7 +2791,7 @@ int plotMeshWithMeditSoftware(Parameters* pParameters);
 * to the standard system c-function. In particular, the mmg3d sofware must have
 * been previously installed at a location that must be either given by the
 * default \ref PATH_MMG3D preprocessor constant, or by a valid path name
-* specified in the input *.info file (preceded by the path_mmg3d keyword).
+* specified in the *.input file (preceded by the path_mmg3d keyword).
 * Similarly, the mesh to be read must be an existing file written in the *.mesh
 * format and stored in the name_mesh variable of the structure pointed by
 * pParameters and the corresponding *.sol file must have a similar name
@@ -2844,7 +2844,7 @@ int adaptMeshWithMmg3dSoftware(Parameters* pParameters, char adaptMode[4]);
 * thank to the standard system c-function. In particular, the mshdist sofware
 * must have been previously installed at a location that must be either given
 * by the default \ref PATH_MSHDIST preprocessor constant, or by a valid path
-* name specified in the input *.info file (preceded by the path_mshdist
+* name specified in the *.input file (preceded by the path_mshdist
 * keyword). Similarly, the mesh to be read must be an existing file written in
 * the *.mesh format and stored in the name_mesh variable of the structure
 * pointed by pParameters and when mode="sol" the corresponding *.sol file must
@@ -2883,7 +2883,7 @@ int renormalizeWithMshdistSoftware(Parameters* pParameters, char mode[4]);
 * sofware thank to the standard system c-function. In particular, the elastic
 * sofware must have been previously installed at a location that must be either
 * given by the default \ref PATH_ELASTIC preprocessor constant, or by a valid
-* path name specified in the input *.info file (preceded by the path_elastic
+* path name specified in the *.input file (preceded by the path_elastic
 * keyword). Similarly, the mesh (respectively elastic parameters) to be read
 * must be an existing file written in the *.mesh (resp. *.elas) format and
 * stored in the name_mesh (resp. name_elas variable of the structure pointed by
@@ -2921,7 +2921,7 @@ int extendShapeGradientWithElasticSoftware(Parameters* pParameters);
 * sofware thank to the standard system c-function. In particular, the advect
 * sofware must have been previously installed at a location that must be either
 * given by the default \ref PATH_ADVECT preprocessor constant, or by a valid
-* path name specified in the input *.info file (preceded by the path_advect
+* path name specified in the *.input file (preceded by the path_advect
 * keyword). Similarly, the mesh (respectively the level-set function, the shape
 * gradient vectorial extension) to be read must be an existing file written in
 * the *.mesh (resp. *.sol scalar, *.sol vectorial) format and stored in the
@@ -2937,7 +2937,7 @@ int advectLevelSetWithAdvectSoftware(Parameters* pParameters);
 * \param[in] argc The (positive) number of arguments entered in the command line
 *                 for executing the MPD program. Here, we must have argc=2, i.e.
 *                 the command line must specify only one input argument: the
-*                 *.info file used to load the parameters into the Parameters
+*                 *.input file used to load the parameters into the Parameters
 *                 structure. Otherwise, (zero or more than one argument) an
 *                 error is returned by the MPD program.
 *
@@ -2945,7 +2945,7 @@ int advectLevelSetWithAdvectSoftware(Parameters* pParameters);
 *                 strings storing the names of the different arguments entered
 *                 in the command line for executing the MPD program. Here,
 *                 argv[0] will always point to the name of the MPD program,
-*                 argv[1] must point to the required name of the *.info file,
+*                 argv[1] must point to the required name of the *.input file,
 *                 and argv[2]=argv[argc] must point to NULL; otherwise, an error
 *                 is returned by the MPD program.
 *
@@ -2955,13 +2955,13 @@ int advectLevelSetWithAdvectSoftware(Parameters* pParameters);
 * The function \ref main performs on a given initial domain in a computational
 * box (mesh variable) at most (parameters.)iter_max deformations in order to
 * maximize the probability to find exactly (parameters.)nu_electrons in a
-* chemicalSystem structure. The command line must specify the *.info (input)
+* chemicalSystem structure. The command line must specify the *.input
 * file, which must contain at least (minimal configuration) the *.wfn/ *.chem
 * (chemical) file, preceded by 'name_chem' keyword, the (positive) number of
 * electrons to look for, preceded by 'nu_electrons' keyword, and optionally the
 * *.mesh/ *.cube (mesh) file to start with, preceded by 'name_mesh' keyword (if
 * not specify a cube or a sphere is built depending on (parameters.)ls_type).
-* The *.info file must end with the 'end_data' keyword. Any other informations
+* The *.input file must end with the 'end_data' keyword. Any other informations
 * placed after 'end_data' will not be read and considered as comments.
 */
 

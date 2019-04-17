@@ -6,27 +6,27 @@
 * \brief Macros and prototypes related to the initial loading of parameters in
 *        the MPD algorithm.
 * \author Jeremy DALPHIN
-* \version 2.0
-* \date September 1st, 2018
+* \version 3.0
+* \date May 1st, 2019
 *
 * This file contains the description of all the preprocessor constants and
 * non-static function prototypes that are used to initially load the parameters
-* of the MPD algorithm from an *.info (input) file.
+* of the MPD algorithm from an *.input file.
 */
 
 #include "main.h"
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // Definitions of the different preprocessor constants that are used to
 // initialize the default values of the structure Parameters (defined in
 // main.h). These default values will be changed if others are specified in the
-// *.info (input) file
-/* ************************************************************************** */
+// *.input file
+////////////////////////////////////////////////////////////////////////////////
 /**
 * \def OPT_MODE
 * \brief Used to set the default value for the opt_mode variable of the
 *        Parameters structure, which thus rules the default type of
-*        optimization performed by the MPD algorithm.
+*        optimization mode performed by the MPD algorithm.
 *
 * Positive values concern tetrahedral meshes whereas non-positive values concern
 * hexahedral meshes. If set to -1/-2, shape-gradient/random perturbations are
@@ -973,9 +973,9 @@
 #define NO_CFL 1
 
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // Prototypes of non-static functions
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 /**
 * \fn void initializeParameterStructure(Parameters* pParameters)
 * \brief It initializes to zero the Parameters structure pointed by pParameters.

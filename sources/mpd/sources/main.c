@@ -34,7 +34,7 @@
 #include "loadParameters.h"
 #include "loadChemistry.h"
 #include "loadMesh.h"
-#include "adaptMesh.h"
+//#include "adaptMesh.h"
 //#include "optimization.h"
 //#include "test.h"
 
@@ -75,9 +75,9 @@ time_t globalInitialTimer=0;
 */
 #define STR_AUTHOR "Jeremy DALPHIN"
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // Macro functions to initialize and end properly the main function
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 /**
 * \def INITIALIZE_MAIN_STRUCTURES(parameters,chemicalSystem,data,mesh,argc)
 * \brief Used to initialize the \ref main function of the MPD program.
@@ -109,14 +109,14 @@ do {                                                                           \
         fprintf(stderr,"%s file on %s",__FILE__,ctime(&globalInitialTimer));   \
         fprintf(stderr,"In main: the MPD program only accept one input ");     \
         fprintf(stderr,"command-line argument (instead of %d); ",(argc)-1);    \
-        fprintf(stderr,"the *.info (input) file, which must contain at ");     \
+        fprintf(stderr,"the *.input file, which must contain at ");            \
         fprintf(stderr,"least the *.wfn/ *.chem (chemical) file name, ");      \
         fprintf(stderr,"preceded by the 'name_chem' keyword, the ");           \
         fprintf(stderr,"(positive) number of electrons to look for, ");        \
         fprintf(stderr,"preceded by the 'nu_electrons' keyword, and ");        \
         fprintf(stderr,"optionally the *.mesh/ *.cube (mesh) file name to ");  \
         fprintf(stderr,"start with, preceded by the 'name_mesh' keyword. ");   \
-        fprintf(stderr,"The *.info file must end with the 'end_data' ");       \
+        fprintf(stderr,"The *.input file must end with the 'end_data' ");      \
         fprintf(stderr,"keyword and any other informations placed after ");    \
         fprintf(stderr,"will not be read and considered as comments.\n");      \
     }                                                                          \
@@ -156,20 +156,20 @@ do {                                                                           \
     fprintf(stdout,".\n");                                                     \
 } while (0)
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function main performs on a given initial domain in a computational box
 // (mesh variable) (parameter.)iter_max deformations to maximize the probability
 // to find (parameter.)nu_electrons in a chemicalSystem structure. It has the
 // usual int argc, char *argv[] command line as input arguments and it returns
 // EXIT_FAILURE if an error occurs, otherwise EXIT_SUCCESS is returned. The
-// command line must specify the *.info (input) file, which must contain at
-// least the *.wfn / *.chem (chemical) file, preceded by 'name_chem' keyword,
-// the (positive) number of electrons to look for, preceded by 'nu_electrons'
+// command line must specify the *.input file, which must contain at least the
+// *.wfn / *.chem (chemical) file, preceded by 'name_chem' keyword, the
+// (positive) number of electrons to look for, preceded by 'nu_electrons'
 // keyword, and optionally the *.mesh / *.cube (mesh data) file to start with,
 // preceded by 'name_mesh' keyword (if not specify a cube or a sphere is built).
-// The *.info file must end with the 'end_data' keyword. Any other informations
+// The *.input file must end with the 'end_data' keyword. Any other informations
 // placed after 'end_data' will not be read and considered as comments
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[])
 {
     time_t startLocalTimer=0, endLocalTimer=0;
@@ -181,6 +181,9 @@ int main(int argc, char *argv[])
     ChemicalSystem chemicalSystem;
     Data data;
     Mesh mesh;
+
+    return 2;
+}
 
 /*
     // Initialize the main structures to zero (nothing should be placed before)
@@ -238,9 +241,9 @@ int main(int argc, char *argv[])
         FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
     }
     strncpy(fileLocation,argv[1],lengthName+1);
-    if (fileLocation[lengthName-6]=='.' && fileLocation[lengthName-5]=='i' && 
-          fileLocation[lengthName-4]=='n' && fileLocation[lengthName-3]=='p' && 
-          fileLocation[lengthName-2]=='u' && fileLocation[lengthName-1]=='t' &&
+    if (fileLocation[lengthName-6]=='.' && fileLocation[lengthName-5]=='i' &&
+         fileLocation[lengthName-4]=='n' && fileLocation[lengthName-3]=='p' &&
+         fileLocation[lengthName-2]=='u' && fileLocation[lengthName-1]=='t' &&
                                                  fileLocation[lengthName]=='\0')
     {
         fileLocation[lengthName-6]='.';
@@ -275,7 +278,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    // Load parameters from a *.info (input) file pointed by argv[1]
+    // Load parameters from a *.input file pointed by argv[1]
     if (!loadParameters(&parameters,fileLocation))
     {
         PRINT_ERROR("In main: loadParameters function returned zero instead ");
@@ -390,8 +393,8 @@ int main(int argc, char *argv[])
     {
         time(&startLocalTimer);
 
-        if (i%3==0 && (parameters.opt_mode==1 || 
-                                (parameters.opt_mode==2 && parameters.nu_spin)))
+        if (i%3==0 && (parameters.opt_mode==1 ||
+                               (parameters.opt_mode==2 && parameters.nu_spin)))
         {
             jPlus=0;
             jMoins=0;
@@ -502,18 +505,15 @@ int main(int argc, char *argv[])
     }
 
     FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_SUCCESS);
-*/
-
-    return EXIT_SUCCESS;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function printTimer takes the difference between the finalTimer and
 // initialTimer variables and converts it into a human readable time format
 // (hour(s), minute(s), second(s), instantaneous), which is finally printed in
 // the standard output stream. It has the two time_t variables (initialTimer,
 // finalTimer) as input arguments and does not return any argument (void output)
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 void printTimer(time_t finalTimer, time_t initialTimer)
 {
     int totalTime=0, timeH=0, timeM=0, timeS=0;
@@ -568,12 +568,12 @@ void printTimer(time_t finalTimer, time_t initialTimer)
     return;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function endTimerAtExit is only called by atexit i.e. when the program
 // will stop. It uses the global variable globalInitialTimer in order to print
 // properly the total execution time of the MPD program. It has no argument and
 // it returns no argument (void input and output)
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 void endTimerAtExit(void)
 {
     time_t localFinalTimer=0;
@@ -588,12 +588,12 @@ void endTimerAtExit(void)
     fflush(stdout);
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function endTimerAtError is called only by PRINT_ERROR when an error
 // occurs in the program or by the saveDataInTheLoop function if its input
 // iterationInTheLoop variable is set to zero. It has no argument (void input)
 // and it returns the time as a string (output of the standard ctim c-function)
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 char* endTimerAtError(void)
 {
     time_t localFinalTimer=0;
@@ -603,14 +603,14 @@ char* endTimerAtError(void)
     return ctime(&localFinalTimer);
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function commentAnormalEnd is meant to display an error message in the
 // standard output stream when an anormal end of the MPD program occurred. It is
 // meant to describe the type of anormal error encountered and it is only called
 // when one of the standard signal is caught (SIGABRT, SIGFPE, SIGILL, SIGSEGV,
 // SIGTERM, SIGINT). It has the int typeOfSignal variable as input argument and
 // it does not return any value (void output)
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 void commentAnormalEnd(int typeOfSignal)
 {
     fprintf(stdout,"\nUnexpected error occurred: ");
@@ -644,14 +644,14 @@ void commentAnormalEnd(int typeOfSignal)
     exit(EXIT_FAILURE);
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function checkStringFromLength evaluates the length (including the
 // terminating nul character '\0') of stringTocheck, which must be comprised
 // between minimumLength and maximumLength. It has the char* stringTocheck and
 // the two int variables (0<minimumLength<=maximumLength) as input arguments and
 // it returns zero if an error is encountered, otherwise it returns the
 // (positive) length of stringToCheck
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int checkStringFromLength(char* stringToCheck, int minimumLength,
                                                               int maximumLength)
 {
@@ -707,11 +707,11 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
     return i;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function checkAllPreprocessorConstants tests if all the preprocessor
 // constants are associated with valid values. It has all the preprocessor
 // constants as input arguments and returns one on success, otherwise zero
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
                                   int nameLength, double lameInt1,
                                   double lameInt2, double lameExt1,
@@ -799,7 +799,7 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
         PRINT_ERROR("In checkAllPreprocessorConstants: ");
         fprintf(stderr,"NAME_LENGTH=%d should be an integer ",nameLength);
         fprintf(stderr,"(strictly) greater than six (to store at least a ");
-        fprintf(stderr,"name that contains something more than the *.info ");
+        fprintf(stderr,"name that contains something more than the *.input ");
         fprintf(stderr,"extension).\nPlease modify the preprocessor constant ");
         fprintf(stderr,"accordingly in loadParameters.h file.\n");
         return 0;
@@ -1220,13 +1220,13 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function initialFileExists checks if a file exists at the location
 // pointed by fileLocation, which must be a string of length less than
 // nameLength. It has a char* and int variables as input arguments. It returns
 // one if the file exists, minus one if it does not, otherwise zero is returned
 // if an error is encountered
-/* ********************* **************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int initialFileExists(char* fileLocation, int nameLength)
 {
     FILE *nameFile=NULL;
@@ -1271,11 +1271,11 @@ int initialFileExists(char* fileLocation, int nameLength)
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function closeTheFile tries to properly close the FILE* variable via its
 // associated pointer pFileToClose. It has the FILE** variable as input argument
 // and it does not return any value (void output)
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 void closeTheFile(FILE** pFileToClose)
 {
     if (pFileToClose!=NULL)
@@ -1301,14 +1301,14 @@ void closeTheFile(FILE** pFileToClose)
     return;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function copyFileLocation tries to copy a file (using system function)
 // located at fileLocation (a path name of length strictly less than nameLength)
 // into the location specified at fileLocationForCopy (warning: the file at his
 // location must not already exist). It has two char* variables (fileLocation,
 // fileLocationForCopy) and an int nameLength variable as input arguments and
 // it returns one on success, otherwise zero is returned if an error appears
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int copyFileLocation(char* fileLocation, int nameLength,
                                                       char* fileLocationForCopy)
 {
@@ -1386,14 +1386,14 @@ int copyFileLocation(char* fileLocation, int nameLength,
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function renameFileLocation tries to rename a file (using the system
 // function) located at fileLocation (a path name of length strictly less than
 // nameLength) into the name specified at newFileLocation (warning: the file at
 // his location must not already exist). It has two char* variables
 // (fileLocation, newFileLocation) and an int nameLength variable as input
 // arguments and it returns one on success, otherwise zero if an error occurs
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int renameFileLocation(char* fileLocation, int nameLength,
                                                           char* newFileLocation)
 {
@@ -1454,8 +1454,8 @@ int renameFileLocation(char* fileLocation, int nameLength,
     strcat(commandLine,newFileLocation);
 
     // system returns is -1 on error, otherwise the return status of the command
-    // commandLine is only printed at start when moving *.temp file into *.chem 
-    if (commandLine[length-4]=='t')
+    // commandLine is only printed at start when moving *.temp file into *.chem
+   if (commandLine[length-4]=='t')
     {
         fprintf(stdout,"\n%s\n",commandLine);
     }
@@ -1475,7 +1475,7 @@ int renameFileLocation(char* fileLocation, int nameLength,
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function plotMeshWithMeditSoftware tries to execute (thanks to the
 // standard system c-function) the external medit software, which must have
 // been previously installed and whose path is stored in the
@@ -1483,8 +1483,7 @@ int renameFileLocation(char* fileLocation, int nameLength,
 // name is stored in pParameters->name_mesh (warning: the file at this location
 // must already exist). It has the Parameters* (defined in main.h) as input
 // argument and it returns one on success otherwise zero is returned
-/* ************************************************************************** */
-/*
+////////////////////////////////////////////////////////////////////////////////
 int plotMeshWithMeditSoftware(Parameters* pParameters)
 {
     size_t length=0;
@@ -1575,9 +1574,8 @@ int plotMeshWithMeditSoftware(Parameters* pParameters)
 
     return 1;
 }
-*/
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function adaptMeshWithMmg3dSoftware tries to execute (thanks to the
 // standard system c-function) the external mmg3d software, which must have
 // been previously installed and whose path is stored in the
@@ -1585,8 +1583,7 @@ int plotMeshWithMeditSoftware(Parameters* pParameters)
 // adaptMode and the parameters stored in the structure pointed by pParameters.
 // It has the Parameters* (defined in main.h) and the char[4] adaptMode as
 // input arguments and it returns one on success otherwise zero is returned
-/* ************************************************************************** */
-/*
+////////////////////////////////////////////////////////////////////////////////
 int adaptMeshWithMmg3dSoftware(Parameters* pParameters, char adaptMode[4])
 {
     size_t length=0;
@@ -1847,9 +1844,8 @@ int adaptMeshWithMmg3dSoftware(Parameters* pParameters, char adaptMode[4])
 
     return 1;
 }
-*/
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function renormalizeWithMshdistSoftware tries to execute (thanks to the
 // standard system c-function) the external mshdist software, which must have
 // been previously installed and whose path is stored in the
@@ -1857,8 +1853,7 @@ int adaptMeshWithMmg3dSoftware(Parameters* pParameters, char adaptMode[4])
 // the mode and the parameters stored in the structure pointed by pParameters.
 // It has the Parameters* (defined in main.h) and the char[4] mode as
 // input arguments and it returns one on success otherwise zero is returned
-/* ************************************************************************** */
-/*
+////////////////////////////////////////////////////////////////////////////////
 int renormalizeWithMshdistSoftware(Parameters* pParameters, char mode[4])
 {
     size_t length=0;
@@ -2046,7 +2041,7 @@ int renormalizeWithMshdistSoftware(Parameters* pParameters, char mode[4])
             if (pParameters->n_iter!=10)
             {
                 fprintf(stdout,"10 %% done.\n");
-            }    
+            }
         }
     }
 
@@ -2079,9 +2074,8 @@ int renormalizeWithMshdistSoftware(Parameters* pParameters, char mode[4])
 
     return 1;
 }
-*/
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function extendShapeGradientWithElasticSoftware tries to execute (thanks
 // to the standard system c-function) the external elastic software, which must
 // have been previously installed and whose path is stored in the
@@ -2090,8 +2084,7 @@ int renormalizeWithMshdistSoftware(Parameters* pParameters, char mode[4])
 // of the internal domain tand the parameters stored in the structure pointed
 // by pParameters. It has the Parameters* (defined in main.h) as input arguments
 // and it returns one on success otherwise zero is returned in case of error
-/* ************************************************************************** */
-/*
+////////////////////////////////////////////////////////////////////////////////
 int extendShapeGradientWithElasticSoftware(Parameters* pParameters)
 {
     size_t length=0;
@@ -2249,9 +2242,8 @@ int extendShapeGradientWithElasticSoftware(Parameters* pParameters)
 
     return 1;
 }
-*/
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function advectLevelSetWithAdvectSoftware tries to execute (thanks to
 // the standard system c-function) the external advect software, which must
 // have been previously installed and whose path is stored in the
@@ -2259,8 +2251,7 @@ int extendShapeGradientWithElasticSoftware(Parameters* pParameters)
 // on the mesh according to the parameters stored in the structure pointed by
 // pParameters. It has the Parameters* (defined in main.h) as input arguments
 // and it returns one on success otherwise zero is returned
-/* ************************************************************************** */
-/*
+////////////////////////////////////////////////////////////////////////////////
 int advectLevelSetWithAdvectSoftware(Parameters* pParameters)
 {
     size_t length=0;

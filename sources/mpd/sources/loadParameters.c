@@ -1,11 +1,11 @@
 /**
 * \file loadParameters.c
 * \brief It contains all the functions used to load properly the parameters
-*        from a *.info file (and use the default values if they are not
+*        from a *.input file (and use the default values if they are not
 *        specified) in the MPD algorithm.
 * \author Jeremy DALPHIN
-* \version 2.0
-* \date September 1st, 2018
+* \version 3.0
+* \date May 1st, 2019
 *
 * The main function of this file is called \ref loadParameters and many other
 * functions should be static but have been defined as non-static for performing
@@ -14,31 +14,37 @@
 
 #include "loadParameters.h"
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function initializeParameterStructure sets to zero all the variables of
 // the structure Parameters (and pointers to NULL). It has the Parameters*
 // variable (defined in main.h) as input argument and it does not return value
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 void initializeParameterStructure(Parameters* pParameters)
 {
-    // 70 parameters
+    // 77 parameters
     if (pParameters!=NULL)
     {
         pParameters->opt_mode=0;
         pParameters->verbose=0;
         pParameters->n_cpu=0;
+        pParameters->rho_opt=0.;
 
         pParameters->name_length=0;
-        pParameters->name_info=NULL;
-        pParameters->name_data=NULL;
+        pParameters->name_input=NULL;
+        pParameters->name_result=NULL;
         pParameters->name_chem=NULL;
         pParameters->name_mesh=NULL;
         pParameters->name_elas=NULL;
 
         pParameters->nu_electrons=0;
-        pParameters->nu_spin=0;
+        pParameters->bohr_unit=0;
+        pParameters->select_orb=0.;
+        pParameters->orb_ortho=0;
+        pParameters->ne_electrons=0;
+        pParameters->multi_det=0;
         pParameters->orb_rhf=0;
 
+        pParameters->select_box=0;
         pParameters->x_min=0.;
         pParameters->y_min=0.;
         pParameters->z_min=0.;
@@ -68,6 +74,7 @@ void initializeParameterStructure(Parameters* pParameters)
         pParameters->trick_matrix=0;
         pParameters->approx_mode=0;
 
+        pParameters->iter_ini=0;
         pParameters->iter_max=0;
         pParameters->iter_told0p=0.;
         pParameters->iter_told1p=0.;
@@ -116,22 +123,22 @@ void initializeParameterStructure(Parameters* pParameters)
     return;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function freeParameterMemory frees the memory dynamically allocated with
 // calloc/malloc/realloc for the structure Parameters (but other variables than
 // pointers are not reset to zero). It has the Parameters* variable (defined in
 // main.h) as input argument and it does not return any value
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 void freeParameterMemory(Parameters* pParameters)
 {
     if (pParameters!=NULL)
     {
         // The free function does not return any value (void output)
-        free(pParameters->name_info);
-        pParameters->name_info=NULL;
+        free(pParameters->name_input);
+        pParameters->name_input=NULL;
 
-        free(pParameters->name_data);
-        pParameters->name_data=NULL;
+        free(pParameters->name_result);
+        pParameters->name_result=NULL;
 
         free(pParameters->name_chem);
         pParameters->name_chem=NULL;
@@ -161,7 +168,8 @@ void freeParameterMemory(Parameters* pParameters)
     return;
 }
 
-/* ************************************************************************** */
+/*
+////////////////////////////////////////////////////////////////////////////////
 // The function setupDefaultParameters fills all the variables of the structure
 // pointed by pParameters to their default values (given by the preprocessor
 // constants of loadParameters.h). The nameInfo variable, which should contain
@@ -169,7 +177,7 @@ void freeParameterMemory(Parameters* pParameters)
 // the structure Parameters. The function has the Parameters* variable (defined
 // in main.h) and the char* nameInfo variable as input arguments and it returns
 // zero if an error occurred, otherwise one is returned in case of success
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int setupDefaultParameters(Parameters* pParameters, char* nameInfo)
 {
     // Check if the input variable pParameters is pointing to NULL
@@ -339,14 +347,14 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInfo)
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function getLengthAfterKeywordBeginning returns the number of characters
 // to read at line counter (including the terminating nul one '\0') depending
 // on the different possibilities for keywordBeginning. It has a char[3]
 // keywordBeginning variable and an int counter variable as input arguments and
 // it returns an integer between two and nine, or eleven, otherwise zero is
 // returned if an error is encountered
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int getLengthAfterKeywordBeginning(char keywordBeginning[3], int counter)
 {
     int returnValue=0;
@@ -435,14 +443,14 @@ int getLengthAfterKeywordBeginning(char keywordBeginning[3], int counter)
     return returnValue;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function getTypeAfterKeyword, depending on the different cases for
 // keywordMiddle (a string of length lengthMiddle including '\0') returns the
 // type (-1= no type (end_data keyword), 1=integer, 2=double, 3=string) of
 // variables to be read after by fscanf at line counter. It has the char[11]
 // keywordMiddle variable, and two int variables (lengthMiddle and counter) as
 // input arguments and returns -1, 1, 2, or 3, otherwise zero in case of error
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int getTypeAfterKeyword(char keywordMiddle[11], int lengthMiddle, int counter)
 {
     int returnValue=0, boolean1=0, boolean2=0, boolean3=0;
@@ -579,14 +587,14 @@ int getTypeAfterKeyword(char keywordMiddle[11], int lengthMiddle, int counter)
     return returnValue;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function getLengthAfterKeywordMiddle, depending on the different cases
 // for keywordMiddle (a string of length lengthMiddle including '\0') evaluates
 // the number of characters (including '\0') to be read after keywordMiddle in
 // order to complete the reading of the (counter)-th keyword. It has a char[11]
 // keywordMiddle, and two int variables (lengthMiddle and counter) as input
 // arguments and it returns 1, 2, 3, or 4, otherwise zero in case of error
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
                                                                     int counter)
 {
@@ -730,7 +738,7 @@ int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
     return returnValue;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function detectRepetition simply adds one in the array repetition at the
 // location corresponding to the (counter)-th keyword in the *.info file read as
 // the concatenation of the strings keywordBeginning+keywordMiddle(+keywordEnd)
@@ -739,7 +747,7 @@ int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
 // keywordMiddle[11], and keywordEnd[6]), and three int variables (lengthMiddle,
 // lengthEnd, and counter) as input arguments and it returns one on success,
 // otherwise zero is returned if an error occurred
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int detectRepetition(int repetition[70], char keywordBeginning[3],
                      char keywordMiddle[11], char keywordEnd[6],
                                    int lengthMiddle, int lengthEnd, int counter)
@@ -1145,7 +1153,7 @@ int detectRepetition(int repetition[70], char keywordBeginning[3],
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function changeValuesOfParameters saves the value stored either in
 // readIntegerIn, readDouble, or readStringIn in the structure pointed by
 // pParameters, depending on the type of the (counter)-th keyword in the *.info
@@ -1156,7 +1164,7 @@ int detectRepetition(int repetition[70], char keywordBeginning[3],
 // readStringIn, four int variables (lengthMiddle, lengthEnd, counter, and
 // readIntegerIn), and a double readDouble variable as input arguments, and it
 // returns one on success, otherwise zero is returned if an error is encountered
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
                              char keywordMiddle[11], char keywordEnd[6],
                              char* readStringIn, int lengthMiddle,
@@ -2006,13 +2014,13 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function readInfoFileAndGetParameters reads the *.info file whose name
 // has already been stored in the name_info variable of the structure pointed
 // by pParameters, and it adjusts the structure Parameters accordingly. It has
 // the Parameters* variable (defined in main.h) as input argument and it
 // returns zero if an error occurs, otherwise one is returned in case of success
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int readInfoFileAndGetParameters(Parameters* pParameters)
 {
     char keywordBeginning[3]={'\0'}, keywordMiddle[11]={'\0'};
@@ -2534,12 +2542,12 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function checkValuesOfAllParameters tests if the values of the structure
 // pointed by pParameters that have been loaded are valid. It has the
 // Parameters* variable (defined in main.h) as input argument and it returns one
 // on success, otherwise zero is returned for an invalid value or an error
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int checkValuesOfAllParameters(Parameters* pParameters)
 {
     size_t lengthName=0;
@@ -3343,7 +3351,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"placed after the 'path_medit' keyword is valid in ");
         fprintf(stderr,"%s file, or if no such line ",pParameters->name_info);
         fprintf(stderr,"exists, add one if the default PATH_MEDIT ");
-        fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MEDIT); 
+        fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MEDIT);
         fprintf(stderr,"loadParameters.h file is not correct.\n");
         free(fileLocation);
         fileLocation=NULL;
@@ -3366,7 +3374,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"placed after the 'path_medit' keyword is valid in ");
         fprintf(stderr,"%s file, or if no such line ",pParameters->name_info);
         fprintf(stderr,"exists, add one if the default PATH_MEDIT ");
-        fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MEDIT); 
+        fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MEDIT);
         fprintf(stderr,"loadParameters.h file is not correct.\n");
         free(fileLocation);
         fileLocation=NULL;
@@ -3429,7 +3437,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"the 'path_mmg3d' keyword is valid in ");
             fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
             fprintf(stderr,"line exists, add one if the default PATH_MMG3D ");
-            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MMG3D); 
+            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MMG3D);
             fprintf(stderr,"loadParameters.h file is not correct.\n");
             free(fileLocation);
             fileLocation=NULL;
@@ -3452,7 +3460,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"the 'path_mmg3d' keyword is valid in ");
             fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
             fprintf(stderr,"line exists, add one if the default PATH_MMG3D ");
-            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MMG3D); 
+            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MMG3D);
             fprintf(stderr,"loadParameters.h file is not correct.\n");
             free(fileLocation);
             fileLocation=NULL;
@@ -3547,7 +3555,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"the 'path_mshdist' keyword is valid in ");
             fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
             fprintf(stderr,"line exists, add one if the default PATH_MSHDIST ");
-            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MSHDIST); 
+            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MSHDIST);
             fprintf(stderr,"loadParameters.h file is not correct.\n");
             free(fileLocation);
             fileLocation=NULL;
@@ -3571,7 +3579,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"the 'path_mshdist' keyword is valid in ");
             fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
             fprintf(stderr,"line exists, add one if the default PATH_MSHDIST ");
-            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MSHDIST); 
+            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MSHDIST);
             fprintf(stderr,"loadParameters.h file is not correct.\n");
             free(fileLocation);
             fileLocation=NULL;
@@ -3670,7 +3678,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"the 'path_elastic' keyword is valid in ");
             fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
             fprintf(stderr,"line exists, add one if the default PATH_ELASTIC ");
-            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_ELASTIC); 
+            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_ELASTIC);
             fprintf(stderr,"loadParameters.h file is not correct.\n");
             free(fileLocation);
             fileLocation=NULL;
@@ -3694,7 +3702,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"the 'path_elastic' keyword is valid in ");
             fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
             fprintf(stderr,"line exists, add one if the default PATH_ELASTIC ");
-            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_ELASTIC); 
+            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_ELASTIC);
             fprintf(stderr,"loadParameters.h file is not correct.\n");
             free(fileLocation);
             fileLocation=NULL;
@@ -3730,7 +3738,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"the 'path_advect' keyword is valid in ");
             fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
             fprintf(stderr,"line exists, add one if the default PATH_ADVECT ");
-            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_ADVECT); 
+            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_ADVECT);
             fprintf(stderr,"loadParameters.h file is not correct.\n");
             free(fileLocation);
             fileLocation=NULL;
@@ -3754,7 +3762,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"the 'path_advect' keyword is valid in ");
             fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
             fprintf(stderr,"line exists, add one if the default PATH_ADVECT ");
-            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_ADVECT); 
+            fprintf(stderr,"preprocessor constant (=%s) in ",PATH_ADVECT);
             fprintf(stderr,"loadParameters.h file is not correct.\n");
             free(fileLocation);
             fileLocation=NULL;
@@ -4063,7 +4071,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function writingDefaultElasticFile writes a default *.elas file in the
 // case where pParameters->opt_mode=1 or 2 and if no file has been specified in
 // the *.info file (using the name_elas keyword) i.e. if pParameters->name_elas
@@ -4073,7 +4081,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
 // one if the default *.elas file has been successfully written (and the
 // pParameters->name_elas variable successfully updated) otherwise zero is
 // returned if an error is encountered
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int writingDefaultElasticFile(Parameters* pParameters)
 {
     size_t lengthName=0;
@@ -4179,7 +4187,7 @@ int writingDefaultElasticFile(Parameters* pParameters)
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function writingRestartFile, depending on the opt_mode variable, writes
 // an *.restart file that contains the default and prescribed values used to
 // perform the mpd algorithm before starting the optimization loop. It has the
@@ -4187,7 +4195,7 @@ int writingDefaultElasticFile(Parameters* pParameters)
 // by the '.restart' one. It has the Parameters* variable (defined in main.h) as
 // input argument and it returns one on success, otherwise zero is returned for
 // an invalid value or an error
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int writingRestartFile(Parameters* pParameters)
 {
     size_t lengthName=0;
@@ -4603,7 +4611,7 @@ int writingRestartFile(Parameters* pParameters)
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function loadParameters initializes all the variables of the structure
 // pointed by pParameters thanks to the values given in an *.info (input) file
 // pointed by nameInfo. The variables of the structure Parameters that are not
@@ -4617,7 +4625,7 @@ int writingRestartFile(Parameters* pParameters)
 // the structure Parameters). The function loadParameters has the Parameters*
 // variable (defined in main.h) and a char* variable as input arguments and it
 // returns one on success, otherwise zero is returned if an error is encountered
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int loadParameters(Parameters* pParameters, char* nameInfo)
 {
     // Initializing the structure pParameters to zero
@@ -4649,4 +4657,6 @@ int loadParameters(Parameters* pParameters, char* nameInfo)
 
    return 1;
 }
+*/
+
 
