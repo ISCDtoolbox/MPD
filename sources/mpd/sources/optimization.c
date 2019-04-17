@@ -3169,7 +3169,7 @@ int computeShapeGradient(Parameters* pParameters, Mesh* pMesh, Data* pData,
             }
         }
 
-        if (pParameters->opt_mode==2 || pParameters->opt_mode==3)
+/*        if (pParameters->opt_mode==2 || pParameters->opt_mode==3)
         {
             for (k=0; k<nTri; k++)
             {
@@ -3258,7 +3258,7 @@ int computeShapeGradient(Parameters* pParameters, Mesh* pMesh, Data* pData,
             }
         }
         else
-        {
+        { */
             for (k=0; k<nVer; k++)
             {
                 // Save the three vertex coordinates
@@ -3280,7 +3280,7 @@ int computeShapeGradient(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     pVertex->value*=-1.;
                 }
             }
-        }
+//        }
     }
     else
     {
