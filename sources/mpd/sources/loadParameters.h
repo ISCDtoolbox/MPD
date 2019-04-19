@@ -29,16 +29,17 @@
 *        optimization mode performed by the MPD algorithm.
 *
 * Positive values concern tetrahedral meshes whereas non-positive values concern
-* hexahedral meshes. If set to -1/-2, shape-gradient/random perturbations are
-* performed on hexahedral meshes in order to maximize the probability. If set
-* to 0, the algorithm starts with level-set (global) perturbations, then changes
-* to random (local) ones when the hexahedral domain no longer evolves. If set
-* to 4, then each new tetrahedral domain represents the positive part of the
-* shape gradient associated with the old one in the optimization loop. If set
-* to 2/3, then an approach of Eulerian(level-set)/Lagrangian type is performed
-* on tetrahedral meshes in order to maximize the probability, by following the
-* shape gradient. If set to 1, then all the previous tetrahedral methods are
-* combined in order to get a converged MPD domain. Other values are forbidden.
+* hexahedral meshes. If set to -1/-2, shape-gradient/exhaustive perturbations
+* are performed on hexahedral meshes in order to maximize the probability. If
+* set to 0, the algorithm starts with level-set (global) perturbations, then
+* switches to an exhaustive (local) search when the hexahedral domain no longer
+* evolves. If set to 4, then each new tetrahedral domain represents the positive
+* part of the shape gradient associated with the old one in the optimization
+* loop. If set to 2/3, then an approach of Eulerian(level-set)/Lagrangian type
+* is performed on tetrahedral meshes in order to maximize the probability, by
+* following the shape gradient. If set to 1, then all the previous tetrahedral
+* methods are combined in order to get a converged MPD domain. Other values are
+* forbidden.
 */
 #define OPT_MODE 0
 
@@ -48,9 +49,9 @@
 *        Parameters structure, which thus rules the default type of
 *        verbosity performed by the MPD algorithm.
 *
-* If set to 1, then it prints every execution details in the standard output
-* stream; otherwise, it must be set to 0 and very little is shown during the
-* execution of the MPD algorithm.
+* If set to 2, then it prints every execution details in the standard output
+* stream; if set to 1, then a little less is displayed; otherwise, it must be
+* set to 0 and very little is shown during the execution of the MPD algorithm.
 */
 #define VERBOSE 0
 
@@ -67,13 +68,24 @@
 #define N_CPU 1
 
 /**
+* \def RHO_OPT
+* \brief Used to set the default value for the rho_opt variable of the
+*        Parameters structure, which thus rules the scaling factor multiplying
+*        the shape gradient during the optimization algorithm.
+*
+* This parameter will only be used if opt_mode=1/2/3/4 in the Parameters
+* structure.
+*/
+#define RHO_OPT 1.0
+
+/**
 * \def NAME_LENGTH
 * \brief Used to set the default value for the name_length variable of the
 *        Parameters structure, which thus rules the default maximal length
 *        allowed for storing the different file names.
 *
-* We must have (int)\ref NAME_LENGTH > 6. This condition ensures to store at
-* least a name that contains something more than the *.info extension.
+* We must have (int)\ref NAME_LENGTH > 7. This condition ensures to store at
+* least a name that contains something more than the *.input extension.
 */
 #define NAME_LENGTH 101
 
@@ -89,14 +101,14 @@
 * the MPD algorithm will need to launch the elastic software (which must have
 * been previously installed in this case). In such a situation, an *.elas file
 * is needed for the command line of the elastic software. Such a file can be
-* prescribed directly in the *.info (input) file (thanks to the name_elas
-* keyword) but if it is not the case, a default *.elas file is built by the MPD
-* algorithm, which requires to specify at least Lamé's first and second
-* coefficients for the internal domains (labelled three in the MPD algorithm
-* and in which the probability is maximized) and for the external ones (labelled
-* two in the MPD algorithm and which corresponds to the complement of the
-* internal domains in the computational box). Although it will be used only if
-* such a situation occurs, we must always have (double)\ref LAME_INT1 > 0.0.
+* prescribed directly in the *.input file (thanks to the name_elas keyword) but
+* if it is not the case, a default *.elas file is built by the MPD algorithm,
+* which requires to specify at least Lamé's first and second coefficients for
+* the internal domains (labelled three in the MPD algorithm and in which the
+* probability is maximized) and for the external ones (labelled two in the MPD
+* algorithm and which corresponds to the complement of the internal domains in
+* the computational box). Although it will be used only if such a situation
+* occurs, we must always have (double)\ref LAME_INT1 > 0.0.
 */
 #define LAME_INT1 186000.0
 
@@ -109,14 +121,14 @@
 * the MPD algorithm will need to launch the elastic software (which must have
 * been previously installed in this case). In such a situation, an *.elas file
 * is needed for the command line of the elastic software. Such a file can be
-* prescribed directly in the *.info (input) file (thanks to the name_elas
-* keyword) but if it is not the case, a default *.elas file is built by the MPD
-* algorithm, which requires to specify at least Lamé's first and second
-* coefficients for the internal domains (labelled three in the MPD algorithm
-* and in which the probability is maximized) and for the external ones (labelled
-* two in the MPD algorithm and which corresponds to the complement of the
-* internal domains in the computational box). Although it will be used only if
-* such a situation occurs, we must always have (double)\ref LAME_INT2 > 0.0.
+* prescribed directly in the *.input file (thanks to the name_elas keyword) but
+* if it is not the case, a default *.elas file is built by the MPD algorithm,
+* which requires to specify at least Lamé's first and second coefficients for
+* the internal domains (labelled three in the MPD algorithm and in which the
+* probability is maximized) and for the external ones (labelled two in the MPD
+* algorithm and which corresponds to the complement of the internal domains in
+* the computational box). Although it will be used only if such a situation
+* occurs, we must always have (double)\ref LAME_INT2 > 0.0.
 */
 #define LAME_INT2 3400.0
 
@@ -129,14 +141,14 @@
 * the MPD algorithm will need to launch the elastic software (which must have
 * been previously installed in this case). In such a situation, an *.elas file
 * is needed for the command line of the elastic software. Such a file can be
-* prescribed directly in the *.info (input) file (thanks to the name_elas
-* keyword) but if it is not the case, a default *.elas file is built by the MPD
-* algorithm, which requires to specify at least Lamé's first and second
-* coefficients for the internal domains (labelled three in the MPD algorithm
-* and in which the probability is maximized) and for the external ones (labelled
-* two in the MPD algorithm and which corresponds to the complement of the
-* internal domains in the computational box). Although it will be used only if
-* such a situation occurs, we must always have (double)\ref LAME_EXT1 > 0.0.
+* prescribed directly in the *.input file (thanks to the name_elas keyword) but
+* if it is not the case, a default *.elas file is built by the MPD algorithm,
+* which requires to specify at least Lamé's first and second coefficients for
+* the internal domains (labelled three in the MPD algorithm and in which the
+* probability is maximized) and for the external ones (labelled two in the MPD
+* algorithm and which corresponds to the complement of the internal domains in
+* the computational box). Although it will be used only if such a situation
+* occurs, we must always have (double)\ref LAME_EXT1 > 0.0.
 */
 #define LAME_EXT1 186000.0
 
@@ -149,19 +161,84 @@
 * the MPD algorithm will need to launch the elastic software (which must have
 * been previously installed in this case). In such a situation, an *.elas file
 * is needed for the command line of the elastic software. Such a file can be
-* prescribed directly in the *.info (input) file (thanks to the name_elas
-* keyword) but if it is not the case, a default *.elas file is built by the MPD
-* algorithm, which requires to specify at least Lamé's first and second
-* coefficients for the internal domains (labelled three in the MPD algorithm
-* and in which the probability is maximized) and for the external ones (labelled
-* two in the MPD algorithm and which corresponds to the complement of the
-* internal domains in the computational box). Although it will be used only if
-* such a situation occurs, we must always have (double)\ref LAME_EXT2 > 0.0.
+* prescribed directly in the *.input file (thanks to the name_elas keyword) but
+* if it is not the case, a default *.elas file is built by the MPD algorithm,
+* which requires to specify at least Lamé's first and second coefficients for
+* the internal domains (labelled three in the MPD algorithm and in which the
+* probability is maximized) and for the external ones (labelled two in the MPD
+* algorithm and which corresponds to the complement of the internal domains in
+* the computational box). Although it will be used only if such a situation
+* occurs, we must always have (double)\ref LAME_EXT2 > 0.0.
 */
 #define LAME_EXT2 3400.0
 
 
+// Related to the system chemistry
+/**
+* \def BOHR_UNIT
+* \brief Used to set the default value for the bohr_unit variable of the
+*        Parameters structure, which thus rules the unit chosen for the centers
+*        of the nuclei in the *.wfn/ *.chem (chemical) files.
+*
+* If set to 1, then it assumes that the coordinates are expressed in Bohrs;
+* otherwise, it must be set to 0 and the unit length is in Angstroms (1.e-10m).
+*/
+#define BOHR_UNIT 1
+
+/**
+* \def SELECT_ORB
+* \brief Used to set the default value for the select_orb variable of the
+*        Parameters structure, which thus indicates (or not) if a selection
+*        of orbitals must be performed during the preprocessing step
+*        (iteration -1) of the MPD algorithm.
+*
+* If set to 0.0, then no selection is applied on the ChemicalSystem structure.
+* Otherwise, we must have (double)\ref SELECT_ORB > 0.0 and
+* (double)\ref SELECT_ORB < 0.01, where the given value corresponds to the
+* tolerance criteria below which the squared L2-norm of the molecular orbitals
+* inside the computational box will be neglected (i.e. considered as zero).
+*/
+#define SELECT_ORB 0.0
+
+/**
+* \def ORB_ORTHO
+* \brief Used to set the default value for the orb_ortho variable of the
+*        Parameters structure, which thus indicates if the given molecular
+*        orbitals form an L2(R3)-orthonormal basis or not.
+*
+* If set to 1, then the L2-product of two distinct molecular orbitals over the
+* real three-dimensional space is equal to zero, while the L2-norm of any
+* molecular orbital is equal to one. Otherwise, it must be set to 0.
+*/
+#define ORB_ORTHO 1
+
+
 // Related to the default computational box
+/**
+* \def SELECT_BOX
+* \brief Used to set the default value for the select_box variable of the
+*        Parameters structure, which thus rules how the default computational
+*        box is built if no mesh is prescribed in the *.input file.
+*
+* If set to 0.0, then the computational box is a cube
+* (\ref X_MIN,\ref X_MAX)x(\ref Y_MIN,\ref Y_MAX)x(\ref Z_MIN,\ref Z_MAX)
+* discretized in (\ref N_X)x(\ref N_Y)x(\ref N_Z) points with a space step
+* precision of (\ref DELTA_X)x(\ref DELTA_Y)x(\ref DELTA_Z). If we have
+* (double)\ref SELECT_BOX >= 0.9 and (double)\ref SELECT_BOX < 1.0, then the
+* default computational box is built so that it contains all the nuclei given
+* in the .wfn/ *.chem files and that the probability to find exactly the total
+* number of electrons inside the computational box is greater than \ref
+* SELECT_BOX (the theoretical value is 1.0 over the whole space). If we have
+* (double)\ref SELECT_BOX > 0.0 and (double)\ref SELECT_BOX <= 0.1, then the
+* default computational box is built as in the previous mode, and in addition a
+* domain maximizing the probability to find exactly the total number of
+* electrons is computed inside it, up to a tolerance given by \ref SELECT_BOX.
+* This non-cubical domain is finally extracted and considered as the
+* computational box at the end of the preprocessing step (iteration -1) of the
+* MPD algorithm. Other values are forbidden.
+*/
+#define SELECT_BOX 0.0
+
 /**
 * \def X_MIN
 * \brief Used to set the default value for the x_min variable of the Parameters

@@ -448,12 +448,14 @@ typedef struct {
                              *    of the nuclei is assumed to be in Bohrs;
                              *    otherwise it must be set to zero. */
 
-    double select_orb;       /*!< If set to a positive value, then a selection
-                             *    of the molecular orbitals will be performed
-                             *    to retain only those that are acting inside
-                             *    the computational box with a L2-value greater
-                             *    than the one given; otherwise it must be set
-                             *    to zero and no selection is done. */
+    double select_orb;       /*!< If set to a positive value lower than 0.01,
+                             *    then a selection of the molecular orbitals
+                             *    will be performed during the preprocessing
+                             *    (iteration -1) to retain only those that are
+                             *    acting inside the computational box with a
+                             *    squared L2-value greater than the one given;
+                             *    otherwise it must be set to zero and no
+                             *    selection is done. */
 
     int orb_ortho;           /*!< If set to one, then the molecular orbitals
                              *    are expected to form an L2-orthonormal basis
@@ -480,11 +482,52 @@ typedef struct {
                              *    otherwise, it must be set to zero. */
 
 
-    // Parameters ruling the computational box (if a *.mesh file is not given)
-    int select_box;          /*!< If set to one, the default computational box
-                             *    is built so that it contains all the nuclei
-                             *    given in the *.wfn/ *.chem files; otherwise,
-                             *    it must be set to zero. */
+    // Parameters ruling the computational box (if a mesh file is not given)
+    double select_box;       /*!< If set to zero, then the computational box is
+                             *    a cube (\ref x_min,\ref x_max)x (\ref y_min,
+                             *   \ref y_max)x(\ref z_min,\ref z_max) discretized
+                             *    in (\ref n_x)x(\ref n_y)x(\ref n_z) points
+                             *    with a space step precision of
+                             *    (\ref delta_x)x(\ref delta_y)x(\ref delta_z);
+                             *    if we have \ref select_box >= 0.9 and
+                             *    \ref select_box < 1.0, then the default
+                             *    computational box is built so that it contains
+                             *    all the nuclei given in the .wfn/ *.chem files
+                             *    and that the probability to find exactly the
+                             *    total number of electrons inside the
+                             *    computational box is greater than \ref
+                             *    select_box (the theoretical value is one over
+                             *    the whole space); if we have \ref
+                             *    select_box > 0.0 and \ref select_box <= 0.1,
+                             *    then the default computational box is built as
+                             *    in the previous mode, and in addition a domain
+                             *    maximizing the probability to find exactly the
+                             *    total number of electrons is computed inside
+                             *    it, up to a tolerance given by \ref 
+                             *    select_box.
+* This non-cubical domain is finally extracted and considered as the
+* computational box at the end of the preprocessing step (iteration -1) of the
+* MPD algorithm. Other values are forbidden.
+
+
+ If set to zero, then the computational box
+                             *    is built according to the *_min, *_max, n_*,
+                             *    and delta_* (x/y/z) parameters (if a mesh
+                             *    file is not given); if set to one, then the
+                             *    default computational box is built so that it
+                             *    contains all the nuclei given in the
+                             *    *.wfn/ *.chem files; otherwise, it must be set
+                             *    to a positive value strictly lower than one,
+                             *    and in this case, the computational box is
+                             *    is build by maximizing the probability to find
+                             *    exactly the total number of electrons of the
+                             *    chemical system (the theoretical solution is
+                             *    the whole three-dimensional space with
+                             *    probability one), ending the procedure when
+                             *    the probability is one up to a certain
+                             *    tolerance prescribed by \ref select_box so
+                             *    that the resulting domain is extracted and
+                             *    taken as the computational box. */
 
     double x_min;            /*!< Minimal coordinate in the first-coordinate
                              *    direction: it must be (strictly) lower than
@@ -1247,7 +1290,7 @@ typedef struct {
                              *    variable of the Parameters structure); for any
                              *    \ref pnu, \ref pop, \ref vol, \ref d0p, \ref
                              *    d1p, \ref d2p, \ref tim, \ref ctim, \ref
-                             *    pprob, and \ref pmat variable that is not
+                             *    pprob, and \ref ppmat variable that is not
                              *    pointing to NULL, \ref ndata should always
                              *    correspond to the (common) size of the array
                              *    such a variable is pointing to. */
@@ -1362,7 +1405,7 @@ typedef struct {
 //                           *    it is not pointing to NULL, the size of the
 //                           *    array it is pointing to should always
 //                           *    correspond to the \ref ndata value. */
-
+//
 //  int nmat;                /*!< Common value used to size the arrays pointed
 //                           *    by the non-NULL variables coef, diag, lvect
 //                           *    and rvect of the OverlapMatrix structures
@@ -1373,7 +1416,7 @@ typedef struct {
 //                           *    variables are stored in the ChemicalSystem
 //                           *    structure). */
 
-    OverlapMatrix** pmat;    /*!< Pointer used to dynamically define an array of
+    OverlapMatrix** ppmat;   /*!< Pointer used to dynamically define an array of
                              *    OverlapMatrix array during the iterative
                              *    process, each one storing all the informations
                              *    related to the different generalized overlap

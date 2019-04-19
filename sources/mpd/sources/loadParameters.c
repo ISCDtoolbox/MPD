@@ -44,7 +44,7 @@ void initializeParameterStructure(Parameters* pParameters)
         pParameters->multi_det=0;
         pParameters->orb_rhf=0;
 
-        pParameters->select_box=0;
+        pParameters->select_box=0.;
         pParameters->x_min=0.;
         pParameters->y_min=0.;
         pParameters->z_min=0.;
