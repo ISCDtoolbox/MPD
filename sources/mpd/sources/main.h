@@ -32,6 +32,13 @@
     #include <omp.h> // take it into account by adding -fopenmp with gcc command
 #endif
 
+/**
+* \def UNIT_TESTS
+* \brief Used to activate or not the unit-testing of all the functions
+*        appearing in the MPD algorithm.
+*/
+#define UNIT_TESTS
+
 ////////////////////////////////////////////////////////////////////////////////
 // Macro functions to initialize the diagnostic of an error, to get the
 // minimum/maximum of two values, and also the absolute value of a double number
@@ -1893,6 +1900,26 @@ typedef struct {
 // they are defined as non-static in order to unit-test them)
 ////////////////////////////////////////////////////////////////////////////////
 /**
+* \fn void commentAnormalEnd(int typeOfSignal)
+* \brief It displays an error message in the standard output stream when an
+*        anormal end of the MPD program occurred.
+*
+* \param[in] typeOfSignal It is expected to refer to one of the standard signal
+*                         number to be caught (SIGABRT, SIGFPE, SIGILL, SIGSEGV,
+*                         SIGTERM, SIGINT). Otherwise, the function will only
+*                         display the integer caught in the standard output
+*                         stream.
+*
+* The function \ref commentAnormalEnd is meant to describe the type of anormal
+* error encountered when the MPD program anormally stops. It is only called by
+* the signal function (cf. \ref INITIALIZE_MAIN_STRUCTURES code for further
+* details) when one of a standard signal is caught (SIGABRT, SIGFPE, SIGILL,
+* SIGSEGV, SIGTERM, SIGINT). This function returns no argument (void output) and
+* should be static but it is defined as non-static in order to unit-test it.
+*/
+void commentAnormalEnd(int typeOfSignal);
+
+/**
 * \fn void printTimer(time_t finalTimer, time_t initialTimer)
 * \brief It takes the time difference between the finalTimer and initialTimer
 *        variables and converts it into a human readable time format (hour(s),
@@ -1936,31 +1963,11 @@ void endTimerAtExit(void);
 *        file.
 *
 * \return Ir returns the local date and time as a string (output of the standard
-*          ctim c-function) in a human readable format.
+*          ctime c-function) in a human readable format.
 
 * It has no argument (void input).
 */
 char* endTimerAtError(void);
-
-/**
-* \fn void commentAnormalEnd(int typeOfSignal)
-* \brief It displays an error message in the standard output stream when an
-*        anormal end of the MPD program occurred.
-*
-* \param[in] typeOfSignal It is expected to refer to one of the standard signal
-*                         number to be caught (SIGABRT, SIGFPE, SIGILL, SIGSEGV,
-*                         SIGTERM, SIGINT). Otherwise, the function will only
-*                         display the integer caught in the standard output
-*                         stream.
-*
-* The function \ref commentAnormalEnd is meant to describe the type of anormal
-* error encountered when the MPD program anormally stops. It is only called by
-* the signal function (cf. \ref INITIALIZE_MAIN_STRUCTURES code for further
-* details) when one of a standard signal is caught (SIGABRT, SIGFPE, SIGILL,
-* SIGSEGV, SIGTERM, SIGINT). This function returns no argument (void output) and
-* should be static but it is defined as non-static in order to unit-test it.
-*/
-void commentAnormalEnd(int typeOfSignal);
 
 /**
 * \fn int checkStringFromLength(char* stringToCheck, int minimumLength,

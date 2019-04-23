@@ -36,7 +36,10 @@
 #include "loadMesh.h"
 //#include "adaptMesh.h"
 #include "optimization.h"
-//#include "test.h"
+
+#ifdef UNIT_TESTS
+    #include "test.h"
+#endif
 
 /**
 * \var globalInitialTimer
@@ -182,7 +185,6 @@ int main(int argc, char *argv[])
     Data data;
     Mesh mesh;
 
-
     // Initialize the main structures to zero (nothing should be placed before)
     INITIALIZE_MAIN_STRUCTURES(&parameters,&chemicalSystem,&data,&mesh,argc);
     if (argc!=2)
@@ -190,11 +192,13 @@ int main(int argc, char *argv[])
         FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
     }
 
-/*
+#ifdef UNIT_TESTS
     // We set the seed for rand() function then we test the selected functions
-    //srand(time(NULL)); // Warning: srand(time(NULL)) must be set only one time
-    //test();            // It contains all the selected unit-testing functions
+    srand(time(NULL)); // Warning: srand(time(NULL)) must be set only one time
+    test();            // It contains all the selected unit-testing functions
+#endif
 
+/*
     // Check values of all the preprocessor constants
     if (!checkAllPreprocessorConstants(OPT_MODE,VERBOSE,N_CPU,NAME_LENGTH,
                                        LAME_INT1,LAME_INT2,LAME_EXT1,LAME_EXT2,
@@ -507,6 +511,58 @@ int main(int argc, char *argv[])
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// The function commentAnormalEnd is meant to display an error message in the
+// standard output stream when an anormal end of the MPD program occurred. It is
+// meant to describe the type of anormal error encountered and it is only called
+// when one of the standard signal is caught (SIGABRT, SIGFPE, SIGILL, SIGSEGV,
+// SIGTERM, SIGINT). It has the int typeOfSignal variable as input argument and
+// it does not return any value (void output)
+////////////////////////////////////////////////////////////////////////////////
+void commentAnormalEnd(int typeOfSignal)
+{
+    fprintf(stdout,"\nUnexpected error occurred: ");
+    switch (typeOfSignal)
+    {
+        case SIGABRT:
+            fprintf(stdout,"potential lack of memory.\n");
+            break;
+
+        case SIGFPE:
+            fprintf(stdout,"floating-point exception.\n");
+            break;
+
+        case SIGILL:
+            fprintf(stdout,"illegal instruction.\n");
+            break;
+
+        case SIGSEGV:
+            fprintf(stdout,"segmentation fault.\n");
+            break;
+
+        case SIGTERM:
+        case SIGINT:
+            fprintf(stdout,"program killed.\n");
+            break;
+
+        default:
+            fprintf(stdout,"signal %d caught.\n",typeOfSignal);
+            break;
+    }
+
+#ifndef UNIT_TESTS
+    exit(EXIT_FAILURE);
+#else
+    // This distinction is made to unit-test properly commentAnormaEnd function
+    // WARNING: please check wisely before removing or modifying this condition
+    if (typeOfSignal==SIGINT)
+    {
+        exit(EXIT_FAILURE);
+    }
+#endif
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // The function printTimer takes the difference between the finalTimer and
 // initialTimer variables and converts it into a human readable time format
 // (hour(s), minute(s), second(s), instantaneous), which is finally printed in
@@ -591,7 +647,7 @@ void endTimerAtExit(void)
 // The function endTimerAtError is called only by PRINT_ERROR when an error
 // occurs in the program or by the saveDataInTheLoop function if its input
 // iterationInTheLoop variable is set to zero. It has no argument (void input)
-// and it returns the time as a string (output of the standard ctim c-function)
+// and it returns the time as a string (output of the standard ctime c-function)
 ////////////////////////////////////////////////////////////////////////////////
 char* endTimerAtError(void)
 {
@@ -600,47 +656,6 @@ char* endTimerAtError(void)
     time(&localFinalTimer);
 
     return ctime(&localFinalTimer);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// The function commentAnormalEnd is meant to display an error message in the
-// standard output stream when an anormal end of the MPD program occurred. It is
-// meant to describe the type of anormal error encountered and it is only called
-// when one of the standard signal is caught (SIGABRT, SIGFPE, SIGILL, SIGSEGV,
-// SIGTERM, SIGINT). It has the int typeOfSignal variable as input argument and
-// it does not return any value (void output)
-////////////////////////////////////////////////////////////////////////////////
-void commentAnormalEnd(int typeOfSignal)
-{
-    fprintf(stdout,"\nUnexpected error occurred: ");
-    switch (typeOfSignal)
-    {
-        case SIGABRT:
-            fprintf(stdout,"potential lack of memory.\n");
-            break;
-
-        case SIGFPE:
-            fprintf(stdout,"floating-point exception.\n");
-            break;
-
-        case SIGILL:
-            fprintf(stdout,"illegal instruction.\n");
-            break;
-
-        case SIGSEGV:
-            fprintf(stdout,"segmentation fault.\n");
-            break;
-
-        case SIGTERM:
-        case SIGINT:
-            fprintf(stdout,"program killed.\n");
-            break;
-
-        default:
-            fprintf(stdout,"signal %d caught.\n",typeOfSignal);
-            break;
-    }
-    exit(EXIT_FAILURE);
 }
 
 /*
