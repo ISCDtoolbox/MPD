@@ -6,8 +6,8 @@
 * \brief Prototypes related to the initial loading of the chemical informations
 *        in the MPD algorithm.
 * \author Jeremy DALPHIN
-* \version 2.0
-* \date September 1st, 2018
+* \version 3.0
+* \date May 1st, 2019
 *
 * This file contains the description of all the non-static function prototypes
 * that are used to initially load the chemical data from a *.wfn/ *.chem file in
@@ -16,9 +16,9 @@
 
 #include "main.h"
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // Prototypes of non-static functions
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 /**
 * \fn void initializeChemicalStructure(ChemicalSystem* pChemicalSystem)
 * \brief It initializes to zero the ChemicalSystem structure pointed by

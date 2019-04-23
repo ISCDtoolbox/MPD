@@ -3,8 +3,8 @@
 * \brief It contains all the functions used to initially load the chemical
 *        informations from a *.wfn/ *.chem file in the MPD algorithm.
 * \author Jeremy DALPHIN
-* \version 2.0
-* \date September 1st, 2018
+* \version 3.0
+* \date May 1st, 2019
 *
 * The main function of this file is called \ref loadChemistry and many other
 * functions should be static but have been define as non-static for performing
@@ -13,12 +13,12 @@
 
 #include "loadChemistry.h"
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function initializeChemicalStructure sets to zero all the variables of
 // the ChemicalSystem structure (and pointers to NULL). It has the
 // ChemicalSystem* variable (defined in main.h) as input argument and does not
 // return any value (void output)
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 void initializeChemicalStructure(ChemicalSystem* pChemicalSystem)
 {
     if (pChemicalSystem!=NULL)
@@ -26,21 +26,28 @@ void initializeChemicalStructure(ChemicalSystem* pChemicalSystem)
         pChemicalSystem->nnucl=0;
         pChemicalSystem->pnucl=NULL;
 
-        pChemicalSystem->ngauss=0;
+        pChemicalSystem->nprim=0;
 
         pChemicalSystem->nmorb=0;
         pChemicalSystem->pmorb=NULL;
+
+        pChemicalSystem->ne=0;
+        pChemicalSystem->nu=0;
+        pChemicalSystem->ndet=0;
+
+        pChemicalSystem->pdet=NULL;
+        pChemicalSystem->pmat=NULL;
     }
 
     return;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function freeChemicalMemory frees the memory dynamically allocated with
 // calloc/malloc/realloc for the ChemicalSystem structure (but other variables
 // than pointers are not reset to zero). It has the ChemicalSystem* variable
 // (defined in main.h) as input argument and it does not return any value
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 void freeChemicalMemory(ChemicalSystem* pChemicalSystem)
 {
     int i=0, iMax=0;
@@ -74,17 +81,72 @@ void freeChemicalMemory(ChemicalSystem* pChemicalSystem)
 
                 free(pChemicalSystem->pmorb[i].type);
                 pChemicalSystem->pmorb[i].type=NULL;
+
+                free(pChemicalSystem->pmorb[i].pgauss);
+                pChemicalSystem->pmorb[i].pgauss=NULL;
              }
         }
 
         free(pChemicalSystem->pmorb);
         pChemicalSystem->pmorb=NULL;
+
+        if (pChemicalSystem->pdet!=NULL)
+        {
+            iMax=pChemicalSystem->ndet;
+            if (iMax<1)
+            {
+                fprintf(stdout,"\nWarning in freeChemicalMemory function: ");
+                fprintf(stdout,"%d determinants are saved in the ",iMax);
+                fprintf(stdout,"pChemicalSystem (input) variable. Some ");
+                fprintf(stdout,"allocated pointers may not be freed up ");
+                fprintf(stdout,"correctly.\n");
+            }
+            for (i=0; i<iMax; i++)
+            {
+                free(pChemicalSystem->pdet[i].vmorb);
+                pChemicalSystem->pdet[i].vmorb=NULL;
+            }
+        }
+
+        free(pChemicalSystem->pdet);
+        pChemicalSystem->pdet=NULL;
+
+        if (pChemicalSystem->pmat!=NULL)
+        {
+            iMax=(pChemicalSystem->ndet)*(pChemicalSystem->ndet);
+            if (iMax<1)
+            {
+                fprintf(stdout,"\nWarning in freeChemicalMemory function: ");
+                fprintf(stdout,"%d overlap matrices are saved in the ",iMax);
+                fprintf(stdout,"pChemicalSystem (input) variable. Some ");
+                fprintf(stdout,"allocated pointers may not be freed up ");
+                fprintf(stdout,"correctly.\n");
+            }
+            for (i=0; i<iMax; i++)
+            {
+                free(pChemicalSystem->pmat[i].coef);
+                pChemicalSystem->pmat[i].coef=NULL;
+
+                free(pChemicalSystem->pmat[i].diag);
+                pChemicalSystem->pmat[i].diag=NULL;
+
+                free(pChemicalSystem->pmat[i].lvect);
+                pChemicalSystem->pmat[i].lvect=NULL;
+
+                free(pChemicalSystem->pmat[i].rvect);
+                pChemicalSystem->pmat[i].rvect=NULL;
+            }
+        }
+
+        free(pChemicalSystem->pmat);
+        pChemicalSystem->pmat=NULL;
     }
 
     return;
 }
 
-/* ************************************************************************** */
+/*
+////////////////////////////////////////////////////////////////////////////////
 // The function getChemicalFormat determines if the file located at fileLocation
 // exists and if its name ends by the *.chem extension or the *.wfn one, with a
 // length (strictly) lower than the nameLength variable, and more than five (to
@@ -92,7 +154,7 @@ void freeChemicalMemory(ChemicalSystem* pChemicalSystem)
 // It has the char* fileLocation and int nameLength variables as input
 // arguments, and it return zero if an error occurs, otherwise 1 (resp. -1)
 // is returned for the *.chem (resp. *.wfn) format.
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int getChemicalFormat(char* fileLocation, int nameLength)
 {
     size_t length=0;
@@ -153,7 +215,7 @@ int getChemicalFormat(char* fileLocation, int nameLength)
     return returnValue;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function readChemFileandAllocateChemicalSystem reads the file at
 // fileLocation (file must exist with length (strictly) lower than nameLength),
 // checks *.chem syntax, allocates memory, and fills the values in the variables
@@ -162,7 +224,7 @@ int getChemicalFormat(char* fileLocation, int nameLength)
 // returns zero if an error is encountered, one (respectively minus one) if the
 // chemical data are successfully loaded and correspond to an restricted (resp.
 // unrestricted) Hartree-Fock chemical structure
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int readChemFileandAllocateChemicalSystem(char* fileLocation, int nameLength,
                                                 ChemicalSystem* pChemicalSystem)
 {
@@ -685,14 +747,14 @@ int readChemFileandAllocateChemicalSystem(char* fileLocation, int nameLength,
     return returnValue;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function readAndConvertWfnFile reads a *.temp file (which is intended
 // to be the copy of a *.wfn file) at fileLocation (such a file must have been
 // previously created), except the first line, and converts all charToRemove
 // encountered into charToPutInstead. It has a char* variable (fileLocation)
 // and two char variables (charToRemove, charToPutInstead) as input arguments
 // and it returns zero if an error occurred, otherwise one in case of success
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int readAndConvertWfnFile(char* fileLocation, char charToRemove,
                                           char charToPutInstead, int nameLength)
 {
@@ -780,7 +842,7 @@ int readAndConvertWfnFile(char* fileLocation, char charToRemove,
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function readWfnFileAndAllocateChemicalSystem reads the file at
 // fileLocation (file must exist with length (strictly) lower than nameLength),
 // checks *.wfn syntax, allocates memory, and fills the values in the variables
@@ -789,7 +851,7 @@ int readAndConvertWfnFile(char* fileLocation, char charToRemove,
 // returns zero if an error is encountered, one (respectively minus one) if the
 // chemical data are successfully loaded and correspond to an restricted (resp.
 // unrestricted) Hartree-Fock chemical structure
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
                                                 ChemicalSystem* pChemicalSystem)
 {
@@ -1779,7 +1841,7 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
     return returnValue;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function writingChemicalFile writes the chemical data stored in the
 // structure pointed by pChemicalSystem, according the the *.chem format, into
 // a file located at fileLocation (warning: reset and overwrite the file if it
@@ -1787,7 +1849,7 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
 // less than nameLength. It has the char* fileLocation, the int nameLength, and
 // the ChemicalSystem* variable (defined in main.h) as input arguments and it
 // returns zero if an error occurred, otherwise one in case of success
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int writingChemicalFile(char* fileLocation, int nameLength,
                                                 ChemicalSystem* pChemicalSystem)
 {
@@ -1979,14 +2041,14 @@ int writingChemicalFile(char* fileLocation, int nameLength,
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function loadChemistry extracts the chemical data from a *.chem or *.wfn
 // file (warning: reset and overwrite chemicalOut.chem file if it already
 // exists) at the location pointed by the name_chem variable of the structure
 // pointed by pParameters. It has the Parameters* and ChemicalSystem* variables
 // (both defined in main.h) as input arguments and it returns zero if an error
 // occurred, otherwise one is returned in case of sucess
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
 {
     size_t length=0;
@@ -2130,9 +2192,9 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
                         return 0;
                     }
                 }
-                // Warning here: an error is returned if the *.chem file 
+                // Warning here: an error is returned if the *.chem file
                 // prescribed by name_chem and the default one built from the
-                // *.info file name (saved in fileLocation) have different 
+                // *.info file name (saved in fileLocation) have different
                 // names but point to the same file like './*.chem' and '*.chem'
                 if (!copyFileLocation(pParameters->name_chem,
                                          pParameters->name_length,fileLocation))
@@ -2344,4 +2406,5 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
 
     return 1;
 }
+*/
 
