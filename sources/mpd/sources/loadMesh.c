@@ -4,8 +4,8 @@
 *        *.mesh/ *.cube file (or use the default/specified parameters if the
 *        file does not exists) in the MPD algorithm.
 * \author Jeremy DALPHIN
-* \version 2.0
-* \date September 1st, 2018
+* \version 3.0
+* \date May 1st, 2019
 *
 * The main function of this file is called \ref loadMesh and many other
 * functions should be static but have been define as non-static for performing
@@ -14,11 +14,11 @@
 
 #include "loadMesh.h"
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function initializeMeshStructure sets to zero all the variables the Mesh
 // structure (and pointers to NULL). It has the Mesh* variable (defined in
 // main.h) as input argument and it does not return any value (void output)
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 void initializeMeshStructure(Mesh* pMesh)
 {
     if (pMesh!=NULL)
@@ -43,6 +43,12 @@ void initializeMeshStructure(Mesh* pMesh)
         pMesh->ntet=0;
         pMesh->ptet=NULL;
 
+        pMesh->ndom=0;
+        pMesh->pdom=NULL;
+
+        pMesh->nbox=0;
+        pMesh->pbox=NULL;
+
         pMesh->nqua=0;
         pMesh->pqua=NULL;
 
@@ -56,12 +62,12 @@ void initializeMeshStructure(Mesh* pMesh)
     return;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function freeMeshMemory free the memory dynamically allocated with
 // calloc/malloc/realloc for the Mesh structure (but other variables than
 // pointers are not reset to zero). It has the Mesh* variable (defined in
 // main.h) as input argument and it does not return value any value
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 void freeMeshMemory(Mesh* pMesh)
 {
     if (pMesh!=NULL)
@@ -84,6 +90,12 @@ void freeMeshMemory(Mesh* pMesh)
         free(pMesh->ptet);
         pMesh->ptet=NULL;
 
+        free(pMesh->pdom);
+        pMesh->pdom=NULL;
+
+        free(pMesh->pbox);
+        pMesh->pbox=NULL;
+
         free(pMesh->pqua);
         pMesh->pqua=NULL;
 
@@ -97,7 +109,8 @@ void freeMeshMemory(Mesh* pMesh)
     return;
 }
 
-/* ************************************************************************** */
+/*
+////////////////////////////////////////////////////////////////////////////////
 // The function initializeCubeDiscretization loads some default parameters in
 // the structure pointed by pParameters in order to initialize the meshing of
 // the cube associated with a default initial computational box. Depending on
@@ -107,7 +120,7 @@ void freeMeshMemory(Mesh* pMesh)
 // parameters* and Mesh* variables (both defined in main.h) as input arguments
 // and it returns one (respectively minus one), if the suggested discretization
 // is manually approved (resp. disapproved) by the user, otherwise zero (error)
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int initializeCubeDiscretization(Parameters* pParameters, Mesh* pMesh)
 {
     int nX=0, nY=0, nZ=0, sizeMemory=0, readChar=0, returnValue=0;
@@ -291,12 +304,12 @@ int initializeCubeDiscretization(Parameters* pParameters, Mesh* pMesh)
     return returnValue;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function allocateInitialMeshMemory dynamically allocates memory for the
 // structure pointed by pMesh thanks to the values already loaded in the
 // corresponding Mesh structure by the initializeCubeDiscretization function.
 // It has the Mesh* variable (defined in main.h) as input argument and it returns zero if an error occurs, otherwise one is returned in case of success
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int allocateInitialMeshMemory(Parameters* pParameters, Mesh* pMesh)
 {
     // Check if the pMesh pointer (input variable) has a NULL value or not
@@ -380,7 +393,7 @@ int allocateInitialMeshMemory(Parameters* pParameters, Mesh* pMesh)
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function labelPoint set the labels for the cube vertices: 0 on internal
 // points; 1, 2, 3, 4, 5, and 6 on the corresponding faces; 12, 14, 15, 16, 23,
 // 25, 26, 34, 35, 36, 45, and 46 on the corresponding ridges; 125, 126, 145,
@@ -389,7 +402,7 @@ int allocateInitialMeshMemory(Parameters* pParameters, Mesh* pMesh)
 // y_min+j*delta_y,z_min+k*delta_z) i=0...nX-1, j=0...nY-1, k=0...nZ-1 as input
 // arguments and it returns the point label (warning here: be sure that i,j,k
 // lie between 0 and nXYZ-1 before using this function)
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int labelPoint(int i, int j, int k, int nX, int nY, int nZ)
 {
     int returnValue=0;
@@ -542,14 +555,14 @@ int labelPoint(int i, int j, int k, int nX, int nY, int nZ)
     return returnValue;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function meshCube fills the structure pointed by pMesh, whose memory
 // has already been allocated thanks to the allocateInitialMeshMemory function
 // according the mesh discretization given by the parameters stored in the
 // structure pointed by pParameters. It has the Parameters* and Mesh* variables
 // (both defined in main.h) as input arguments and it returns one on success,
 // otherwise zero is returned if an error is encountered
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int meshCube(Parameters* pParameters, Mesh* pMesh)
 {
     int i=0, j=0, k=0, counter=0, nX=0, nY=0, nZ=0;
@@ -1370,7 +1383,7 @@ int meshCube(Parameters* pParameters, Mesh* pMesh)
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function writingMeshFile writes the mesh discretization data saved in the
 // structure pointed by pMesh and writes it in a *.mesh file according to the
 // parameters stored in the structure pointed by pParameters. If
@@ -1383,7 +1396,7 @@ int meshCube(Parameters* pParameters, Mesh* pMesh)
 // reset and overwrite the file if it already exists). It has the Parameters*,
 // and Mesh* variables (both defined in main.h) as input arguments and it
 // returns one on success otherwise zero is returned if an error is encountered
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int writingMeshFile(Parameters* pParameters, Mesh* pMesh)
 {
     size_t lengthName=0;
@@ -2208,7 +2221,7 @@ int writingMeshFile(Parameters* pParameters, Mesh* pMesh)
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function getMeshFormat determines if the file located at fileLocation
 // exists and if its name ends by the *.mesh extension or the *.cube one, with a
 // length (strictly) lower than the nameLength variable, and more than five (to
@@ -2216,7 +2229,7 @@ int writingMeshFile(Parameters* pParameters, Mesh* pMesh)
 // extension). It has the char* fileLocation and int nameLength variables as
 // input arguments, and it return zero if an error occurs, otherwise 1 (resp.
 // -1) is returned for the *.mesh (resp. *.cube) format.
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int getMeshFormat(char* fileLocation, int nameLength)
 {
     size_t length=0;
@@ -2276,7 +2289,7 @@ int getMeshFormat(char* fileLocation, int nameLength)
     return returnValue;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function readMeshFileAndAllocateMesh reads the *.mesh file at the
 // location given by the name_mesh variable of the structure pointed by
 // pParameters (warning here: the file must exist), checks that it has the
@@ -2285,7 +2298,7 @@ int getMeshFormat(char* fileLocation, int nameLength)
 // updating also some values stored in the structure pointed by pParmaters. It
 // has the Parameter* and Mesh* variables (both defined in main.h) as input
 // arguments and it returns zero if an error occurs, otherwise one on success
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int readMeshFileAndAllocateMesh(Parameters* pParameters, Mesh* pMesh)
 {
     size_t length=0;
@@ -3929,7 +3942,7 @@ int readMeshFileAndAllocateMesh(Parameters* pParameters, Mesh* pMesh)
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function updateDiscretizationParameters looks at the mesh dicretization
 // recently stored in the structure pointed by pMesh and first update the x_min,
 // y_min,  z_min, x_max, y_max, and z_max variables of the structure pointed by
@@ -3940,7 +3953,7 @@ int readMeshFileAndAllocateMesh(Parameters* pParameters, Mesh* pMesh)
 // delta_z, n_x, n_y and n_z variables of the structure pointed by pParameters.
 // It has the Parameters* and Mesh* variable (both defined in main.h) as input
 // arguments and it returns one on success, otherwise zero if an error is found
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int updateDiscretizationParameters(Parameters* pParameters, Mesh* pMesh)
 {
     int nX=0, nY=0, nZ=0, i=0, iMax=0, j=0, k=0, boolean;
@@ -4221,7 +4234,7 @@ int updateDiscretizationParameters(Parameters* pParameters, Mesh* pMesh)
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function checkCompatibilityOfChemicalData opens the *.chem file whose
 // path name is stored in the fileLocation variable, a string of length
 // (strictly less than the nameLength variable). Then, it reads the number of
@@ -4229,7 +4242,7 @@ int updateDiscretizationParameters(Parameters* pParameters, Mesh* pMesh)
 // the array (of size nNcul) pointed by pNucl. It has the Nucleus* (defined in
 // main.h), the char* fileLocation and two int (nameLength and pNucl) variables
 // as input arguments and it returns one on succes otherwise zero is returned
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int checkCompatibilityOfChemicalData(char* fileLocation, int nameLength,
                                                       Nucleus* pNucl, int nNucl)
 {
@@ -4499,7 +4512,7 @@ int checkCompatibilityOfChemicalData(char* fileLocation, int nameLength,
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function readCubeFileAndAllocateMesh reads the *.cube file at the
 // location given by the name_mesh variable of the structure pointed by
 // pParameters (warning here: the file must exist), checks that it has the file
@@ -4508,7 +4521,7 @@ int checkCompatibilityOfChemicalData(char* fileLocation, int nameLength,
 // the structure pointed by pMesh, building and storing the mesh data there.
 // It has the Parameter* and Mesh* variables (both defined in main.h) as input
 // arguments and returns zero if an error occurs, otherwise one on success
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int readCubeFileAndAllocateMesh(Parameters* pParameters, Mesh* pMesh)
 {
     size_t length=0;
@@ -5581,7 +5594,7 @@ int readCubeFileAndAllocateMesh(Parameters* pParameters, Mesh* pMesh)
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function loadMesh looks at the pParameters->name_mesh variable. If it is
 // set to NULL, depending on the pParamters->opt_mode (<=0/>0), we generate a
 // default (hexahedral/tetrahedral) mesh which is stored in the structure
@@ -5593,7 +5606,7 @@ int readCubeFileAndAllocateMesh(Parameters* pParameters, Mesh* pMesh)
 // one on success, minus one in the case where the user refuses to approve the
 // suggested mesh discretization of the default initial computational box.
 // Otherwise zero is returned if an error is encountered during the process
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int loadMesh(Parameters* pParameters, Mesh* pMesh)
 {
     size_t lengthName=0;
@@ -6010,7 +6023,7 @@ int loadMesh(Parameters* pParameters, Mesh* pMesh)
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function writingCubeFile combines the data stored in the structures
 // pointed by pParameters, pChemicalSystem, and pMesh in order to save the mesh
 // discretization in the *.cube format. If pParameters->name_mesh is set to NULL
@@ -6023,7 +6036,7 @@ int loadMesh(Parameters* pParameters, Mesh* pMesh)
 // already exists). It has the Parameters*, ChemicalSystem*, and Mesh* variables
 // (both defined in main.h) as input arguments and it returns one on success
 // otherwise zero is returned if an error is encountered in the process
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int writingCubeFile(Parameters* pParameters, ChemicalSystem* pChemicalSystem,
                                                                     Mesh* pMesh)
 {
@@ -6412,4 +6425,5 @@ int writingCubeFile(Parameters* pParameters, ChemicalSystem* pChemicalSystem,
 
     return 1;
 }
+*/
 

@@ -6,8 +6,8 @@
 * \brief Prototypes related to the initial loading (or creation) of an initial
 *        mesh in the MPD algorithm.
 * \author Jeremy DALPHIN
-* \version 2.0
-* \date September 1st, 2018
+* \version 3.0
+* \date May 1st, 2019
 *
 * This file contains the description of the all non-static function prototypes
 * that are used to initially load the mesh of the MPD algorithm, either from a
@@ -17,9 +17,9 @@
 
 #include "main.h"
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // Prototypes of non-static functions
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 /**
 * \fn void initializeMeshStructure(Mesh* pMesh)
 * \brief It initializes to zero the Mesh structure pointed by pMesh.
