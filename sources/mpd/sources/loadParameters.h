@@ -356,8 +356,8 @@
 /**
 * \def DELTA_X
 * \brief Used to set the default value for the delta_x variable of the
-*        Parameters structure, which thus rules the default discretization step
-*        in the first-coordinate direction.
+*        Parameters structure, which thus rules the default discretization space
+*        step in the first-coordinate direction.
 *
 * We must have (double)\ref DELTA_X > 0.0 and (double)\ref DELTA_X == (\ref
 * X_MAX - \ref X_MIN)/(\ref N_X - 1) (or with at least a difference of less than
@@ -368,8 +368,8 @@
 /**
 * \def DELTA_Y
 * \brief Used to set the default value for the delta_y variable of the
-*        Parameters structure, which thus rules the default discretization step
-*        in the second-coordinate direction.
+*        Parameters structure, which thus rules the default discretization space
+*        step in the second-coordinate direction.
 *
 * We must have (double)\ref DELTA_Y > 0.0 and (double)\ref DELTA_Y == (\ref
 * Y_MAX - \ref Y_MIN)/(\ref N_Y - 1) (or with at least a difference of less than
@@ -380,8 +380,8 @@
 /**
 * \def DELTA_Z
 * \brief Used to set the default value for the delta_z variable of the
-*        Parameters structure, which thus rules the default discretization step
-*        in the third-coordinate direction.
+*        Parameters structure, which thus rules the default discretization space
+*        step in the third-coordinate direction.
 *
 * We must have (double)\ref DELTA_Z > 0.0 and (double)\ref DELTA_Z == (\ref
 * Z_MAX - \ref Z_MIN)/(\ref N_Z - 1) (or with at least a difference of less than
@@ -511,15 +511,25 @@
 
 // Related to the default stop criteria in the optimization loop
 /**
+* \def ITER_INI
+* \brief Used to set the default value for the iter_ini variable of the
+*        Parameters structure, which thus rules the default initial iteration
+*        (counter) at which the optimization loop will start.
+*
+* We must have (int)\ref ITER_INI >= 0 and (int)\ref ITER_INI <= \ref ITER_MAX.
+*/
+#define ITER_INI 0
+
+/**
 * \def ITER_MAX
 * \brief Used to set the default value for the iter_max variable of the
 *        Parameters structure, which thus rules the default maximal number of
 *        iterations allowed in the optimization loop.
 *
 * We must have (int)\ref ITER_MAX >= 0 (zero means that no optimization loop is
-* performed).
+* performed) and also (int)\ref ITER_MAX >= \ref ITER_INI.
 */
-#define ITER_MAX 100
+#define ITER_MAX 200
 
 /**
 * \def ITER_TOLD0P
@@ -539,13 +549,12 @@
 *        Parameters structure, which thus rules the default tolerance allowed
 *        on the first-order optimality condition of the optimization problem.
 *
-* If opt_mode=1/2/3/4 in the Parameters structure, it corresponds to the
-* tolerance allowed on the shape derivative of the probability, taken in the
-* direction of the shape gradient. Otherwise, we have opt_mode=-2/-1/0 in the
-* Parameters structure and it represents the tolerance allowed between the
-* probability differences of two successive iterations. We must have (double)
-* \ref ITER_TOLD1P >= 0.0 (zero means that it is not taken into account in the
-* stop criteria of the optimization loop).
+* It corresponds to the tolerance allowed on the shape derivative of the
+* probability, taken in the direction of the shape gradient. Theoretically, a
+* zero value of such shape derivative represents the first-order optimimality
+* condition of the shape optimization problem. We must have (double)\ref
+* ITER_TOLD1P >= 0.0 (zero means that it is not taken into account in the stop
+* criteria of the optimization loop).
 */
 #define ITER_TOLD1P 1.0e-10
 
@@ -573,8 +582,9 @@
 *        format used by the MPD algorithm.
 *
 * If set to 1, then any output mesh is saved using the *.mesh format. If set
-* to 0, then any output mesh is saved using the *.cube format. Otherwise, it
-* must be set to 2 and in this case, any output mesh is saved in both *.cube and
+* to 0, then any output mesh is saved using the *.cube/ *.obj format (*.cube for
+* tetrahedral meshes and *.obj for hexahedral ones). Otherwise, it must be set
+* to 2 and in this case, any output mesh is saved in both *.cube/ *.obj and
 * *.mesh format.
 */
 #define SAVE_TYPE 1
@@ -587,7 +597,10 @@
 *
 * We must have (int)\ref SAVE_MESH >= 0 (zero means that the mesh is never saved
 * in the optimization loop, and also if \ref SAVE_MESH is (strictly) greater
-* than \ref ITER_MAX).
+* than \ref ITER_MAX). We recall that in any case, the initial mesh
+* (iteration 0) and the mesh of the current iteration are always saved in the
+* *.mesh format so that even if the MPD algorithm crashes, the program can be
+* lauched again thanks to these meshes and the *.restart file.
 */
 #define SAVE_MESH 0
 
@@ -614,7 +627,9 @@
 * plotted in the optimization loop, and also if \ref SAVE_PRINT is (strictly)
 * greater than \ref ITER_MAX). We recall that medit software must have been
 * previously installed and every time that medit is loaded, the algorithm will
-* stop until exit is performed.
+* stop until a normal exit of medit is performed. We also recall that in the
+* case of a positive value, a manual confirmation is asked if a default
+* computational box has to be built.
 */
 #define SAVE_PRINT 0
 
@@ -627,10 +642,10 @@
 *
 * If set to 1, the metric is displayed with the mesh on medit software, which
 * must have been previously intalled. If set to 2, the level-set function is
-* plotted. If set to 3/4, it is the shape gradient (before/after relabelling).
-* If set to 5, the extension of the shape gradient using the elasticy equations
-* is vizualized. If set to 6, it is the advection of the level-set function. If
-* set to 7, the advected new domain is displayed. Other values are forbidden.
+* plotted. If set to 3/4, it is the shape gradient (scalar/vectorial form).
+* If set to 5, the extension of the shape gradient is vizualized. If set to 6,
+* it is the advection of the level-set function. If set to 7, the advected new
+* domain is displayed. Other values are forbidden.
 */
 #define SAVE_WHERE 7
 
@@ -662,7 +677,7 @@
 * PATH_LENGTH. We recall that the medit software must have been previously
 * installed.
 */
-#define PATH_MEDIT "./../../bin/medit"
+#define PATH_MEDIT "../../../bin/medit"
 
 /**
 * \def PATH_MMG3D
@@ -672,10 +687,10 @@
 *
 * (char[])\ref PATH_MMG3D must be a string of length (strictly) lower than \ref
 * PATH_LENGTH. Although this condition is checked, \ref PATH_MMG3D will only be
-* used opt_mode=1/2/3/4 in the Parameters structure. We also recall that the
+* used if opt_mode=1/2/3/4 in the Parameters structure. We also recall that the
 * mmg3d software must have been previously installed.
 */
-#define PATH_MMG3D "./../../bin/mmg3d"
+#define PATH_MMG3D "../../../bin/mmg3d"
 
 /**
 * \def PATH_MSHDIST
@@ -685,10 +700,10 @@
 *
 * (char[])\ref PATH_MSHDIST must be a string of length (strictly) lower than
 * \ref PATH_LENGTH. Although this condition is checked, \ref PATH_MSHDIST will
-* only be used opt_mode=1/2/3/4 in the Parameters structure. We also recall that
-* the mshdist software must have been previously installed.
+* only be used if opt_mode=1/2/3/4 in the Parameters structure. We also recall
+* that the mshdist software must have been previously installed.
 */
-#define PATH_MSHDIST "./../../bin/mshdist"
+#define PATH_MSHDIST "../../../bin/mshdist"
 
 /**
 * \def PATH_ELASTIC
@@ -698,10 +713,10 @@
 *
 * (char[])\ref PATH_ELASTIC must be a string of length (strictly) lower than
 * \ref PATH_LENGTH. Although this condition is checked, \ref PATH_ELASTIC will
-* only be used opt_mode=1/2 in the Parameters structure. We also recall that the
-* elastic software must have been previously installed.
+* only be used if opt_mode=1/2 in the Parameters structure. We also recall that
+* the elastic software must have been previously installed.
 */
-#define PATH_ELASTIC "./../../bin/elastic"
+#define PATH_ELASTIC "../../../bin/elastic"
 
 /**
 * \def PATH_ADVECT
@@ -711,10 +726,10 @@
 *
 * (char[])\ref PATH_ADVECT must be a string of length (strictly) lower than
 * \ref PATH_LENGTH. Although this condition is checked, \ref PATH_ADVECT will
-* only be used opt_mode=1/2 in the Parameters structure. We also recall that the
-* advect software must have been previously installed.
+* only be used if opt_mode=1/2 in the Parameters structure. We also recall that
+* the advect software must have been previously installed.
 */
-#define PATH_ADVECT "./../../bin/advect"
+#define PATH_ADVECT "../../../bin/advect"
 
 
 // Related to the default parameters used by mmg3d to build a default isotropic
@@ -819,7 +834,7 @@
 * it will only be used if opt_mode=1/2/3/4 in the Parameters structure. We also
 * recall that the mmg3d software must have been previously installed.
 */
-#define HAUSD_MET 0.01
+#define HAUSD_MET 0.1
 
 /**
 * \def HGRAD_MET
@@ -888,7 +903,7 @@
 * recall that the modified version of mmg3d software must have been previously
 * installed (its source files are joined with the ones of the MPD program).
 */
-#define HAUSD_LS 0.01
+#define HAUSD_LS 0.1
 
 /**
 * \def HGRAD_LS
@@ -967,7 +982,7 @@
 * it will only be used if opt_mode=1/3 in the Parameters structure. We also
 * recall that the mmg3d software must have been previously installed.
 */
-#define HAUSD_LAG 0.01
+#define HAUSD_LAG 0.1
 
 /**
 * \def HGRAD_LAG

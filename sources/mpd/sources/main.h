@@ -446,15 +446,16 @@ typedef struct {
     int bohr_unit;           /*!< If set to one, then the unit used in the
                              *    *.wfn / *.chem file for locating the centers
                              *    of the nuclei is assumed to be in Bohrs;
-                             *    otherwise it must be set to zero. */
+                             *    otherwise it must be set to zero (and the
+                             *    unit is Angstroms i.e. 1.e_10m). */
 
     double select_orb;       /*!< If set to a positive value lower than 0.01,
                              *    then a selection of the molecular orbitals
                              *    will be performed during the preprocessing
                              *    (iteration -1) to retain only those that are
                              *    acting inside the computational box with a
-                             *    squared L2-value greater than the one given;
-                             *    otherwise it must be set to zero and no
+                             *    squared L2(R3)-value greater than the one
+                             *    given; otherwise it must be set to zero and no
                              *    selection is done. */
 
     int orb_ortho;           /*!< If set to one, then the molecular orbitals
@@ -500,34 +501,15 @@ typedef struct {
                              *    the whole space); if we have \ref
                              *    select_box > 0.0 and \ref select_box <= 0.1,
                              *    then the default computational box is built as
-                             *    in the previous mode, and in addition a domain
+                             *    in the previous mode, but in addition a domain
                              *    maximizing the probability to find exactly the
                              *    total number of electrons is computed inside
-                             *    it, up to a tolerance given by \ref 
-                             *    select_box.
-* This non-cubical domain is finally extracted and considered as the
-* computational box at the end of the preprocessing step (iteration -1) of the
-* MPD algorithm. Other values are forbidden.
-
-
- If set to zero, then the computational box
-                             *    is built according to the *_min, *_max, n_*,
-                             *    and delta_* (x/y/z) parameters (if a mesh
-                             *    file is not given); if set to one, then the
-                             *    default computational box is built so that it
-                             *    contains all the nuclei given in the
-                             *    *.wfn/ *.chem files; otherwise, it must be set
-                             *    to a positive value strictly lower than one,
-                             *    and in this case, the computational box is
-                             *    is build by maximizing the probability to find
-                             *    exactly the total number of electrons of the
-                             *    chemical system (the theoretical solution is
-                             *    the whole three-dimensional space with
-                             *    probability one), ending the procedure when
-                             *    the probability is one up to a certain
-                             *    tolerance prescribed by \ref select_box so
-                             *    that the resulting domain is extracted and
-                             *    taken as the computational box. */
+                             *    it, up to a tolerance given by \ref
+                             *    select_box, and this non-cubical domain is
+                             *    finally extracted and considered as the
+                             *    computational box at the end of the
+                             *    preprocessing step (iteration -1) of the MPD
+                             *    algorithm; other values are forbidden. */
 
     double x_min;            /*!< Minimal coordinate in the first-coordinate
                              *    direction: it must be (strictly) lower than
@@ -669,7 +651,8 @@ typedef struct {
     int iter_max;            /*!< Maximum number of iterations allowed in the
                              *    optimization loop: it must not be negative
                              *    (zero means that no optimization loop is
-                             *    performed). */
+                             *    performed) and not lower than the \ref
+                             *    iter_ini variable. */
 
     double iter_told0p;      /*!< Tolerance allowed between the probabilities
                              *    of two successive iterations: it must not be
@@ -680,13 +663,10 @@ typedef struct {
     double iter_told1p;      /*!< Tolerance allowed on the shape derivative
                              *    taken in the direction of the shape gradient,
                              *    whose zero value represents the first-order
-                             *    optimality condition of the optimization
-                             *    problem (if \ref opt_mode=-(two/one/zero),
-                             *    between the probability differences of two
-                             *    successive iterations): it must not be
-                             *    negative (zero means that it is not taken into
-                             *    account in the stop criteria of the
-                             *    optimization loop). */
+                             *    optimality condition of the shape optimization
+                             *    problem: it must not be  negative (zero means
+                             *    that it is not taken into account in the stop
+                             *    criteria of the optimization loop). */
 
     double iter_told2p;      /*!< Tolerance allowed between the shape
                              *    derivatives of two successive iterations (if
@@ -701,7 +681,7 @@ typedef struct {
     // Parameters ruling the saving of data in the optimization loop
     int save_type;           /*!< If set to one, then the mesh is saved using
                              *    the *.mesh format; if set to zero, then the
-                             *    mesh is saved using the *.cube/*.obj format
+                             *    mesh is saved using the *.cube/ *.obj format
                              *    (*.cube for hexahedral meshes and *.obj for
                              *    tetrahedral ones); otherwise, it must be set
                              *    to two, and in this case, the mesh is saved
@@ -709,7 +689,13 @@ typedef struct {
 
     int save_mesh;           /*!< Frequency at which the mesh is saved in the
                              *    optimization loop: it cannot be negative
-                             *    (zero means that the mesh is never saved). */
+                             *    (zero means that the mesh is never saved); we
+                             *    recall that in any case, the initial mesh
+                             *    (iteration 0) and the current mesh are always
+                             *    saved in the *.mesh format so that even if the
+                             *    MPD algorithm crashes, the program can be
+                             *    lauched again thanks to these meshes and the
+                             *    *.restart file. */
 
     int save_data;           /*!< Frequency at which the data are saved in the
                              *    the optimization loop (we refer to the Data
@@ -721,7 +707,10 @@ typedef struct {
                              *    previously installed and every time that medit
                              *    is loaded, the algorithm will stop until exit
                              *    is performed): it must not be negative (zero
-                             *    means that the mesh is never plotted). */
+                             *    means that the mesh is never plotted); we also
+                             *    recall that in the case of a positive value, a
+                             *    manual confirmation is asked if a default
+                             *    computational box has to be built. */
 
     int save_where;          /*!< Integer referring to the part of the
                              *    optimization loop that \ref save_print is
