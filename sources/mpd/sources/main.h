@@ -1370,7 +1370,7 @@ typedef struct {
                              *    always be positive and its size should
                              *    always correspond to the \ref ndata value. */
 
-    int nprob;               /*!< Common size the arrays pointed by the \ref
+    int nprob;               /*!< Common size of the arrays pointed by the \ref
                              *    pprob variable (if not set to NULL); it should
                              *    always be positive and  correspond to the
                              *    total number of electrons plus one (the total
@@ -1388,22 +1388,13 @@ typedef struct {
                              *    while its size should always correspond to the
                              *    \ref ndata value. */
 
-//  Probabilities* pprob;    /*!< Pointer used to dynamically define the array
-//                           *    storing all the different types of
-//                           *    probabilities during the iterative process; if
-//                           *    it is not pointing to NULL, the size of the
-//                           *    array it is pointing to should always
-//                           *    correspond to the \ref ndata value. */
-//
-//  int nmat;                /*!< Common value used to size the arrays pointed
-//                           *    by the non-NULL variables coef, diag, lvect
-//                           *    and rvect of the OverlapMatrix structures
-//                           *    stored in the array pointed by \ref pmat (if
-//                           *    \ref pmat is not NULL); it should always be
-//                           *    positive and correspond to the value
-//                           *    (ndet)x(ndet)x(ne)x(ne) where the ndet and ne
-//                           *    variables are stored in the ChemicalSystem
-//                           *    structure). */
+    int npmat;               /*!< Common size of the arrays pointed by the \ref
+                             *    ppmat variable (if not set to NULL); it should
+                             *    always be positive and correspond to the
+                             *    total number of possible generalized overlap
+                             *    matrices i.e. equal to (ndet)x(ndet), where
+                             *    the ndet variable is the one stored in the
+                             *    ChemicalSystem structure. */
 
     OverlapMatrix** ppmat;   /*!< Pointer used to dynamically define an array of
                              *    OverlapMatrix array during the iterative

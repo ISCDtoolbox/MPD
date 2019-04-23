@@ -3,8 +3,8 @@
 * \brief It contains all the functions used to compute the optimization loop
 *        of the MPD algorithm.
 * \author Jeremy DALPHIN
-* \version 2.0
-* \date September 1st, 2018
+* \version 3.0
+* \date May 1st, 2019
 *
 * The main function of this file is called \ref optimization and many other
 * functions should be static but have been defines as non-static for performing
@@ -16,11 +16,11 @@
 #include "adaptMesh.h"
 #include "optimization.h"
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function initializeDataStructure sets to zero all the variables of the
 // Data structure (and pointers to NULL). It has the Data* variable (defined in
 // main.h) as input argument and it does not return any value (void output)
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 void initializeDataStructure(Data* pData)
 {
     if (pData!=NULL)
@@ -30,6 +30,7 @@ void initializeDataStructure(Data* pData)
 
         pData->pnu=NULL;
         pData->pop=NULL;
+        pData->vol=NULL;
 
         pData->d0p=NULL;
         pData->d1p=NULL;
@@ -41,27 +42,28 @@ void initializeDataStructure(Data* pData)
         pData->nprob=0;
         pData->pprob=NULL;
 
-        pData->nmat=0;
-        pData->pmat=NULL;
+        pData->npmat=0;
+        pData->ppmat=NULL;
     }
 
     return;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function freeDataMemory frees the memory dynamically allocated with
 // calloc/malloc/realloc for the Data structure (but other variables than
 // pointers are not reset to zero). It has the Data* variable (defined in
 // main.h) as input argument and it does not return any value (void output)
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 void freeDataMemory(Data* pData)
 {
-    int i=0, iMax=0;
+    int i=0, iMax=0, j=0, jMax=0;
+    OverlapMatrix *pOverlapMatrixI=NULL;
 
     if (pData!=NULL)
     {
         iMax=pData->ndata;
-        if (iMax<1 && (pData->pprob!=NULL || pData->pmat!=NULL))
+        if (iMax<1 && (pData->pprob!=NULL || pData->ppmat!=NULL))
         {
              fprintf(stdout,"\nWarning in freeDataMemory function: ");
              fprintf(stdout,"%d iterations are saved in pData (input) ",iMax);
@@ -74,6 +76,9 @@ void freeDataMemory(Data* pData)
 
         free(pData->pop);
         pData->pop=NULL;
+
+        free(pData->vol);
+        pData->vol=NULL;
 
         free(pData->d0p);
         pData->d0p=NULL;
@@ -94,43 +99,62 @@ void freeDataMemory(Data* pData)
         {
             for (i=0; i<iMax; i++)
             {
-                free(pData->pprob[i].pk);
-                pData->pprob[i].pk=NULL;
-
-                free(pData->pprob[i].pkl);
-                pData->pprob[i].pkl=NULL;
+                free(pData->pprob[i]);
+                pData->pprob[i]=NULL;
             }
         }
         free(pData->pprob);
         pData->pprob=NULL;
 
-        if (pData->pmat!=NULL)
+        if (pData->ppmat!=NULL)
         {
+            jMax=pData->npmat;
+            if (jMax<1)
+            {
+                 fprintf(stdout,"\nWarning in freeDataMemory function: ");
+                 fprintf(stdout,"%d overlap matrices are saved in the ",jMax);
+                 fprintf(stdout,"pData (input) variable. Some allocated ");
+                 fprintf(stdout,"pointers may not be freed up correctly.\n");
+            }
+
             for (i=0; i<iMax; i++)
             {
-                free(pData->pmat[i].coef);
-                pData->pmat[i].coef=NULL;
+                pOverlapMatrixI=pData->ppmat[i];
+                if (pOverlapMatrixI!=NULL)
+                {
+                    for (j=0; j<jMax; j++)
+                    {
+                        free(pOverlapMatrixI->pmat[j].coef);
+                        pOverlapMatrixI->pmat[j].coef=NULL;
 
-                free(pData->pmat[i].diag);
-                pData->pmat[i].diag=NULL;
+                        free(pOverlapMatrixI->pmat[j].diag);
+                        pOverlapMatrixI->pmat[j].diag=NULL;
 
-                free(pData->pmat[i].vect);
-                pData->pmat[i].vect=NULL;
+                        free(pOverlapMatrixI->pmat[j].lvect);
+                        pOverlapMatrixI->pmat[j].lvect=NULL;
+
+                        free(pOverlapMatrixI->pmat[j].rvect);
+                        pOverlapMatrixI->pmat[j].rvect=NULL;
+                    }
+                }
+                free(pOverlapMatrixI);
+                pOverlapMatrixI=NULL;
             }
         }
-        free(pData->pmat);
-        pData->pmat=NULL;
+        free(pData->ppmat);
+        pData->ppmat=NULL;
     }
 
     return;
 }
 
-/* ************************************************************************** */
+/*
+////////////////////////////////////////////////////////////////////////////////
 // The function allocateMemoryForData dynamically allocates the memory for
 // the Data structure according to pChemicalSystem and pParameters. It has the
 // Parameters*, Data*, and ChemicalSystem* variables (both defined in main.h)
 // as input arguments and it returns one one succes otherwise zero for an error
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int allocateMemoryForData(Parameters* pParameters, Data* pData,
                                                 ChemicalSystem* pChemicalSystem)
 {
@@ -305,7 +329,7 @@ int allocateMemoryForData(Parameters* pParameters, Data* pData,
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function addLengthForFileName checks that all the file names stored in
 // the structure pointed by pParameters are string of correct length (strictly
 // less than the pParameters->name_length variable and more than five) and that
@@ -317,7 +341,7 @@ int allocateMemoryForData(Parameters* pParameters, Data* pData,
 // additionalLength. Finally, it updates the pParameters->name_length variable.
 // It has the Parameters* (defined in main.h) and the int additionalLength
 // variables as input arguments and it returns one one succes otherwise zero
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int addLengthForFileName(Parameters* pParameters, int additionalLength)
 {
     size_t lengthName=0;
@@ -594,14 +618,14 @@ int addLengthForFileName(Parameters* pParameters, int additionalLength)
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function evaluatingPrimitiveAtVertices evaluates at the point (px,py,pz)
 // the function associated to a Gaussian-type primitive of pMolecularOrbital
 // described in pChemicalSystem. It has the ChemicalSystem*, MolecularOrbital*
 // variables (both defined in main.h), the three point coordinates and the int
 // characterizing the Gaussian-type primitive as input arguments. It returns
 // the value of the associated function at the given point.
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 double evaluatingPrimitiveAtVertices(double px, double py, double pz,
                                      ChemicalSystem* pChemicalSystem,
                                      MolecularOrbital* pMolecularOrbital,
@@ -726,14 +750,14 @@ double evaluatingPrimitiveAtVertices(double px, double py, double pz,
     return function;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function evaluateOrbitalsIJ computes the value of Orb(i)*Orb(j) at the
 // point (px,py,pz), where the orbitals' description are stored in the
 // structures pointed by pMolecularOrbitalI and pMolecularOrbitalJ of
 // pChemicalSystem. It has the ChemicalSystem*, the two MolecularOrbital*
 // variables (both defined in main.h), and the three point coordinates as input
 // arguments, and it returns the value of the function (Orb_i*Orb_j)(px,py,pz)
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 double evaluateOrbitalsIJ(double px, double py, double pz,
                           ChemicalSystem* pChemicalSystem,
                           MolecularOrbital* pMolecularOrbitalI,
@@ -763,14 +787,14 @@ double evaluateOrbitalsIJ(double px, double py, double pz,
     return functionI*functionJ;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function evaluateOrbitalsII computes the value of Orb(i)*Orb(i) at the
 // point (px,py,pz), where the orbital description is stored in the structure
 // pointed by pMolecularOrbitalI of pChemicalSystem. It has the ChemicalSystem*,
 // the MolecularOrbital* variables (both defined in main.h), and the three point
 // coordinates as input arguments, and it returns the value of the function
 // (Orb_i)(px,py,pz)*(Orb_i)(px,py,pz)
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 double evaluateOrbitalsII(double px, double py, double pz,
                           ChemicalSystem* pChemicalSystem,
                                            MolecularOrbital* pMolecularOrbitalI)
@@ -789,12 +813,12 @@ double evaluateOrbitalsII(double px, double py, double pz,
     return function*function;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function computeVolumeTetrahedron evaluates the volume (in fact 6 times
 // the volume) of a tetrehedron defined by four points. It has the four Point*
 // (defined in main.h) variables as input arguments, and it returns the volume
 // of the tetrahedron frame (12,13,14) in terms of determinant (vector product)
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 double computeVolumeTetrahedron(Point* pp1, Point* pp2, Point* pp3, Point* pp4)
 {
     double a11=pp2->x;
@@ -834,7 +858,7 @@ double computeVolumeTetrahedron(Point* pp1, Point* pp2, Point* pp3, Point* pp4)
     return DEF_ABS(determinant);
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function computeOverlapMatrix calculates the overlap matrix S(Omega)_ij
 // defined by int_Omega Orb(i)*Orb(j), where the molecular orbitals' is stored
 // in the structure pointed by pChemicalSystem. The domain of integration Omega
@@ -846,7 +870,7 @@ double computeVolumeTetrahedron(Point* pp1, Point* pp2, Point* pp3, Point* pp4)
 // labelToAvoid and iterationInTheLoop as input arguments. It returns one if
 // the coefficients of the overlap matrix have been successfully computed,
 // otherwise zero is returned if an error is encountered during the process
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int computeOverlapMatrix(Parameters* pParameters, Mesh* pMesh, Data* pData,
                          ChemicalSystem* pChemicalSystem, int labelToAvoid,
                                                          int iterationInTheLoop)
@@ -1398,7 +1422,7 @@ int computeOverlapMatrix(Parameters* pParameters, Mesh* pMesh, Data* pData,
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function convertingType converts the integer type as given in the
 // standard nomenclature of the *.wfn format (see the descriptions of the ORB_*
 // preprocessor cosntants in main.h for further details) into another integer
@@ -1407,7 +1431,7 @@ int computeOverlapMatrix(Parameters* pParameters, Mesh* pMesh, Data* pData,
 // arguments, which is expected to be comprised between one and twenty (i.e.
 // equal to one of the ORB_* preprocessor constants). It returns the converted
 // type and if the type variable is not between one and twenty, it returns zero
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int convertingType(int type)
 {
     int returnValue=0;
@@ -1504,7 +1528,7 @@ int convertingType(int type)
     return returnValue;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function evaluateGaussianIntegral computes the exact analytical
 // expression of the one-dimensional Gaussian integral from t0 to t1 of
 // t^exp0*exp(-t*t) with respect to the t-variable, and according to the
@@ -1514,7 +1538,7 @@ int convertingType(int type)
 // returns the value of the integral and if the exp0 variable is not comprised
 // between zero and six, it returns the integral as if exp0=0, which corresponds
 // to the case of the erf function (multiply by sqrt(pi) i.e. up to a constant)
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 double evaluateGaussianIntegral(int exp0, double t0, double t1)
 {
     double integral=0.;
@@ -1563,7 +1587,7 @@ double evaluateGaussianIntegral(int exp0, double t0, double t1)
     return integral;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function evaluateOneIntegralIJ computes the exact analytical expression
 // of the one-dimensional integral from t0 to t1 of
 // 2*(t-cI)^expI*(t+cJ)^expJ*exp(-t^2) with respect to the t-variable, and
@@ -1574,7 +1598,7 @@ double evaluateGaussianIntegral(int exp0, double t0, double t1)
 // (cI, cJ, t0, t1) as input arguments. It returns the value of the integral
 // and the exponents variables are treated as zero if they are not comprised
 // between zero and three
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 double evaluateOneIntegralIJ(int expI, int expJ, double cI, double cJ,
                                                            double t0, double t1)
 {
@@ -1762,7 +1786,7 @@ double evaluateOneIntegralIJ(int expI, int expJ, double cI, double cJ,
     return integral;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function evaluateTripleIntegralIJ evaluates on the hexahedron stored at
 // the kHexahedron-th position in the array pointed by pMesh->phex the exact
 // analytical expression of the three-dimensional integral of prim(i)*prim(j),
@@ -1777,7 +1801,7 @@ double evaluateOneIntegralIJ(int expI, int expJ, double cI, double cJ,
 // Mesh*, the ChemicalSystem*, the two MolecularOrbital* variables (both defined
 // in main.h) and the three integers primitiveI, primitiveJ, and kHexahedron as
 // input arguments. It returns the value of the integral over the hexahedron
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 double evaluateTripleIntegralIJ(Parameters* pParameters, Mesh *pMesh,
                                 ChemicalSystem *pChemicalSystem,
                                 MolecularOrbital *pMolecularOrbitalI,
@@ -1883,7 +1907,7 @@ double evaluateTripleIntegralIJ(Parameters* pParameters, Mesh *pMesh,
     return integral;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function computeOverlapMatrixOnGrid calculates the overlap matrix
 // S(Omega)_ij=int_Omega Orb(i)*Orb(j), where the molecular orbitals' is stored
 // in the structure pointed by pChemicalSystem. The domain of integration Omega
@@ -1897,7 +1921,7 @@ double evaluateTripleIntegralIJ(Parameters* pParameters, Mesh *pMesh,
 // main.h), and the two integers labelToConsiderOrAvoid and iterationInTheLoop
 // as input arguments. It returns one if the coefficients of the overlap matrix
 // have been successfully computed, otherwise zero is returned in case of error
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int computeOverlapMatrixOnGrid(Parameters* pParameters, Mesh* pMesh,
                                Data* pData, ChemicalSystem* pChemicalSystem,
                                int labelToConsiderOrAvoid,
@@ -2245,14 +2269,14 @@ int computeOverlapMatrixOnGrid(Parameters* pParameters, Mesh* pMesh,
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function diagonalizeOverlapMatrix diagonalize the (square symmetric)
 // matrix whose coefficients are stored in pData->pmat[iterationInTheLoop]
 // and if verbose is not set to zero, its prints the eigenvalues and
 // eigenvectors in the standard output stream. It has the Parameters*, the Data*
 // variable (both defined in main.h), and the int iterationInTheLoop as input
 // arguments and it returns one on success, otherwise zero for an error
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int diagonalizeOverlapMatrix(Parameters* pParameters, Data* pData,
                                                          int iterationInTheLoop)
 {
@@ -2464,7 +2488,7 @@ int diagonalizeOverlapMatrix(Parameters* pParameters, Data* pData,
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function computeProbability calculates the probability to find exactly
 // a certain number nu of electrons in the domain Omega and in the complement
 // the total number of electrons minus nu by using the eigenvalues of the
@@ -2477,7 +2501,7 @@ int diagonalizeOverlapMatrix(Parameters* pParameters, Data* pData,
 // (both defined in main.h), and the integer iterationInTheLoop as input
 // arguments. It returns one if the probabilities have been successfully
 // computed and saved in pData, otherwise zero is returned in case of error
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int computeProbability(Parameters* pParameters, Data* pData,
                                                          int iterationInTheLoop)
 {
@@ -2713,7 +2737,7 @@ int computeProbability(Parameters* pParameters, Data* pData,
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function AddOrRemoveHexahedronToMesh modify the label associated with one
 // of the two hexahedra of that are having the j-th quadrilateral in common.
 // These two hexahedra are quickly identified thanks to the Adjacency structures
@@ -2732,7 +2756,7 @@ int computeProbability(Parameters* pParameters, Data* pData,
 // It returns the position of the hexahedron in the array pointed by pMesh->phex
 // on success, otherwise zero is returned if addOrRemove is not set to (+/-)one
 // minus two/three and a warning is displayed in the standard output stream
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int AddOrRemoveHexahedronToMesh(Mesh* pMesh, int j, int addOrRemove)
 {
     int iHexahedron=0;
@@ -2773,7 +2797,7 @@ int AddOrRemoveHexahedronToMesh(Mesh* pMesh, int j, int addOrRemove)
     return iHexahedron;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function evaluateShapeGradientAtThePoint calculates the shape gradient
 // of the probability (to find exactly nu electrons) at the point (px,py,pz)
 // thanks to the overlap matrix of pChemicalSystem, and more precisely thanks to
@@ -2784,7 +2808,7 @@ int AddOrRemoveHexahedronToMesh(Mesh* pMesh, int j, int addOrRemove)
 // (both defined in main.h), the three point coordinates (px,py,pz), and the
 // two integers (nProb,nu) as input arguments. It returns the computed value of
 // the shape gradient.
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 double evaluateShapeGradientAtThePoint(double px, double py, double pz,
                                        int nProb, Probabilities* pProbabilities,
                                        int nu, OverlapMatrix* pOverlapMatrix,
@@ -2927,7 +2951,7 @@ double evaluateShapeGradientAtThePoint(double px, double py, double pz,
     return shapeGradientAtThePoint;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function computeShapeGradient calculates the shape gradient of the
 // probability at the vertices of pMesh if pParameters->opt_mode is positive,
 // otherwise at the center of the quadrilateral representing the boundary of the
@@ -2940,7 +2964,7 @@ double evaluateShapeGradientAtThePoint(double px, double py, double pz,
 // It returns one if the shape gradient has been successfully computed (and the
 // domain succesfully modified in the case of hexahedral meshes) otherwise zero
 // is returned if an error is encountered
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int computeShapeGradient(Parameters* pParameters, Mesh* pMesh, Data* pData,
                          ChemicalSystem* pChemicalSystem,
                                                          int iterationInTheLoop)
@@ -3703,12 +3727,12 @@ int computeShapeGradient(Parameters* pParameters, Mesh* pMesh, Data* pData,
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function computeAreaTriangle evaluates the area of a triangle defined by
 // three points. It has the three Point* (defined in main.h) variables as input
 // arguments, and it returns the area of the triangle (123) in terms of a
 // vector product: 0.5*norm(12^13)
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 double computeAreaTriangle(Point* pp1, Point* pp2, Point* pp3)
 {
     double a1=pp2->x;
@@ -3738,7 +3762,7 @@ double computeAreaTriangle(Point* pp1, Point* pp2, Point* pp3)
     return .5*sqrt(dx*dx+dy*dy+dz*dz);
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function computeShapeResidual calculates the two-dimensional integral of
 // the square of the shape gradient of the probability over the boundary of the
 // internal domain, which corresponds to the shape derivative of the probability
@@ -3748,7 +3772,7 @@ double computeAreaTriangle(Point* pp1, Point* pp2, Point* pp3)
 // (both defined in main.h) and the integer iterationInTheLoop as input
 // argument. It returns one if the quantity has been successfully computed and
 // stored in the pData->d1p[iterationInTheLoop] variable, otherwise zero (error)
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int computeShapeResidual(Parameters* pParameters, Mesh* pMesh, Data* pData,
                          ChemicalSystem* pChemicalSystem,
                                                          int iterationInTheLoop)
@@ -4219,7 +4243,7 @@ int computeShapeResidual(Parameters* pParameters, Mesh* pMesh, Data* pData,
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function shapeDerivative computes the overlapMatrix, the probability,
 // its shape gradient, and associated residual at iterationInTheLoop. In the
 // case of hexahedral meshes with level-set perturbations, it also modify the
@@ -4227,7 +4251,7 @@ int computeShapeResidual(Parameters* pParameters, Mesh* pMesh, Data* pData,
 // Mesh*, Data*, ChemicalSystem*, (defined in main.h), and the integer
 // iterationInTheLoop as input arguments. It returns one on success, otherwise
 // zero is returned if an error is encountered during the process
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int shapeDerivative(Parameters* pParameters, Mesh* pMesh, Data* pData,
                         ChemicalSystem* pChemicalSystem, int iterationInTheLoop)
 {
@@ -4437,7 +4461,7 @@ int shapeDerivative(Parameters* pParameters, Mesh* pMesh, Data* pData,
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function writingShapeSolFile writes into a (vectorial) *.sol file the
 // values associated with the product of what is stored in pMesh->pver[i].value
 // by the associated normal vector coordinates, where i stands the vertices
@@ -4448,7 +4472,7 @@ int shapeDerivative(Parameters* pParameters, Mesh* pMesh, Data* pData,
 // exists). It has the Parameters* and Mesh* variables (both defined in the
 // main.h) as input arguments and it returns zero if an error occurred,
 // otherwise one on success
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int writingShapeSolFile(Parameters* pParameters, Mesh* pMesh)
 {
     size_t lengthName=0;
@@ -4712,7 +4736,7 @@ int writingShapeSolFile(Parameters* pParameters, Mesh* pMesh)
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function writingObjFile writes into a *.obj file the 3 coordinates of the
 // vertices of an internal domain contained in pMesh, and also the boundary
 // triangles associated to it (labelled 10) with the right vertex connectivity.
@@ -4721,7 +4745,7 @@ int writingShapeSolFile(Parameters* pParameters, Mesh* pMesh)
 // reset and overwrites the file if it already exists). It has the Parameters*
 // and Mesh* variables (both defined in the main.h) as input arguments and it
 // returns zero if an error occurred, otherwise one on success
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int writingObjFile(Parameters* pParameters, Mesh* pMesh)
 {
     size_t lengthName=0;
@@ -5000,7 +5024,7 @@ int writingObjFile(Parameters* pParameters, Mesh* pMesh)
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function saveOrRemoveMeshInTheLoop is used in the optimization loop
 // to either save the mesh in the *.mesh and/or *.cube/*.obj format according to
 // the pParameters->save_type and iterationInTheLoop variables, or remove the
@@ -5013,7 +5037,7 @@ int writingObjFile(Parameters* pParameters, Mesh* pMesh)
 // Mesh*, ChemicalSystem* (both defined in main.h) and the integer variable
 // iterationInTheLoop as input arguments. It returns one one success, otherwise
 // zero is returned uf an error is encountered during the process
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int saveOrRemoveMeshInTheLoop(Parameters* pParameters, Mesh* pMesh,
                               ChemicalSystem* pChemicalSystem,
                                      int booleanForSave, int iterationInTheLoop)
@@ -5276,7 +5300,7 @@ int saveOrRemoveMeshInTheLoop(Parameters* pParameters, Mesh* pMesh,
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function saveDataInTheLoop finishes to evaluate the non-already-computed
 // data at the (iterationInTheLoop)-th iteration of the optimization loop, saves
 // the mesh in a *.(iterationInTheLoop).mesh/ *.(iterationInTheLoop).cube file
@@ -5295,7 +5319,7 @@ int saveOrRemoveMeshInTheLoop(Parameters* pParameters, Mesh* pMesh,
 // (pGlobalInitialTimer, pStartLocalTimer, pEndLocalTimer) that are used to
 // compute the execution time of one iteration and the cumulated time. The
 // function returns one on success, otherwise zero is returned in case of error
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int saveDataInTheLoop(Parameters* pParameters, Mesh* pMesh, Data* pData,
                       ChemicalSystem* pChemicalSystem, int iterationInTheLoop,
                       time_t* pGlobalInitialTimer, time_t* pStartLocalTimer,
@@ -5606,7 +5630,7 @@ int saveDataInTheLoop(Parameters* pParameters, Mesh* pMesh, Data* pData,
 }
 
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function setupInitialData successively allocates memory for the structure
 // pointed by pData i.e. for the saving of data, enlarge of 10 letters the
 // maximal length allowed for path names, reallocates the memory accordingly
@@ -5625,7 +5649,7 @@ int saveDataInTheLoop(Parameters* pParameters, Mesh* pMesh, Data* pData,
 // used to compute the execution time of the initialization and the one needed
 // for both loading the data, and initialize them. The function returns one on
 // success, otherwise zero is returned if an error is encountered in the process
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int setupInitialData(Parameters* pParameters, Mesh* pMesh, Data* pData,
                      ChemicalSystem* pChemicalSystem,
                      time_t* pGlobalInitialTimer, time_t* pStartLocalTimer,
@@ -5692,14 +5716,14 @@ int setupInitialData(Parameters* pParameters, Mesh* pMesh, Data* pData,
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function exhaustiveSearchAlgorithm computes the pParameters->opt_mode=-2
 // of the optimization function. It tries to add or remove the hexahedra that
 // are touching the boundary of the domain. Only those increasing the
 // probability are retained. It has the Parameters*, Mesh*, Data*,
 // ChemicalSystem* (both defined in main.h) and the int iterationInTheLoop
 // variables as input arguments. It returns one on success otherwise zero
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int exhaustiveSearchAlgorithm(Parameters* pParameters, Mesh* pMesh,
                                Data* pData, ChemicalSystem* pChemicalSystem,
                                                          int iterationInTheLoop)
@@ -6220,14 +6244,14 @@ int exhaustiveSearchAlgorithm(Parameters* pParameters, Mesh* pMesh,
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function computeLevelSet computes the signed distance function i.e. the
 // level-set function with unitary gradient norm of the internal domain of pMesh
 // and saves the values in an *.chi.sol file associated with an *.mesh one. It
 // has the Parameters* and Mesh* variables (both defined in main.h) as input
 // arguments and it returns zero if an error occurred, otherwise one is returned
 // on success
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int computeLevelSet(Parameters* pParameters, Mesh* pMesh,
                                                          int iterationInTheLoop)
 {
@@ -6395,14 +6419,14 @@ int computeLevelSet(Parameters* pParameters, Mesh* pMesh,
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function saveTheShapeGradient contains successive functions that are
 // used to vizualize the norm of the shape gradient, save it in the vectorial
 // *.sol file, and vizualize it with the medit software. It has the
 // Parameters*, Mesh*, (both defined in main.h), and the int
 // interationInTheLoop variables as input arguments. It returns one on success
 // otherwise zero if an error is encoutnered during the process
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int saveTheShapeGradient(Parameters* pParameters, Mesh* pMesh,
                                                          int iterationInTheLoop)
 {
@@ -6494,13 +6518,13 @@ int saveTheShapeGradient(Parameters* pParameters, Mesh* pMesh,
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function computeEulerianMode contains successive functions that are
 // used to specifically compute the Eulerian mode in the optimization function
 // It has the Parameters*, Mesh*, (both defined in main.h), and the int
 // interationInTheLoop variables as input arguments. It returns one on success
 // otherwise zero if an error is encoutnered during the process
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int computeEulerianMode(Parameters* pParameters, Mesh* pMesh,
                                                          int iterationInTheLoop)
 {
@@ -6610,13 +6634,13 @@ int computeEulerianMode(Parameters* pParameters, Mesh* pMesh,
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function computeLagrangianMode contains successive functions that are
 // used to specifically compute the Lagrangian mode in the optimization function
 // It has the Parameters*, Mesh*, (both defined in main.h), and the int
 // interationInTheLoop variables as input arguments. It returns one on success
 // otherwise zero if an error is encoutnered during the process
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int computeLagrangianMode(Parameters* pParameters, Mesh* pMesh,
                                                          int iterationInTheLoop)
 {
@@ -6751,13 +6775,13 @@ int computeLagrangianMode(Parameters* pParameters, Mesh* pMesh,
     return 1;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function computeProbabilityAndReloadPreviousMesh compute the probability
 // of a given mesh then reload the previous mesh in the structure pointed by
 // pMesh. It has the Parameters*, Mesh*, Data*, ChemicalSystem* (both defined in
 // main.h), and the int interationInTheLoop variables as input arguments. It
 // returns the value of the probability on success otherwise -10000 for an error
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 double computeProbabilityAndReloadPreviousMesh(Parameters* pParameters,
                                                Mesh* pMesh, Data* pData,
                                                ChemicalSystem* pChemicalSystem,
@@ -6918,14 +6942,14 @@ double computeProbabilityAndReloadPreviousMesh(Parameters* pParameters,
     return returnValue;
 }
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // The function optimization modifies the shape of the MPD domain according to
 // the shape derivative in order to increase to probability. This is the
 // function used iteratively in the optimization loop of the main function.
 // It has the Parameters*, Mesh*, Data*, ChemicalSystem* (both defined in
 // main.h), the int interationInTheLoop, and the three time_t* variables as
 // input arguments. It returns one on success otherwise zero for an error
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                  ChemicalSystem* pChemicalSystem, int iterationInTheLoop,
                  time_t* pGlobalInitialTimer, time_t* pStartLocalTimer,
@@ -7401,17 +7425,17 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
                     {
                         //Try to get better guess for t1 to avoid big advections
                         t1=.1*(tMax+9.*tMin);
-                        /*if (t1>tMin && t1<tMax)
-                        {
-                            if (t1>.5*(tMax+tMin))
-                            {
-                                t1=.5*(tMax+tMin);
-                            }
-                        }
-                        else
-                        {
-                            t1=.5*(tMax+tMin);
-                        }*/
+//                        if (t1>tMin && t1<tMax)
+//                        {
+//                            if (t1>.5*(tMax+tMin))
+//                            {
+//                                t1=.5*(tMax+tMin);
+//                            }
+//                        }
+//                        else
+//                        {
+//                            t1=.5*(tMax+tMin);
+//                        }
                     }
                 }
                 else
@@ -7585,508 +7609,507 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
             // The optimal step has been found, update t0 (used after comments)
             t0=t1;
 
-/*            tMax=1.;
-            tMin=0.;
-            pMin=pData->pnu[iterationInTheLoop-1];
+//            tMax=1.;
+//          tMin=0.;
+//          pMin=pData->pnu[iterationInTheLoop-1];
 
-            // First perform an initial Eulerian perturbation of intensity one
-            fprintf(stdout,"\nSEARCHING THE STARTING INTERVAL FOR THE ");
-            fprintf(stdout,"OPTIMAL STEP.\nCOMPUTING p(%lf).\n",tMax);
+//          // First perform an initial Eulerian perturbation of intensity one
+//          fprintf(stdout,"\nSEARCHING THE STARTING INTERVAL FOR THE ");
+//          fprintf(stdout,"OPTIMAL STEP.\nCOMPUTING p(%lf).\n",tMax);
 
-            // Save the shape gradient
-            if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
-            {
-                PRINT_ERROR("In optimization: saveTheShapeGradient function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
+//          // Save the shape gradient
+//          if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
+//          {
+//              PRINT_ERROR("In optimization: saveTheShapeGradient function ");
+//              fprintf(stderr,"returned zero instead of one.\n");
+//              free(pShapeGradient);
+//              pShapeGradient=NULL;
+//              return 0;
+//          }
 
-            // Advect the mesh thanks to Eulerian mode (level-set approach)
-            if (!computeEulerianMode(pParameters,pMesh,iterationInTheLoop))
-            {
-                PRINT_ERROR("In optimization: computeEulerianMode function ");
-                fprintf(stderr,"returned zero instead of one.\n");
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
+//          // Advect the mesh thanks to Eulerian mode (level-set approach)
+//          if (!computeEulerianMode(pParameters,pMesh,iterationInTheLoop))
+//          {
+//              PRINT_ERROR("In optimization: computeEulerianMode function ");
+//              fprintf(stderr,"returned zero instead of one.\n");
+//              free(pShapeGradient);
+//              pShapeGradient=NULL;
+//              return 0;
+//          }
 
-            // Adapt the mesh to both molecular orbitals and new domain geometry
-            if (!performLevelSetAdaptation(pParameters,pMesh,pChemicalSystem,
-                                                            iterationInTheLoop))
-            {
-                PRINT_ERROR("In optimization: performLevelSetAdaptation ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
+//          // Adapt the mesh to both molecular orbitals and new domain geometry
+//          if (!performLevelSetAdaptation(pParameters,pMesh,pChemicalSystem,
+//                                                          iterationInTheLoop))
+//          {
+//              PRINT_ERROR("In optimization: performLevelSetAdaptation ");
+//              fprintf(stderr,"function returned zero instead of one.\n");
+//              free(pShapeGradient);
+//              pShapeGradient=NULL;
+//              return 0;
+//          }
 
-            // Compute pMax and reload the previous mesh
-            pMax=computeProbabilityAndReloadPreviousMesh(pParameters,pMesh,
-                                                         pData,pChemicalSystem,
-                                                            iterationInTheLoop);
-            if (pMax==-10000.)
-            {
-                PRINT_ERROR("In optimization: ");
-                fprintf(stderr,"computeProbabilityAndReloadPreviousMesh ");
-                fprintf(stderr,"function returned zero instead of one.\n");
-                free(pShapeGradient);
-                pShapeGradient=NULL;
-                return 0;
-            }
+//          // Compute pMax and reload the previous mesh
+//          pMax=computeProbabilityAndReloadPreviousMesh(pParameters,pMesh,
+//                                                       pData,pChemicalSystem,
+//                                                          iterationInTheLoop);
+//          if (pMax==-10000.)
+//          {
+//              PRINT_ERROR("In optimization: ");
+//              fprintf(stderr,"computeProbabilityAndReloadPreviousMesh ");
+//              fprintf(stderr,"function returned zero instead of one.\n");
+//              free(pShapeGradient);
+//              pShapeGradient=NULL;
+//              return 0;
+//          }
 
-            // Trying to enlarge the searching interval
-            t0=tMax;
-            p0=pMax;
+//          // Trying to enlarge the searching interval
+//          t0=tMax;
+//          p0=pMax;
 
-            tMax=tMin;
-            pMax=pMin;
+//          tMax=tMin;
+//          pMax=pMin;
 
-            counter=0;
-            while (pMax<p0 && counter<5)
-            {
-                fprintf(stdout,"\nTRYING TO ENLARGE THE SEARCHING INTERVAL ");
-                fprintf(stdout,"[%lf, %lf].\n",tMax,t0);
-                fprintf(stdout,"p(%lf)=%lf p(%lf)=%lf. ",tMax,pMax,t0,p0);
+//          counter=0;
+//          while (pMax<p0 && counter<5)
+//          {
+//              fprintf(stdout,"\nTRYING TO ENLARGE THE SEARCHING INTERVAL ");
+//              fprintf(stdout,"[%lf, %lf].\n",tMax,t0);
+//              fprintf(stdout,"p(%lf)=%lf p(%lf)=%lf. ",tMax,pMax,t0,p0);
 
-                tMin=tMax;
-                pMin=pMax;
+//              tMin=tMax;
+//              pMin=pMax;
 
-                tMax=t0;
-                pMax=p0;
+//              tMax=t0;
+//              pMax=p0;
 
-                counter++;
-                t0=exp(counter);
-                fprintf(stdout,"COMPUTING p(%lf).\n",t0);
+//              counter++;
+//              t0=exp(counter);
+//              fprintf(stdout,"COMPUTING p(%lf).\n",t0);
 
-                for (i=0; i<pMesh->nver; i++)
-                {
-                    pMesh->pver[i].value=t0*pShapeGradient[i];
-                }
+//              for (i=0; i<pMesh->nver; i++)
+//              {
+//                  pMesh->pver[i].value=t0*pShapeGradient[i];
+//              }
 
-                // Save the shape gradient
-                if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
-                {
-                    PRINT_ERROR("In optimization: saveTheShapeGradient ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
+//              // Save the shape gradient
+//              if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
+//              {
+//                  PRINT_ERROR("In optimization: saveTheShapeGradient ");
+//                  fprintf(stderr,"function returned zero instead of one.\n");
+//                  free(pShapeGradient);
+//                  pShapeGradient=NULL;
+//                  return 0;
+//              }
 
-                // Advect the mesh thanks to Eulerian mode (level-set approach)
-                if (!computeEulerianMode(pParameters,pMesh,iterationInTheLoop))
-                {
-                    PRINT_ERROR("In optimization: computeEulerianMode ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
+//              // Advect the mesh thanks to Eulerian mode (level-set approach)
+//              if (!computeEulerianMode(pParameters,pMesh,iterationInTheLoop))
+//              {
+//                  PRINT_ERROR("In optimization: computeEulerianMode ");
+//                  fprintf(stderr,"function returned zero instead of one.\n");
+//                  free(pShapeGradient);
+//                  pShapeGradient=NULL;
+//                  return 0;
+//              }
 
-                // Adapt mesh to both molecular orbitals and new domain geometry
-                if (!performLevelSetAdaptation(pParameters,pMesh,
-                                               pChemicalSystem,
-                                                            iterationInTheLoop))
-                {
-                    PRINT_ERROR("In optimization: performLevelSetAdaptation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
+//              // Adapt mesh to both molecular orbitals and new domain geometry
+//              if (!performLevelSetAdaptation(pParameters,pMesh,
+//                                             pChemicalSystem,
+//                                                          iterationInTheLoop))
+//              {
+//                  PRINT_ERROR("In optimization: performLevelSetAdaptation ");
+//                  fprintf(stderr,"function returned zero instead of one.\n");
+//                  free(pShapeGradient);
+//                  pShapeGradient=NULL;
+//                  return 0;
+//              }
 
-                // Compute p0 and reload the previous mesh
-                p0=computeProbabilityAndReloadPreviousMesh(pParameters,pMesh,
-                                                           pData,
-                                                           pChemicalSystem,
-                                                            iterationInTheLoop);
-                if (p0==-10000.)
-                {
-                    PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"computeProbabilityAndReloadPreviousMesh ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
-            }
+//              // Compute p0 and reload the previous mesh
+//              p0=computeProbabilityAndReloadPreviousMesh(pParameters,pMesh,
+//                                                         pData,
+//                                                         pChemicalSystem,
+//                                                          iterationInTheLoop);
+//              if (p0==-10000.)
+//              {
+//                  PRINT_ERROR("In optimization: ");
+//                  fprintf(stderr,"computeProbabilityAndReloadPreviousMesh ");
+//                  fprintf(stderr,"function returned zero instead of one.\n");
+//                  free(pShapeGradient);
+//                  pShapeGradient=NULL;
+//                  return 0;
+//              }
+//          }
 
-            if (pMax>=p0)
-            {
+//          if (pMax>=p0)
+//          {
 
-                tMax=t0;
-                pMax=p0;
+//              tMax=t0;
+//              pMax=p0;
 
-                // Starting golden-line search on the initial interval
-                fprintf(stdout,"\nINITIAL INTERVAL FOUND: ");
-                fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
-                fprintf(stdout,"STARTING THE GOLDEN-SECTION LINE SEARCH.\n");
+//              // Starting golden-line search on the initial interval
+//              fprintf(stdout,"\nINITIAL INTERVAL FOUND: ");
+//              fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
+//              fprintf(stdout,"STARTING THE GOLDEN-SECTION LINE SEARCH.\n");
 
-                h=tMax-tMin;
-                if (tMax==1.)
-                {
-                    nMax=2;
-                    //nMax=(int)(floor(log(1.e-1/h)/log(INV_PHI)));
-                }
-                else
-                {
-                    nMax=0;
-                }
+//              h=tMax-tMin;
+//              if (tMax==1.)
+//              {
+//                  nMax=2;
+//                  //nMax=(int)(floor(log(1.e-1/h)/log(INV_PHI)));
+//              }
+//              else
+//              {
+//                  nMax=0;
+//              }
 
-                // Evaluation of p0 (t0<1. Lagr. otherwise Eulerian approach)
-                t0=tMin+INV_PHI2*h;
-                for (i=0; i<pMesh->nver; i++)
-                {
-                    pMesh->pver[i].value=t0*pShapeGradient[i];
-                }
+//              // Evaluation of p0 (t0<1. Lagr. otherwise Eulerian approach)
+//              t0=tMin+INV_PHI2*h;
+//              for (i=0; i<pMesh->nver; i++)
+//              {
+//                  pMesh->pver[i].value=t0*pShapeGradient[i];
+//              }
 
-                // Save the shape gradient
-                if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
-                {
-                    PRINT_ERROR("In optimization: saveTheShapeGradient");
-                    fprintf(stderr," function returned zero instead of one.\n");
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
+//              // Save the shape gradient
+//              if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
+//              {
+//                  PRINT_ERROR("In optimization: saveTheShapeGradient");
+//                  fprintf(stderr," function returned zero instead of one.\n");
+//                  free(pShapeGradient);
+//                  pShapeGradient=NULL;
+//                  return 0;
+//              }
 
-                if (t0<1.)
-                {
-                    // Advect mesh thanks to Lagrangian mode of mmg3d software
-                    if (!computeLagrangianMode(pParameters,pMesh,
-                                                            iterationInTheLoop))
-                    {
-                        PRINT_ERROR("In optimization: computeLagrangianMode ");
-                        fprintf(stderr,"function returned zero instead of ");
-                        fprintf(stderr,"one.\n");
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-                }
-                else
-                {
-                    // Advect mesh thanks to Eulerian mode (level-set approach)
-                    if (!computeEulerianMode(pParameters,pMesh,
-                                                            iterationInTheLoop))
-                    {
-                        PRINT_ERROR("In optimization: computeEulerianMode ");
-                        fprintf(stderr,"function returned zero instead of ");
-                        fprintf(stderr,"one.\n");
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-                }
+//              if (t0<1.)
+//              {
+//                  // Advect mesh thanks to Lagrangian mode of mmg3d software
+//                  if (!computeLagrangianMode(pParameters,pMesh,
+//                                                          iterationInTheLoop))
+//                  {
+//                      PRINT_ERROR("In optimization: computeLagrangianMode ");
+//                      fprintf(stderr,"function returned zero instead of ");
+//                      fprintf(stderr,"one.\n");
+//                      free(pShapeGradient);
+//                      pShapeGradient=NULL;
+//                      return 0;
+//                  }
+//              }
+//              else
+//              {
+//                  // Advect mesh thanks to Eulerian mode (level-set approach)
+//                  if (!computeEulerianMode(pParameters,pMesh,
+//                                                          iterationInTheLoop))
+//                  {
+//                      PRINT_ERROR("In optimization: computeEulerianMode ");
+//                      fprintf(stderr,"function returned zero instead of ");
+//                      fprintf(stderr,"one.\n");
+//                      free(pShapeGradient);
+//                      pShapeGradient=NULL;
+//                      return 0;
+//                  }
+//              }
 
-                // Adapt mesh to both molecular orbitals and new domain geometry
-                if (!performLevelSetAdaptation(pParameters,pMesh,
-                                            pChemicalSystem,iterationInTheLoop))
-                {
-                    PRINT_ERROR("In optimization: performLevelSetAdaptation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
+//              // Adapt mesh to both molecular orbitals and new domain geometry
+//              if (!performLevelSetAdaptation(pParameters,pMesh,
+//                                          pChemicalSystem,iterationInTheLoop))
+//              {
+//                  PRINT_ERROR("In optimization: performLevelSetAdaptation ");
+//                  fprintf(stderr,"function returned zero instead of one.\n");
+//                  free(pShapeGradient);
+//                  pShapeGradient=NULL;
+//                  return 0;
+//              }
 
-                // Compute p0 and reload the previous mesh
-                p0=computeProbabilityAndReloadPreviousMesh(pParameters,pMesh,
-                                                           pData,
-                                                           pChemicalSystem,
-                                                            iterationInTheLoop);
-                if (p0==-10000.)
-                {
-                    PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"computeProbabilityAndReloadPreviousMesh ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
+//              // Compute p0 and reload the previous mesh
+//              p0=computeProbabilityAndReloadPreviousMesh(pParameters,pMesh,
+//                                                         pData,
+//                                                         pChemicalSystem,
+//                                                          iterationInTheLoop);
+//              if (p0==-10000.)
+//              {
+//                  PRINT_ERROR("In optimization: ");
+//                  fprintf(stderr,"computeProbabilityAndReloadPreviousMesh ");
+//                  fprintf(stderr,"function returned zero instead of one.\n");
+//                  free(pShapeGradient);
+//                  pShapeGradient=NULL;
+//                  return 0;
+//              }
 
-                // Evaluation of p1 (t1<1. Lagr. otherwise Eulerian approach)
-                t1=tMin+INV_PHI*h;
-                fprintf(stdout,"\nFIRST EVALUATION ENDED: p(%lf)=%lf; ",t0,p0);
-                fprintf(stdout,"COMPUTING p(%lf).\n",t1);
-                for (i=0; i<pMesh->nver; i++)
-                {
-                    pMesh->pver[i].value=t1*pShapeGradient[i];
-                }
+//              // Evaluation of p1 (t1<1. Lagr. otherwise Eulerian approach)
+//              t1=tMin+INV_PHI*h;
+//              fprintf(stdout,"\nFIRST EVALUATION ENDED: p(%lf)=%lf; ",t0,p0);
+//              fprintf(stdout,"COMPUTING p(%lf).\n",t1);
+//              for (i=0; i<pMesh->nver; i++)
+//              {
+//                  pMesh->pver[i].value=t1*pShapeGradient[i];
+//              }
 
-                // Save the shape gradient
-                if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
-                {
-                    PRINT_ERROR("In optimization: saveTheShapeGradient ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
+//              // Save the shape gradient
+//              if (!saveTheShapeGradient(pParameters,pMesh,iterationInTheLoop))
+//              {
+//                  PRINT_ERROR("In optimization: saveTheShapeGradient ");
+//                  fprintf(stderr,"function returned zero instead of one.\n");
+//                  free(pShapeGradient);
+//                  pShapeGradient=NULL;
+//                  return 0;
+//              }
 
-                if (t1<1.)
-                {
-                    // Advect mesh thanks to Lagrangian mode of mmg3d software
-                    if (!computeLagrangianMode(pParameters,pMesh,
-                                                            iterationInTheLoop))
-                    {
-                        PRINT_ERROR("In optimization: computeLagrangianMode ");
-                        fprintf(stderr,"function returned zero instead of ");
-                        fprintf(stderr,"one.\n");
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-                }
-                else
-                {
-                    // Advect mesh thanks to Eulerian mode (level-set approach)
-                    if (!computeEulerianMode(pParameters,pMesh,
-                                                            iterationInTheLoop))
-                    {
-                        PRINT_ERROR("In optimization: computeEulerianMode ");
-                        fprintf(stderr,"function returned zero instead of ");
-                        fprintf(stderr,"one.\n");
-                        free(pShapeGradient);
-                        pShapeGradient=NULL;
-                        return 0;
-                    }
-                }
+//              if (t1<1.)
+//              {
+//                  // Advect mesh thanks to Lagrangian mode of mmg3d software
+//                  if (!computeLagrangianMode(pParameters,pMesh,
+//                                                          iterationInTheLoop))
+//                  {
+//                      PRINT_ERROR("In optimization: computeLagrangianMode ");
+//                      fprintf(stderr,"function returned zero instead of ");
+//                      fprintf(stderr,"one.\n");
+//                      free(pShapeGradient);
+//                      pShapeGradient=NULL;
+//                      return 0;
+//                  }
+//              }
+//              else
+//              {
+//                  // Advect mesh thanks to Eulerian mode (level-set approach)
+//                  if (!computeEulerianMode(pParameters,pMesh,
+//                                                          iterationInTheLoop))
+//                  {
+//                      PRINT_ERROR("In optimization: computeEulerianMode ");
+//                      fprintf(stderr,"function returned zero instead of ");
+//                      fprintf(stderr,"one.\n");
+//                      free(pShapeGradient);
+//                      pShapeGradient=NULL;
+//                      return 0;
+//                  }
+//              }
 
-                // Adapt mesh to both molecular orbitals and new domain geometry
-                if (!performLevelSetAdaptation(pParameters,pMesh,
-                                               pChemicalSystem,
-                                                            iterationInTheLoop))
-                {
-                    PRINT_ERROR("In optimization: performLevelSetAdaptation ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
+//              // Adapt mesh to both molecular orbitals and new domain geometry
+//              if (!performLevelSetAdaptation(pParameters,pMesh,
+//                                             pChemicalSystem,
+//                                                          iterationInTheLoop))
+//              {
+//                  PRINT_ERROR("In optimization: performLevelSetAdaptation ");
+//                  fprintf(stderr,"function returned zero instead of one.\n");
+//                  free(pShapeGradient);
+//                  pShapeGradient=NULL;
+//                  return 0;
+//              }
 
-                // Compute p1 and reload the previous mesh
-                p1=computeProbabilityAndReloadPreviousMesh(pParameters,pMesh,
-                                                           pData,
-                                                           pChemicalSystem,
-                                                            iterationInTheLoop);
-                if (p1==-10000.)
-                {
-                    PRINT_ERROR("In optimization: ");
-                    fprintf(stderr,"computeProbabilityAndReloadPreviousMesh ");
-                    fprintf(stderr,"function returned zero instead of one.\n");
-                    free(pShapeGradient);
-                    pShapeGradient=NULL;
-                    return 0;
-                }
+//              // Compute p1 and reload the previous mesh
+//              p1=computeProbabilityAndReloadPreviousMesh(pParameters,pMesh,
+//                                                         pData,
+//                                                         pChemicalSystem,
+//                                                          iterationInTheLoop);
+//              if (p1==-10000.)
+//              {
+//                  PRINT_ERROR("In optimization: ");
+//                  fprintf(stderr,"computeProbabilityAndReloadPreviousMesh ");
+//                  fprintf(stderr,"function returned zero instead of one.\n");
+//                  free(pShapeGradient);
+//                  pShapeGradient=NULL;
+//                  return 0;
+//              }
 
-                for (n=0; n<nMax; n++)
-                {
-                    if (p0<p1)
-                    {
-                        tMin=t0;
-                        pMin=p0;
+//              for (n=0; n<nMax; n++)
+//              {
+//                  if (p0<p1)
+//                  {
+//                      tMin=t0;
+//                      pMin=p0;
 
-                        t0=t1;
-                        p0=p1;
+//                      t0=t1;
+//                      p0=p1;
 
-                        h*=INV_PHI;
-                        t1=tMin+INV_PHI*h;
+//                      h*=INV_PHI;
+//                      t1=tMin+INV_PHI*h;
 
-                        fprintf(stdout,"\nTRYING TO RESTRICT THE LINE SEARCH ");
-                        fprintf(stdout,"ON THE INTERVAL ");
-                        fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
-                        fprintf(stdout,"p(%lf)=%lf ",tMin,pMin);
-                        fprintf(stdout,"p(%lf)=%lf ",t0,p0);
-                        fprintf(stdout,"p(%lf)=%lf.\nCOMPUTING ",tMax,pMax);
-                        fprintf(stdout,"p(%lf).\n",t1);
+//                      fprintf(stdout,"\nTRYING TO RESTRICT THE LINE SEARCH ");
+//                      fprintf(stdout,"ON THE INTERVAL ");
+//                      fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
+//                      fprintf(stdout,"p(%lf)=%lf ",tMin,pMin);
+//                      fprintf(stdout,"p(%lf)=%lf ",t0,p0);
+//                      fprintf(stdout,"p(%lf)=%lf.\nCOMPUTING ",tMax,pMax);
+//                      fprintf(stdout,"p(%lf).\n",t1);
 
-                        for (i=0; i<pMesh->nver; i++)
-                        {
-                            pMesh->pver[i].value=t1*pShapeGradient[i];
-                        }
+//                      for (i=0; i<pMesh->nver; i++)
+//                      {
+//                          pMesh->pver[i].value=t1*pShapeGradient[i];
+//                      }
 
-                       // Save the shape gradient
-                       if (!saveTheShapeGradient(pParameters,pMesh,
-                                                            iterationInTheLoop))
-                       {
-                           PRINT_ERROR("In optimization: ");
-                           fprintf(stderr,"saveTheShapeGradient function ");
-                           fprintf(stderr,"returned zero instead of one.\n");
-                           free(pShapeGradient);
-                           pShapeGradient=NULL;
-                           return 0;
-                       }
+//                     // Save the shape gradient
+//                     if (!saveTheShapeGradient(pParameters,pMesh,
+//                                                          iterationInTheLoop))
+//                     {
+//                         PRINT_ERROR("In optimization: ");
+//                         fprintf(stderr,"saveTheShapeGradient function ");
+//                         fprintf(stderr,"returned zero instead of one.\n");
+//                         free(pShapeGradient);
+//                         pShapeGradient=NULL;
+//                         return 0;
+//                     }
 
-                       if (t1<1.)
-                       {
-                            // Advect mesh thanks to Lagrangian mode of mmg3d
-                            if (!computeLagrangianMode(pParameters,pMesh,
-                                                            iterationInTheLoop))
-                            {
-                                PRINT_ERROR("In optimization: ");
-                                fprintf(stderr,"computeLagrangianMode ");
-                                fprintf(stderr,"function returned zero ");
-                                fprintf(stderr,"instead of one.\n");
-                                free(pShapeGradient);
-                                pShapeGradient=NULL;
-                                return 0;
-                            }
-                        }
-                        else
-                        {
-                            // Advect mesh thanks to Eul. mode (level-set mode)
-                            if (!computeEulerianMode(pParameters,pMesh,
-                                                            iterationInTheLoop))
-                            {
-                                PRINT_ERROR("In optimization: ");
-                                fprintf(stderr,"computeEulerianMode function ");
-                                fprintf(stderr,"returned zero instead of ");
-                                fprintf(stderr,"one.\n");
-                                free(pShapeGradient);
-                                pShapeGradient=NULL;
-                                return 0;
-                            }
-                        }
+//                     if (t1<1.)
+//                     {
+//                          // Advect mesh thanks to Lagrangian mode of mmg3d
+//                          if (!computeLagrangianMode(pParameters,pMesh,
+//                                                          iterationInTheLoop))
+//                          {
+//                              PRINT_ERROR("In optimization: ");
+//                              fprintf(stderr,"computeLagrangianMode ");
+//                              fprintf(stderr,"function returned zero ");
+//                              fprintf(stderr,"instead of one.\n");
+//                              free(pShapeGradient);
+//                              pShapeGradient=NULL;
+//                              return 0;
+//                          }
+//                      }
+//                      else
+//                      {
+//                          // Advect mesh thanks to Eul. mode (level-set mode)
+//                          if (!computeEulerianMode(pParameters,pMesh,
+//                                                          iterationInTheLoop))
+//                          {
+//                              PRINT_ERROR("In optimization: ");
+//                              fprintf(stderr,"computeEulerianMode function ");
+//                              fprintf(stderr,"returned zero instead of ");
+//                              fprintf(stderr,"one.\n");
+//                              free(pShapeGradient);
+//                              pShapeGradient=NULL;
+//                              return 0;
+//                          }
+//                      }
 
-                        // Adapt mesh to both molecular orbitals and new domain
-                        if (!performLevelSetAdaptation(pParameters,pMesh,
-                                                   pChemicalSystem,
-                                                            iterationInTheLoop))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"performLevelSetAdaptation ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
+//                      // Adapt mesh to both molecular orbitals and new domain
+//                      if (!performLevelSetAdaptation(pParameters,pMesh,
+//                                                 pChemicalSystem,
+//                                                          iterationInTheLoop))
+//                      {
+//                          PRINT_ERROR("In optimization: ");
+//                          fprintf(stderr,"performLevelSetAdaptation ");
+//                          fprintf(stderr,"function returned zero instead ");
+//                          fprintf(stderr,"of one.\n");
+//                          free(pShapeGradient);
+//                          pShapeGradient=NULL;
+//                          return 0;
+//                      }
 
-                        // Compute p1 and reload the previous mesh
-                        p1=computeProbabilityAndReloadPreviousMesh(pParameters,
-                                                                   pMesh,pData,
-                                                                pChemicalSystem,
-                                                            iterationInTheLoop);
-                        if (p1==-10000.)
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"computeProbability");
-                            fprintf(stderr,"AndReloadPreviousMesh function ");
-                            fprintf(stderr,"returned zero instead of one.\n");
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                    }
-                    else
-                    {
-                        tMax=t1;
-                        pMax=p1;
+//                      // Compute p1 and reload the previous mesh
+//                      p1=computeProbabilityAndReloadPreviousMesh(pParameters,
+//                                                                 pMesh,pData,
+//                                                              pChemicalSystem,
+//                                                          iterationInTheLoop);
+//                      if (p1==-10000.)
+//                      {
+//                          PRINT_ERROR("In optimization: ");
+//                          fprintf(stderr,"computeProbability");
+//                          fprintf(stderr,"AndReloadPreviousMesh function ");
+//                          fprintf(stderr,"returned zero instead of one.\n");
+//                          free(pShapeGradient);
+//                          pShapeGradient=NULL;
+//                          return 0;
+//                      }
+//                  }
+//                  else
+//                  {
+//                      tMax=t1;
+//                      pMax=p1;
 
-                        t1=t0;
-                        p1=p0;
+//                      t1=t0;
+//                      p1=p0;
 
-                        h*=INV_PHI;
-                        t0=tMin+INV_PHI2*h;
+//                      h*=INV_PHI;
+//                      t0=tMin+INV_PHI2*h;
 
-                        fprintf(stdout,"\nTRYING TO RESTRICT THE LINE SEARCH ");
-                        fprintf(stdout,"ON THE INTERVAL ");
-                        fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
-                        fprintf(stdout,"p(%lf)=%lf ",tMin,pMin);
-                        fprintf(stdout,"p(%lf)=%lf ",t1,p1);
-                        fprintf(stdout,"p(%lf)=%lf.\nCOMPUTING ",tMax,pMax);
-                        fprintf(stdout,"p(%lf).\n",t0);
+//                      fprintf(stdout,"\nTRYING TO RESTRICT THE LINE SEARCH ");
+//                      fprintf(stdout,"ON THE INTERVAL ");
+//                      fprintf(stdout,"[%lf, %lf].\n",tMin,tMax);
+//                      fprintf(stdout,"p(%lf)=%lf ",tMin,pMin);
+//                      fprintf(stdout,"p(%lf)=%lf ",t1,p1);
+//                      fprintf(stdout,"p(%lf)=%lf.\nCOMPUTING ",tMax,pMax);
+//                      fprintf(stdout,"p(%lf).\n",t0);
 
-                        for (i=0; i<pMesh->nver; i++)
-                        {
-                            pMesh->pver[i].value=t0*pShapeGradient[i];
-                        }
+//                      for (i=0; i<pMesh->nver; i++)
+//                      {
+//                          pMesh->pver[i].value=t0*pShapeGradient[i];
+//                      }
 
-                        // Save the shape gradient
-                        if (!saveTheShapeGradient(pParameters,pMesh,
-                                                            iterationInTheLoop))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"saveTheShapeGradient function ");
-                            fprintf(stderr,"returned zero instead of one.\n");
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
+//                      // Save the shape gradient
+//                      if (!saveTheShapeGradient(pParameters,pMesh,
+//                                                          iterationInTheLoop))
+//                      {
+//                          PRINT_ERROR("In optimization: ");
+//                          fprintf(stderr,"saveTheShapeGradient function ");
+//                          fprintf(stderr,"returned zero instead of one.\n");
+//                          free(pShapeGradient);
+//                          pShapeGradient=NULL;
+//                          return 0;
+//                      }
 
-                        if (t0<1.)
-                        {
-                            // Advect mesh thanks to Lagrangian mode of mmg3d
-                            if (!computeLagrangianMode(pParameters,pMesh,
-                                                            iterationInTheLoop))
-                            {
-                                PRINT_ERROR("In optimization: ");
-                                fprintf(stderr,"computeLagrangianMode ");
-                                fprintf(stderr,"function returned zero ");
-                                fprintf(stderr,"instead of one.\n");
-                                free(pShapeGradient);
-                                pShapeGradient=NULL;
-                                return 0;
-                            }
-                        }
-                        else
-                        {
-                            // Advect mesh thanks to Eul. mode (level-set mode)
-                            if (!computeEulerianMode(pParameters,pMesh,
-                                                            iterationInTheLoop))
-                            {
-                                PRINT_ERROR("In optimization: ");
-                                fprintf(stderr,"computeEulerianMode function ");
-                                fprintf(stderr,"returned zero instead of ");
-                                fprintf(stderr,"one.\n");
-                                free(pShapeGradient);
-                                pShapeGradient=NULL;
-                                return 0;
-                            }
-                        }
+//                      if (t0<1.)
+//                      {
+//                          // Advect mesh thanks to Lagrangian mode of mmg3d
+//                          if (!computeLagrangianMode(pParameters,pMesh,
+//                                                          iterationInTheLoop))
+//                          {
+//                              PRINT_ERROR("In optimization: ");
+//                              fprintf(stderr,"computeLagrangianMode ");
+//                              fprintf(stderr,"function returned zero ");
+//                              fprintf(stderr,"instead of one.\n");
+//                              free(pShapeGradient);
+//                              pShapeGradient=NULL;
+//                              return 0;
+//                          }
+//                      }
+//                      else
+//                      {
+//                          // Advect mesh thanks to Eul. mode (level-set mode)
+//                          if (!computeEulerianMode(pParameters,pMesh,
+//                                                          iterationInTheLoop))
+//                          {
+//                              PRINT_ERROR("In optimization: ");
+//                              fprintf(stderr,"computeEulerianMode function ");
+//                              fprintf(stderr,"returned zero instead of ");
+//                              fprintf(stderr,"one.\n");
+//                              free(pShapeGradient);
+//                              pShapeGradient=NULL;
+//                              return 0;
+//                          }
+//                      }
 
-                        // Adapt mesh to both molecular orbitals and new domain
-                        if (!performLevelSetAdaptation(pParameters,pMesh,
-                                                       pChemicalSystem,
-                                                            iterationInTheLoop))
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"performLevelSetAdaptation ");
-                            fprintf(stderr,"function returned zero instead ");
-                            fprintf(stderr,"of one.\n");
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
+//                      // Adapt mesh to both molecular orbitals and new domain
+//                      if (!performLevelSetAdaptation(pParameters,pMesh,
+//                                                     pChemicalSystem,
+//                                                          iterationInTheLoop))
+//                      {
+//                          PRINT_ERROR("In optimization: ");
+//                          fprintf(stderr,"performLevelSetAdaptation ");
+//                          fprintf(stderr,"function returned zero instead ");
+//                          fprintf(stderr,"of one.\n");
+//                          free(pShapeGradient);
+//                          pShapeGradient=NULL;
+//                          return 0;
+//                      }
 
-                        // Compute p0 and reload the previous mesh
-                        p0=computeProbabilityAndReloadPreviousMesh(pParameters,
-                                                                   pMesh,pData,
-                                                                pChemicalSystem,
-                                                            iterationInTheLoop);
-                        if (p0==-10000.)
-                        {
-                            PRINT_ERROR("In optimization: ");
-                            fprintf(stderr,"computeProbabilityAnd");
-                            fprintf(stderr,"ReloadPreviousMesh function ");
-                            fprintf(stderr,"returned zero instead of one.\n");
-                            free(pShapeGradient);
-                            pShapeGradient=NULL;
-                            return 0;
-                        }
-                    }
-                }
-                if (p0<p1)
-                {
-                    t0=t1;
-                }
-            }
-*/
+//                      // Compute p0 and reload the previous mesh
+//                      p0=computeProbabilityAndReloadPreviousMesh(pParameters,
+//                                                                 pMesh,pData,
+//                                                              pChemicalSystem,
+//                                                          iterationInTheLoop);
+//                      if (p0==-10000.)
+//                      {
+//                          PRINT_ERROR("In optimization: ");
+//                          fprintf(stderr,"computeProbabilityAnd");
+//                          fprintf(stderr,"ReloadPreviousMesh function ");
+//                          fprintf(stderr,"returned zero instead of one.\n");
+//                          free(pShapeGradient);
+//                          pShapeGradient=NULL;
+//                          return 0;
+//                      }
+//                  }
+//              }
+//              if (p0<p1)
+//              {
+//                  t0=t1;
+//              }
+//          }
 
             // Finally compute the optimal line search
             fprintf(stdout,"\nOPTIMAL STEP FOUND: %lf.\nCOMPUTING THE ",t0);
@@ -8294,4 +8317,5 @@ int optimization(Parameters* pParameters, Mesh* pMesh, Data* pData,
 
     return 1;
 }
+*/
 

@@ -86,7 +86,6 @@ void freeChemicalMemory(ChemicalSystem* pChemicalSystem)
                 pChemicalSystem->pmorb[i].pgauss=NULL;
              }
         }
-
         free(pChemicalSystem->pmorb);
         pChemicalSystem->pmorb=NULL;
 
@@ -107,7 +106,6 @@ void freeChemicalMemory(ChemicalSystem* pChemicalSystem)
                 pChemicalSystem->pdet[i].vmorb=NULL;
             }
         }
-
         free(pChemicalSystem->pdet);
         pChemicalSystem->pdet=NULL;
 
@@ -137,7 +135,6 @@ void freeChemicalMemory(ChemicalSystem* pChemicalSystem)
                 pChemicalSystem->pmat[i].rvect=NULL;
             }
         }
-
         free(pChemicalSystem->pmat);
         pChemicalSystem->pmat=NULL;
     }

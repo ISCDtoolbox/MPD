@@ -6,8 +6,8 @@
 * \brief Macros and prototypes related to the computation of the optimization
 *        loop in the MPD algorithm.
 * \author Jeremy DALPHIN
-* \version 2.0
-* \date September 1st, 2018
+* \version 3.0
+* \date May 1st, 2019
 *
 * This file contains the description of all the preprocessor constant and
 * non-static function prototypes that are used to compute the optimization loop
@@ -32,14 +32,14 @@
 */
 #define INV_PHI2 0.381966011250105152
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // Constants defined in the article of Grundmann and Moller (april 1978) for 3D
 // numerical integration (formula used by default in Freefem++ software for
 // three-dimensional tetrahedral meshes). The 14-point formula (cf.(4.5), p.288)
 // is exact on tetrahedra for 5th-order polynomials (sum x^a*y^b*z^c with
 // a+b+c<=5) otherwise int_tet(f)=vol(tet)*sum_i [w_i*f(a1i,a2i,a3i,a4i)] +
 // Error (of order 6)
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // Weights
 /**
 * \def CST_A
@@ -153,14 +153,14 @@
 */
 #define CST_cc 0.721794249067326322     // (1-3*CST_c)
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // Constants defined in the article of Cowper (1973) for two-dimensional
 // numerical integration (formula used by default in Freefem++ software for
 // two-dimensional triangulated meshes). The 7-point formula (cf.Table I, p.407)
 // is exact on triangles for 5th-order polynomials (sum x^a*y^b*z^c with
 // a+b+c<=5) otherwise int_tri(f)=area(tri)*sum_i [w_i*f(a1i,a2i,a3i)] +
 // Error (of order 6)
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // Weights
 /**
 * \def CST_ONE
@@ -266,9 +266,9 @@
 */
 #define CST_33 0.059715871789769820     // (1-2*CST_3)
 
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 // Prototypes of non-static functions
-/* ************************************************************************** */
+////////////////////////////////////////////////////////////////////////////////
 /**
 * \fn void initializeDataStructure(Data* pData)
 * \brief It initializes to zero the Data structure pointed by pData.
@@ -410,7 +410,7 @@ int addLengthForFileName(Parameters* pParameters, int additionalLength);
 * function uses the exponential mathematical function so in order to use this
 * function, the math.h file must not be put in comment in the main.h file, and
 * the -lm must be set when compiling with gcc (or link properly the math library
-* for other compilers and architectures).  
+* for other compilers and architectures).
 */
 double evaluatingPrimitiveAtVertices(double px, double py, double pz,
                                      ChemicalSystem* pChemicalSystem,
@@ -1468,7 +1468,7 @@ int computeShapeResidual(Parameters* pParameters, Mesh* pMesh, Data* pData,
 * \fn int shapeDerivative(Parameters* pParameters, Mesh* pMesh, Data* pData,
 *                       ChemicalSystem* pChemicalSystem, int iterationInTheLoop)
 * \brief It computes the (symmetric) overlap matrix, its eigenvalues and
-*        associated eigenvectors, the total population inside the domain, 
+*        associated eigenvectors, the total population inside the domain,
 *        the probability, its shape gradient, and associated residual at
 *        iterationInTheLoop in the optimization loop algorithm. In the case
 *        of hexahedral meshes with level-set perturbations, it also modifies the
@@ -1512,12 +1512,12 @@ int computeShapeResidual(Parameters* pParameters, Mesh* pMesh, Data* pData,
 *                   variables stores as OverlapMatrix (resp. Probabilities)
 *                   structures the (symmetric) overlap matrix coef(ficients),
 *                   diag(onal) elements resulting from a diagonalization
-*                   process i.e. the overlap matrix eigenvalues, and its 
+*                   process i.e. the overlap matrix eigenvalues, and its
 *                   associated (eigen)vect(ors) (resp. the different computed
 *                   p(robabilities to find )k electrons in the domain and a
 *                   pkl matrix used to compute recursively the quantities
 *                   thanks to the formula of Cancès, Keriven, Lodier, and Savin
-*                   (2004)). 
+*                   (2004)).
 *
 * \param[in] pChemicalSystem A pointer that points to the ChemicalSystem
 *                            structure of the \ref main function. It is storing
@@ -1549,10 +1549,10 @@ int computeShapeResidual(Parameters* pParameters, Mesh* pMesh, Data* pData,
 * order to perform unit-test on it. Let us only mention that it uses standard
 * mathematical functions, parallelize with openmp the evaluation of the overlap
 * matrix, and diagonalize it thanks to the dsyev routine of the lapacke library
-* (LAPACK interface for C). Hence, in order to use this function, the -lm 
+* (LAPACK interface for C). Hence, in order to use this function, the -lm
 * -llapacke -fopenmp options must be set at compilation with gcc (or link
 * properly the math.h, lapacke.h and omp.h aasociated libraries) and the math.h
-* omp.h and lapacke.h files must not be put in comment in main.h file. 
+* omp.h and lapacke.h files must not be put in comment in main.h file.
 */
 int shapeDerivative(Parameters* pParameters, Mesh* pMesh, Data* pData,
                        ChemicalSystem* pChemicalSystem, int iterationInTheLoop);
@@ -1663,7 +1663,7 @@ int writingObjFile(Parameters* pParameters, Mesh* pMesh);
 *
 * \param[in] pMesh A pointer that points to the Mesh structure of the \ref main
 *                  function. It contains the values that are intended to be
-*                  saved if the booleanForSave variable is set to one. 
+*                  saved if the booleanForSave variable is set to one.
 *
 * \param[in] pChemicalSystem A pointer that points to the ChemicalSystem
 *                            structure of the \ref main function. It contains
@@ -1671,7 +1671,7 @@ int writingObjFile(Parameters* pParameters, Mesh* pMesh);
 *                            that are intended to be saved in the *.cube file
 *                            if the if the booleanForSave variable is set to
 *                            one (and if the pParameters->save_type is not set
-*                            to one). 
+*                            to one).
 *
 * \param[in] booleanForSave An integer that refers to the saving or not of the
 *                           mesh. If set to 0, the *.(iterationInTheLoop).mesh
@@ -1732,7 +1732,7 @@ int saveOrRemoveMeshInTheLoop(Parameters* pParameters, Mesh* pMesh,
 *                        the \ref main function. Its name_data variable must
 *                        refer to the name of a valid *.data file. However, the
 *                        saving of data is always performed in appending mode
-*                        i.e. if the file does not exists it is created, 
+*                        i.e. if the file does not exists it is created,
 *                        otherwise the data are written right after the already
 *                        existing content. Its save_data variable rules the
 *                        frequency of the saving. If it is positive and a
@@ -1751,7 +1751,7 @@ int saveOrRemoveMeshInTheLoop(Parameters* pParameters, Mesh* pMesh,
 *                        next loop, which is therefore deleted by this same
 *                        function at the end if everything went right. Hence,
 *                        in other words, the \ref saveDataInTheLoop function
-*                        also deletes the *.(iterationInTheLoop-1).mesh/ 
+*                        also deletes the *.(iterationInTheLoop-1).mesh/
 *                        *.(iterationInTheLoop-1).cube file thanks to the \ref
 *                        saveOrRemoveMeshInTheLoop function, except if this
 *                        previous mesh wants to be really saved by the user i.e.
@@ -1785,7 +1785,7 @@ int saveOrRemoveMeshInTheLoop(Parameters* pParameters, Mesh* pMesh,
 *                  just initialize it to pData->pnu[iterationInTheLoop]) and
 *                  the second order quantity. If the mesh is made of tetrahedra
 *                  i.e. if pParameters->opt_mode is positive, the
-*                  pData->d2p[iterationInTheLoop] variable stores the absolute 
+*                  pData->d2p[iterationInTheLoop] variable stores the absolute
 *                  residual difference, otherwise it stores the second-order
 *                  probability difference which is in particular used in the
 *                  MPD algorithm to detect oscillations of hexahedral meshes in
@@ -1816,7 +1816,7 @@ int saveOrRemoveMeshInTheLoop(Parameters* pParameters, Mesh* pMesh,
 *                            saveOrRemoveMeshInTheLoop function to save the
 *                            mesh in a *.cube format, depending on the
 *                            pParameters->save_type variable (i.e. if not set
-*                            to one). 
+*                            to one).
 *
 * \param[in] iterationInTheLoop It represents the integer counting the number
 *                               of iterations already performed in the
@@ -1858,7 +1858,7 @@ int saveOrRemoveMeshInTheLoop(Parameters* pParameters, Mesh* pMesh,
 *                           saveDataInTheLoop function. It also allows the \ref
 *                           saveDataInTheLoop function to compute the total
 *                           execution time of the current iterationInTheLoop
-*                           and the cumulated one, saved in the 
+*                           and the cumulated one, saved in the
 *                           pData->[iterationInTheLoop].tim and the
 *                           pData->[iterationInTheLoop].ctim variables.
 *
@@ -1942,7 +1942,7 @@ int saveDataInTheLoop(Parameters* pParameters, Mesh* pMesh, Data* pData,
 *         is provided in the standard error stream before returning zero.
 *
 * The \ref setupInitialData function successively executes the \ref
-* allocateMemoryForData, \ref addLengthForFileName, \ref writingRestartFile, 
+* allocateMemoryForData, \ref addLengthForFileName, \ref writingRestartFile,
 * \ref shapeDerivative, \ref saveDataInTheLoop functions. We refer to their
 * descriptions description for further details. In addition, let us only mention
 * that the \ref setupInitialData function calls the \ref shapeDerivative
@@ -1961,7 +1961,7 @@ int setupInitialData(Parameters* pParameters, Mesh* pMesh, Data* pData,
 
 /**
 * \fn int exhaustiveSearchAlgorithm(Parameters* pParameters, Mesh* pMesh,
-*                                   Data* pData, 
+*                                   Data* pData,
 *                                   ChemicalSystem* pChemicalSystem,
 *                                                        int iterationInTheLoop)
 * \brief It computes the pParameters->opt_mode=-2 of the \ref optimization
@@ -2080,7 +2080,7 @@ int saveTheShapeGradient(Parameters* pParameters, Mesh* pMesh,
 *                               loop.
 *
 * \return It returns one if the Eulerian adaptation step has been successfully
-*         performed, otherwise zero is returned if an error is encountered 
+*         performed, otherwise zero is returned if an error is encountered
 *         during the process.
 *
 * The \ref computeEulerianMode relies on the external medit, elastic, mshdist,
@@ -2117,7 +2117,7 @@ int computeLagrangianMode(Parameters* pParameters, Mesh* pMesh,
                                                         int iterationInTheLoop);
 
 /**
-* \fn double computeProbabilityAndReloadPreviousMesh(Parameters* pParameters, 
+* \fn double computeProbabilityAndReloadPreviousMesh(Parameters* pParameters,
 *                                                    Mesh* pMesh, Data* pData,
 *                                                    ChemicalSystem*
 *                                                    pChemicalSystem,
@@ -2160,7 +2160,7 @@ int computeLagrangianMode(Parameters* pParameters, Mesh* pMesh,
 * and the math.h omp.h and lapacke.h files must of course not be put in comment
 * in the main.h file.
 */
-double computeProbabilityAndReloadPreviousMesh(Parameters* pParameters, 
+double computeProbabilityAndReloadPreviousMesh(Parameters* pParameters,
                                                Mesh* pMesh, Data* pData,
                                                ChemicalSystem* pChemicalSystem,
                                                         int iterationInTheLoop);
@@ -2227,7 +2227,7 @@ double computeProbabilityAndReloadPreviousMesh(Parameters* pParameters,
 *                           saveDataInTheLoop function. It also allows the \ref
 *                           saveDataInTheLoop function to compute the total
 *                           execution time of the current iterationInTheLoop
-*                           and the cumulated one, saved in the 
+*                           and the cumulated one, saved in the
 *                           pData->[iterationInTheLoop].tim and the
 *                           pData->[iterationInTheLoop].ctim variables.
 *

@@ -172,20 +172,17 @@ do {                                                                           \
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[])
 {
-    time_t startLocalTimer=0, endLocalTimer=0;
-    size_t lengthName=0;
-    char* fileLocation=NULL;
-    int i=0, j=0, optMode=0, iStop=0, jPlus=0, jMoins=0;
-    double d0p=0., d1p=0., d2p=0.;
+//    time_t startLocalTimer=0, endLocalTimer=0;
+//    size_t lengthName=0;
+//    char* fileLocation=NULL;
+//    int i=0, j=0, optMode=0, iStop=0, jPlus=0, jMoins=0;
+//    double d0p=0., d1p=0., d2p=0.;
     Parameters parameters;
     ChemicalSystem chemicalSystem;
     Data data;
     Mesh mesh;
 
-    return 2;
-}
 
-/*
     // Initialize the main structures to zero (nothing should be placed before)
     INITIALIZE_MAIN_STRUCTURES(&parameters,&chemicalSystem,&data,&mesh,argc);
     if (argc!=2)
@@ -193,6 +190,7 @@ int main(int argc, char *argv[])
         FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
     }
 
+/*
     // We set the seed for rand() function then we test the selected functions
     //srand(time(NULL)); // Warning: srand(time(NULL)) must be set only one time
     //test();            // It contains all the selected unit-testing functions
@@ -503,6 +501,7 @@ int main(int argc, char *argv[])
         data.d1p[iStop]=d1p;
         data.d2p[iStop]=d2p;
     }
+*/
 
     FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_SUCCESS);
 }
@@ -644,6 +643,7 @@ void commentAnormalEnd(int typeOfSignal)
     exit(EXIT_FAILURE);
 }
 
+/*
 ////////////////////////////////////////////////////////////////////////////////
 // The function checkStringFromLength evaluates the length (including the
 // terminating nul character '\0') of stringTocheck, which must be comprised

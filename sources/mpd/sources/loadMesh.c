@@ -5915,8 +5915,8 @@ int loadMesh(Parameters* pParameters, Mesh* pMesh)
                                     break;
                             }
                             // Clean the input buffer of the standard input
-                            // stream (stdin) in order to avoid buffer overflow 
-                            // later (warning here: be sure that it is not 
+                            // stream (stdin) in order to avoid buffer overflow
+                            // later (warning here: be sure that it is not
                             // empty otherwise it will wait undefinitively for
                             // a non-empty input)
                             while (readChar!='\n' && readChar!=EOF)
@@ -6233,7 +6233,7 @@ int writingCubeFile(Parameters* pParameters, ChemicalSystem* pChemicalSystem,
                                                    (double)(pParameters->n_x-1);
         boolean=(boolean || DEF_ABS(pParameters->delta_x-delta)>=1.e-16);
     }
-    if (boolean)                    
+    if (boolean)
     {
         PRINT_ERROR("In writingCubeFile: incorrect discretization of the ");
         fprintf(stderr,"cube in the first-coordinate direction: expecting\n");
