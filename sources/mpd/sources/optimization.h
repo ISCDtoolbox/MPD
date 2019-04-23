@@ -1270,10 +1270,10 @@ int AddOrRemoveHexahedronToMesh(Mesh* pMesh, int j, int addOrRemove);
 * properly the math library for other compilers and architectures).
 */
 
-double evaluateShapeGradientAtThePoint(double px, double py, double pz,
-                                       int nProb, Probabilities* pProbabilities,
-                                       int nu, OverlapMatrix* pOverlapMatrix,
-                                               ChemicalSystem* pChemicalSystem);
+//double evaluateShapeGradientAtThePoint(double px, double py, double pz,
+//                                     int nProb, Probabilities* pProbabilities,
+//                                     int nu, OverlapMatrix* pOverlapMatrix,
+//                                             ChemicalSystem* pChemicalSystem);
 
 /**
 * \fn int computeShapeGradient(Parameters* pParameters, Mesh* pMesh,

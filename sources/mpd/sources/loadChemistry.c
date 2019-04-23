@@ -2191,8 +2191,8 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
                 }
                 // Warning here: an error is returned if the *.chem file
                 // prescribed by name_chem and the default one built from the
-                // *.info file name (saved in fileLocation) have different
-                // names but point to the same file like './*.chem' and '*.chem'
+                // *.info file name (saved in fileLocation) have different names
+                // but point to the same file like './'+'*.chem' and '*.chem'
                 if (!copyFileLocation(pParameters->name_chem,
                                          pParameters->name_length,fileLocation))
                 {

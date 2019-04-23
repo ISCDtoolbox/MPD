@@ -35,7 +35,7 @@
 #include "loadChemistry.h"
 #include "loadMesh.h"
 //#include "adaptMesh.h"
-//#include "optimization.h"
+#include "optimization.h"
 //#include "test.h"
 
 /**
@@ -67,7 +67,7 @@ time_t globalInitialTimer=0;
 * \def STR_COPYRIGHT
 * \brief Used to specify the copyright informations of the MPD program.
 */
-#define STR_COPYRIGHT "2019, ISCD-Sorbonne Universite"
+#define STR_COPYRIGHT "2019, ISCD-Sorbonne University"
 
 /**
 * \def STR_AUTHOR

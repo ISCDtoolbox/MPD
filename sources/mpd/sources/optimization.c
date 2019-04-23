@@ -124,17 +124,17 @@ void freeDataMemory(Data* pData)
                 {
                     for (j=0; j<jMax; j++)
                     {
-                        free(pOverlapMatrixI->pmat[j].coef);
-                        pOverlapMatrixI->pmat[j].coef=NULL;
+                        free(pOverlapMatrixI[j].coef);
+                        pOverlapMatrixI[j].coef=NULL;
 
-                        free(pOverlapMatrixI->pmat[j].diag);
-                        pOverlapMatrixI->pmat[j].diag=NULL;
+                        free(pOverlapMatrixI[j].diag);
+                        pOverlapMatrixI[j].diag=NULL;
 
-                        free(pOverlapMatrixI->pmat[j].lvect);
-                        pOverlapMatrixI->pmat[j].lvect=NULL;
+                        free(pOverlapMatrixI[j].lvect);
+                        pOverlapMatrixI[j].lvect=NULL;
 
-                        free(pOverlapMatrixI->pmat[j].rvect);
-                        pOverlapMatrixI->pmat[j].rvect=NULL;
+                        free(pOverlapMatrixI[j].rvect);
+                        pOverlapMatrixI[j].rvect=NULL;
                     }
                 }
                 free(pOverlapMatrixI);
@@ -5026,8 +5026,8 @@ int writingObjFile(Parameters* pParameters, Mesh* pMesh)
 
 ////////////////////////////////////////////////////////////////////////////////
 // The function saveOrRemoveMeshInTheLoop is used in the optimization loop
-// to either save the mesh in the *.mesh and/or *.cube/*.obj format according to
-// the pParameters->save_type and iterationInTheLoop variables, or remove the
+// to either save the mesh in the *.mesh and/or *.cube/ *.obj format according
+// to the pParameters->save_type and iterationInTheLoop variables, or remove the
 // *.(iterationInTheLoop).mesh file if it already exists, depending if the
 // booleanForSave input variable is set to one or zero. In the latter case, the
 // file must already exists as well as its associated *.mesh one whose path
@@ -5307,7 +5307,7 @@ int saveOrRemoveMeshInTheLoop(Parameters* pParameters, Mesh* pMesh,
 // thanks to the saveOrRemoveMeshInTheLoop function (since saveDataInTheLoop is
 // performed at the end of the optimization loop, this mesh will correspond to
 // the one of the next iteration, thus getting a copy in case of crash), and
-// deletes the *.(iterationInTheLoop-1).mesh/*.(iterationInTheLoop-1).cube
+// deletes the *.(iterationInTheLoop-1).mesh/ *.(iterationInTheLoop-1).cube
 // previous mesh file except if the pParameters->save_mesh variable is positive
 // and a multiple of (iterationInTheLoop-1). Similarly, if
 // pParameters->save_data is positive and a multiple of iterationInTheLoop,

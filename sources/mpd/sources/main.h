@@ -685,7 +685,7 @@ typedef struct {
                              *    (*.cube for hexahedral meshes and *.obj for
                              *    tetrahedral ones); otherwise, it must be set
                              *    to two, and in this case, the mesh is saved
-                             *    in both *.cube/*.obj and *.mesh format. */
+                             *    in both *.cube/ *.obj and *.mesh format. */
 
     int save_mesh;           /*!< Frequency at which the mesh is saved in the
                              *    optimization loop: it cannot be negative
