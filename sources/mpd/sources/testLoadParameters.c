@@ -2,8 +2,8 @@
 * \file testLoadParameters.c
 * \brief All unit testing functions related to loadParameters.c file.
 * \author Jeremy DALPHIN
-* \version 1.1a
-* \date August 1st, 2018
+* \version 3.0
+* \date May 1st, 2019
 *
 * This file contains all the unit testing functions that were built to test
 * the functions defined in the loadParameters.c file. We use the convention that
@@ -16,7 +16,9 @@
 #include "test.h"
 #include "loadParameters.h"
 
+////////////////////////////////////////////////////////////////////////////////
 // Unit (random) tests on initializeParameters of loadParameters.c file
+////////////////////////////////////////////////////////////////////////////////
 void testInitializeParameterStructure(void)
 {
     time_t startTimer=0, endTimer=0;
@@ -27,44 +29,55 @@ void testInitializeParameterStructure(void)
     int iRandom=0, i=0, j=0, jMax=0, boolean=0;
     Parameters *pParameters=NULL, parameters;
 
-    char pStringToPrint[10][13]={"name_info","name_data","name_chem",
+    char pStringToPrint[10][13]={"name_input","name_result","name_chem",
                                  "name_mesh","name_elas","path_medit",
                                  "path_mmg3d","path_mshdist","path_elastic",
                                                                  "path_advect"};
-    char **pString[10]={&parameters.name_info,&parameters.name_data,
+
+    char **pString[10]={&parameters.name_input,&parameters.name_result,
                         &parameters.name_chem,&parameters.name_mesh,
                         &parameters.name_elas,&parameters.path_medit,
                         &parameters.path_mmg3d,&parameters.path_mshdist,
                               &parameters.path_elastic,&parameters.path_advect};
-    char pIntegerToPrint[23][13]={"name_length","path_length","opt_mode",
-                                  "verbose","n_cpu","nu_electrons","nu_spin",
-                                  "orb_rhf","n_x","n_y","n_z","ls_type",
-                                  "trick_matrix","approx_mode","iter_max",
-                                  "save_type","save_mesh","save_data",
-                                  "save_print","save_where","hmode_lag",
-                                                             "n_iter","no_cfl"};
-    int *pInteger[23]={&parameters.name_length,&parameters.path_length,
+
+    char pIntegerToPrint[28][13]={"name_length","path_length","opt_mode",
+                                  "verbose","n_cpu","nu_electrons","bohr_unit",
+                                  "orb_ortho","ne_electrons","multi_det",
+                                  "orb_rhf","n_x","n_y","n_z","ls_ini",
+                                  "ls_type","trick_matrix","approx_mode",
+                                  "iter_ini","iter_max","save_type","save_mesh",
+                                  "save_data","save_print","save_where",
+                                                 "hmode_lag","n_iter","no_cfl"};
+
+    int *pInteger[28]={&parameters.name_length,&parameters.path_length,
                        &parameters.opt_mode,&parameters.verbose,
                        &parameters.n_cpu,&parameters.nu_electrons,
-                       &parameters.nu_spin,&parameters.orb_rhf,&parameters.n_x,
-                       &parameters.n_y,&parameters.n_z,&parameters.ls_type,
+                       &parameters.bohr_unit,&parameters.orb_ortho,
+                       &parameters.ne_electrons,&parameters.multi_det,
+                       &parameters.orb_rhf,&parameters.n_x,&parameters.n_y,
+                       &parameters.n_z,&parameters.ls_ini,&parameters.ls_type,
                        &parameters.trick_matrix,&parameters.approx_mode,
-                       &parameters.iter_max,&parameters.save_type,
-                       &parameters.save_mesh,&parameters.save_data,
-                       &parameters.save_print,&parameters.save_where,
-                       &parameters.hmode_lag,&parameters.n_iter,
-                                                            &parameters.no_cfl};
-    char pDoubleToPrint[37][12]={"x_min","y_min","z_min","x_max","y_max",
-                                 "z_max","delta_x","delta_y","delta_z","ls_x",
-                                 "ls_y","ls_z","ls_r","met_err","met_min",
-                                 "met_max","iter_told0p","iter_told1p",
-                                 "iter_told2p","hmin_iso","hmax_iso",
-                                 "hausd_iso","hgrad_iso","hmin_met","hmax_met",
-                                 "hausd_met","hgrad_met","hmin_ls","hmax_ls",
-                                 "hausd_ls","hgrad_ls","hmin_lag","hmax_lag",
-                                  "hausd_lag","hgrad_lag","residual","delta_t"};
-    double *pDouble[37]={&parameters.x_min,&parameters.y_min,&parameters.z_min,
-                         &parameters.x_max,&parameters.y_max,&parameters.z_max,
+                       &parameters.iter_ini,&parameters.iter_max,
+                       &parameters.save_type,&parameters.save_mesh,
+                       &parameters.save_data,&parameters.save_print,
+                       &parameters.save_where,&parameters.hmode_lag,
+                                         &parameters.n_iter,&parameters.no_cfl};
+
+    char pDoubleToPrint[40][12]={"rho_opt","select_orb","select_box","x_min",
+                                 "y_min","z_min","x_max","y_max","z_max",
+                                 "delta_x","delta_y","delta_z","ls_x","ls_y",
+                                 "ls_z","ls_r","met_err","met_min","met_max",
+                                 "iter_told0p","iter_told1p","iter_told2p",
+                                 "hmin_iso","hmax_iso","hausd_iso","hgrad_iso",
+                                 "hmin_met","hmax_met","hausd_met","hgrad_met",
+                                 "hmin_ls","hmax_ls","hausd_ls","hgrad_ls",
+                                 "hmin_lag","hmax_lag","hausd_lag","hgrad_lag",
+                                                          "residual","delta_t"};
+
+    double *pDouble[40]={&parameters.rho_opt,&parameters.select_orb,
+                         &parameters.select_box,&parameters.x_min,
+                         &parameters.y_min,&parameters.z_min,&parameters.x_max,
+                         &parameters.y_max,&parameters.z_max,
                          &parameters.delta_x,&parameters.delta_y,
                          &parameters.delta_z,&parameters.ls_x,&parameters.ls_y,
                          &parameters.ls_z,&parameters.ls_r,&parameters.met_err,
@@ -81,18 +94,18 @@ void testInitializeParameterStructure(void)
                          &parameters.hgrad_lag,&parameters.residual,
                                                            &parameters.delta_t};
 
-    // Initializing to zero the structure of parameters
+    // Initializing to zero the 78 parameters of the structure
     for (i=0; i<10; i++)
     {
         *pString[i]=NULL;
     }
-    for (i=0; i<23; i++)
+    for (i=0; i<28; i++)
     {
         *pInteger[i]=0;
     }
-    for (i=0; i<37; i++)
+    for (i=0; i<40; i++)
     {
-        *pDouble[i]=.0;
+        *pDouble[i]=0.;
     }
 
     // Test starts
@@ -113,6 +126,7 @@ void testInitializeParameterStructure(void)
     initializeParameterStructure(pParameters);
     PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
                                                                       readChar);
+
 
     for (iRandom=0; iRandom<50000; iRandom++)
     {
@@ -138,11 +152,11 @@ void testInitializeParameterStructure(void)
                 (*pString[i])[rand()%lengthName]='\0';
             }
         }
-        for (i=0; i<23; i++)
+        for (i=0; i<28; i++)
         {
             *pInteger[i]=rand()%121-20;
         }
-        for (i=0; i<37; i++)
+        for (i=0; i<40; i++)
         {
             *pDouble[i]=(double)(rand()%6001-3000)/1000.;
         }
@@ -154,11 +168,11 @@ void testInitializeParameterStructure(void)
         {
             fprintf(stdout,"%s=%s\n",pStringToPrint[i],*pString[i]);
         }
-        for (i=0; i<23; i++)
+        for (i=0; i<28; i++)
         {
             fprintf(stdout,"%s=%d\n",pIntegerToPrint[i],*pInteger[i]);
         }
-        for (i=0; i<37; i++)
+        for (i=0; i<40; i++)
         {
             fprintf(stdout,"%s=%lf\n",pDoubleToPrint[i],*pDouble[i]);
         }
@@ -178,11 +192,11 @@ void testInitializeParameterStructure(void)
         {
             boolean=(boolean || *pString[i]!=NULL);
         }
-        for (i=0; i<23; i++)
+        for (i=0; i<28; i++)
         {
             boolean=(boolean || *pInteger[i]!=0);
         }
-        for (i=0; i<37; i++)
+        for (i=0; i<40; i++)
         {
             boolean=(boolean || *pDouble[i]!=.0);
         }
@@ -201,11 +215,11 @@ void testInitializeParameterStructure(void)
             {
                 fprintf(stdout,"%s=%p\n",pStringToPrint[i],*pString[i]);
             }
-            for (i=0; i<23; i++)
+            for (i=0; i<28; i++)
             {
                 fprintf(stdout,"%s=%d\n",pIntegerToPrint[i],*pInteger[i]);
             }
-            for (i=0; i<37; i++)
+            for (i=0; i<40; i++)
             {
                 fprintf(stdout,"%s=%lf\n",pDoubleToPrint[i],*pDouble[i]);
             }
@@ -232,7 +246,10 @@ void testInitializeParameterStructure(void)
     return;
 }
 
+/*
+////////////////////////////////////////////////////////////////////////////////
 // Unit (random) tests on freeParameterMemory of loadParameters.c
+////////////////////////////////////////////////////////////////////////////////
 void testFreeParameterMemory(void)
 {
     time_t startTimer=0, endTimer=0;
@@ -429,7 +446,10 @@ void testFreeParameterMemory(void)
     return;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
 // Unit (random) tests on setupDefaultParameters of loadParameters.c
+////////////////////////////////////////////////////////////////////////////////
 void testSetupDefaultParameters(void)
 {
     time_t startTimer=0, endTimer=0;
@@ -1260,7 +1280,9 @@ void testSetupDefaultParameters(void)
     return;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 // Unit (random) tests on getLengthAfterKeywordBeginning of loadParameters.c
+////////////////////////////////////////////////////////////////////////////////
 void testGetLengthAfterKeywordBeginning(void)
 {
     time_t startTimer=0, endTimer=0;
@@ -1420,7 +1442,9 @@ void testGetLengthAfterKeywordBeginning(void)
     return;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 // Unit (random) tests on getTypeAfterKeyword of loadParameters.c
+////////////////////////////////////////////////////////////////////////////////
 void testGetTypeAfterKeyword(void)
 {
     time_t startTimer=0, endTimer=0;
@@ -1591,7 +1615,9 @@ void testGetTypeAfterKeyword(void)
     return;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 // Unit (random) tests on getLengthAfterKeywordMiddle of loadParameters.c
+////////////////////////////////////////////////////////////////////////////////
 void testGetLengthAfterKeywordMiddle(void)
 {
     time_t startTimer=0, endTimer=0;
@@ -1775,7 +1801,9 @@ void testGetLengthAfterKeywordMiddle(void)
     return;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 // Unit (random) tests on detectRepetition of loadParameters.c
+////////////////////////////////////////////////////////////////////////////////
 void testDetectRepetition(void)
 {
     time_t startTimer=0, endTimer=0;
@@ -2300,7 +2328,9 @@ void testDetectRepetition(void)
     return;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 // Unit (random) tests on changeValuesOfParameters of loadParameters.c
+////////////////////////////////////////////////////////////////////////////////
 void testChangeValuesOfParameters(void)
 {
     time_t startTimer=0, endTimer=0;
@@ -3226,7 +3256,9 @@ void testChangeValuesOfParameters(void)
     return;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 // Unit (random) tests on readInfoFileAndGetParameters of loadParameters.c
+////////////////////////////////////////////////////////////////////////////////
 void testReadInfoFileAndGetParameters(void)
 {
     time_t startTimer=0, endTimer=0;
@@ -4467,7 +4499,9 @@ void testReadInfoFileAndGetParameters(void)
     return;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 // Unit (random) tests on checkValuesOfAllParameters of loadParameters.c file
+////////////////////////////////////////////////////////////////////////////////
 void testCheckValuesOfAllParameters(void)
 {
     time_t startTimer=0, endTimer=0;
@@ -5030,6 +5064,7 @@ void testCheckValuesOfAllParameters(void)
 
     return;
 }
+*/
 
 /*
 static void testLoadParameters(void)

@@ -88,29 +88,29 @@ void test(void);
 
 /**
 * \fn void testCommentAnormalEnd(void)
-* \brief It performs unit (random) tests on the \ref commentAnormalEnd function
+* \brief It performs (random) unit tests on the \ref commentAnormalEnd function
 *        of the main.c file.
 */
 void testCommentAnormalEnd(void);
 
 /**
 * \fn void testPrintTimer(void)
-* \brief It performs unit tests on the \ref printTimer function of the
+* \brief It performs (random) unit tests on the \ref printTimer function of the
 *        main.c file.
 */
 void testPrintTimer(void);
 
 /**
 * \fn void testEndTimerAtExit(void)
-* \brief It performs unit tests on the \ref endTimerAtExit function of the
-*        main.c file.
+* \brief It performs (random) unit tests on the \ref endTimerAtExit function of 
+*        the main.c file.
 */
 void testEndTimerAtExit(void);
 
 /**
 * \fn void testEndTimerAtError(void)
-* \brief It performs unit tests on the \ref endTimerAtError function of the
-*        main.c file.
+* \brief It performs (random) unit tests on the \ref endTimerAtError function of
+*        the main.c file.
 */
 void testEndTimerAtError(void);
 
@@ -131,7 +131,7 @@ void testInitializeChemicalStructure(void);
 /**
 * \fn void testInitializeDataStructure(void)
 * \brief It performs (random) unit tests on the \ref initializeDataStructure
-*        function of the optimization.c file.
+*        function of the computeData.c file.
 */
 void testInitializeDataStructure(void);
 
@@ -149,11 +149,11 @@ void testInitializeMeshStructure(void);
 */
 void testFreeMeshMemory(void);
 
-// Unit (random) tests on freeDataMemory of optimization.c file
+// Unit (random) tests on freeDataMemory of computeData.c file
 /**
 * \fn void testFreeDataMemory(void)
 * \brief It performs (random) unit tests on the \ref freeDataMemory function of
-*        the optimization.c file.
+*        the computeData.c file.
 */
 void testFreeDataMemory(void);
 

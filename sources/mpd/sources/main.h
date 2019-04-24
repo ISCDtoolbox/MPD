@@ -1325,6 +1325,17 @@ typedef struct {
                              *    always be positive and not (strictly) greater
                              *    than the \ref ndata value. */
 
+    int* opt;                /*!< Pointer used to dynamically define the array
+                             *    storing the type of optimization mode used 
+                             *    during the MPD iterative process; its
+                             *    values should always be stay between minus
+                             *    two and four (see the description of the
+                             *    opt_mode variable in the structure Parameters
+                             *    for further details); if it is not pointing to
+                             *    NULL, the size of the array it is pointing
+                             *    to should always correspond to the \ref ndata
+                             *    value. */
+
     double* pnu;             /*!< Pointer used to dynamically define the array
                              *    storing the probability to find exactly the
                              *    number of electrons prescribed by the user
@@ -1386,16 +1397,13 @@ typedef struct {
                              *    Parameters structure, and its size should
                              *    always correspond to the \ref ndata value. */
 
-    int* opt;                /*!< Pointer used to dynamically define the array
-                             *    storing the type of optimization mode used 
-                             *    during the MPD iterative process; its
-                             *    values should always be stay between minus
-                             *    two and four (see the description of the
-                             *    opt_mode variable in the structure Parameters
-                             *    for further details); if it is not pointing to
-                             *    NULL, the size of the array it is pointing
-                             *    to should always correspond to the \ref ndata
-                             *    value. */
+    double* rho;             /*!< Pointer used to dynamically define the array
+                             *    storing the scaling factor that may be
+                             *    multiplying the shape gradient during the
+                             *    iterative optimization process; if it is not
+                             *    pointing to NULL, the size of the array it
+                             *    is pointing to should always correspond to
+                             *    the \ref ndata value. */
 
     double* tim;             /*!< Pointer used to dynamically define the array
                              *    storing the computational time needed to

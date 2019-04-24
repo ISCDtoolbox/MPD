@@ -2,8 +2,8 @@
 * \file testLoadChemistry.c
 * \brief All unit testing functions related to loadChemistry.c file.
 * \author Jeremy DALPHIN
-* \version 1.1a
-* \date August 1st, 2018
+* \version 3.0
+* \date May 1st, 2019
 *
 * This file contains all the unit testing functions that were built to test
 * the functions defined in the loadChemistry.c file. We use the convention that
@@ -16,7 +16,9 @@
 #include "test.h"
 #include "loadChemistry.h"
 
+////////////////////////////////////////////////////////////////////////////////
 // Unit (random) tests on initializeChemicalStructure of loadChemistry.c file
+////////////////////////////////////////////////////////////////////////////////
 void testInitializeChemicalStructure(void)
 {
     time_t startTimer=0, endTimer=0;
@@ -30,9 +32,14 @@ void testInitializeChemicalStructure(void)
     // Initializing to zero the chemical structure
     chemicalSystem.nnucl=0;
     chemicalSystem.pnucl=NULL;
-    chemicalSystem.ngauss=0;
+    chemicalSystem.nprim=0;
     chemicalSystem.nmorb=0;
     chemicalSystem.pmorb=NULL;
+    chemicalSystem.ne=0;
+    chemicalSystem.nu=0;
+    chemicalSystem.ndet=0;
+    chemicalSystem.pdet=NULL;
+    chemicalSystem.pmat=NULL;
 
     // Test starts
     time(&startTimer);
@@ -56,9 +63,9 @@ void testInitializeChemicalStructure(void)
     for (iRandom=0; iRandom<50000; iRandom++)
     {
         // Giving random value to the variables
-        pChemicalSystem->nnucl=rand()%5-1;
-        lengthArray=rand()%10+1;
-        if (lengthArray>7)
+        pChemicalSystem->nnucl=rand()%50-15;
+        lengthArray=rand()%20+1;
+        if (lengthArray>12)
         {
             pChemicalSystem->pnucl=NULL;
         }
@@ -67,11 +74,11 @@ void testInitializeChemicalStructure(void)
             pChemicalSystem->pnucl=(Nucleus*)calloc(lengthArray,
                                                                sizeof(Nucleus));
         }
-        pChemicalSystem->ngauss=rand()%161-30;
+        pChemicalSystem->nprim=rand()%161-30;
 
-        pChemicalSystem->nmorb=rand()%14-3;
-        lengthArray=rand()%10+1;
-        if (lengthArray>7)
+        pChemicalSystem->nmorb=rand()%60-20;
+        lengthArray=rand()%20+1;
+        if (lengthArray>12)
         {
             pChemicalSystem->pmorb=NULL;
         }
@@ -80,18 +87,50 @@ void testInitializeChemicalStructure(void)
             pChemicalSystem->pmorb=(MolecularOrbital*)calloc(lengthArray,
                                                       sizeof(MolecularOrbital));
         }
+        pChemicalSystem->ne=rand()%60-20;
+        pChemicalSystem->nu=rand()%60-20;
+
+        pChemicalSystem->ndet=rand()%60-20;
+        lengthArray=rand()%20+1;
+        if (lengthArray>12)
+        {
+            pChemicalSystem->pdet=NULL;
+        }
+        else
+        {
+            pChemicalSystem->pdet=(Determinant*)calloc(lengthArray,
+                                                           sizeof(Determinant));
+        }
+
+        lengthArray=rand()%20+1;
+        if (lengthArray>12)
+        {
+            pChemicalSystem->pmat=NULL;
+        }
+        else
+        {
+            pChemicalSystem->pmat=(OverlapMatrix*)calloc(lengthArray,
+                                                         sizeof(OverlapMatrix));
+        }
 
         PRINT_TEST_START(counter,expectedValue);
 
         // Printing the value of the different variables
         fprintf(stdout,"nnucl=%d\n",pChemicalSystem->nnucl);
         fprintf(stdout,"pnucl=%p\n",(void*)pChemicalSystem->pnucl);
-        fprintf(stdout,"ngauss=%d\n",pChemicalSystem->ngauss);
+        fprintf(stdout,"nprim=%d\n",pChemicalSystem->nprim);
         fprintf(stdout,"nmorb=%d\n",pChemicalSystem->nmorb);
         fprintf(stdout,"pmorb=%p\n",(void*)pChemicalSystem->pmorb);
+        fprintf(stdout,"ne=%d\n",pChemicalSystem->ne);
+        fprintf(stdout,"nu=%d\n",pChemicalSystem->nu);
+        fprintf(stdout,"ndet=%d\n",pChemicalSystem->ndet);
+        fprintf(stdout,"pdet=%p\n",(void*)pChemicalSystem->pdet);
+        fprintf(stdout,"pmat=%p\n",(void*)pChemicalSystem->pmat);
 
         free(pChemicalSystem->pnucl);
         free(pChemicalSystem->pmorb);
+        free(pChemicalSystem->pdet);
+        free(pChemicalSystem->pmat);
 
         // Testing the function
         initializeChemicalStructure(pChemicalSystem);
@@ -99,9 +138,14 @@ void testInitializeChemicalStructure(void)
         // Checking if the initialization worked
         boolean=(pChemicalSystem->nnucl!=0);
         boolean=(boolean || pChemicalSystem->pnucl!=NULL);
-        boolean=(boolean || pChemicalSystem->ngauss!=0);
+        boolean=(boolean || pChemicalSystem->nprim!=0);
         boolean=(boolean || pChemicalSystem->nmorb!=0);
         boolean=(boolean || pChemicalSystem->pmorb!=NULL);
+        boolean=(boolean || pChemicalSystem->ne!=0);
+        boolean=(boolean || pChemicalSystem->nu!=0);
+        boolean=(boolean || pChemicalSystem->ndet!=0);
+        boolean=(boolean || pChemicalSystem->pdet!=NULL);
+        boolean=(boolean || pChemicalSystem->pmat!=NULL);
 
         returnValue=1;
         if (boolean)
@@ -115,9 +159,14 @@ void testInitializeChemicalStructure(void)
 
             fprintf(stdout,"nnucl=%d\n",pChemicalSystem->nnucl);
             fprintf(stdout,"pnucl=%p\n",(void*)pChemicalSystem->pnucl);
-            fprintf(stdout,"ngauss=%d\n",pChemicalSystem->ngauss);
+            fprintf(stdout,"nprim=%d\n",pChemicalSystem->nprim);
             fprintf(stdout,"nmorb=%d\n",pChemicalSystem->nmorb);
             fprintf(stdout,"pmorb=%p\n",(void*)pChemicalSystem->pmorb);
+            fprintf(stdout,"ne=%d\n",pChemicalSystem->ne);
+            fprintf(stdout,"nu=%d\n",pChemicalSystem->nu);
+            fprintf(stdout,"ndet=%d\n",pChemicalSystem->ndet);
+            fprintf(stdout,"pdet=%p\n",(void*)pChemicalSystem->pdet);
+            fprintf(stdout,"pmat=%p\n",(void*)pChemicalSystem->pmat);
         }
 
         PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,
@@ -141,7 +190,10 @@ void testInitializeChemicalStructure(void)
     return;
 }
 
+/*
+////////////////////////////////////////////////////////////////////////////////
 // Unit (random) tests on freeChemicalMemory of loadChemistry.c file
+////////////////////////////////////////////////////////////////////////////////
 void testFreeChemicalMemory(void)
 {
     time_t startTimer=0, endTimer=0;
@@ -361,4 +413,5 @@ void testFreeChemicalMemory(void)
 
     return;
 }
+*/
 

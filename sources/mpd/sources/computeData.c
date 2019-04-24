@@ -28,6 +28,7 @@ void initializeDataStructure(Data* pData)
     {
         pData->ndata=0;
         pData->niter=0;
+        pData->opt=NULL;
 
         pData->pnu=NULL;
         pData->pop=NULL;
@@ -37,7 +38,7 @@ void initializeDataStructure(Data* pData)
         pData->d1p=NULL;
         pData->d2p=NULL;
 
-        pData->opt=NULL;
+        pData->rho=NULL;
         pData->tim=NULL;
         pData->ctim=NULL;
 
@@ -73,7 +74,10 @@ void freeDataMemory(Data* pData)
              fprintf(stdout,"freed up correctly.\n");
         }
 
-        free(pData->pnu); // free function does not return any value
+        free(pData->opt); // free function does not return any value
+        pData->opt=NULL;
+
+        free(pData->pnu);
         pData->pnu=NULL;
 
         free(pData->pop);
@@ -91,8 +95,8 @@ void freeDataMemory(Data* pData)
         free(pData->d2p);
         pData->d2p=NULL;
 
-        free(pData->opt);
-        pData->opt=NULL;
+        free(pData->rho);
+        pData->rho=NULL;
 
         free(pData->tim);
         pData->tim=NULL;

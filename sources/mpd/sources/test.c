@@ -45,7 +45,7 @@ void test(void)
 //    testInitializeMeshStructure();
 
 //    testFreeMeshMemory();
-//    testFreeDataMemory();
+    testFreeDataMemory();
 //    testFreeChemicalMemory();
 //    testFreeParameterMemory();
 
@@ -85,8 +85,8 @@ void testCommentAnormalEnd(void)
 
     expectedValue=1;
     PRINT_TEST_START(counter,expectedValue);
-    returnValue=1;
     commentAnormalEnd(typeOfSignal);
+    returnValue=1;
     PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
                                                                       readChar);
 
@@ -141,7 +141,7 @@ void testCommentAnormalEnd(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Unit tests on printTimer of main.c file
+// Unit (random) tests on printTimer of main.c file
 ////////////////////////////////////////////////////////////////////////////////
 void testPrintTimer(void)
 {
@@ -151,6 +151,7 @@ void testPrintTimer(void)
 
     int i=0, iRandom=0;
     time_t finalTimer=0, initialTimer=0;
+
     time_t pFinalTimer[53]={0,1,2,60,61,62,120,121,122,3600,3601,3602,3660,3661,
                             3662,3720,3721,3722,7200,7201,7202,7260,7261,7262,
                             7320,7321,7322,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -208,10 +209,10 @@ void testPrintTimer(void)
 
     expectedValue=1;
     PRINT_TEST_START(counter,expectedValue);
-    returnValue=1;
     fprintf(stdout,"Function printTimer returns: ");
     printTimer(finalTimer,initialTimer);
     fprintf(stdout,".\n");
+    returnValue=1;
     PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
                                                                       readChar);
 
@@ -255,7 +256,7 @@ void testPrintTimer(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Unit tests on endTimerAtExit of main.c file
+// Unit (random) tests on endTimerAtExit of main.c file
 ////////////////////////////////////////////////////////////////////////////////
 void testEndTimerAtExit(void)
 {
@@ -271,8 +272,8 @@ void testEndTimerAtExit(void)
 
     expectedValue=1;
     PRINT_TEST_START(counter,expectedValue);
-    returnValue=1;
     endTimerAtExit();
+    returnValue=1;
     PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
                                                                       readChar);
 
@@ -318,8 +319,8 @@ void testEndTimerAtError(void)
 
     expectedValue=1;
     PRINT_TEST_START(counter,expectedValue);
-    returnValue=1;
     fprintf(stdout,"Function endTimerAtError returns: %s",endTimerAtError());
+    returnValue=1;
     PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
                                                                       readChar);
 
