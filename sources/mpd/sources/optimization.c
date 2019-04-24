@@ -4890,9 +4890,12 @@ int writingObjFile(Parameters* pParameters, Mesh* pMesh)
             {
                 pTri[3*i]=nTri;
                 nTri++;
-                fprintf(objFile,"v %.8le ",pMesh->pver[pMesh->ptri[i].p1-1].x);
-                fprintf(objFile,"%.8le ",pMesh->pver[pMesh->ptri[i].p1-1].y);
-                fprintf(objFile,"%.8le \n",pMesh->pver[pMesh->ptri[i].p1-1].z);
+                fprintf(objFile,"v %.8le ",
+                             pMesh->pver[pMesh->ptri[i].p1-1].x*.5291772109217);
+                fprintf(objFile,"%.8le ",
+                             pMesh->pver[pMesh->ptri[i].p1-1].y*.5291772109217);
+                fprintf(objFile,"%.8le \n",
+                             pMesh->pver[pMesh->ptri[i].p1-1].z*.5291772109217);
             }
 
             // Check for repetition of p2 before saving the point
@@ -4921,9 +4924,12 @@ int writingObjFile(Parameters* pParameters, Mesh* pMesh)
             {
                 pTri[3*i+1]=nTri;
                 nTri++;
-                fprintf(objFile,"v %.8le ",pMesh->pver[pMesh->ptri[i].p2-1].x);
-                fprintf(objFile,"%.8le ",pMesh->pver[pMesh->ptri[i].p2-1].y);
-                fprintf(objFile,"%.8le \n",pMesh->pver[pMesh->ptri[i].p2-1].z);
+                fprintf(objFile,"v %.8le ",
+                             pMesh->pver[pMesh->ptri[i].p2-1].x*.5291772109217);
+                fprintf(objFile,"%.8le ",
+                             pMesh->pver[pMesh->ptri[i].p2-1].y*.5291772109217);
+                fprintf(objFile,"%.8le \n",
+                             pMesh->pver[pMesh->ptri[i].p2-1].z*.5291772109217);
             }
 
             // Check for repetition of p3 before saving the point
@@ -4952,9 +4958,12 @@ int writingObjFile(Parameters* pParameters, Mesh* pMesh)
             {
                 pTri[3*i+2]=nTri;
                 nTri++;
-                fprintf(objFile,"v %.8le ",pMesh->pver[pMesh->ptri[i].p3-1].x);
-                fprintf(objFile,"%.8le ",pMesh->pver[pMesh->ptri[i].p3-1].y);
-                fprintf(objFile,"%.8le \n",pMesh->pver[pMesh->ptri[i].p3-1].z);
+                fprintf(objFile,"v %.8le ",
+                             pMesh->pver[pMesh->ptri[i].p3-1].x*.5291772109217);
+                fprintf(objFile,"%.8le ",
+                             pMesh->pver[pMesh->ptri[i].p3-1].y*.5291772109217);
+                fprintf(objFile,"%.8le \n",
+                             pMesh->pver[pMesh->ptri[i].p3-1].z*.5291772109217);
             }
         }
     }
