@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <time.h>
 #include <signal.h>
 #include <complex.h>
@@ -37,7 +38,7 @@
 * \brief Used to activate or not the unit-testing of all the functions
 *        appearing in the MPD algorithm.
 */
-#define UNIT_TESTS
+//#define UNIT_TESTS
 
 ////////////////////////////////////////////////////////////////////////////////
 // Macro functions to initialize the diagnostic of an error, to get the
@@ -326,11 +327,11 @@ do {                                                                           \
 */
 
 ////////////////////////////////////////////////////////////////////////////////
-// Definition of the structure storing the 77 parameters used in the algorithm
+// Definition of the structure storing the 78 parameters used in the algorithm
 ////////////////////////////////////////////////////////////////////////////////
 /**
 * \struct Parameters main.h
-* \brief It can store all the different 77 parameters used in the MPD algorithm.
+* \brief It can store all the different 78 parameters used in the MPD algorithm.
 */
 typedef struct {
     int opt_mode;            /*!< This parameter rules the type of optimization
@@ -589,6 +590,20 @@ typedef struct {
 
 
     // Parameters ruling the level-set function of the initial domain
+    int ls_ini;              /*!< If set to two, then it assumes that an
+                             *    existing *.mesh/ *.cube file has been
+                             *    prescribed with the \ref name_mesh variable
+                             *    and that it possesses a valid internal domain
+                             *    in its structure; if set to one, then it means
+                             *    that the given mesh has no internal domain and
+                             *    in this case, a (default) initial domain is
+                             *    built according to the \ref ls_type, \ref 
+                             *    ls_x, \ref ls_y, \ref ls_z, and \ref ls_r
+                             *    variables; otherwise, it must be set to zero
+                             *    and it considers that a default computational
+                             *    box (as well as the initial domain) has to be
+                             *    constructed. */
+
     int ls_type;             /*!< If set to zero, then the initial domain is a
                              *    cube of center (\ref ls_x, \ref ls_y, \ref
                              *    ls_z) and size \ref ls_r; otherwise, it must
@@ -1130,6 +1145,17 @@ typedef struct {
                              *    number in this case); otherwise, it must be
                              *    set to zero. */
 
+    int sym;                 /*!< If set to one, then it means that the current
+                             *    OverlapMatrix structure represents a symmetric
+                             *    matrix; otherwise, it must be set to zero. */
+
+    int id;                  /*!< If set to one, then it means that the current
+                             *    OverlapMatrix structure represents an
+                             *    homothetic transformation i.e. the identity
+                             *    (nmat)x(nmat)-matrix, up to a scaling factor
+                             *    (which can be zero); otherwise, it must be set
+                             *    to zero. */
+
     double cmat;             /*!< Coefficient acting as a multiplicating
                              *    pre-factor in the decomposition of the
                              *    probability as a finite linear combinaison
@@ -1359,6 +1385,17 @@ typedef struct {
                              *    greater than the iter_told2p variable of the
                              *    Parameters structure, and its size should
                              *    always correspond to the \ref ndata value. */
+
+    int* opt;                /*!< Pointer used to dynamically define the array
+                             *    storing the type of optimization mode used 
+                             *    during the MPD iterative process; its
+                             *    values should always be stay between minus
+                             *    two and four (see the description of the
+                             *    opt_mode variable in the structure Parameters
+                             *    for further details); if it is not pointing to
+                             *    NULL, the size of the array it is pointing
+                             *    to should always correspond to the \ref ndata
+                             *    value. */
 
     double* tim;             /*!< Pointer used to dynamically define the array
                              *    storing the computational time needed to

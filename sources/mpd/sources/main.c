@@ -31,11 +31,14 @@
 */
 
 #include "main.h"
+
 #include "loadParameters.h"
 #include "loadChemistry.h"
 #include "loadMesh.h"
+
 //#include "adaptMesh.h"
-#include "optimization.h"
+#include "computeData.h"
+//#include "optimization.h"
 
 #ifdef UNIT_TESTS
     #include "test.h"
@@ -108,20 +111,47 @@ do {                                                                           \
     fprintf(stdout,"Author: %s.\n%s\n",STR_AUTHOR,STR_PHASE);                  \
     if ((argc)!=2)                                                             \
     {                                                                          \
-        fprintf(stderr,"\nError encountered at line %d in ",__LINE__);         \
-        fprintf(stderr,"%s file on %s",__FILE__,ctime(&globalInitialTimer));   \
-        fprintf(stderr,"In main: the MPD program only accept one input ");     \
-        fprintf(stderr,"command-line argument (instead of %d); ",(argc)-1);    \
-        fprintf(stderr,"the *.input file, which must contain at ");            \
-        fprintf(stderr,"least the *.wfn/ *.chem (chemical) file name, ");      \
-        fprintf(stderr,"preceded by the 'name_chem' keyword, the ");           \
-        fprintf(stderr,"(positive) number of electrons to look for, ");        \
-        fprintf(stderr,"preceded by the 'nu_electrons' keyword, and ");        \
-        fprintf(stderr,"optionally the *.mesh/ *.cube (mesh) file name to ");  \
-        fprintf(stderr,"start with, preceded by the 'name_mesh' keyword. ");   \
-        fprintf(stderr,"The *.input file must end with the 'end_data' ");      \
-        fprintf(stderr,"keyword and any other informations placed after ");    \
-        fprintf(stderr,"will not be read and considered as comments.\n");      \
+        if (!(VERBOSE))                                                        \
+        {                                                                      \
+            if ((argc)==1)                                                     \
+            {                                                                  \
+                fprintf(stderr,"\nERROR: no *.input file argument given ");    \
+                fprintf(stderr,"in the command-line.\n");                      \
+            }                                                                  \
+            else                                                               \
+            {                                                                  \
+                fprintf(stderr,"\nERROR: wrong number of command-line ");      \
+                fprintf(stderr,"arguments (=%d instead of 1).\n",(argc)-1);    \
+            }                                                                  \
+        }                                                                      \
+        else                                                                   \
+        {                                                                      \
+            fprintf(stderr,"\nError encountered at line %d ",__LINE__);        \
+            fprintf(stderr,"in %s file ",__FILE__);                            \
+            fprintf(stderr,"on %s",ctime(&globalInitialTimer));                \
+            fprintf(stderr,"In main: the MPD program only accept ");           \
+            fprintf(stderr,"one input command-line argument ");                \
+            fprintf(stderr,"(instead of %d); the *.input file",(argc)-1);      \
+            if (VERBOSE==1)                                                    \
+            {                                                                  \
+                fprintf(stderr,".\n");                                         \
+            }                                                                  \
+            else                                                               \
+            {                                                                  \
+                fprintf(stderr,", which must contain at least the ");          \
+                fprintf(stderr,"*.wfn/ *.chem (chemical) file name, ");        \
+                fprintf(stderr,"preceded by the 'name_chem' keyword, ");       \
+                fprintf(stderr,"the (positive) number of electrons to ");      \
+                fprintf(stderr,"look for, preceded by the 'nu_electrons' ");   \
+                fprintf(stderr,"keyword, and optionally the ");                \
+                fprintf(stderr,"*.mesh/ *.cube (mesh) file name to ");         \
+                fprintf(stderr,"start with, preceded by the 'name_mesh' ");    \
+                fprintf(stderr,"keyword. The *.input file must also ");        \
+                fprintf(stderr,"end with the 'end_data' keyword and any ");    \
+                fprintf(stderr,"other informations placed after will not ");   \
+                fprintf(stderr,"be read and considered as comments.\n");       \
+            }                                                                  \
+        }                                                                      \
     }                                                                          \
     initializeParameterStructure(parameters);                                  \
     initializeChemicalStructure(chemicalSystem);                               \

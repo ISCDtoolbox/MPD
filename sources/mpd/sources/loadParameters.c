@@ -21,7 +21,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 void initializeParameterStructure(Parameters* pParameters)
 {
-    // 77 parameters
+    // 78 parameters
     if (pParameters!=NULL)
     {
         pParameters->opt_mode=0;
@@ -61,6 +61,7 @@ void initializeParameterStructure(Parameters* pParameters)
         pParameters->delta_y=0.;
         pParameters->delta_z=0.;
 
+        pParameters->ls_ini=0;
         pParameters->ls_type=0;
         pParameters->ls_x=0.;
         pParameters->ls_y=0.;

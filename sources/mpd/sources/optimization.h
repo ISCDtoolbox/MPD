@@ -270,35 +270,6 @@
 // Prototypes of non-static functions
 ////////////////////////////////////////////////////////////////////////////////
 /**
-* \fn void initializeDataStructure(Data* pData)
-* \brief It initializes to zero the Data structure pointed by pData.
-*
-* \param[in] pData A pointer that points to the Data structure (defined in
-*                  main.h) of the \ref main function.
-*
-* The function \ref initializeDataStructure sets to zero all the variables
-* of the structure pointed by pData (and pointers are set to NULL). This
-* function does not return any value (void output).
-*/
-void initializeDataStructure(Data* pData);
-
-/**
-* \fn void freeDataMemory(Data* pData)
-* \brief It frees the memory dynamically allocated for the Data structure
-*        pointed by pData.
-*
-* \param[in] pData A pointer that points to the Data structure (defined in
-*                  main.h file) of the \ref main function.
-*
-* The function \ref freeDataMemory frees the memory dynamically allocated with
-* calloc/malloc/realloc for the Data structure pointed by pData. All pointers of
-* the Data structure that have been freed up are also set to NULL (but other
-* variables than pointers are not reset to zero). This function does not return
-* any value (void output).
-*/
-void freeDataMemory(Data* pData);
-
-/**
 * \fn int allocateMemoryForData(Parameters* pParameters, Data* pData,
 *                                               ChemicalSystem* pChemicalSystem)
 * \brief It dynamically allocates memory for the structure pointed by pData

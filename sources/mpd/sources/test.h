@@ -88,8 +88,8 @@ void test(void);
 
 /**
 * \fn void testCommentAnormalEnd(void)
-* \brief It performs unit tests on the \ref commentAnormalEnd function of the
-*        main.c file.
+* \brief It performs unit (random) tests on the \ref commentAnormalEnd function
+*        of the main.c file.
 */
 void testCommentAnormalEnd(void);
 

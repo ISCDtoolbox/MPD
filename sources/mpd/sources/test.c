@@ -13,11 +13,15 @@
 */
 
 #include "main.h"
+
 #include "loadParameters.h"
 #include "loadChemistry.h"
 #include "loadMesh.h"
+
 //#include "adaptMesh.h"
-#include "optimization.h"
+#include "computeData.h"
+//#include "optimization.h"
+
 #include "test.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -30,10 +34,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 void test(void)
 {
-    testCommentAnormalEnd();
-    testPrintTimer();
-    testEndTimerAtExit();
-    testEndTimerAtError();
+//    testCommentAnormalEnd();
+//    testPrintTimer();
+//    testEndTimerAtExit();
+//    testEndTimerAtError();
 
 //    testInitializeParameterStructure();
 //    testInitializeChemicalStructure();
@@ -65,7 +69,7 @@ void test(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Unit tests on commentAnormalEnd of main.c file
+// Unit (random) tests on commentAnormalEnd of main.c file
 ////////////////////////////////////////////////////////////////////////////////
 void testCommentAnormalEnd(void)
 {
@@ -73,7 +77,7 @@ void testCommentAnormalEnd(void)
     int returnValue=0, expectedValue=0, counter=0, counterSuccess=0;
     int counterFail=0, readChar=0;
 
-    int typeOfSignal=0;
+    int typeOfSignal=0, iRandom=0;
 
     // Test starts
     time(&startTimer);
@@ -86,7 +90,20 @@ void testCommentAnormalEnd(void)
     PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
                                                                       readChar);
 
-    for (typeOfSignal=-20; typeOfSignal<20; typeOfSignal++)
+    for (iRandom=0; iRandom<50000; iRandom++)
+    {
+        typeOfSignal=rand()%2001-1000;
+        if (typeOfSignal!=SIGINT)
+        {
+            PRINT_TEST_START(counter,expectedValue);
+            fprintf(stdout,"typeOfSignal=%d\n",typeOfSignal);
+            commentAnormalEnd(typeOfSignal);
+            PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,
+                                                        expectedValue,readChar);
+        }
+    }
+
+    for (typeOfSignal=-20; typeOfSignal<=20; typeOfSignal++)
     {
         if (typeOfSignal!=SIGINT)
         {
@@ -132,7 +149,8 @@ void testPrintTimer(void)
     int returnValue=0, expectedValue=0, counter=0, counterSuccess=0;
     int counterFail=0, readChar=0;
 
-    int i=0;
+    int i=0, iRandom=0;
+    time_t finalTimer=0, initialTimer=0;
     time_t pFinalTimer[53]={0,1,2,60,61,62,120,121,122,3600,3601,3602,3660,3661,
                             3662,3720,3721,3722,7200,7201,7202,7260,7261,7262,
                             7320,7321,7322,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -189,10 +207,29 @@ void testPrintTimer(void)
     fprintf(stdout,"\nTesting printTimer function.\n");
 
     expectedValue=1;
+    PRINT_TEST_START(counter,expectedValue);
+    returnValue=1;
+    fprintf(stdout,"Function printTimer returns: ");
+    printTimer(finalTimer,initialTimer);
+    fprintf(stdout,".\n");
+    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
+                                                                      readChar);
+
+    for (iRandom=0; iRandom<50000; iRandom++)
+    {
+        initialTimer=rand()%30001-10000;
+        finalTimer=rand()%30001-10000;
+        PRINT_TEST_START(counter,expectedValue);
+        fprintf(stdout,"Function printTimer returns: ");
+        printTimer(finalTimer,initialTimer);
+        fprintf(stdout,".\n");
+        PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,
+                                                        expectedValue,readChar);
+    }
+
     for (i=0; i<53; i++)
     {
         PRINT_TEST_START(counter,expectedValue);
-        returnValue=1;
         fprintf(stdout,"The program should print '%s': ",pStringToPrint[i]);
         printTimer(pFinalTimer[i],pInitialTimer[i]);
         fprintf(stdout,".\n");
@@ -226,6 +263,8 @@ void testEndTimerAtExit(void)
     int returnValue=0, expectedValue=0, counter=0, counterSuccess=0;
     int counterFail=0, readChar=0;
 
+    int iRandom=0;
+
     // Test starts
     time(&startTimer);
     fprintf(stdout,"\nTesting endTimerAtExit function.\n");
@@ -236,6 +275,14 @@ void testEndTimerAtExit(void)
     endTimerAtExit();
     PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
                                                                       readChar);
+
+    for (iRandom=0; iRandom<50000; iRandom++)
+    {
+        PRINT_TEST_START(counter,expectedValue);
+        endTimerAtExit();
+        PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,
+                                                        expectedValue,readChar);
+    }
 
     // End of the tests
     fprintf(stdout,"\nTotal: %d tests (%d succeeded, ",counter,counterSuccess);
@@ -263,6 +310,8 @@ void testEndTimerAtError(void)
     int returnValue=0, expectedValue=0, counter=0, counterSuccess=0;
     int counterFail=0, readChar=0; 
 
+    int iRandom=0;
+
     // Test starts
     time(&startTimer);
     fprintf(stdout,"\nTesting endTimerAtError function.\n");
@@ -273,6 +322,15 @@ void testEndTimerAtError(void)
     fprintf(stdout,"Function endTimerAtError returns: %s",endTimerAtError());
     PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
                                                                       readChar);
+
+    for (iRandom=0; iRandom<50000; iRandom++)
+    {
+        PRINT_TEST_START(counter,expectedValue);
+        fprintf(stdout,"Function endTimerAtError returns: ");
+        fprintf(stdout,"%s",endTimerAtError());
+        PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,
+                                                        expectedValue,readChar);
+    }
 
     // End of the tests
     fprintf(stdout,"\nTotal: %d tests (%d succeeded, ",counter,counterSuccess);
