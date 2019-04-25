@@ -36,7 +36,7 @@
 #include "loadChemistry.h"
 #include "loadMesh.h"
 
-//#include "adaptMesh.h"
+#include "adaptMesh.h"
 #include "computeData.h"
 //#include "optimization.h"
 
@@ -111,46 +111,31 @@ do {                                                                           \
     fprintf(stdout,"Author: %s.\n%s\n",STR_AUTHOR,STR_PHASE);                  \
     if ((argc)!=2)                                                             \
     {                                                                          \
-        if (!(VERBOSE))                                                        \
+        fprintf(stderr,"\nError encountered at line %d in ",__LINE__);         \
+        fprintf(stderr,"%s file on %s",__FILE__,ctime(&globalInitialTimer));   \
+        fprintf(stderr,"In main: the MPD program only accepts one input ");    \
+        fprintf(stderr,"command-line argument (instead of %d); ",(argc)-1);    \
+        fprintf(stderr,"the *.input file, which must contain at least ");      \
+        fprintf(stderr,"the *.wfn/ *.chem (chemical) file name, preceded ");   \
+        fprintf(stderr,"by the 'name_chem' keyword, the (positive) ");         \
+        fprintf(stderr,"number of electrons to look for, preceded by ");       \
+        fprintf(stderr,"the 'nu_electrons' keyword, and optionally ");         \
+        fprintf(stderr,"the *.mesh/ *.cube (mesh) file name to start with, "); \
+        fprintf(stderr,"preceded by the 'name_mesh' keyword. The *.input ");   \
+        fprintf(stderr,"file must also end with the 'end_data' keyword ");     \
+        fprintf(stderr,"and any other informations placed after will not ");   \
+        fprintf(stderr,"be read and considered as comments.\n");               \
+        if ((argc)==1)                                                         \
         {                                                                      \
-            if ((argc)==1)                                                     \
-            {                                                                  \
-                fprintf(stderr,"\nERROR: no *.input file argument given ");    \
-                fprintf(stderr,"in the command-line.\n");                      \
-            }                                                                  \
-            else                                                               \
-            {                                                                  \
-                fprintf(stderr,"\nERROR: wrong number of command-line ");      \
-                fprintf(stderr,"arguments (=%d instead of 1).\n",(argc)-1);    \
-            }                                                                  \
+            fprintf(stdout,"\n%s\nERROR: no *.input file ",STR_ERROR);         \
+            fprintf(stdout,"argument given in the ");                          \
+            fprintf(stdout,"command-line.\n%s\n",STR_ERROR);                   \
         }                                                                      \
         else                                                                   \
         {                                                                      \
-            fprintf(stderr,"\nError encountered at line %d ",__LINE__);        \
-            fprintf(stderr,"in %s file ",__FILE__);                            \
-            fprintf(stderr,"on %s",ctime(&globalInitialTimer));                \
-            fprintf(stderr,"In main: the MPD program only accept ");           \
-            fprintf(stderr,"one input command-line argument ");                \
-            fprintf(stderr,"(instead of %d); the *.input file",(argc)-1);      \
-            if (VERBOSE==1)                                                    \
-            {                                                                  \
-                fprintf(stderr,".\n");                                         \
-            }                                                                  \
-            else                                                               \
-            {                                                                  \
-                fprintf(stderr,", which must contain at least the ");          \
-                fprintf(stderr,"*.wfn/ *.chem (chemical) file name, ");        \
-                fprintf(stderr,"preceded by the 'name_chem' keyword, ");       \
-                fprintf(stderr,"the (positive) number of electrons to ");      \
-                fprintf(stderr,"look for, preceded by the 'nu_electrons' ");   \
-                fprintf(stderr,"keyword, and optionally the ");                \
-                fprintf(stderr,"*.mesh/ *.cube (mesh) file name to ");         \
-                fprintf(stderr,"start with, preceded by the 'name_mesh' ");    \
-                fprintf(stderr,"keyword. The *.input file must also ");        \
-                fprintf(stderr,"end with the 'end_data' keyword and any ");    \
-                fprintf(stderr,"other informations placed after will not ");   \
-                fprintf(stderr,"be read and considered as comments.\n");       \
-            }                                                                  \
+            fprintf(stdout,"\n%s\nERROR: wrong number of ",STR_ERROR);         \
+            fprintf(stdout,"command-line arguments ");                         \
+            fprintf(stdout,"(=%d instead of 1).\n%s\n",(argc)-1,STR_ERROR);    \
         }                                                                      \
     }                                                                          \
     initializeParameterStructure(parameters);                                  \
@@ -228,14 +213,15 @@ int main(int argc, char *argv[])
     test();            // It contains all the selected unit-testing functions
 #endif
 
-/*
-    // Check values of all the preprocessor constants
-    if (!checkAllPreprocessorConstants(OPT_MODE,VERBOSE,N_CPU,NAME_LENGTH,
-                                       LAME_INT1,LAME_INT2,LAME_EXT1,LAME_EXT2,
-                                       X_MIN,Y_MIN,Z_MIN,X_MAX,Y_MAX,Z_MAX,N_X,
-                                       N_Y,N_Z,DELTA_X,DELTA_Y,DELTA_Z,LS_TYPE,
-                                       LS_X,LS_Y,LS_Z,LS_R,MET_CST,MET_ERR,
-                                       MET_MIN,MET_MAX,TRICK_MATRIX,APPROX_MODE,
+    // Check values of all preprocessor constants (default values of Parameters)
+    if (!checkAllPreprocessorConstants(OPT_MODE,VERBOSE,N_CPU,RHO_OPT,
+                                       NAME_LENGTH,LAME_INT1,LAME_INT2,
+                                       LAME_EXT1,LAME_EXT2,BOHR_UNIT,SELECT_ORB,
+                                       ORB_ORTHO,SELECT_BOX,X_MIN,Y_MIN,Z_MIN,
+                                       X_MAX,Y_MAX,Z_MAX,N_X,N_Y,N_Z,DELTA_X,
+                                       DELTA_Y,DELTA_Z,LS_TYPE,LS_X,LS_Y,LS_Z,
+                                       LS_R,MET_CST,MET_ERR,MET_MIN,MET_MAX,
+                                       TRICK_MATRIX,APPROX_MODE,ITER_INI,
                                        ITER_MAX,ITER_TOLD0P,ITER_TOLD1P,
                                        ITER_TOLD2P,SAVE_TYPE,SAVE_MESH,
                                        SAVE_DATA,SAVE_PRINT,SAVE_WHERE,
@@ -253,13 +239,20 @@ int main(int argc, char *argv[])
                                        ORB_FYZZ,ORB_FXYZ,CST_A,CST_B,CST_C,
                                        CST_a,CST_b,CST_c,CST_aa,CST_bb,CST_cc,
                                        CST_ONE,CST_TWO,CST_THREE,CST_1,CST_2,
-                                          CST_3,CST_22,CST_33,INV_PHI,INV_PHI2))
+                                               CST_3,CST_22,CST_33,BOHR_RADIUS))
     {
         PRINT_ERROR("In main: checkAllPreprocessorConstants function ");
         fprintf(stderr,"returned zero instead of one.\n");
+
+        // Printing also an error message in the standard output
+        fprintf(stdout,"\n%s\nERROR: invalid preprocessor ",STR_ERROR);
+        fprintf(stdout,"constant(s). Please recompile properly the ");
+        fprintf(stdout,"program.\n%s\n",STR_ERROR);
+
         FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
     }
 
+/*
     // NEW: change if necessary the name of the *.input file into a *.info one
     // calloc returns a pointer to the allocated memory, or NULL if it fails
     // strlen returns the length of the string but not including the '\0'
@@ -691,10 +684,12 @@ char* endTimerAtError(void)
 ////////////////////////////////////////////////////////////////////////////////
 // The function checkStringFromLength evaluates the length (including the
 // terminating nul character '\0') of stringTocheck, which must be comprised
-// between minimumLength and maximumLength. It has the char* stringTocheck and
-// the two int variables (0<minimumLength<=maximumLength) as input arguments and
-// it returns zero if an error is encountered, otherwise it returns the
-// (positive) length of stringToCheck
+// between minimumLength and maximumLength (in the strict sense if the
+// terminating nul character is not counted or in the large sense if it is).
+// It has the char* stringTocheck and the two int variables
+// (0<minimumLength<=maximumLength) as input arguments and it returns zero if
+// an error is encountered, otherwise it returns the (positive) length of
+// stringToCheck
 ////////////////////////////////////////////////////////////////////////////////
 int checkStringFromLength(char* stringToCheck, int minimumLength,
                                                               int maximumLength)
@@ -704,18 +699,18 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
     // Check if stringToCheck is pointing to NULL
     if (stringToCheck==NULL)
     {
-        PRINT_ERROR("In checkStringFromLength: the input (char*) variable ");
-        fprintf(stderr,"stringToCheck is pointing to the ");
-        fprintf(stderr,"%p address.\n",(void*)stringToCheck);
+        PRINT_ERROR("In checkStringFromLength: the input (char*) ");
+        fprintf(stderr,"variable stringToCheck=%p ",(void*)stringToCheck);
+        fprintf(stderr,"does not point to a valid address.\n");
         return 0;
     }
 
     // Check if the bounds are correct
     if (minimumLength<1 || maximumLength<minimumLength)
     {
-        PRINT_ERROR("In checkStringFromLength: the input variable ");
+        PRINT_ERROR("In checkStringFromLength: the (input) variable ");
         fprintf(stderr,"minimumLength (=%d) should be a ",minimumLength);
-        fprintf(stderr,"positive integer less or equal to the (input) ");
+        fprintf(stderr,"positive integer less or equal to the other (input) ");
         fprintf(stderr,"variable maximumLength (=%d).\n",maximumLength);
         return 0;
     }
@@ -757,42 +752,44 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
 // constants as input arguments and returns one on success, otherwise zero
 ////////////////////////////////////////////////////////////////////////////////
 int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
-                                  int nameLength, double lameInt1,
-                                  double lameInt2, double lameExt1,
-                                  double lameExt2, double xMin, double yMin,
+                                  double rhoOpt, int nameLength,
+                                  double lameInt1,double lameInt2,
+                                  double lameExt1,double lameExt2, int bohrUnit,
+                                  double selectOrb, int orbOrtho,
+                                  double selectBox, double xMin, double yMin,
                                   double zMin, double xMax, double yMax,
                                   double zMax, int nX, int nY,int nZ,
                                   double deltaX, double deltaY, double deltaZ,
                                   int lsType, double lsX, double lsY,
                                   double lsZ, double lsR, double metCst,
                                   double metErr, double metMin, double metMax,
-                                  int trickMatrix, int approxMode, int iterMax,
-                                  double iterTolD0P, double iterTolD1P,
-                                  double iterTolD2P, int saveType, int saveMesh,
-                                  int saveData, int savePrint, int saveWhere,
-                                  int pathLength, char* pathMedit,
-                                  char* pathMmg3d, char* pathMshdist,
-                                  char* pathElastic, char* pathAdvect,
-                                  double hminIso, double hmaxIso,
-                                  double hausdIso, double hgradIso,
-                                  double hminMet, double hmaxMet,
-                                  double hausdMet, double hgradMet,
-                                  double hminLs, double hmaxLs, double hausdLs,
-                                  double hgradLs, int hmodeLag, double hminLag,
-                                  double hmaxLag, double hausdLag,
-                                  double hgradLag, int nIter, double residual,
-                                  double deltaT, int noCfl, int orb1, int orb2,
-                                  int orb3, int orb4, int orb5, int orb6,
-                                  int orb7, int orb8, int orb9, int orb10,
-                                  int orb11, int orb12, int orb13, int orb14,
-                                  int orb15, int orb16, int orb17, int orb18,
-                                  int orb19, int orb20, double cstA,
-                                  double cstB, double cstC, double csta,
-                                  double cstb, double cstc, double cstaa,
-                                  double cstbb, double cstcc, double cstOne,
-                                  double cstTwo, double cstThree, double cst1,
-                                  double cst2, double cst3, double cst22,
-                                    double cst33, double invPhi, double invPhi2)
+                                  int trickMatrix, int approxMode, int iterIni,
+                                  int iterMax, double iterTolD0P,
+                                  double iterTolD1P, double iterTolD2P,
+                                  int saveType, int saveMesh, int saveData,
+                                  int savePrint, int saveWhere, int pathLength,
+                                  char* pathMedit, char* pathMmg3d,
+                                  char* pathMshdist, char* pathElastic,
+                                  char* pathAdvect, double hminIso,
+                                  double hmaxIso, double hausdIso,
+                                  double hgradIso, double hminMet,
+                                  double hmaxMet, double hausdMet,
+                                  double hgradMet, double hminLs, double hmaxLs,
+                                  double hausdLs, double hgradLs, int hmodeLag,
+                                  double hminLag, double hmaxLag,
+                                  double hausdLag, double hgradLag, int nIter,
+                                  double residual, double deltaT, int noCfl,
+                                  int orb1, int orb2, int orb3, int orb4,
+                                  int orb5, int orb6, int orb7, int orb8,
+                                  int orb9, int orb10, int orb11, int orb12,
+                                  int orb13, int orb14, int orb15, int orb16,
+                                  int orb17, int orb18, int orb19, int orb20,
+                                  double cstA, double cstB, double cstC,
+                                  double csta, double cstb, double cstc,
+                                  double cstaa, double cstbb, double cstcc,
+                                  double cstOne, double cstTwo, double cstThree,
+                                  double cst1, double cst2, double cst3,
+                                  double cst22, double cst33, double bohrRadius)
 {
     int boolean=0;
     double dx=0., dy=0., dz=0.;
@@ -815,11 +812,11 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
     }
 
     // Check VERBOSE
-    boolean=(verbose==0 || verbose==1);
+    boolean=(verbose==0 || verbose==1 || verbose==2);
     if (!boolean)
     {
         PRINT_ERROR("In checkAllPreprocessorConstants: ");
-        fprintf(stderr,"VERBOSE=%d can only be set to 0 or 1.\n",verbose);
+        fprintf(stderr,"VERBOSE=%d can only be set to 0, 1 or 2.\n",verbose);
         fprintf(stderr,"Please modify the preprocessor constant accordingly ");
         fprintf(stderr,"in loadParameters.h file.\n");
         return 0;
@@ -835,6 +832,20 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
         fprintf(stderr,"loadParameters.h file.\n");
         return 0;
     }
+
+#ifdef _OPENMP
+    boolean=(nCpu<=omp_get_max_threads());
+    if (!boolean)
+    {
+        PRINT_ERROR("In checkAllPreprocessorConstants: ");
+        fprintf(stderr,"N_CPU=%d cannot be greater than the total ",nCpu);
+        fprintf(stderr,"number of threads (=%d) ",omp_get_max_threads());
+        fprintf(stderr,"currently available on your computer.\nPlease ");
+        fprintf(stderr,"modify the preprocessor constant accordingly in ");
+        fprintf(stderr,"loadParameters.h file.\n");
+        return 0;
+    }
+#endif
 
     // Check NAME_LENGTH
     boolean=(nameLength>6);
@@ -1244,16 +1255,16 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
         return 0;
     }
 
-    boolean=(invPhi==0.618033988749894848 && invPhi2==0.381966011250105152);
-    if (!boolean)
-    {
-        PRINT_ERROR("In checkAllPreprocessorConstants: expecting\n");
-        fprintf(stderr,"(INV_PHI=%.18lf) == 0.618033988749894848\n",invPhi);
-        fprintf(stderr,"(INV_PHI2=%.18lf) == 0.381966011250105152\n",invPhi2);
-        fprintf(stderr,"Please modify the preprocessor constants accordingly ");
-        fprintf(stderr,"in optimization.h file.\n");
-        return 0;
-    }
+//   boolean=(invPhi==0.618033988749894848 && invPhi2==0.381966011250105152);
+//   if (!boolean)
+//   {
+//        PRINT_ERROR("In checkAllPreprocessorConstants: expecting\n");
+//        fprintf(stderr,"(INV_PHI=%.18lf) == 0.618033988749894848\n",invPhi);
+//        fprintf(stderr,"(INV_PHI2=%.18lf) == 0.381966011250105152\n",invPhi2);
+//        fprintf(stderr,"Please modify the preprocessor constants ");
+//        fprintf(stderr,"accordingly in optimization.h file.\n");
+//        return 0;
+//    }
 
     if (verbose)
     {

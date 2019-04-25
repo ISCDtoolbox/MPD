@@ -40,6 +40,13 @@
 // */
 // #define UNIT_TESTS
 
+/**
+* \def STR_ERROR
+* \brief Used to underline some important informations during the MPD algorithm.
+*/
+#define STR_ERROR "------------------------------------------------------------\
+--------------------"
+
 ////////////////////////////////////////////////////////////////////////////////
 // Macro functions to initialize the diagnostic of an error, to get the
 // minimum/maximum of two values, and also the absolute value of a double number
@@ -2627,42 +2634,45 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
 * make their values vary during the different unitary tests.
 */
 int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
-                                  int nameLength, double lameInt1,
-                                  double lameInt2, double lameExt1,
-                                  double lameExt2, double xMin, double yMin,
+                                  double rhoOpt, int nameLength,
+                                  double lameInt1,double lameInt2,
+                                  double lameExt1,double lameExt2, int bohrUnit,
+                                  double selectOrb, int orbOrtho,
+                                  double selectBox, double xMin, double yMin,
                                   double zMin, double xMax, double yMax,
                                   double zMax, int nX, int nY,int nZ,
                                   double deltaX, double deltaY, double deltaZ,
                                   int lsType, double lsX, double lsY,
                                   double lsZ, double lsR, double metCst,
                                   double metErr, double metMin, double metMax,
-                                  int trickMatrix, int approxMode, int iterMax,
-                                  double iterTolD0P, double iterTolD1P,
-                                  double iterTolD2P, int saveType, int saveMesh,
-                                  int saveData, int savePrint, int saveWhere,
-                                  int pathLength, char* pathMedit,
-                                  char* pathMmg3d, char* pathMshdist,
-                                  char* pathElastic, char* pathAdvect,
-                                  double hminIso, double hmaxIso,
-                                  double hausdIso, double hgradIso,
-                                  double hminMet, double hmaxMet,
-                                  double hausdMet, double hgradMet,
-                                  double hminLs, double hmaxLs, double hausdLs,
-                                  double hgradLs, int hmodeLag, double hminLag,
-                                  double hmaxLag, double hausdLag,
-                                  double hgradLag, int nIter, double residual,
-                                  double deltaT, int noCfl, int orb1, int orb2,
-                                  int orb3, int orb4, int orb5, int orb6,
-                                  int orb7, int orb8, int orb9, int orb10,
-                                  int orb11, int orb12, int orb13, int orb14,
-                                  int orb15, int orb16, int orb17, int orb18,
-                                  int orb19, int orb20, double cstA,
-                                  double cstB, double cstC, double csta,
-                                  double cstb, double cstc, double cstaa,
-                                  double cstbb, double cstcc, double cstOne,
-                                  double cstTwo, double cstThree, double cst1,
-                                  double cst2, double cst3, double cst22,
-                                   double cst33, double invPhi, double invPhi2);
+                                  int trickMatrix, int approxMode, int iterIni,
+                                  int iterMax, double iterTolD0P,
+                                  double iterTolD1P, double iterTolD2P,
+                                  int saveType, int saveMesh, int saveData,
+                                  int savePrint, int saveWhere, int pathLength,
+                                  char* pathMedit, char* pathMmg3d,
+                                  char* pathMshdist, char* pathElastic,
+                                  char* pathAdvect, double hminIso,
+                                  double hmaxIso, double hausdIso,
+                                  double hgradIso, double hminMet,
+                                  double hmaxMet, double hausdMet,
+                                  double hgradMet, double hminLs, double hmaxLs,
+                                  double hausdLs, double hgradLs, int hmodeLag,
+                                  double hminLag, double hmaxLag,
+                                  double hausdLag, double hgradLag, int nIter,
+                                  double residual, double deltaT, int noCfl,
+                                  int orb1, int orb2, int orb3, int orb4,
+                                  int orb5, int orb6, int orb7, int orb8,
+                                  int orb9, int orb10, int orb11, int orb12,
+                                  int orb13, int orb14, int orb15, int orb16,
+                                  int orb17, int orb18, int orb19, int orb20,
+                                  double cstA, double cstB, double cstC,
+                                  double csta, double cstb, double cstc,
+                                  double cstaa, double cstbb, double cstcc,
+                                  double cstOne, double cstTwo, double cstThree,
+                                  double cst1, double cst2, double cst3,
+                                  double cst22, double cst33,
+                                                             double bohrRadius);
 
 /**
 * \fn int initialFileExists(char* fileLocation, int nameLength)
