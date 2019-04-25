@@ -275,79 +275,47 @@ void testFreeDataMemory(void)
     PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
                                                                       readChar);
 
-    pData->ndata=-1;
-    pData->pprob=(double**)malloc(10*sizeof(double*));
-    PRINT_TEST_START(counter,expectedValue);
-    fprintf(stdout,"pData=%p with ndata=%d ",(void*)pData,pData->ndata);
-    fprintf(stdout,"pprob=%p and ",(void*)pData->pprob);
-    fprintf(stdout,"pmat=%p\n",(void*)pData->ppmat);
-    freeDataMemory(pData);
-    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
-                                                                      readChar);
+    for (iRandom=-10; iRandom<1; iRandom++)
+    {
+        for (i=-10; i<1; i++)
+        {
+            pData->ndata=iRandom;
+            pData->npmat=i;
+            for (j=0; j<2; j++)
+            {
+                for (k=0; k<2; k++)
+                {
+                    if (j)
+                    {
+                        pData->pprob=(double**)malloc(10*sizeof(double*));
+                    }
+                    else
+                    {
+                        pData->pprob=NULL;
+                    }
 
-    pData->ppmat=(OverlapMatrix**)malloc(10*sizeof(OverlapMatrix*));
-    PRINT_TEST_START(counter,expectedValue);
-    fprintf(stdout,"pData=%p with ndata=%d ",(void*)pData,pData->ndata);
-    fprintf(stdout,"pprob=%p and ",(void*)pData->pprob);
-    fprintf(stdout,"pmat=%p\n",(void*)pData->ppmat);
-    freeDataMemory(pData);
-    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
-                                                                      readChar);
+                    if (k)
+                    {
+                        pData->ppmat=
+                             (OverlapMatrix**)malloc(10*sizeof(OverlapMatrix*));
+                    }
+                    else
+                    {
+                        pData->ppmat=NULL;
+                    }
 
-    pData->pprob=(double**)malloc(10*sizeof(double*));
-    pData->ppmat=(OverlapMatrix**)malloc(10*sizeof(OverlapMatrix*));
-    PRINT_TEST_START(counter,expectedValue);
-    fprintf(stdout,"pData=%p with ndata=%d ",(void*)pData,pData->ndata);
-    fprintf(stdout,"pprob=%p and ",(void*)pData->pprob);
-    fprintf(stdout,"pmat=%p\n",(void*)pData->ppmat);
-    freeDataMemory(pData);
-    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
-                                                                      readChar);
-
-    PRINT_TEST_START(counter,expectedValue);
-    fprintf(stdout,"pData=%p with ndata=%d ",(void*)pData,pData->ndata);
-    fprintf(stdout,"pprob=%p and ",(void*)pData->pprob);
-    fprintf(stdout,"pmat=%p\n",(void*)pData->ppmat);
-    freeDataMemory(pData);
-    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
-                                                                      readChar);
-
-    pData->ndata=0;
-    pData->pprob=(double**)malloc(10*sizeof(double*));
-    PRINT_TEST_START(counter,expectedValue);
-    fprintf(stdout,"pData=%p with ndata=%d ",(void*)pData,pData->ndata);
-    fprintf(stdout,"pprob=%p and ",(void*)pData->pprob);
-    fprintf(stdout,"pmat=%p\n",(void*)pData->ppmat);
-    freeDataMemory(pData);
-    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
-                                                                      readChar);
-
-    pData->ppmat=(OverlapMatrix**)malloc(10*sizeof(OverlapMatrix*));
-    PRINT_TEST_START(counter,expectedValue);
-    fprintf(stdout,"pData=%p with ndata=%d ",(void*)pData,pData->ndata);
-    fprintf(stdout,"pprob=%p and ",(void*)pData->pprob);
-    fprintf(stdout,"pmat=%p\n",(void*)pData->ppmat);
-    freeDataMemory(pData);
-    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
-                                                                      readChar);
-
-    pData->pprob=(double**)malloc(10*sizeof(double*));
-    pData->ppmat=(OverlapMatrix**)malloc(10*sizeof(OverlapMatrix*));
-    PRINT_TEST_START(counter,expectedValue);
-    fprintf(stdout,"pData=%p with ndata=%d ",(void*)pData,pData->ndata);
-    fprintf(stdout,"pprob=%p and ",(void*)pData->pprob);
-    fprintf(stdout,"pmat=%p\n",(void*)pData->ppmat);
-    freeDataMemory(pData);
-    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
-                                                                      readChar);
-
-    PRINT_TEST_START(counter,expectedValue);
-    fprintf(stdout,"pData=%p with ndata=%d ",(void*)pData,pData->ndata);
-    fprintf(stdout,"pprob=%p and ",(void*)pData->pprob);
-    fprintf(stdout,"pmat=%p\n",(void*)pData->ppmat);
-    freeDataMemory(pData);
-    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
-                                                                      readChar);
+                    PRINT_TEST_START(counter,expectedValue);
+                    fprintf(stdout,"ndata=%d\n",pData->ndata);
+                    fprintf(stdout,"npmat=%d\n",pData->npmat);
+                    fprintf(stdout,"pprob=%p\n",(void*)pData->pprob);
+                    fprintf(stdout,"ppmat=%p\n",(void*)pData->ppmat);
+                    freeDataMemory(pData);
+                    PRINT_TEST_END(counter,counterSuccess,counterFail,
+                                            returnValue,expectedValue,readChar);
+                }
+            }
+        }
+    }
 
     for (iRandom=0; iRandom<50000; iRandom++)
     {
@@ -412,8 +380,8 @@ void testFreeDataMemory(void)
             for (i=0; i<iMax; i++)
             {
                 pprob=&pData->pprob[i];
-                lengthArray=rand()%200+1;
-                if (lengthArray>160)
+                lengthArray=rand()%20+1;
+                if (lengthArray>15)
                 {
                     *pprob=NULL;
                 }
@@ -468,8 +436,8 @@ void testFreeDataMemory(void)
                         (*ppOverlapMatrix)[j].cmat=
                                                (double)(rand()%6001-3000)/1000.;
 
-                        lengthArray=rand()%200+1;
-                        if (lengthArray>160)
+                        lengthArray=rand()%20+1;
+                        if (lengthArray>15)
                         {
                            (*ppOverlapMatrix)[j].coef=NULL;
                         }
@@ -488,8 +456,8 @@ void testFreeDataMemory(void)
                             }
                         }
 
-                        lengthArray=rand()%200+1;
-                        if (lengthArray>160)
+                        lengthArray=rand()%20+1;
+                        if (lengthArray>15)
                         {
                             (*ppOverlapMatrix)[j].diag=NULL;
                         }
@@ -510,8 +478,8 @@ void testFreeDataMemory(void)
                             }
                         }
 
-                        lengthArray=rand()%200+1;
-                        if (lengthArray>160)
+                        lengthArray=rand()%20+1;
+                        if (lengthArray>15)
                         {
                             (*ppOverlapMatrix)[j].lvect=NULL;
                         }
@@ -532,8 +500,8 @@ void testFreeDataMemory(void)
                             }
                         }
 
-                        lengthArray=rand()%200+1;
-                        if (lengthArray>160)
+                        lengthArray=rand()%20+1;
+                        if (lengthArray>15)
                         {
                             (*ppOverlapMatrix)[j].rvect=NULL;
                         }

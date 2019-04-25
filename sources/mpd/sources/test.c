@@ -45,7 +45,7 @@ void test(void)
 //    testInitializeMeshStructure();
 
 //    testFreeMeshMemory();
-    testFreeDataMemory();
+//    testFreeDataMemory();
 //    testFreeChemicalMemory();
 //    testFreeParameterMemory();
 

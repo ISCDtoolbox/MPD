@@ -26,7 +26,7 @@ void testInitializeChemicalStructure(void)
     int counterFail=0, readChar=0;
 
     size_t lengthArray=0;
-    int iRandom=0, boolean=0;
+    int iRandom=0, i=0, iMax=0, boolean=0;
     ChemicalSystem *pChemicalSystem=NULL, chemicalSystem;
 
     // Initializing to zero the chemical structure
@@ -74,8 +74,18 @@ void testInitializeChemicalStructure(void)
             pChemicalSystem->pnucl=(Nucleus*)calloc(lengthArray,
                                                                sizeof(Nucleus));
         }
+        if (pChemicalSystem->pnucl!=NULL)
+        {
+            iMax=lengthArray;
+            for (i=0; i<iMax; i++)
+            {
+                pChemicalSystem->pnucl[i].x=(double)(rand()%6001-3000)/1000.;
+                pChemicalSystem->pnucl[i].y=(double)(rand()%6001-3000)/1000.;
+                pChemicalSystem->pnucl[i].z=(double)(rand()%6001-3000)/1000.;
+                pChemicalSystem->pnucl[i].charge=rand()%161-30;
+            }
+        }
         pChemicalSystem->nprim=rand()%161-30;
-
         pChemicalSystem->nmorb=rand()%60-20;
         lengthArray=rand()%20+1;
         if (lengthArray>12)
@@ -84,12 +94,11 @@ void testInitializeChemicalStructure(void)
         }
         else
         {
-            pChemicalSystem->pmorb=(MolecularOrbital*)calloc(lengthArray,
-                                                      sizeof(MolecularOrbital));
+            pChemicalSystem->pmorb=
+                (MolecularOrbital*)malloc(lengthArray*sizeof(MolecularOrbital));
         }
         pChemicalSystem->ne=rand()%60-20;
         pChemicalSystem->nu=rand()%60-20;
-
         pChemicalSystem->ndet=rand()%60-20;
         lengthArray=rand()%20+1;
         if (lengthArray>12)
@@ -98,8 +107,8 @@ void testInitializeChemicalStructure(void)
         }
         else
         {
-            pChemicalSystem->pdet=(Determinant*)calloc(lengthArray,
-                                                           sizeof(Determinant));
+            pChemicalSystem->pdet=
+                          (Determinant*)malloc(lengthArray*sizeof(Determinant));
         }
 
         lengthArray=rand()%20+1;
@@ -109,8 +118,8 @@ void testInitializeChemicalStructure(void)
         }
         else
         {
-            pChemicalSystem->pmat=(OverlapMatrix*)calloc(lengthArray,
-                                                         sizeof(OverlapMatrix));
+            pChemicalSystem->pmat=
+                      (OverlapMatrix*)malloc(lengthArray*sizeof(OverlapMatrix));
         }
 
         PRINT_TEST_START(counter,expectedValue);
@@ -190,7 +199,6 @@ void testInitializeChemicalStructure(void)
     return;
 }
 
-/*
 ////////////////////////////////////////////////////////////////////////////////
 // Unit (random) tests on freeChemicalMemory of loadChemistry.c file
 ////////////////////////////////////////////////////////////////////////////////
@@ -200,17 +208,24 @@ void testFreeChemicalMemory(void)
     int returnValue=0, expectedValue=0, counter=0, counterSuccess=0;
     int counterFail=0, readChar=0;
 
-    size_t lengthArray=0;
-    int i=0, iRandom=0, boolean=0;
+    size_t lengthMorb=0, lengthDet=0, lengthMatrix=0, lengthArray=0;
+    int iRandom=0, i=0, iMax=0, j=0, jMax=0, k=0, l=0, boolean=0;
     MolecularOrbital *pMolecularOrbital=NULL;
+    Determinant *pDeterminant=NULL;
+    OverlapMatrix *pOverlapMatrix=NULL;
     ChemicalSystem *pChemicalSystem=NULL, chemicalSystem;
 
     // Initializing the chemical structure
     chemicalSystem.nnucl=0;
     chemicalSystem.pnucl=NULL;
-    chemicalSystem.ngauss=0;
+    chemicalSystem.nprim=0;
     chemicalSystem.nmorb=0;
     chemicalSystem.pmorb=NULL;
+    chemicalSystem.ne=0;
+    chemicalSystem.nu=0;
+    chemicalSystem.ndet=0;
+    chemicalSystem.pdet=NULL;
+    chemicalSystem.pmat=NULL;
 
     // Test starts
     time(&startTimer);
@@ -225,37 +240,78 @@ void testFreeChemicalMemory(void)
                                                                       readChar);
 
     pChemicalSystem=&chemicalSystem;
-    chemicalSystem.nmorb=-1;
-    chemicalSystem.pmorb=(MolecularOrbital*)calloc(6,sizeof(MolecularOrbital));
-    PRINT_TEST_START(counter,expectedValue);
-    fprintf(stdout,"pChemicalSystem=%p with ",(void*)pChemicalSystem);
-    fprintf(stdout,"nmorb=%d ",pChemicalSystem->nmorb);
-    fprintf(stdout,"and pmorb=%p\n",(void*)pChemicalSystem->pmorb);
-    freeChemicalMemory(pChemicalSystem);
-    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
-                                                                      readChar);
-
-    PRINT_TEST_START(counter,expectedValue);
-    fprintf(stdout,"pChemicalSystem=%p with ",(void*)pChemicalSystem);
-    fprintf(stdout,"nmorb=%d ",pChemicalSystem->nmorb);
-    fprintf(stdout,"and pmorb=%p\n",(void*)pChemicalSystem->pmorb);
-    freeChemicalMemory(pChemicalSystem);
-    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
-                                                                      readChar);
-
-    chemicalSystem.nmorb=0;
     PRINT_TEST_START(counter,expectedValue);
     fprintf(stdout,"pChemicalSystem=%p\n",(void*)pChemicalSystem);
     freeChemicalMemory(pChemicalSystem);
     PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
                                                                       readChar);
 
+    for (iRandom=-10; iRandom<1; iRandom++)
+    {
+        for (i=-10; i<1; i++)
+        {
+            pChemicalSystem->nmorb=iRandom;
+            pChemicalSystem->ndet=i;
+            for (j=0; j<2; j++)
+            {
+                for (k=0; k<2; k++)
+                {
+                    for (l=0; l<2; l++)
+                    {
+                        if (j)
+                        {
+                            pChemicalSystem->pmorb=(MolecularOrbital*)
+                                            malloc(10*sizeof(MolecularOrbital));
+                        }
+                        else
+                        {
+                            pChemicalSystem->pmorb=NULL;
+                        }
+
+                        if (k)
+                        {
+                            pChemicalSystem->pdet=
+                                   (Determinant*)malloc(10*sizeof(Determinant));
+                        }
+                        else
+                        {
+                            pChemicalSystem->pdet=NULL;
+                        }
+
+                        if (l)
+                        {
+                            pChemicalSystem->pmat=
+                               (OverlapMatrix*)malloc(10*sizeof(OverlapMatrix));
+                        }
+                        else
+                        {
+                            pChemicalSystem->pmat=NULL;
+                        }
+
+                        PRINT_TEST_START(counter,expectedValue);
+                        fprintf(stdout,"nmorb=%d\n",pChemicalSystem->nmorb);
+                        fprintf(stdout,"ndet=%d\n",pChemicalSystem->ndet);
+                        fprintf(stdout,"pmorb=%p\n",
+                                                 (void*)pChemicalSystem->pmorb);
+                        fprintf(stdout,"pdet=%p\n",
+                                                  (void*)pChemicalSystem->pdet);
+                        fprintf(stdout,"pmat=%p\n",
+                                                  (void*)pChemicalSystem->pmat);
+                        freeChemicalMemory(pChemicalSystem);
+                        PRINT_TEST_END(counter,counterSuccess,counterFail,
+                                            returnValue,expectedValue,readChar);
+                    }
+                }
+            }
+        }
+    }
+
     for (iRandom=0; iRandom<50000; iRandom++)
     {
         // Giving random value to the variables
-        pChemicalSystem->nnucl=rand()%5-1;
-        lengthArray=rand()%10+1;
-        if (lengthArray>7)
+        pChemicalSystem->nnucl=rand()%50-15;
+        lengthArray=rand()%20+1;
+        if (lengthArray>12)
         {
             pChemicalSystem->pnucl=NULL;
         }
@@ -264,26 +320,38 @@ void testFreeChemicalMemory(void)
             pChemicalSystem->pnucl=(Nucleus*)calloc(lengthArray,
                                                                sizeof(Nucleus));
         }
-        pChemicalSystem->ngauss=rand()%161-30;
+        if (pChemicalSystem->pnucl!=NULL)
+        {
+            iMax=lengthArray;
+            for (i=0; i<iMax; i++)
+            {
+                pChemicalSystem->pnucl[i].x=(double)(rand()%6001-3000)/1000.;
+                pChemicalSystem->pnucl[i].y=(double)(rand()%6001-3000)/1000.;
+                pChemicalSystem->pnucl[i].z=(double)(rand()%6001-3000)/1000.;
+                pChemicalSystem->pnucl[i].charge=rand()%161-30;
+            }
+        }
+        pChemicalSystem->nprim=rand()%161-30;
 
-        lengthArray=rand()%20+1;
-        pChemicalSystem->nmorb=lengthArray;
-        if (lengthArray>15)
+        lengthMorb=rand()%20+1;
+        pChemicalSystem->nmorb=lengthMorb;
+        if (lengthMorb>15)
         {
             pChemicalSystem->pmorb=NULL;
         }
         else
         {
-            pChemicalSystem->pmorb=(MolecularOrbital*)calloc(lengthArray,
+            pChemicalSystem->pmorb=(MolecularOrbital*)calloc(lengthMorb,
                                                       sizeof(MolecularOrbital));
         }
-
         if (pChemicalSystem->pmorb!=NULL)
         {
-            for (i=0; i<pChemicalSystem->nmorb; i++)
+            iMax=lengthMorb;
+            for (i=0; i<iMax; i++)
             {
                 pMolecularOrbital=&pChemicalSystem->pmorb[i];
                 pMolecularOrbital->spin=rand()%5-2;
+                pMolecularOrbital->ngauss=rand()%161-30;
 
                 lengthArray=rand()%120+1;
                 if (lengthArray>100)
@@ -294,6 +362,15 @@ void testFreeChemicalMemory(void)
                 {
                     pMolecularOrbital->coeff=(double*)calloc(lengthArray,
                                                                 sizeof(double));
+                }
+                if (pMolecularOrbital->coeff!=NULL)
+                {
+                    jMax=lengthArray;
+                    for (j=0; j<jMax; j++)
+                    {
+                        pMolecularOrbital->coeff[j]=
+                                               (double)(rand()%6001-3000)/1000.;
+                    }
                 }
 
                 lengthArray=rand()%120+1;
@@ -306,6 +383,15 @@ void testFreeChemicalMemory(void)
                     pMolecularOrbital->exp=(double*)calloc(lengthArray,
                                                                 sizeof(double));
                 }
+                if (pMolecularOrbital->exp!=NULL)
+                {
+                    jMax=lengthArray;
+                    for (j=0; j<jMax; j++)
+                    {
+                        pMolecularOrbital->exp[j]=
+                                               (double)(rand()%6001-3000)/1000.;
+                    }
+                }
 
                 lengthArray=rand()%120+1;
                 if (lengthArray>100)
@@ -316,6 +402,14 @@ void testFreeChemicalMemory(void)
                 {
                     pMolecularOrbital->nucl=(int*)calloc(lengthArray,
                                                                    sizeof(int));
+                }
+                if (pMolecularOrbital->nucl!=NULL)
+                {
+                    jMax=lengthArray;
+                    for (j=0; j<jMax; j++)
+                    {
+                        pMolecularOrbital->nucl[j]=rand()%161-30;
+                    }
                 }
 
                 lengthArray=rand()%120+1;
@@ -328,6 +422,182 @@ void testFreeChemicalMemory(void)
                     pMolecularOrbital->type=(int*)calloc(lengthArray,
                                                                    sizeof(int));
                 }
+                if (pMolecularOrbital->type!=NULL)
+                {
+                    jMax=lengthArray;
+                    for (j=0; j<jMax; j++)
+                    {
+                        pMolecularOrbital->type[j]=rand()%161-30;
+                    }
+                }
+
+                lengthArray=rand()%120+1;
+                if (lengthArray>100)
+                {
+                    pMolecularOrbital->pgauss=NULL;
+                }
+                else
+                {
+                    pMolecularOrbital->pgauss=(int*)calloc(lengthArray,
+                                                                   sizeof(int));
+                }
+                if (pMolecularOrbital->pgauss!=NULL)
+                {
+                    jMax=lengthArray;
+                    for (j=0; j<jMax; j++)
+                    {
+                        pMolecularOrbital->pgauss[j]=rand()%161-30;
+                    }
+                }
+            }
+        }
+        pChemicalSystem->ne=rand()%60-20;
+        pChemicalSystem->nu=rand()%60-20;
+
+        lengthDet=rand()%20+1;
+        pChemicalSystem->ndet=lengthDet;
+        if (lengthDet>5 && lengthDet<15)
+        {
+            pChemicalSystem->pdet=NULL;
+        }
+        else
+        {
+            pChemicalSystem->pdet=(Determinant*)calloc(lengthDet,
+                                                           sizeof(Determinant));
+        }
+        if (pChemicalSystem->pdet!=NULL)
+        {
+            iMax=lengthDet;
+            for (i=0; i<iMax; i++)
+            {
+                pDeterminant=&pChemicalSystem->pdet[i];
+                pDeterminant->rhf=rand()%161-30;
+                pDeterminant->cdet=(double)(rand()%6001-3000)/1000.;
+
+                lengthArray=rand()%120+1;
+                if (lengthArray>100)
+                {
+                    pDeterminant->vmorb=NULL;
+                }
+                else
+                {
+                    pDeterminant->vmorb=(int*)calloc(lengthArray,sizeof(int));
+                }
+                if (pDeterminant->vmorb!=NULL)
+                {
+                    jMax=lengthArray;
+                    for (j=0; j<jMax; j++)
+                    {
+                        pDeterminant->vmorb[j]=rand()%161-30;
+                    }
+                }
+            }
+        }
+
+        lengthMatrix=lengthDet*lengthDet;
+        if (lengthMatrix>200)
+        {
+            pChemicalSystem->pmat=NULL;
+        }
+        else
+        {
+            pChemicalSystem->pmat=(OverlapMatrix*)calloc(lengthMatrix,
+                                                         sizeof(OverlapMatrix));
+        }
+        if (pChemicalSystem->pmat!=NULL)
+        {
+            iMax=lengthMatrix;
+            for (i=0; i<iMax; i++)
+            {
+                pOverlapMatrix=&pChemicalSystem->pmat[i];
+
+                pOverlapMatrix->nmat=rand()%161-30;
+                pOverlapMatrix->rhf=rand()%161-30;
+                pOverlapMatrix->sym=rand()%161-30;
+                pOverlapMatrix->id=rand()%161-30;
+                pOverlapMatrix->cmat=(double)(rand()%6001-3000)/1000.;
+
+                lengthArray=rand()%120+1;
+                if (lengthArray>100)
+                {
+                    pOverlapMatrix->coef=NULL;
+                }
+                else
+                {
+                    pOverlapMatrix->coef=(double*)calloc(lengthArray,
+                                                                sizeof(double));
+                }
+                if (pOverlapMatrix->coef!=NULL)
+                {
+                    jMax=lengthArray;
+                    for (j=0; j<jMax; j++)
+                    {
+                        pOverlapMatrix->coef[j]=
+                                               (double)(rand()%6001-3000)/1000.;
+                    }
+                }
+
+                lengthArray=rand()%120+1;
+                if (lengthArray>100)
+                {
+                    pOverlapMatrix->diag=NULL;
+                }
+                else
+                {
+                    pOverlapMatrix->diag=(double complex*)calloc(lengthArray,
+                                                        sizeof(double complex));
+                }
+                if (pOverlapMatrix->diag!=NULL)
+                {
+                    jMax=lengthArray;
+                    for (j=0; j<jMax; j++)
+                    {
+                        pOverlapMatrix->diag[j]=(double)(rand()%6001-3000)/1000.
+                                            +I*(double)(rand()%6001-3000)/1000.;
+                    }
+                }
+
+                lengthArray=rand()%120+1;
+                if (lengthArray>100)
+                {
+                    pOverlapMatrix->lvect=NULL;
+                }
+                else
+                {
+                    pOverlapMatrix->lvect=(double complex*)calloc(lengthArray,
+                                                        sizeof(double complex));
+                }
+                if (pOverlapMatrix->lvect!=NULL)
+                {
+                    jMax=lengthArray;
+                    for (j=0; j<jMax; j++)
+                    {
+                        pOverlapMatrix->lvect[j]=
+                                                (double)(rand()%6001-3000)/1000.
+                                            +I*(double)(rand()%6001-3000)/1000.;
+                    }
+                }
+
+                lengthArray=rand()%120+1;
+                if (lengthArray>100)
+                {
+                    pOverlapMatrix->rvect=NULL;
+                }
+                else
+                {
+                    pOverlapMatrix->rvect=(double complex*)calloc(lengthArray,
+                                                        sizeof(double complex));
+                }
+                if (pOverlapMatrix->rvect!=NULL)
+                {
+                    jMax=lengthArray;
+                    for (j=0; j<jMax; j++)
+                    {
+                        pOverlapMatrix->rvect[j]=
+                                                (double)(rand()%6001-3000)/1000.
+                                            +I*(double)(rand()%6001-3000)/1000.;
+                    }
+                }
             }
         }
 
@@ -336,22 +606,65 @@ void testFreeChemicalMemory(void)
         // Printing the value of the different variables
         fprintf(stdout,"nnucl=%d\n",pChemicalSystem->nnucl);
         fprintf(stdout,"pnucl=%p\n",(void*)pChemicalSystem->pnucl);
-        fprintf(stdout,"ngauss=%d\n",pChemicalSystem->ngauss);
+        fprintf(stdout,"nprim=%d\n",pChemicalSystem->nprim);
         fprintf(stdout,"nmorb=%d\n",pChemicalSystem->nmorb);
         fprintf(stdout,"pmorb=%p\n",(void*)pChemicalSystem->pmorb);
+        fprintf(stdout,"ne=%d\n",pChemicalSystem->ne);
+        fprintf(stdout,"nu=%d\n",pChemicalSystem->nu);
+        fprintf(stdout,"ndet=%d\n",pChemicalSystem->ndet);
+        fprintf(stdout,"pdet=%p\n",(void*)pChemicalSystem->pdet);
+        fprintf(stdout,"pmat=%p\n\n",(void*)pChemicalSystem->pmat);
 
         if (pChemicalSystem->pmorb!=NULL)
         {
-            for (i=0; i<pChemicalSystem->nmorb; i++)
+            iMax=lengthMorb;
+            for (i=0; i<iMax; i++)
             {
                 pMolecularOrbital=&pChemicalSystem->pmorb[i];
-                fprintf(stdout,"Orbital %d: ",i+1);
+                fprintf(stdout,"MolecularOrbital %d: ",i+1);
                 fprintf(stdout,"spin=%d ",pMolecularOrbital->spin);
                 fprintf(stdout,"coeff=%p ",(void*)pMolecularOrbital->coeff);
                 fprintf(stdout,"exp=%p ",(void*)pMolecularOrbital->exp);
                 fprintf(stdout,"nucl=%p ",(void*)pMolecularOrbital->nucl);
-                fprintf(stdout,"type=%p\n",(void*)pMolecularOrbital->type);
+                fprintf(stdout,"type=%p ",(void*)pMolecularOrbital->type);
+                fprintf(stdout,"ngauss=%d ",pMolecularOrbital->ngauss);
+                fprintf(stdout,"pgauss=%p\n",(void*)pMolecularOrbital->pgauss);
             }
+            fprintf(stdout,"\n");
+        }
+
+        if (pChemicalSystem->pdet!=NULL)
+        {
+            iMax=lengthDet;
+            for (i=0; i<iMax; i++)
+            {
+                pDeterminant=&pChemicalSystem->pdet[i];
+                fprintf(stdout,"Determinant %d: ",i+1);
+                fprintf(stdout,"rhf=%d ",pDeterminant->rhf);
+                fprintf(stdout,"cdet=%lf ",pDeterminant->cdet);
+                fprintf(stdout,"vmorb=%p\n",(void*)pDeterminant->vmorb);
+            }
+            fprintf(stdout,"\n");
+        }
+
+        if (pChemicalSystem->pmat!=NULL)
+        {
+            iMax=lengthMatrix;
+            for (i=0; i<iMax; i++)
+            {
+                pOverlapMatrix=&pChemicalSystem->pmat[i];
+                fprintf(stdout,"OverlapMatrix %d ",i+1);
+                fprintf(stdout,"nmat=%d ",pOverlapMatrix->nmat);
+                fprintf(stdout,"rhf=%d ",pOverlapMatrix->rhf);
+                fprintf(stdout,"sym=%d ",pOverlapMatrix->sym);
+                fprintf(stdout,"id=%d ",pOverlapMatrix->id);
+                fprintf(stdout,"cmat=%lf ",pOverlapMatrix->cmat);
+                fprintf(stdout,"coef=%p ",(void*)pOverlapMatrix->coef);
+                fprintf(stdout,"diag=%p ",(void*)pOverlapMatrix->diag);
+                fprintf(stdout,"lvect=%p ",(void*)pOverlapMatrix->lvect);
+                fprintf(stdout,"rvect=%p\n",(void*)pOverlapMatrix->rvect);
+            }
+            fprintf(stdout,"\n");
         }
 
         // Testing the function
@@ -364,6 +677,8 @@ void testFreeChemicalMemory(void)
         // Checking if it worked
         boolean=(pChemicalSystem->pnucl!=NULL);
         boolean=(boolean || pChemicalSystem->pmorb!=NULL);
+        boolean=(boolean || pChemicalSystem->pdet!=NULL);
+        boolean=(boolean || pChemicalSystem->pmat!=NULL);
 
         returnValue=1;
         if (boolean)
@@ -377,20 +692,8 @@ void testFreeChemicalMemory(void)
 
             fprintf(stdout,"pnucl=%p\n",(void*)pChemicalSystem->pnucl);
             fprintf(stdout,"pmorb=%p\n",(void*)pChemicalSystem->pmorb);
-
-            if (pChemicalSystem->pmorb!=NULL)
-            {
-                for (i=0; i<pChemicalSystem->nmorb; i++)
-                {
-                    pMolecularOrbital=&pChemicalSystem->pmorb[i];
-                    fprintf(stdout,"Orbital %d: ",i+1);
-                    fprintf(stdout,"spin=%d ",pMolecularOrbital->spin);
-                    fprintf(stdout,"coeff=%p ",(void*)pMolecularOrbital->coeff);
-                    fprintf(stdout,"exp=%p ",(void*)pMolecularOrbital->exp);
-                    fprintf(stdout,"nucl=%p ",(void*)pMolecularOrbital->nucl);
-                    fprintf(stdout,"type=%p\n",(void*)pMolecularOrbital->type);
-                }
-            }
+            fprintf(stdout,"pdet=%p\n",(void*)pChemicalSystem->pdet);
+            fprintf(stdout,"pmat=%p\n",(void*)pChemicalSystem->pmat);
         }
 
         PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,
@@ -413,5 +716,4 @@ void testFreeChemicalMemory(void)
 
     return;
 }
-*/
 

@@ -80,8 +80,8 @@ void testInitializeMeshStructure(void)
             *pInteger[i]=rand()%161-30;
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->pver=NULL;
         }
@@ -102,8 +102,8 @@ void testInitializeMeshStructure(void)
             }
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->pnorm=NULL;
         }
@@ -123,8 +123,8 @@ void testInitializeMeshStructure(void)
             }
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->ptan=NULL;
         }
@@ -144,8 +144,8 @@ void testInitializeMeshStructure(void)
             }
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->pedg=NULL;
         }
@@ -164,8 +164,8 @@ void testInitializeMeshStructure(void)
             }
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->ptri=NULL;
         }
@@ -185,8 +185,8 @@ void testInitializeMeshStructure(void)
             }
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->ptet=NULL;
         }
@@ -207,8 +207,8 @@ void testInitializeMeshStructure(void)
             }
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->pdom=NULL;
         }
@@ -225,8 +225,8 @@ void testInitializeMeshStructure(void)
             }
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->pbox=NULL;
         }
@@ -243,8 +243,8 @@ void testInitializeMeshStructure(void)
             }
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->pqua=NULL;
         }
@@ -266,8 +266,8 @@ void testInitializeMeshStructure(void)
             }
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->phex=NULL;
         }
@@ -292,8 +292,8 @@ void testInitializeMeshStructure(void)
             }
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->padj=NULL;
         }
@@ -476,8 +476,8 @@ void testFreeMeshMemory(void)
             *pInteger[i]=rand()%161-30;
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->pver=NULL;
         }
@@ -498,8 +498,8 @@ void testFreeMeshMemory(void)
             }
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->pnorm=NULL;
         }
@@ -519,8 +519,8 @@ void testFreeMeshMemory(void)
             }
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->ptan=NULL;
         }
@@ -540,8 +540,8 @@ void testFreeMeshMemory(void)
             }
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->pedg=NULL;
         }
@@ -560,8 +560,8 @@ void testFreeMeshMemory(void)
             }
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->ptri=NULL;
         }
@@ -581,8 +581,8 @@ void testFreeMeshMemory(void)
             }
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->ptet=NULL;
         }
@@ -603,8 +603,8 @@ void testFreeMeshMemory(void)
             }
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->pdom=NULL;
         }
@@ -621,8 +621,8 @@ void testFreeMeshMemory(void)
             }
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->pbox=NULL;
         }
@@ -639,8 +639,8 @@ void testFreeMeshMemory(void)
             }
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->pqua=NULL;
         }
@@ -662,8 +662,8 @@ void testFreeMeshMemory(void)
             }
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->phex=NULL;
         }
@@ -688,8 +688,8 @@ void testFreeMeshMemory(void)
             }
         }
 
-        lengthArray=rand()%10000+1;
-        if (lengthArray>7000)
+        lengthArray=rand()%200+1;
+        if (lengthArray>160)
         {
             pMesh->padj=NULL;
         }

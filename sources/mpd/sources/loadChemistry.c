@@ -111,7 +111,7 @@ void freeChemicalMemory(ChemicalSystem* pChemicalSystem)
 
         if (pChemicalSystem->pmat!=NULL)
         {
-            iMax=(pChemicalSystem->ndet)*(pChemicalSystem->ndet);
+            iMax=(pChemicalSystem->ndet)*abs(pChemicalSystem->ndet);
             if (iMax<1)
             {
                 fprintf(stdout,"\nWarning in freeChemicalMemory function: ");

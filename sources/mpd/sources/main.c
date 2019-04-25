@@ -226,7 +226,7 @@ int main(int argc, char *argv[])
     // We set the seed for rand() function then we test the selected functions
     srand(time(NULL)); // Warning: srand(time(NULL)) must be set only one time
     test();            // It contains all the selected unit-testing functions
-#else
+#endif
 
 /*
     // Check values of all the preprocessor constants
@@ -537,8 +537,6 @@ int main(int argc, char *argv[])
     }
 */
 
-#endif
-
     FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_SUCCESS);
 }
 
@@ -690,7 +688,6 @@ char* endTimerAtError(void)
     return ctime(&localFinalTimer);
 }
 
-/*
 ////////////////////////////////////////////////////////////////////////////////
 // The function checkStringFromLength evaluates the length (including the
 // terminating nul character '\0') of stringTocheck, which must be comprised
@@ -1267,6 +1264,7 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
     return 1;
 }
 
+/*
 ////////////////////////////////////////////////////////////////////////////////
 // The function initialFileExists checks if a file exists at the location
 // pointed by fileLocation, which must be a string of length less than

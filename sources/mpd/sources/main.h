@@ -33,12 +33,12 @@
     #include <omp.h> // take it into account by adding -fopenmp with gcc command
 #endif
 
-/**
-* \def UNIT_TESTS
-* \brief Used to activate or not the unit-testing of all the functions
-*        appearing in the MPD algorithm.
-*/
-//#define UNIT_TESTS
+// /**
+// * \def UNIT_TESTS
+// * \brief Used to activate or not the unit-testing of all the functions
+// *        appearing in the MPD algorithm.
+// */
+// #define UNIT_TESTS
 
 ////////////////////////////////////////////////////////////////////////////////
 // Macro functions to initialize the diagnostic of an error, to get the
@@ -285,46 +285,44 @@ do {                                                                           \
 */
 #define ORB_FXYZ 20
 
-/*
-// Not used in the current version of the MPD program (but we save the values
-// here just in case they might be needed later)
-#define ORB_GXXXX 21
-#define ORB_GYYYY 22
-#define ORB_GZZZZ 23
-#define ORB_GXXXY 24
-#define ORB_GXXXZ 25
-#define ORB_GXYYY 26
-#define ORB_GYYYZ 27
-#define ORB_GXZZZ 28
-#define ORB_GYZZZ 29
-#define ORB_GXXYY 30
-#define ORB_GXXZZ 31
-#define ORB_GYYZZ 32
-#define ORB_GXXYZ 33
-#define ORB_GXYYZ 34
-#define ORB_GXYZZ 35
-#define ORB_HZZZZZ 36
-#define ORB_HYZZZZ 37
-#define ORB_HYYZZZ 38
-#define ORB_HYYYZZ 39
-#define ORB_HYYYYZ 40
-#define ORB_HYYYYY 41
-#define ORB_HXZZZZ 42
-#define ORB_HXYZZZ 43
-#define ORB_HXYYZZ 44
-#define ORB_HXYYYZ 45
-#define ORB_HXYYYY 46
-#define ORB_HXXZZZ 47
-#define ORB_HXXYZZ 48
-#define ORB_HXXYYZ 49
-#define ORB_HXXYYY 50
-#define ORB_HXXXZZ 51
-#define ORB_HXXXYZ 52
-#define ORB_HXXXYY 53
-#define ORB_HXXXXZ 54
-#define ORB_HXXXXY 55
-#define ORB_HXXXXX 56
-*/
+// // Not used in the current version of the MPD program (but we save the values
+// // here just in case they might be needed later)
+// #define ORB_GXXXX 21
+// #define ORB_GYYYY 22
+// #define ORB_GZZZZ 23
+// #define ORB_GXXXY 24
+// #define ORB_GXXXZ 25
+// #define ORB_GXYYY 26
+// #define ORB_GYYYZ 27
+// #define ORB_GXZZZ 28
+// #define ORB_GYZZZ 29
+// #define ORB_GXXYY 30
+// #define ORB_GXXZZ 31
+// #define ORB_GYYZZ 32
+// #define ORB_GXXYZ 33
+// #define ORB_GXYYZ 34
+// #define ORB_GXYZZ 35
+// #define ORB_HZZZZZ 36
+// #define ORB_HYZZZZ 37
+// #define ORB_HYYZZZ 38
+// #define ORB_HYYYZZ 39
+// #define ORB_HYYYYZ 40
+// #define ORB_HYYYYY 41
+// #define ORB_HXZZZZ 42
+// #define ORB_HXYZZZ 43
+// #define ORB_HXYYZZ 44
+// #define ORB_HXYYYZ 45
+// #define ORB_HXYYYY 46
+// #define ORB_HXXZZZ 47
+// #define ORB_HXXYZZ 48
+// #define ORB_HXXYYZ 49
+// #define ORB_HXXYYY 50
+// #define ORB_HXXXZZ 51
+// #define ORB_HXXXYZ 52
+// #define ORB_HXXXYY 53
+// #define ORB_HXXXXZ 54
+// #define ORB_HXXXXY 55
+// #define ORB_HXXXXX 56
 
 ////////////////////////////////////////////////////////////////////////////////
 // Definition of the structure storing the 78 parameters used in the algorithm
@@ -1271,11 +1269,11 @@ typedef struct {
 // Definition of the structures used to save the data in the MPD algorithm
 ////////////////////////////////////////////////////////////////////////////////
 // /**
-//* \struct Probabilities main.h
-//* \brief It can store all the different types of probabilities to find exactly
-//*        a certain number of electrons in a given domain.
+// * \struct Probabilities main.h
+// * \brief It can store all the different types of probabilities to find 
+// *        exactly a certain number of electrons in a given domain.
 // */
-//typedef struct {
+// typedef struct {
 //  double* pk;              /*!< Pointer used to dynamically define the array
 //                           *    storing at the k-th position the probability
 //                           *    to find exactly k electrons in a given domain;
@@ -1297,7 +1295,7 @@ typedef struct {
 //                           *    correspond to the (nprob)x(nprob) value, where
 //                           *    the nprob variable refers to the one of
 //                           *    the Data structure. */
-//} Probabilities;
+// } Probabilities;
 
 /**
 * \struct Data main.h
