@@ -245,7 +245,7 @@ int main(int argc, char *argv[])
         PRINT_ERROR("In main: checkAllPreprocessorConstants function ");
         fprintf(stderr,"returned zero instead of one.\n");
 
-        // Printing also an error message in the standard output
+        // Printing also a simpler error message in the standard output
         fprintf(stdout,"\n%s\nERROR: invalid preprocessor ",STR_ERROR);
         fprintf(stdout,"constant(s). Please recompile properly the ");
         fprintf(stdout,"program.\n%s\n",STR_ERROR);
@@ -672,7 +672,7 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
     if (i==maximumLength)
     {
         PRINT_ERROR("In checkStringFromLength: the input (char*) variable ");
-        fprintf(stderr,"stringToCheck (=%p) is supposed ",(void*)stringToCheck);
+        fprintf(stderr,"stringToCheck=%p is supposed ",(void*)stringToCheck);
         fprintf(stderr,"to store a name as a string. It seems that ");
         fprintf(stderr,"stringToCheck is not a string (no terminating NUL ");
         fprintf(stderr,"character found) or has a length greater or equal to ");
@@ -682,7 +682,7 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
     else if (i<minimumLength-1)
     {
         PRINT_ERROR("In checkStringFromLength: the input (char*) variable ");
-        fprintf(stderr,"stringToCheck is a string %s of length ",stringToCheck);
+        fprintf(stderr,"stringToCheck is a string=%s of length ",stringToCheck);
         fprintf(stderr,"%d which is strictly less than the minimal size ",i);
         fprintf(stderr,"(=%d) allowed here.\n",minimumLength-1);
         return 0;
@@ -885,7 +885,7 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
     if (!boolean)
     {
         PRINT_ERROR("In checkAllPreprocessorConstants: expecting\n");
-        fprintf(stderr,"0.0 <= (SELECT_BOX=%lf) <= 0.1\nor\n",selectBox);
+        fprintf(stderr,"0.0 <= (SELECT_BOX=%lf) <= 0.1\n\nor\n\n",selectBox);
         fprintf(stderr,"0.9 <= (SELECT_BOX=%lf) <  1.0\n",selectBox);
         fprintf(stderr,"Please modify the preprocessor constant accordingly ");
         fprintf(stderr,"in loadParameters.h file.\n");

@@ -18,7 +18,7 @@
 #include "loadChemistry.h"
 #include "loadMesh.h"
 
-//#include "adaptMesh.h"
+#include "adaptMesh.h"
 #include "computeData.h"
 //#include "optimization.h"
 
@@ -50,7 +50,7 @@ void test(void)
 //    testFreeParameterMemory();
 
 //    testCheckStringFromLength();
-    testCheckAllPreprocessorConstants();
+//    testCheckAllPreprocessorConstants();
 //    testInitialFileExists();
 //    testCloseTheFile();
 
@@ -360,7 +360,10 @@ void testCheckStringFromLength(void)
     int counterFail=0, readChar=0;
 
     char stringToCheck[16]={'\0'}, *pStringToCheck=NULL;
-    int i=0, iTest=0, minimumLength=0, maximumLength=0;
+    int iTest=0, i=0, j=0, k=0, l=0, minimumLength=0, maximumLength=0;
+    char pStringToCheckBefore[6]={'a','b','1','1','d','1'};
+    char pStringToCheckAfter[6]={'A','1','C','1','\0','\0'};
+    int *pIntMaxOrMin[2]={&minimumLength,&maximumLength};
 
     // Test starts
     time(&startTimer);
@@ -387,545 +390,74 @@ void testCheckStringFromLength(void)
     PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,
                                                         expectedValue,readChar);
 
-    for (minimumLength=-10; minimumLength<11; minimumLength++)
+    for (maximumLength=-10; maximumLength<11; maximumLength++)
     {
-        for (maximumLength=-10; maximumLength<11; maximumLength++)
+        for (minimumLength=-10; minimumLength<11; minimumLength++)
         {
-            for (iTest=0; iTest<32; iTest++)
+            for (i=0; i<2; i++)
             {
-                switch(iTest)
+                for (j=-10; j<11; j++)
                 {
-                    case 0:
-                        for (i=0; i<15; i++)
+                    for (k=0; k<6; k++)
+                    {
+                        for (iTest=0; iTest<2; iTest++)
                         {
-                            if (i<maximumLength-5)
+                            for (l=0; l<15; l++)
                             {
-                                stringToCheck[i]='a';
+                                stringToCheck[l]=rand()%90+33;
                             }
-                            else if (i==maximumLength-5)
+
+                            if (iTest)
                             {
-                                stringToCheck[i]='\0';
+                                for (l=0; l<15; l++)
+                                {
+                                    if (l<*pIntMaxOrMin[i]+j)
+                                    {
+                                        if (pStringToCheckBefore[k]!='1')
+                                        {
+                                            stringToCheck[l]=
+                                                        pStringToCheckBefore[k];
+                                        }
+                                    }
+                                    else if (l==*pIntMaxOrMin[i]+j)
+                                    {
+                                        stringToCheck[l]='\0';
+                                    }
+                                    else
+                                    {
+                                        if (pStringToCheckBefore[k]!='1')
+                                        {
+                                            stringToCheck[l]=
+                                                         pStringToCheckAfter[k];
+                                        }
+                                    }
+                                }
                             }
                             else
                             {
-                                stringToCheck[i]='A';
+                                stringToCheck[rand()%15]='\0';
                             }
-                        }
-                        break;
 
-                    case 1:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength-5)
+                            expectedValue=strlen(stringToCheck)+1;
+                            if (minimumLength<1 || maximumLength<minimumLength
+                                               || expectedValue>maximumLength ||
+                                                    expectedValue<minimumLength)
                             {
-                                stringToCheck[i]='b';
+                                expectedValue=0;
                             }
-                            else if (i==maximumLength-5)
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                            else
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                        }
-                        break;
 
-                    case 2:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength-5)
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                            else if (i==maximumLength-5)
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                            else
-                            {
-                                stringToCheck[i]='C';
-                            }
-                        }
-                        break;
-
-                    case 3:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength-5)
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                            else if (i==maximumLength-5)
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                            else
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                        }
-                        break;
-
-                    case 4:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength-5)
-                            {
-                                stringToCheck[i]='d';
-                            }
-                            else
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                        }
-                        break;
-
-                    case 5:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength-5)
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                            else
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                        }
-                        break;
-
-                    case 6:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength-1)
-                            {
-                                stringToCheck[i]='e';
-                            }
-                            else if (i==maximumLength-1)
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                            else
-                            {
-                                stringToCheck[i]='E';
-                            }
-                        }
-                        break;
-
-                    case 7:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength-1)
-                            {
-                                stringToCheck[i]='f';
-                            }
-                            else if (i==maximumLength-1)
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                            else
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                        }
-                        break;
-
-                    case 8:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength-1)
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                            else if (i==maximumLength-1)
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                            else
-                            {
-                                stringToCheck[i]='G';
-                            }
-                        }
-                        break;
-
-                    case 9:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength-1)
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                            else if (i==maximumLength-1)
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                            else
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                        }
-                        break;
-
-                    case 10:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength-1)
-                            {
-                                stringToCheck[i]='h';
-                            }
-                            else
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                        }
-                        break;
-
-                    case 11:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength-1)
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                            else
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                        }
-                        break;
-
-                    case 12:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength)
-                            {
-                                stringToCheck[i]='i';
-                            }
-                            else if (i==maximumLength)
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                            else
-                            {
-                                stringToCheck[i]='I';
-                            }
-                        }
-                        break;
-
-                    case 13:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength)
-                            {
-                                stringToCheck[i]='j';
-                            }
-                            else if (i==maximumLength)
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                            else
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                        }
-                        break;
-
-                    case 14:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength)
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                            else if (i==maximumLength)
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                            else
-                            {
-                                stringToCheck[i]='K';
-                            }
-                        }
-                        break;
-
-                    case 15:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength)
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                            else if (i==maximumLength)
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                            else
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                        }
-                        break;
-
-                    case 16:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength)
-                            {
-                                stringToCheck[i]='l';
-                            }
-                            else
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                        }
-                        break;
-
-                    case 17:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength)
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                            else
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                        }
-                        break;
-
-                    case 18:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength+1)
-                            {
-                                stringToCheck[i]='m';
-                            }
-                            else if (i==maximumLength+1)
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                            else
-                            {
-                                stringToCheck[i]='M';
-                            }
-                        }
-                        break;
-
-                    case 19:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength+1)
-                            {
-                                stringToCheck[i]='n';
-                            }
-                            else if (i==maximumLength+1)
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                            else
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                        }
-                        break;
-
-                    case 20:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength+1)
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                            else if (i==maximumLength+1)
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                            else
-                            {
-                                stringToCheck[i]='O';
-                            }
-                        }
-                        break;
-
-                    case 21:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength+1)
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                            else if (i==maximumLength+1)
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                            else
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                        }
-                        break;
-
-                    case 22:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength+1)
-                            {
-                                stringToCheck[i]='p';
-                            }
-                            else
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                        }
-                        break;
-
-                    case 23:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength+1)
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                            else
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                        }
-                        break;
-
-                    case 24:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength+5)
-                            {
-                                stringToCheck[i]='q';
-                            }
-                            else if (i==maximumLength+5)
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                            else
-                            {
-                                stringToCheck[i]='Q';
-                            }
-                        }
-                        break;
-
-                    case 25:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength+5)
-                            {
-                                stringToCheck[i]='r';
-                            }
-                            else if (i==maximumLength+5)
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                            else
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                        }
-                        break;
-
-                    case 26:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength+5)
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                            else if (i==maximumLength+5)
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                            else
-                            {
-                                stringToCheck[i]='S';
-                            }
-                        }
-                        break;
-
-                    case 27:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength+5)
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                            else if (i==maximumLength+5)
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                            else
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                        }
-                        break;
-
-                    case 28:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength+5)
-                            {
-                                stringToCheck[i]='t';
-                            }
-                            else
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                        }
-                        break;
-
-                    case 29:
-                        for (i=0; i<15; i++)
-                        {
-                            if (i<maximumLength+5)
-                            {
-                                stringToCheck[i]=rand()%90+33;
-                            }
-                            else
-                            {
-                                stringToCheck[i]='\0';
-                            }
-                        }
-                        break;
-
-                    case 30:
-                        for (i=0; i<15; i++)
-                        {
-                            stringToCheck[i]=rand()%90+33;
-                        }
-                        break;
-
-                    case 31:
-                        for (i=0; i<15; i++)
-                        {
-                            stringToCheck[i]=rand()%90+33;
-                        }
-                        stringToCheck[rand()%15]='\0';
-                        break;
-                }
-
-                expectedValue=strlen(stringToCheck)+1;
-                if (minimumLength<1 || maximumLength<minimumLength ||
-                     expectedValue>maximumLength || expectedValue<minimumLength)
-                {
-                    expectedValue=0;
-                }
-
-                PRINT_TEST_START(counter,expectedValue);
-                fprintf(stdout,"stringToCheck=%s\n",pStringToCheck);
-                fprintf(stdout,"minimumLength=%d\n",minimumLength);
-                fprintf(stdout,"maximumLength=%d\n",maximumLength);
-                returnValue=checkStringFromLength(pStringToCheck,minimumLength,
+                            PRINT_TEST_START(counter,expectedValue);
+                            fprintf(stdout,"stringToCheck=%s\n",pStringToCheck);
+                            fprintf(stdout,"minimumLength=%d\n",minimumLength);
+                            fprintf(stdout,"maximumLength=%d\n",maximumLength);
+                            returnValue=checkStringFromLength(pStringToCheck,
+                                                              minimumLength,
                                                                  maximumLength);
-                PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,
-                                                        expectedValue,readChar);
+                            PRINT_TEST_END(counter,counterSuccess,counterFail,
+                                            returnValue,expectedValue,readChar);
+                        }
+                    }
+                }
             }
         }
     }
@@ -947,133 +479,132 @@ void testCheckStringFromLength(void)
     return;
 }
 
-/*
+////////////////////////////////////////////////////////////////////////////////
 // Unit tests on checkAllPreprocessorConstants of main.c file
+////////////////////////////////////////////////////////////////////////////////
 void testCheckAllPreprocessorConstants(void)
 {
     time_t startTimer=0, endTimer=0;
     int returnValue=0, expectedValue=0, counter=0, counterSuccess=0;
     int counterFail=0, readChar=0;
 
-    char pathTest[PATH_LENGTH+11]={'\0'}, *pPathMedit=NULL, *pPathMmg3d=NULL;
-    char *pPathMshdist=NULL, *pPathElastic=NULL, *pPathAdvect=NULL;
-    char pathMedit[6]=PATH_MEDIT, pathMmg3d[9]=PATH_MMG3D;
-    char pathMshdist[8]=PATH_MSHDIST, pathElastic[8]=PATH_ELASTIC;
-    char pathAdvect[7]=PATH_ADVECT;
+    char pStringToCheckBefore[6]={'a','b','1','1','d','1'};
+    char pStringToCheckAfter[6]={'A','1','C','1','\0','\0'};
+    char pathTest[PATH_LENGTH+11]={'\0'};
+    char *pPathTest[5]={NULL,NULL,NULL,NULL,NULL};
+    char pPathToPrint[5][12]={"pathMedit","pathMmg3d","pathMshdist",
+                                                    "pathElastic","pathAdvect"};
+    char pPathRef[5][21]={PATH_MEDIT,PATH_MMG3D,PATH_MSHDIST,PATH_ELASTIC,
+                                                                   PATH_ADVECT};
 
-    int i=0, iPathTest=0, iPathMedit=0, iPathMmg3d=0, iPathMshdist=0;
+    int i=0, j=0, k=0, iTest=0, iPathMedit=0, iPathMmg3d=0, iPathMshdist=0;
     int iPathElastic=0, iPathAdvect=0, optMode=0, verbose=0, nCpu=0;
-    int nameLength=0, nX=0, nY=0, nZ=0, lsType=0, trickMatrix=0, approxMode=0;
-    int iterMax=0, saveType=0, saveMesh=0, saveData=0, savePrint=0, saveWhere=0;
-    int pathLength=0, hmodeLag=0, nIter=0, noCfl=0, orb1=0, orb2=0, orb3=0;
-    int orb4=0, orb5=0, orb6=0, orb7=0, orb8=0, orb9=0, orb10=0, orb11=0;
-    int orb12=0, orb13=0, orb14=0, orb15=0, orb16=0, orb17=0, orb18=0, orb19=0;
-    int orb20=0;
+    int nameLength=0, bohrUnit=0, orbOrtho=0, nX=0, nY=0, nZ=0, lsType=0;
+    int trickMatrix=0, approxMode=0, iterIni=0, iterMax=0, saveType=0;
+    int saveMesh=0, saveData=0, savePrint=0, saveWhere=0, pathLength=0;
+    int hmodeLag=0, nIter=0, noCfl=0, orb1=0, orb2=0, orb3=0, orb4=0, orb5=0;
+    int orb6=0, orb7=0, orb8=0, orb9=0, orb10=0, orb11=0, orb12=0, orb13=0;
+    int orb14=0, orb15=0, orb16=0, orb17=0, orb18=0, orb19=0, orb20=0;
 
-    double lameInt1=0., lameInt2=0., lameExt1=0., lameExt2=0., xMin=0., yMin=0.;
-    double zMin=0., xMax=0., yMax=0., zMax=0., deltaX=0., deltaY=0., deltaZ=0.;
-    double lsX=0., lsY=0., lsZ=0., lsR=0., metCst=0., metErr=0., metMin=0.;
-    double metMax=0., iterTolD0P=0., iterTolD1P=0., iterTolD2P=0., hminIso=0.;
-    double hmaxIso=0., hausdIso=0., hgradIso=0., hminMet=0., hmaxMet=0.;
-    double hausdMet=0., hgradMet=0., hminLs=0., hmaxLs=0., hausdLs=0.;
-    double hgradLs=0., hminLag=0., hmaxLag=0., hausdLag=0., hgradLag=0.;
-    double residual=0., deltaT=0., cstA=0., cstB=0., cstC=0., csta=0., cstb=0.;
-    double cstc=0., cstaa=0., cstbb=0., cstcc=0.;
+    double rhoOpt=0., lameInt1=0., lameInt2=0., lameExt1=0., lameExt2=0.;
+    double bohrRadius=0., selectOrb=0., selectBox=0., xMin=0., yMin=0., zMin=0.;
+    double xMax=0., yMax=0., zMax=0., deltaX=0., deltaY=0., deltaZ=0., lsX=0.;
+    double lsY=0., lsZ=0., lsR=0., metCst=0., metErr=0., metMin=0., metMax=0.;
+    double iterTolD0P=0., iterTolD1P=0., iterTolD2P=0., hminIso=0., hmaxIso=0.;
+    double hausdIso=0., hgradIso=0., hminMet=0., hmaxMet=0., hausdMet=0.;
+    double hgradMet=0., hminLs=0., hmaxLs=0., hausdLs=0., hgradLs=0.;
+    double hminLag=0., hmaxLag=0., hausdLag=0., hgradLag=0., residual=0.;
+    double deltaT=0., cstA=0., cstB=0., cstC=0., csta=0., cstb=0., cstc=0.;
+    double cstaa=0., cstbb=0., cstcc=0., cstOne=0., cstTwo=0., cstThree=0.;
+    double cst1=0., cst2=0., cst3=0., cst22=0., cst33=0.;
 
     // Test starts
     time(&startTimer);
     fprintf(stdout,"\nTesting checkAllPreprocessorConstants function.\n");
+    pathTest[PATH_LENGTH+10]='\0';
+    for (i=0; i<5; i++)
+    {
+        pPathRef[i][20]='\0';
+    }
 
     expectedValue=0;
     PRINT_TEST_START(counter,expectedValue);
-    returnValue=checkAllPreprocessorConstants(optMode,verbose,nCpu,nameLength,
-                                              lameInt1,lameInt2,lameExt1,
-                                              lameExt2,xMin,yMin,zMin,xMax,yMax,
-                                              zMax,nX,nY,nZ,deltaX,deltaY,
+    returnValue=checkAllPreprocessorConstants(optMode,verbose,nCpu,rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
                                               deltaZ,lsType,lsX,lsY,lsZ,lsR,
                                               metCst,metErr,metMin,metMax,
-                                              trickMatrix,approxMode,iterMax,
-                                              iterTolD0P,iterTolD1P,iterTolD2P,
-                                              saveType,saveMesh,saveData,
-                                              savePrint,saveWhere,pathLength,
-                                              pPathMedit,pPathMmg3d,
-                                              pPathMshdist,pPathElastic,
-                                              pPathAdvect,hminIso,hmaxIso,
-                                              hausdIso,hgradIso,hminMet,hmaxMet,
-                                              hausdMet,hgradMet,hminLs,hmaxLs,
-                                              hausdLs,hgradLs,hmodeLag,hminLag,
-                                              hmaxLag,hausdLag,hgradLag,nIter,
-                                              residual,deltaT,noCfl,orb1,orb2,
-                                              orb3,orb4,orb5,orb6,orb7,orb8,
-                                              orb9,orb10,orb11,orb12,orb13,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
                                               orb14,orb15,orb16,orb17,orb18,
                                               orb19,orb20,cstA,cstB,cstC,csta,
-                                                   cstb,cstc,cstaa,cstbb,cstcc);
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
     PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
                                                                       readChar);
 
     for (optMode=-3; optMode<6; optMode++)
     {
-        for (verbose=-1; verbose<3; verbose++)
+        for (verbose=-1; verbose<4; verbose++)
         {
-            for (nCpu=-2; nCpu<5; nCpu+=2)
+            for (nCpu=-2; nCpu<7; nCpu+=2)
             {
-                for (nameLength=-50; nameLength<=100; nameLength+=50)
+                for (rhoOpt=-1.; rhoOpt<=1.; rhoOpt+=.5)
                 {
-                    PRINT_TEST_START(counter,expectedValue);
-                    returnValue=checkAllPreprocessorConstants(optMode,verbose,
-                                                              nCpu,nameLength,
-                                                              lameInt1,lameInt2,
-                                                              lameExt1,lameExt2,
-                                                              xMin,yMin,zMin,
-                                                              xMax,yMax,zMax,nX,
-                                                              nY,nZ,deltaX,
-                                                              deltaY,deltaZ,
-                                                              lsType,lsX,lsY,
-                                                              lsZ,lsR,metCst,
-                                                              metErr,metMin,
-                                                              metMax,
-                                                              trickMatrix,
-                                                              approxMode,
-                                                              iterMax,
-                                                              iterTolD0P,
-                                                              iterTolD1P,
-                                                              iterTolD2P,
-                                                              saveType,saveMesh,
-                                                              saveData,
-                                                              savePrint,
-                                                              saveWhere,
-                                                              pathLength,
-                                                              pPathMedit,
-                                                              pPathMmg3d,
-                                                              pPathMshdist,
-                                                              pPathElastic,
-                                                              pPathAdvect,
-                                                              hminIso,hmaxIso,
-                                                              hausdIso,hgradIso,
-                                                              hminMet,hmaxMet,
-                                                              hausdMet,hgradMet,
-                                                              hminLs,hmaxLs,
-                                                              hausdLs,hgradLs,
-                                                              hmodeLag,hminLag,
-                                                              hmaxLag,hausdLag,
-                                                              hgradLag,nIter,
-                                                              residual,deltaT,
-                                                              noCfl,orb1,orb2,
-                                                              orb3,orb4,orb5,
-                                                              orb6,orb7,orb8,
-                                                              orb9,orb10,orb11,
-                                                              orb12,orb13,orb14,
-                                                              orb15,orb16,orb17,
-                                                              orb18,orb19,orb20,
-                                                              cstA,cstB,cstC,
-                                                              csta,cstb,cstc,
-                                                              cstaa,cstbb,
-                                                                         cstcc);
-                    PRINT_TEST_END(counter,counterSuccess,counterFail,
+                    for (nameLength=-50; nameLength<=100; nameLength+=50)
+                    {
+                        PRINT_TEST_START(counter,expectedValue);
+                        returnValue=checkAllPreprocessorConstants(optMode,
+                                                                  verbose,nCpu,
+                                                                  rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
+                        PRINT_TEST_END(counter,counterSuccess,counterFail,
                                             returnValue,expectedValue,readChar);
+                    }
+                    nameLength=NAME_LENGTH;
                 }
-                nameLength=NAME_LENGTH;
+                rhoOpt=RHO_OPT;
             }
             nCpu=N_CPU;
         }
@@ -1091,54 +622,33 @@ void testCheckAllPreprocessorConstants(void)
                 {
                     PRINT_TEST_START(counter,expectedValue);
                     returnValue=checkAllPreprocessorConstants(optMode,verbose,
-                                                              nCpu,nameLength,
-                                                              lameInt1,lameInt2,
-                                                              lameExt1,lameExt2,
-                                                              xMin,yMin,zMin,
-                                                              xMax,yMax,zMax,nX,
-                                                              nY,nZ,deltaX,
-                                                              deltaY,deltaZ,
-                                                              lsType,lsX,lsY,
-                                                              lsZ,lsR,metCst,
-                                                              metErr,metMin,
-                                                              metMax,
-                                                              trickMatrix,
-                                                              approxMode,
-                                                              iterMax,
-                                                              iterTolD0P,
-                                                              iterTolD1P,
-                                                              iterTolD2P,
-                                                              saveType,saveMesh,
-                                                              saveData,
-                                                              savePrint,
-                                                              saveWhere,
-                                                              pathLength,
-                                                              pPathMedit,
-                                                              pPathMmg3d,
-                                                              pPathMshdist,
-                                                              pPathElastic,
-                                                              pPathAdvect,
-                                                              hminIso,hmaxIso,
-                                                              hausdIso,hgradIso,
-                                                              hminMet,hmaxMet,
-                                                              hausdMet,hgradMet,
-                                                              hminLs,hmaxLs,
-                                                              hausdLs,hgradLs,
-                                                              hmodeLag,hminLag,
-                                                              hmaxLag,hausdLag,
-                                                              hgradLag,nIter,
-                                                              residual,deltaT,
-                                                              noCfl,orb1,orb2,
-                                                              orb3,orb4,orb5,
-                                                              orb6,orb7,orb8,
-                                                              orb9,orb10,orb11,
-                                                              orb12,orb13,orb14,
-                                                              orb15,orb16,orb17,
-                                                              orb18,orb19,orb20,
-                                                              cstA,cstB,cstC,
-                                                              csta,cstb,cstc,
-                                                              cstaa,cstbb,
-                                                                         cstcc);
+                                                              nCpu,rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
                     PRINT_TEST_END(counter,counterSuccess,counterFail,
                                             returnValue,expectedValue,readChar);
                 }
@@ -1149,6 +659,60 @@ void testCheckAllPreprocessorConstants(void)
         lameInt2=LAME_INT2;
     }
     lameInt1=LAME_INT1;
+
+    for (bohrUnit=-1; bohrUnit<3; bohrUnit++)
+    {
+        for (bohrRadius=-BOHR_RADIUS; bohrRadius<=2*BOHR_RADIUS;
+                                                        bohrRadius+=BOHR_RADIUS)
+        {
+            for (selectOrb=-.01; selectOrb<=.02; selectOrb+=.01)
+            {
+                for (orbOrtho=-1; orbOrtho<=3; orbOrtho++)
+                {
+                    for (selectBox=-.1; selectBox<=1.1; selectBox+=.05)
+                    {
+                        PRINT_TEST_START(counter,expectedValue);
+                        returnValue=checkAllPreprocessorConstants(optMode,
+                                                                  verbose,nCpu,
+                                                                  rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
+                        PRINT_TEST_END(counter,counterSuccess,counterFail,
+                                            returnValue,expectedValue,readChar);
+                    }
+                    selectBox=SELECT_BOX;
+                }
+                orbOrtho=ORB_ORTHO;
+            }
+            selectOrb=SELECT_ORB;
+        }
+        bohrRadius=BOHR_RADIUS;
+    }
+    bohrUnit=BOHR_UNIT;
 
     yMin=Y_MIN;
     yMax=Y_MAX;
@@ -1166,54 +730,33 @@ void testCheckAllPreprocessorConstants(void)
                 {
                     PRINT_TEST_START(counter,expectedValue);
                     returnValue=checkAllPreprocessorConstants(optMode,verbose,
-                                                              nCpu,nameLength,
-                                                              lameInt1,lameInt2,
-                                                              lameExt1,lameExt2,
-                                                              xMin,yMin,zMin,
-                                                              xMax,yMax,zMax,nX,
-                                                              nY,nZ,deltaX,
-                                                              deltaY,deltaZ,
-                                                              lsType,lsX,lsY,
-                                                              lsZ,lsR,metCst,
-                                                              metErr,metMin,
-                                                              metMax,
-                                                              trickMatrix,
-                                                              approxMode,
-                                                              iterMax,
-                                                              iterTolD0P,
-                                                              iterTolD1P,
-                                                              iterTolD2P,
-                                                              saveType,saveMesh,
-                                                              saveData,
-                                                              savePrint,
-                                                              saveWhere,
-                                                              pathLength,
-                                                              pPathMedit,
-                                                              pPathMmg3d,
-                                                              pPathMshdist,
-                                                              pPathElastic,
-                                                              pPathAdvect,
-                                                              hminIso,hmaxIso,
-                                                              hausdIso,hgradIso,
-                                                              hminMet,hmaxMet,
-                                                              hausdMet,hgradMet,
-                                                              hminLs,hmaxLs,
-                                                              hausdLs,hgradLs,
-                                                              hmodeLag,hminLag,
-                                                              hmaxLag,hausdLag,
-                                                              hgradLag,nIter,
-                                                              residual,deltaT,
-                                                              noCfl,orb1,orb2,
-                                                              orb3,orb4,orb5,
-                                                              orb6,orb7,orb8,
-                                                              orb9,orb10,orb11,
-                                                              orb12,orb13,orb14,
-                                                              orb15,orb16,orb17,
-                                                              orb18,orb19,orb20,
-                                                              cstA,cstB,cstC,
-                                                              csta,cstb,cstc,
-                                                              cstaa,cstbb,
-                                                                         cstcc);
+                                                              nCpu,rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
                     PRINT_TEST_END(counter,counterSuccess,counterFail,
                                             returnValue,expectedValue,readChar);
                 }
@@ -1235,54 +778,33 @@ void testCheckAllPreprocessorConstants(void)
                 {
                     PRINT_TEST_START(counter,expectedValue);
                     returnValue=checkAllPreprocessorConstants(optMode,verbose,
-                                                              nCpu,nameLength,
-                                                              lameInt1,lameInt2,
-                                                              lameExt1,lameExt2,
-                                                              xMin,yMin,zMin,
-                                                              xMax,yMax,zMax,nX,
-                                                              nY,nZ,deltaX,
-                                                              deltaY,deltaZ,
-                                                              lsType,lsX,lsY,
-                                                              lsZ,lsR,metCst,
-                                                              metErr,metMin,
-                                                              metMax,
-                                                              trickMatrix,
-                                                              approxMode,
-                                                              iterMax,
-                                                              iterTolD0P,
-                                                              iterTolD1P,
-                                                              iterTolD2P,
-                                                              saveType,saveMesh,
-                                                              saveData,
-                                                              savePrint,
-                                                              saveWhere,
-                                                              pathLength,
-                                                              pPathMedit,
-                                                              pPathMmg3d,
-                                                              pPathMshdist,
-                                                              pPathElastic,
-                                                              pPathAdvect,
-                                                              hminIso,hmaxIso,
-                                                              hausdIso,hgradIso,
-                                                              hminMet,hmaxMet,
-                                                              hausdMet,hgradMet,
-                                                              hminLs,hmaxLs,
-                                                              hausdLs,hgradLs,
-                                                              hmodeLag,hminLag,
-                                                              hmaxLag,hausdLag,
-                                                              hgradLag,nIter,
-                                                              residual,deltaT,
-                                                              noCfl,orb1,orb2,
-                                                              orb3,orb4,orb5,
-                                                              orb6,orb7,orb8,
-                                                              orb9,orb10,orb11,
-                                                              orb12,orb13,orb14,
-                                                              orb15,orb16,orb17,
-                                                              orb18,orb19,orb20,
-                                                              cstA,cstB,cstC,
-                                                              csta,cstb,cstc,
-                                                              cstaa,cstbb,
-                                                                         cstcc);
+                                                              nCpu,rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
                     PRINT_TEST_END(counter,counterSuccess,counterFail,
                                             returnValue,expectedValue,readChar);
                 }
@@ -1304,54 +826,33 @@ void testCheckAllPreprocessorConstants(void)
                 {
                     PRINT_TEST_START(counter,expectedValue);
                     returnValue=checkAllPreprocessorConstants(optMode,verbose,
-                                                              nCpu,nameLength,
-                                                              lameInt1,lameInt2,
-                                                              lameExt1,lameExt2,
-                                                              xMin,yMin,zMin,
-                                                              xMax,yMax,zMax,nX,
-                                                              nY,nZ,deltaX,
-                                                              deltaY,deltaZ,
-                                                              lsType,lsX,lsY,
-                                                              lsZ,lsR,metCst,
-                                                              metErr,metMin,
-                                                              metMax,
-                                                              trickMatrix,
-                                                              approxMode,
-                                                              iterMax,
-                                                              iterTolD0P,
-                                                              iterTolD1P,
-                                                              iterTolD2P,
-                                                              saveType,saveMesh,
-                                                              saveData,
-                                                              savePrint,
-                                                              saveWhere,
-                                                              pathLength,
-                                                              pPathMedit,
-                                                              pPathMmg3d,
-                                                              pPathMshdist,
-                                                              pPathElastic,
-                                                              pPathAdvect,
-                                                              hminIso,hmaxIso,
-                                                              hausdIso,hgradIso,
-                                                              hminMet,hmaxMet,
-                                                              hausdMet,hgradMet,
-                                                              hminLs,hmaxLs,
-                                                              hausdLs,hgradLs,
-                                                              hmodeLag,hminLag,
-                                                              hmaxLag,hausdLag,
-                                                              hgradLag,nIter,
-                                                              residual,deltaT,
-                                                              noCfl,orb1,orb2,
-                                                              orb3,orb4,orb5,
-                                                              orb6,orb7,orb8,
-                                                              orb9,orb10,orb11,
-                                                              orb12,orb13,orb14,
-                                                              orb15,orb16,orb17,
-                                                              orb18,orb19,orb20,
-                                                              cstA,cstB,cstC,
-                                                              csta,cstb,cstc,
-                                                              cstaa,cstbb,
-                                                                         cstcc);
+                                                              nCpu,rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
                     PRINT_TEST_END(counter,counterSuccess,counterFail,
                                             returnValue,expectedValue,readChar);
                 }
@@ -1375,73 +876,34 @@ void testCheckAllPreprocessorConstants(void)
                     {
                         PRINT_TEST_START(counter,expectedValue);
                         returnValue=checkAllPreprocessorConstants(optMode,
-                                                                  verbose,
-                                                                  nCpu,
-                                                                  nameLength,
-                                                                  lameInt1,
-                                                                  lameInt2,
-                                                                  lameExt1,
-                                                                  lameExt2,
-                                                                  xMin,yMin,
-                                                                  zMin,xMax,
-                                                                  yMax,zMax,nX,
-                                                                  nY,nZ,deltaX,
-                                                                  deltaY,deltaZ,
-                                                                  lsType,lsX,
-                                                                  lsY,lsZ,lsR,
-                                                                  metCst,metErr,
-                                                                  metMin,metMax,
-                                                                  trickMatrix,
-                                                                  approxMode,
-                                                                  iterMax,
-                                                                  iterTolD0P,
-                                                                  iterTolD1P,
-                                                                  iterTolD2P,
-                                                                  saveType,
-                                                                  saveMesh,
-                                                                  saveData,
-                                                                  savePrint,
-                                                                  saveWhere,
-                                                                  pathLength,
-                                                                  pPathMedit,
-                                                                  pPathMmg3d,
-                                                                  pPathMshdist,
-                                                                  pPathElastic,
-                                                                  pPathAdvect,
-                                                                  hminIso,
-                                                                  hmaxIso,
-                                                                  hausdIso,
-                                                                  hgradIso,
-                                                                  hminMet,
-                                                                  hmaxMet,
-                                                                  hausdMet,
-                                                                  hgradMet,
-                                                                  hminLs,hmaxLs,
-                                                                  hausdLs,
-                                                                  hgradLs,
-                                                                  hmodeLag,
-                                                                  hminLag,
-                                                                  hmaxLag,
-                                                                  hausdLag,
-                                                                  hgradLag,
-                                                                  nIter,
-                                                                  residual,
-                                                                  deltaT,
-                                                                  noCfl,orb1,
-                                                                  orb2,orb3,
-                                                                  orb4,orb5,
-                                                                  orb6,orb7,
-                                                                  orb8,orb9,
-                                                                  orb10,orb11,
-                                                                  orb12,orb13,
-                                                                  orb14,orb15,
-                                                                  orb16,orb17,
-                                                                  orb18,orb19,
-                                                                  orb20,cstA,
-                                                                  cstB,cstC,
-                                                                  csta,cstb,
-                                                                  cstc,cstaa,
-                                                                   cstbb,cstcc);
+                                                                  verbose,nCpu,
+                                                                  rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
                         PRINT_TEST_END(counter,counterSuccess,counterFail,
                                             returnValue,expectedValue,readChar);
                     }
@@ -1455,7 +917,7 @@ void testCheckAllPreprocessorConstants(void)
     }
     lsType=LS_TYPE;
 
-    for (metCst=-MET_CST; metCst<=2.*MET_CST; metCst+=MET_CST)
+    for (metCst=-MET_CST; metCst<=2*MET_CST; metCst+=MET_CST)
     {
         for (metErr=-.2; metErr<=.4; metErr+=.2)
         {
@@ -1465,77 +927,43 @@ void testCheckAllPreprocessorConstants(void)
                 {
                     for (trickMatrix=-1; trickMatrix<3; trickMatrix++)
                     {
-                        PRINT_TEST_START(counter,expectedValue);
-                        returnValue=checkAllPreprocessorConstants(optMode,
-                                                                  verbose,
-                                                                  nCpu,
-                                                                  nameLength,
-                                                                  lameInt1,
-                                                                  lameInt2,
-                                                                  lameExt1,
-                                                                  lameExt2,
-                                                                  xMin,yMin,
-                                                                  zMin,xMax,
-                                                                  yMax,zMax,nX,
-                                                                  nY,nZ,deltaX,
-                                                                  deltaY,deltaZ,
-                                                                  lsType,lsX,
-                                                                  lsY,lsZ,lsR,
-                                                                  metCst,metErr,
-                                                                  metMin,metMax,
-                                                                  trickMatrix,
-                                                                  approxMode,
-                                                                  iterMax,
-                                                                  iterTolD0P,
-                                                                  iterTolD1P,
-                                                                  iterTolD2P,
-                                                                  saveType,
-                                                                  saveMesh,
-                                                                  saveData,
-                                                                  savePrint,
-                                                                  saveWhere,
-                                                                  pathLength,
-                                                                  pPathMedit,
-                                                                  pPathMmg3d,
-                                                                  pPathMshdist,
-                                                                  pPathElastic,
-                                                                  pPathAdvect,
-                                                                  hminIso,
-                                                                  hmaxIso,
-                                                                  hausdIso,
-                                                                  hgradIso,
-                                                                  hminMet,
-                                                                  hmaxMet,
-                                                                  hausdMet,
-                                                                  hgradMet,
-                                                                  hminLs,hmaxLs,
-                                                                  hausdLs,
-                                                                  hgradLs,
-                                                                  hmodeLag,
-                                                                  hminLag,
-                                                                  hmaxLag,
-                                                                  hausdLag,
-                                                                  hgradLag,
-                                                                  nIter,
-                                                                  residual,
-                                                                  deltaT,
-                                                                  noCfl,orb1,
-                                                                  orb2,orb3,
-                                                                  orb4,orb5,
-                                                                  orb6,orb7,
-                                                                  orb8,orb9,
-                                                                  orb10,orb11,
-                                                                  orb12,orb13,
-                                                                  orb14,orb15,
-                                                                  orb16,orb17,
-                                                                  orb18,orb19,
-                                                                  orb20,cstA,
-                                                                  cstB,cstC,
-                                                                  csta,cstb,
-                                                                  cstc,cstaa,
-                                                                   cstbb,cstcc);
-                        PRINT_TEST_END(counter,counterSuccess,counterFail,
+                        for (approxMode=-1; approxMode<3; approxMode++)
+                        {
+                            PRINT_TEST_START(counter,expectedValue);
+                            returnValue=checkAllPreprocessorConstants(optMode,
+                                                                      verbose,
+                                                                      nCpu,
+                                                                      rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
+                            PRINT_TEST_END(counter,counterSuccess,counterFail,
                                             returnValue,expectedValue,readChar);
+                        }
+                        approxMode=APPROX_MODE;
                     }
                     trickMatrix=TRICK_MATRIX;
                 }
@@ -1547,7 +975,7 @@ void testCheckAllPreprocessorConstants(void)
     }
     metCst=MET_CST;
 
-    for (approxMode=-1; approxMode<3; approxMode++)
+    for (iterIni=10; iterIni>=-10; iterIni-=5)
     {
         for (iterMax=-10; iterMax<11; iterMax+=5)
         {
@@ -1559,73 +987,34 @@ void testCheckAllPreprocessorConstants(void)
                     {
                         PRINT_TEST_START(counter,expectedValue);
                         returnValue=checkAllPreprocessorConstants(optMode,
-                                                                  verbose,
-                                                                  nCpu,
-                                                                  nameLength,
-                                                                  lameInt1,
-                                                                  lameInt2,
-                                                                  lameExt1,
-                                                                  lameExt2,
-                                                                  xMin,yMin,
-                                                                  zMin,xMax,
-                                                                  yMax,zMax,nX,
-                                                                  nY,nZ,deltaX,
-                                                                  deltaY,deltaZ,
-                                                                  lsType,lsX,
-                                                                  lsY,lsZ,lsR,
-                                                                  metCst,metErr,
-                                                                  metMin,metMax,
-                                                                  trickMatrix,
-                                                                  approxMode,
-                                                                  iterMax,
-                                                                  iterTolD0P,
-                                                                  iterTolD1P,
-                                                                  iterTolD2P,
-                                                                  saveType,
-                                                                  saveMesh,
-                                                                  saveData,
-                                                                  savePrint,
-                                                                  saveWhere,
-                                                                  pathLength,
-                                                                  pPathMedit,
-                                                                  pPathMmg3d,
-                                                                  pPathMshdist,
-                                                                  pPathElastic,
-                                                                  pPathAdvect,
-                                                                  hminIso,
-                                                                  hmaxIso,
-                                                                  hausdIso,
-                                                                  hgradIso,
-                                                                  hminMet,
-                                                                  hmaxMet,
-                                                                  hausdMet,
-                                                                  hgradMet,
-                                                                  hminLs,hmaxLs,
-                                                                  hausdLs,
-                                                                  hgradLs,
-                                                                  hmodeLag,
-                                                                  hminLag,
-                                                                  hmaxLag,
-                                                                  hausdLag,
-                                                                  hgradLag,
-                                                                  nIter,
-                                                                  residual,
-                                                                  deltaT,
-                                                                  noCfl,orb1,
-                                                                  orb2,orb3,
-                                                                  orb4,orb5,
-                                                                  orb6,orb7,
-                                                                  orb8,orb9,
-                                                                  orb10,orb11,
-                                                                  orb12,orb13,
-                                                                  orb14,orb15,
-                                                                  orb16,orb17,
-                                                                  orb18,orb19,
-                                                                  orb20,cstA,
-                                                                  cstB,cstC,
-                                                                  csta,cstb,
-                                                                  cstc,cstaa,
-                                                                   cstbb,cstcc);
+                                                                  verbose,nCpu,
+                                                                  rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
                         PRINT_TEST_END(counter,counterSuccess,counterFail,
                                             returnValue,expectedValue,readChar);
                     }
@@ -1637,7 +1026,7 @@ void testCheckAllPreprocessorConstants(void)
         }
         iterMax=ITER_MAX;
     }
-    approxMode=APPROX_MODE;
+    iterIni=ITER_INI;
 
     for (saveType=-1; saveType<4; saveType++)
     {
@@ -1651,73 +1040,34 @@ void testCheckAllPreprocessorConstants(void)
                     {
                         PRINT_TEST_START(counter,expectedValue);
                         returnValue=checkAllPreprocessorConstants(optMode,
-                                                                  verbose,
-                                                                  nCpu,
-                                                                  nameLength,
-                                                                  lameInt1,
-                                                                  lameInt2,
-                                                                  lameExt1,
-                                                                  lameExt2,
-                                                                  xMin,yMin,
-                                                                  zMin,xMax,
-                                                                  yMax,zMax,nX,
-                                                                  nY,nZ,deltaX,
-                                                                  deltaY,deltaZ,
-                                                                  lsType,lsX,
-                                                                  lsY,lsZ,lsR,
-                                                                  metCst,metErr,
-                                                                  metMin,metMax,
-                                                                  trickMatrix,
-                                                                  approxMode,
-                                                                  iterMax,
-                                                                  iterTolD0P,
-                                                                  iterTolD1P,
-                                                                  iterTolD2P,
-                                                                  saveType,
-                                                                  saveMesh,
-                                                                  saveData,
-                                                                  savePrint,
-                                                                  saveWhere,
-                                                                  pathLength,
-                                                                  pPathMedit,
-                                                                  pPathMmg3d,
-                                                                  pPathMshdist,
-                                                                  pPathElastic,
-                                                                  pPathAdvect,
-                                                                  hminIso,
-                                                                  hmaxIso,
-                                                                  hausdIso,
-                                                                  hgradIso,
-                                                                  hminMet,
-                                                                  hmaxMet,
-                                                                  hausdMet,
-                                                                  hgradMet,
-                                                                  hminLs,hmaxLs,
-                                                                  hausdLs,
-                                                                  hgradLs,
-                                                                  hmodeLag,
-                                                                  hminLag,
-                                                                  hmaxLag,
-                                                                  hausdLag,
-                                                                  hgradLag,
-                                                                  nIter,
-                                                                  residual,
-                                                                  deltaT,
-                                                                  noCfl,orb1,
-                                                                  orb2,orb3,
-                                                                  orb4,orb5,
-                                                                  orb6,orb7,
-                                                                  orb8,orb9,
-                                                                  orb10,orb11,
-                                                                  orb12,orb13,
-                                                                  orb14,orb15,
-                                                                  orb16,orb17,
-                                                                  orb18,orb19,
-                                                                  orb20,cstA,
-                                                                  cstB,cstC,
-                                                                  csta,cstb,
-                                                                  cstc,cstaa,
-                                                                   cstbb,cstcc);
+                                                                  verbose,nCpu,
+                                                                  rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
                         PRINT_TEST_END(counter,counterSuccess,counterFail,
                                             returnValue,expectedValue,readChar);
                     }
@@ -1732,723 +1082,101 @@ void testCheckAllPreprocessorConstants(void)
     saveType=SAVE_TYPE;
 
     pathTest[PATH_LENGTH+10]='\0';
+    for (i=0; i<5; i++)
+    {
+        pPathRef[i][20]='\0';
+    }
     for (pathLength=-PATH_LENGTH+2; pathLength<=PATH_LENGTH+2;
                                                         pathLength+=PATH_LENGTH)
     {
-        for (iPathTest=0; iPathTest<32; iPathTest++)
+        for (i=-5; i<6; i++)
         {
-            switch(iPathTest)
+            for (j=0; j<6; j++)
             {
-                case 0:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
+                for (iTest=0; iTest<2; iTest++)
+                {
+                    for (k=0; k<PATH_LENGTH+10; k++)
                     {
-                        if (i<pathLength-5)
-                        {
-                            pathTest[i]='a';
-                        }
-                        else if (i==pathLength-5)
-                        {
-                            pathTest[i]='\0';
-                        }
-                        else
-                        {
-                            pathTest[i]='A';
-                        }
+                        pathTest[k]=rand()%90+33;
                     }
-                    break;
 
-                case 1:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
+                    if (iTest)
                     {
-                        if (i<pathLength-5)
+                        for (k=0; k<PATH_LENGTH+10; k++)
                         {
-                            pathTest[i]='b';
-                        }
-                        else if (i==pathLength-5)
-                        {
-                            pathTest[i]='\0';
-                        }
-                        else
-                        {
-                            pathTest[i]=rand()%90+33;
+                            if (k<pathLength+i)
+                            {
+                                if (pStringToCheckBefore[j]!='1')
+                                {
+                                    pathTest[k]=pStringToCheckBefore[j];
+                                }
+                            }
+                            else if (k==pathLength+i)
+                            {
+                                pathTest[k]='\0';
+                            }
+                            else
+                            {
+                                if (pStringToCheckBefore[j]!='1')
+                                {
+                                    pathTest[k]=pStringToCheckAfter[j];
+                                }
+                            }
                         }
                     }
-                    break;
+                    else
+                    {
+                        pathTest[rand()%(PATH_LENGTH+10)]='\0';
+                    }
 
-                case 2:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
+                    for (k=0; k<5; k++)
                     {
-                        if (i<pathLength-5)
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                        else if (i==pathLength-5)
-                        {
-                            pathTest[i]='\0';
-                        }
-                        else
-                        {
-                            pathTest[i]='C';
-                        }
+                        pPathTest[k]=NULL;
                     }
-                    break;
 
-                case 3:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
+                    for (k=0; k<5; k++)
                     {
-                        if (i<pathLength-5)
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                        else if (i==pathLength-5)
-                        {
-                            pathTest[i]='\0';
-                        }
-                        else
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
+                        pPathTest[k]=pathTest;
+                        PRINT_TEST_START(counter,expectedValue);
+                        fprintf(stdout,"pathLength=%d\n",pathLength);
+                        fprintf(stdout,"%s=%s\n",pPathToPrint[k],pPathTest[k]);
+                        fprintf(stdout,"(%ld characters)\n",
+                                                          strlen(pPathTest[k]));
+                        returnValue=checkAllPreprocessorConstants(optMode,
+                                                                  verbose,nCpu,
+                                                                  rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
+                        PRINT_TEST_END(counter,counterSuccess,counterFail,
+                                            returnValue,expectedValue,readChar);
+                        pPathTest[k]=pPathRef[k];
                     }
-                    break;
-
-                case 4:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength-5)
-                        {
-                            pathTest[i]='d';
-                        }
-                        else
-                        {
-                            pathTest[i]='\0';
-                        }
-                    }
-                    break;
-
-                case 5:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength-5)
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                        else
-                        {
-                            pathTest[i]='\0';
-                        }
-                    }
-                    break;
-
-                case 6:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength-1)
-                        {
-                            pathTest[i]='e';
-                        }
-                        else if (i==pathLength-1)
-                        {
-                            pathTest[i]='\0';
-                        }
-                        else
-                        {
-                            pathTest[i]='E';
-                        }
-                    }
-                    break;
-
-                case 7:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength-1)
-                        {
-                            pathTest[i]='f';
-                        }
-                        else if (i==pathLength-1)
-                        {
-                            pathTest[i]='\0';
-                        }
-                        else
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                    }
-                    break;
-
-                case 8:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength-1)
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                        else if (i==pathLength-1)
-                        {
-                            pathTest[i]='\0';
-                        }
-                        else
-                        {
-                            pathTest[i]='G';
-                        }
-                    }
-                    break;
-
-                case 9:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength-1)
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                        else if (i==pathLength-1)
-                        {
-                            pathTest[i]='\0';
-                        }
-                        else
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                    }
-                    break;
-
-                case 10:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength-1)
-                        {
-                            pathTest[i]='h';
-                        }
-                        else
-                        {
-                            pathTest[i]='\0';
-                        }
-                    }
-                    break;
-
-                case 11:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength-1)
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                        else
-                        {
-                            pathTest[i]='\0';
-                        }
-                    }
-                    break;
-
-                case 12:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength)
-                        {
-                            pathTest[i]='i';
-                        }
-                        else if (i==pathLength)
-                        {
-                            pathTest[i]='\0';
-                        }
-                        else
-                        {
-                            pathTest[i]='I';
-                        }
-                    }
-                    break;
-
-                case 13:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength)
-                        {
-                            pathTest[i]='j';
-                        }
-                        else if (i==pathLength)
-                        {
-                            pathTest[i]='\0';
-                        }
-                        else
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                    }
-                    break;
-
-                case 14:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength)
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                        else if (i==pathLength)
-                        {
-                            pathTest[i]='\0';
-                        }
-                        else
-                        {
-                            pathTest[i]='K';
-                        }
-                    }
-                    break;
-
-                case 15:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength)
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                        else if (i==pathLength)
-                        {
-                            pathTest[i]='\0';
-                        }
-                        else
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                    }
-                    break;
-
-                case 16:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength)
-                        {
-                            pathTest[i]='l';
-                        }
-                        else
-                        {
-                            pathTest[i]='\0';
-                        }
-                    }
-                    break;
-
-                case 17:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength)
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                        else
-                        {
-                            pathTest[i]='\0';
-                        }
-                    }
-                    break;
-
-                case 18:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength+1)
-                        {
-                            pathTest[i]='m';
-                        }
-                        else if (i==pathLength+1)
-                        {
-                            pathTest[i]='\0';
-                        }
-                        else
-                        {
-                            pathTest[i]='M';
-                        }
-                    }
-                    break;
-
-                case 19:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength+1)
-                        {
-                            pathTest[i]='n';
-                        }
-                        else if (i==pathLength+1)
-                        {
-                            pathTest[i]='\0';
-                        }
-                        else
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                    }
-                    break;
-
-                case 20:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength+1)
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                        else if (i==pathLength+1)
-                        {
-                            pathTest[i]='\0';
-                        }
-                        else
-                        {
-                            pathTest[i]='O';
-                        }
-                    }
-                    break;
-
-                case 21:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength+1)
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                        else if (i==pathLength+1)
-                        {
-                            pathTest[i]='\0';
-                        }
-                        else
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                    }
-                    break;
-
-                case 22:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength+1)
-                        {
-                            pathTest[i]='p';
-                        }
-                        else
-                        {
-                            pathTest[i]='\0';
-                        }
-                    }
-                    break;
-
-                case 23:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength+1)
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                        else
-                        {
-                            pathTest[i]='\0';
-                        }
-                    }
-                    break;
-
-                case 24:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength+5)
-                        {
-                            pathTest[i]='q';
-                        }
-                        else if (i==pathLength+5)
-                        {
-                            pathTest[i]='\0';
-                        }
-                        else
-                        {
-                            pathTest[i]='Q';
-                        }
-                    }
-                    break;
-
-                case 25:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength+5)
-                        {
-                            pathTest[i]='r';
-                        }
-                        else if (i==pathLength+5)
-                        {
-                            pathTest[i]='\0';
-                        }
-                        else
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                    }
-                    break;
-
-                case 26:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength+5)
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                        else if (i==pathLength+5)
-                        {
-                            pathTest[i]='\0';
-                        }
-                        else
-                        {
-                            pathTest[i]='S';
-                        }
-                    }
-                    break;
-
-                case 27:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength+5)
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                        else if (i==pathLength+5)
-                        {
-                            pathTest[i]='\0';
-                        }
-                        else
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                    }
-                    break;
-
-                case 28:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength+5)
-                        {
-                            pathTest[i]='t';
-                        }
-                        else
-                        {
-                            pathTest[i]='\0';
-                        }
-                    }
-                    break;
-
-                case 29:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        if (i<pathLength+5)
-                        {
-                            pathTest[i]=rand()%90+33;
-                        }
-                        else
-                        {
-                            pathTest[i]='\0';
-                        }
-                    }
-                    break;
-
-                case 30:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        pathTest[i]=rand()%90+33;
-                    }
-                    break;
-
-                case 31:
-                    for (i=0; i<PATH_LENGTH+10;  i++)
-                    {
-                        pathTest[i]=rand()%90+33;
-                    }
-                    pathTest[rand()%(PATH_LENGTH+10)]='\0';
-                    break;
+                }
             }
-            pPathMedit=pathTest;
-            PRINT_TEST_START(counter,expectedValue);
-            fprintf(stdout,"pathLength=%d\n",pathLength);
-            fprintf(stdout,"pathMedit=%s\n",pPathMedit);
-            fprintf(stdout,"(%ld characters)\n",strlen(pPathMedit));
-            returnValue=checkAllPreprocessorConstants(optMode,verbose,nCpu,
-                                                      nameLength,lameInt1,
-                                                      lameInt2,lameExt1,
-                                                      lameExt2,xMin,yMin,zMin,
-                                                      xMax,yMax,zMax,nX,nY,nZ,
-                                                      deltaX,deltaY,deltaZ,
-                                                      lsType,lsX,lsY,lsZ,lsR,
-                                                      metCst,metErr,metMin,
-                                                      metMax,trickMatrix,
-                                                      approxMode,iterMax,
-                                                      iterTolD0P,iterTolD1P,
-                                                      iterTolD2P,saveType,
-                                                      saveMesh,saveData,
-                                                      savePrint,saveWhere,
-                                                      pathLength,pPathMedit,
-                                                      pPathMmg3d,pPathMshdist,
-                                                      pPathElastic,pPathAdvect,
-                                                      hminIso,hmaxIso,hausdIso,
-                                                      hgradIso,hminMet,hmaxMet,
-                                                      hausdMet,hgradMet,hminLs,
-                                                      hmaxLs,hausdLs,hgradLs,
-                                                      hmodeLag,hminLag,hmaxLag,
-                                                      hausdLag,hgradLag,nIter,
-                                                      residual,deltaT,noCfl,
-                                                      orb1,orb2,orb3,orb4,orb5,
-                                                      orb6,orb7,orb8,orb9,orb10,
-                                                      orb11,orb12,orb13,orb14,
-                                                      orb15,orb16,orb17,orb18,
-                                                      orb19,orb20,cstA,cstB,
-                                                      cstC,csta,cstb,cstc,cstaa,
-                                                                   cstbb,cstcc);
-            PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,
-                                                        expectedValue,readChar);
-            pPathMedit=pathMedit;
-            pPathMmg3d=pathTest;
-            PRINT_TEST_START(counter,expectedValue);
-            fprintf(stdout,"pathLength=%d\n",pathLength);
-            fprintf(stdout,"pathMmg3d=%s\n",pPathMmg3d);
-            fprintf(stdout,"(%ld characters)\n",strlen(pPathMmg3d));
-            returnValue=checkAllPreprocessorConstants(optMode,verbose,nCpu,
-                                                      nameLength,lameInt1,
-                                                      lameInt2,lameExt1,
-                                                      lameExt2,xMin,yMin,zMin,
-                                                      xMax,yMax,zMax,nX,nY,nZ,
-                                                      deltaX,deltaY,deltaZ,
-                                                      lsType,lsX,lsY,lsZ,lsR,
-                                                      metCst,metErr,metMin,
-                                                      metMax,trickMatrix,
-                                                      approxMode,iterMax,
-                                                      iterTolD0P,iterTolD1P,
-                                                      iterTolD2P,saveType,
-                                                      saveMesh,saveData,
-                                                      savePrint,saveWhere,
-                                                      pathLength,pPathMedit,
-                                                      pPathMmg3d,pPathMshdist,
-                                                      pPathElastic,pPathAdvect,
-                                                      hminIso,hmaxIso,hausdIso,
-                                                      hgradIso,hminMet,hmaxMet,
-                                                      hausdMet,hgradMet,hminLs,
-                                                      hmaxLs,hausdLs,hgradLs,
-                                                      hmodeLag,hminLag,hmaxLag,
-                                                      hausdLag,hgradLag,nIter,
-                                                      residual,deltaT,noCfl,
-                                                      orb1,orb2,orb3,orb4,orb5,
-                                                      orb6,orb7,orb8,orb9,orb10,
-                                                      orb11,orb12,orb13,orb14,
-                                                      orb15,orb16,orb17,orb18,
-                                                      orb19,orb20,cstA,cstB,
-                                                      cstC,csta,cstb,cstc,cstaa,
-                                                                   cstbb,cstcc);
-            PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,
-                                                        expectedValue,readChar);
-            pPathMmg3d=pathMmg3d;
-            pPathMshdist=pathTest;
-            PRINT_TEST_START(counter,expectedValue);
-            fprintf(stdout,"pathLength=%d\n",pathLength);
-            fprintf(stdout,"pathMshdist=%s\n",pPathMshdist);
-            fprintf(stdout,"(%ld characters)\n",strlen(pPathMshdist));
-            returnValue=checkAllPreprocessorConstants(optMode,verbose,nCpu,
-                                                      nameLength,lameInt1,
-                                                      lameInt2,lameExt1,
-                                                      lameExt2,xMin,yMin,zMin,
-                                                      xMax,yMax,zMax,nX,nY,nZ,
-                                                      deltaX,deltaY,deltaZ,
-                                                      lsType,lsX,lsY,lsZ,lsR,
-                                                      metCst,metErr,metMin,
-                                                      metMax,trickMatrix,
-                                                      approxMode,iterMax,
-                                                      iterTolD0P,iterTolD1P,
-                                                      iterTolD2P,saveType,
-                                                      saveMesh,saveData,
-                                                      savePrint,saveWhere,
-                                                      pathLength,pPathMedit,
-                                                      pPathMmg3d,pPathMshdist,
-                                                      pPathElastic,pPathAdvect,
-                                                      hminIso,hmaxIso,hausdIso,
-                                                      hgradIso,hminMet,hmaxMet,
-                                                      hausdMet,hgradMet,hminLs,
-                                                      hmaxLs,hausdLs,hgradLs,
-                                                      hmodeLag,hminLag,hmaxLag,
-                                                      hausdLag,hgradLag,nIter,
-                                                      residual,deltaT,noCfl,
-                                                      orb1,orb2,orb3,orb4,orb5,
-                                                      orb6,orb7,orb8,orb9,orb10,
-                                                      orb11,orb12,orb13,orb14,
-                                                      orb15,orb16,orb17,orb18,
-                                                      orb19,orb20,cstA,cstB,
-                                                      cstC,csta,cstb,cstc,cstaa,
-                                                                   cstbb,cstcc);
-            PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,
-                                                        expectedValue,readChar);
-            pPathMshdist=pathMshdist;
-            pPathElastic=pathTest;
-            PRINT_TEST_START(counter,expectedValue);
-            fprintf(stdout,"pathLength=%d\n",pathLength);
-            fprintf(stdout,"pathElastic=%s\n",pPathElastic);
-            fprintf(stdout,"(%ld characters)\n",strlen(pPathElastic));
-            returnValue=checkAllPreprocessorConstants(optMode,verbose,nCpu,
-                                                      nameLength,lameInt1,
-                                                      lameInt2,lameExt1,
-                                                      lameExt2,xMin,yMin,zMin,
-                                                      xMax,yMax,zMax,nX,nY,nZ,
-                                                      deltaX,deltaY,deltaZ,
-                                                      lsType,lsX,lsY,lsZ,lsR,
-                                                      metCst,metErr,metMin,
-                                                      metMax,trickMatrix,
-                                                      approxMode,iterMax,
-                                                      iterTolD0P,iterTolD1P,
-                                                      iterTolD2P,saveType,
-                                                      saveMesh,saveData,
-                                                      savePrint,saveWhere,
-                                                      pathLength,pPathMedit,
-                                                      pPathMmg3d,pPathMshdist,
-                                                      pPathElastic,pPathAdvect,
-                                                      hminIso,hmaxIso,hausdIso,
-                                                      hgradIso,hminMet,hmaxMet,
-                                                      hausdMet,hgradMet,hminLs,
-                                                      hmaxLs,hausdLs,hgradLs,
-                                                      hmodeLag,hminLag,hmaxLag,
-                                                      hausdLag,hgradLag,nIter,
-                                                      residual,deltaT,noCfl,
-                                                      orb1,orb2,orb3,orb4,orb5,
-                                                      orb6,orb7,orb8,orb9,orb10,
-                                                      orb11,orb12,orb13,orb14,
-                                                      orb15,orb16,orb17,orb18,
-                                                      orb19,orb20,cstA,cstB,
-                                                      cstC,csta,cstb,cstc,cstaa,
-                                                                   cstbb,cstcc);
-            PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,
-                                                        expectedValue,readChar);
-            pPathElastic=pathElastic;
-            pPathAdvect=pathTest;
-            PRINT_TEST_START(counter,expectedValue);
-            fprintf(stdout,"pathLength=%d\n",pathLength);
-            fprintf(stdout,"pathAdvect=%s\n",pPathAdvect);
-            fprintf(stdout,"(%ld characters)\n",strlen(pPathAdvect));
-            returnValue=checkAllPreprocessorConstants(optMode,verbose,nCpu,
-                                                      nameLength,lameInt1,
-                                                      lameInt2,lameExt1,
-                                                      lameExt2,xMin,yMin,zMin,
-                                                      xMax,yMax,zMax,nX,nY,nZ,
-                                                      deltaX,deltaY,deltaZ,
-                                                      lsType,lsX,lsY,lsZ,lsR,
-                                                      metCst,metErr,metMin,
-                                                      metMax,trickMatrix,
-                                                      approxMode,iterMax,
-                                                      iterTolD0P,iterTolD1P,
-                                                      iterTolD2P,saveType,
-                                                      saveMesh,saveData,
-                                                      savePrint,saveWhere,
-                                                      pathLength,pPathMedit,
-                                                      pPathMmg3d,pPathMshdist,
-                                                      pPathElastic,pPathAdvect,
-                                                      hminIso,hmaxIso,hausdIso,
-                                                      hgradIso,hminMet,hmaxMet,
-                                                      hausdMet,hgradMet,hminLs,
-                                                      hmaxLs,hausdLs,hgradLs,
-                                                      hmodeLag,hminLag,hmaxLag,
-                                                      hausdLag,hgradLag,nIter,
-                                                      residual,deltaT,noCfl,
-                                                      orb1,orb2,orb3,orb4,orb5,
-                                                      orb6,orb7,orb8,orb9,orb10,
-                                                      orb11,orb12,orb13,orb14,
-                                                      orb15,orb16,orb17,orb18,
-                                                      orb19,orb20,cstA,cstB,
-                                                      cstC,csta,cstb,cstc,cstaa,
-                                                                   cstbb,cstcc);
-            PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,
-                                                        expectedValue,readChar);
-            pPathAdvect=pathAdvect;
         }
     }
 
@@ -2456,126 +1184,83 @@ void testCheckAllPreprocessorConstants(void)
     {
         for (iPathMedit=-10; iPathMedit<=10; iPathMedit+=10)
         {
-            pPathMedit=NULL;
+            pPathTest[0]=NULL;
             if (iPathMedit>0)
             {
-                pPathMedit=pathMedit;
+                pPathTest[0]=pPathRef[0];
             }
             for (iPathMmg3d=-10; iPathMmg3d<=10; iPathMmg3d+=10)
             {
-                pPathMmg3d=NULL;
+                pPathTest[1]=NULL;
                 if (iPathMmg3d>0)
                 {
-                    pPathMmg3d=pathMmg3d;
+                    pPathTest[1]=pPathRef[1];
                 }
                 for (iPathMshdist=-10; iPathMshdist<=10; iPathMshdist+=10)
                 {
-                    pPathMshdist=NULL;
+                    pPathTest[2]=NULL;
                     if (iPathMshdist>0)
                     {
-                         pPathMshdist=pathMshdist;
+                         pPathTest[2]=pPathRef[2];
                     }
                     for (iPathElastic=-10; iPathElastic<=10; iPathElastic+=10)
                     {
-                        pPathElastic=NULL;
+                        pPathTest[3]=NULL;
                         if (iPathElastic>0)
                         {
-                            pPathElastic=pathElastic;
+                            pPathTest[3]=pPathRef[3];
                         }
                         for (iPathAdvect=-10; iPathAdvect<=10; iPathAdvect+=10)
                         {
-                            pPathAdvect=NULL;
+                            pPathTest[4]=NULL;
                             if (iPathAdvect>0)
                             {
-                                pPathAdvect=pathAdvect;
+                                pPathTest[4]=pPathRef[4];
                             }
                             PRINT_TEST_START(counter,expectedValue);
                             returnValue=checkAllPreprocessorConstants(optMode,
-                                                                   verbose,
-                                                                   nCpu,
-                                                                   nameLength,
-                                                                   lameInt1,
-                                                                   lameInt2,
-                                                                   lameExt1,
-                                                                   lameExt2,
-                                                                   xMin,yMin,
-                                                                   zMin,xMax,
-                                                                   yMax,zMax,
-                                                                   nX,nY,nZ,
-                                                                   deltaX,
-                                                                   deltaY,
-                                                                   deltaZ,
-                                                                   lsType,lsX,
-                                                                   lsY,lsZ,lsR,
-                                                                   metCst,
-                                                                   metErr,
-                                                                   metMin,
-                                                                   metMax,
-                                                                   trickMatrix,
-                                                                   approxMode,
-                                                                   iterMax,
-                                                                   iterTolD0P,
-                                                                   iterTolD1P,
-                                                                   iterTolD2P,
-                                                                   saveType,
-                                                                   saveMesh,
-                                                                   saveData,
-                                                                   savePrint,
-                                                                   saveWhere,
-                                                                   pathLength,
-                                                                   pPathMedit,
-                                                                   pPathMmg3d,
-                                                                   pPathMshdist,
-                                                                   pPathElastic,
-                                                                   pPathAdvect,
-                                                                   hminIso,
-                                                                   hmaxIso,
-                                                                   hausdIso,
-                                                                   hgradIso,
-                                                                   hminMet,
-                                                                   hmaxMet,
-                                                                   hausdMet,
-                                                                   hgradMet,
-                                                                   hminLs,
-                                                                   hmaxLs,
-                                                                   hausdLs,
-                                                                   hgradLs,
-                                                                   hmodeLag,
-                                                                   hminLag,
-                                                                   hmaxLag,
-                                                                   hausdLag,
-                                                                   hgradLag,
-                                                                   nIter,
-                                                                   residual,
-                                                                   deltaT,
-                                                                   noCfl,orb1,
-                                                                   orb2,orb3,
-                                                                   orb4,orb5,
-                                                                   orb6,orb7,
-                                                                   orb8,orb9,
-                                                                   orb10,orb11,
-                                                                   orb12,orb13,
-                                                                   orb14,orb15,
-                                                                   orb16,orb17,
-                                                                   orb18,orb19,
-                                                                   orb20,cstA,
-                                                                   cstB,cstC,
-                                                                   csta,cstb,
-                                                                   cstc,cstaa,
-                                                                   cstbb,cstcc);
+                                                                      verbose,
+                                                                      nCpu,
+                                                                      rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
                               PRINT_TEST_END(counter,counterSuccess,counterFail,
                                                    returnValue,expectedValue,
                                                                       readChar);
                         }
-                        pPathAdvect=pathAdvect;
+                        pPathTest[4]=pPathRef[4];
                     }
-                    pPathElastic=pathElastic;
+                    pPathTest[3]=pPathRef[3];
                 }
-                pPathMshdist=pathMshdist;
+                pPathTest[2]=pPathRef[2];
             }
-            pPathMmg3d=pathMmg3d;
+            pPathTest[1]=pPathRef[1];
         }
-        pPathMedit=pathMedit;
+        pPathTest[0]=pPathRef[0];
     }
     pathLength=PATH_LENGTH;
 
@@ -2589,54 +1274,33 @@ void testCheckAllPreprocessorConstants(void)
                 {
                     PRINT_TEST_START(counter,expectedValue);
                     returnValue=checkAllPreprocessorConstants(optMode,verbose,
-                                                              nCpu,nameLength,
-                                                              lameInt1,lameInt2,
-                                                              lameExt1,lameExt2,
-                                                              xMin,yMin,zMin,
-                                                              xMax,yMax,zMax,nX,
-                                                              nY,nZ,deltaX,
-                                                              deltaY,deltaZ,
-                                                              lsType,lsX,lsY,
-                                                              lsZ,lsR,metCst,
-                                                              metErr,metMin,
-                                                              metMax,
-                                                              trickMatrix,
-                                                              approxMode,
-                                                              iterMax,
-                                                              iterTolD0P,
-                                                              iterTolD1P,
-                                                              iterTolD2P,
-                                                              saveType,saveMesh,
-                                                              saveData,
-                                                              savePrint,
-                                                              saveWhere,
-                                                              pathLength,
-                                                              pPathMedit,
-                                                              pPathMmg3d,
-                                                              pPathMshdist,
-                                                              pPathElastic,
-                                                              pPathAdvect,
-                                                              hminIso,hmaxIso,
-                                                              hausdIso,hgradIso,
-                                                              hminMet,hmaxMet,
-                                                              hausdMet,hgradMet,
-                                                              hminLs,hmaxLs,
-                                                              hausdLs,hgradLs,
-                                                              hmodeLag,hminLag,
-                                                              hmaxLag,hausdLag,
-                                                              hgradLag,nIter,
-                                                              residual,deltaT,
-                                                              noCfl,orb1,orb2,
-                                                              orb3,orb4,orb5,
-                                                              orb6,orb7,orb8,
-                                                              orb9,orb10,orb11,
-                                                              orb12,orb13,orb14,
-                                                              orb15,orb16,orb17,
-                                                              orb18,orb19,orb20,
-                                                              cstA,cstB,cstC,
-                                                              csta,cstb,cstc,
-                                                              cstaa,cstbb,
-                                                                         cstcc);
+                                                              nCpu,rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
                     PRINT_TEST_END(counter,counterSuccess,counterFail,
                                             returnValue,expectedValue,readChar);
                 }
@@ -2658,54 +1322,33 @@ void testCheckAllPreprocessorConstants(void)
                 {
                     PRINT_TEST_START(counter,expectedValue);
                     returnValue=checkAllPreprocessorConstants(optMode,verbose,
-                                                              nCpu,nameLength,
-                                                              lameInt1,lameInt2,
-                                                              lameExt1,lameExt2,
-                                                              xMin,yMin,zMin,
-                                                              xMax,yMax,zMax,nX,
-                                                              nY,nZ,deltaX,
-                                                              deltaY,deltaZ,
-                                                              lsType,lsX,lsY,
-                                                              lsZ,lsR,metCst,
-                                                              metErr,metMin,
-                                                              metMax,
-                                                              trickMatrix,
-                                                              approxMode,
-                                                              iterMax,
-                                                              iterTolD0P,
-                                                              iterTolD1P,
-                                                              iterTolD2P,
-                                                              saveType,saveMesh,
-                                                              saveData,
-                                                              savePrint,
-                                                              saveWhere,
-                                                              pathLength,
-                                                              pPathMedit,
-                                                              pPathMmg3d,
-                                                              pPathMshdist,
-                                                              pPathElastic,
-                                                              pPathAdvect,
-                                                              hminIso,hmaxIso,
-                                                              hausdIso,hgradIso,
-                                                              hminMet,hmaxMet,
-                                                              hausdMet,hgradMet,
-                                                              hminLs,hmaxLs,
-                                                              hausdLs,hgradLs,
-                                                              hmodeLag,hminLag,
-                                                              hmaxLag,hausdLag,
-                                                              hgradLag,nIter,
-                                                              residual,deltaT,
-                                                              noCfl,orb1,orb2,
-                                                              orb3,orb4,orb5,
-                                                              orb6,orb7,orb8,
-                                                              orb9,orb10,orb11,
-                                                              orb12,orb13,orb14,
-                                                              orb15,orb16,orb17,
-                                                              orb18,orb19,orb20,
-                                                              cstA,cstB,cstC,
-                                                              csta,cstb,cstc,
-                                                              cstaa,cstbb,
-                                                                         cstcc);
+                                                              nCpu,rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
                     PRINT_TEST_END(counter,counterSuccess,counterFail,
                                             returnValue,expectedValue,readChar);
                 }
@@ -2727,54 +1370,33 @@ void testCheckAllPreprocessorConstants(void)
                 {
                     PRINT_TEST_START(counter,expectedValue);
                     returnValue=checkAllPreprocessorConstants(optMode,verbose,
-                                                              nCpu,nameLength,
-                                                              lameInt1,lameInt2,
-                                                              lameExt1,lameExt2,
-                                                              xMin,yMin,zMin,
-                                                              xMax,yMax,zMax,nX,
-                                                              nY,nZ,deltaX,
-                                                              deltaY,deltaZ,
-                                                              lsType,lsX,lsY,
-                                                              lsZ,lsR,metCst,
-                                                              metErr,metMin,
-                                                              metMax,
-                                                              trickMatrix,
-                                                              approxMode,
-                                                              iterMax,
-                                                              iterTolD0P,
-                                                              iterTolD1P,
-                                                              iterTolD2P,
-                                                              saveType,saveMesh,
-                                                              saveData,
-                                                              savePrint,
-                                                              saveWhere,
-                                                              pathLength,
-                                                              pPathMedit,
-                                                              pPathMmg3d,
-                                                              pPathMshdist,
-                                                              pPathElastic,
-                                                              pPathAdvect,
-                                                              hminIso,hmaxIso,
-                                                              hausdIso,hgradIso,
-                                                              hminMet,hmaxMet,
-                                                              hausdMet,hgradMet,
-                                                              hminLs,hmaxLs,
-                                                              hausdLs,hgradLs,
-                                                              hmodeLag,hminLag,
-                                                              hmaxLag,hausdLag,
-                                                              hgradLag,nIter,
-                                                              residual,deltaT,
-                                                              noCfl,orb1,orb2,
-                                                              orb3,orb4,orb5,
-                                                              orb6,orb7,orb8,
-                                                              orb9,orb10,orb11,
-                                                              orb12,orb13,orb14,
-                                                              orb15,orb16,orb17,
-                                                              orb18,orb19,orb20,
-                                                              cstA,cstB,cstC,
-                                                              csta,cstb,cstc,
-                                                              cstaa,cstbb,
-                                                                         cstcc);
+                                                              nCpu,rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
                     PRINT_TEST_END(counter,counterSuccess,counterFail,
                                             returnValue,expectedValue,readChar);
                 }
@@ -2800,71 +1422,33 @@ void testCheckAllPreprocessorConstants(void)
                         returnValue=checkAllPreprocessorConstants(optMode,
                                                                   verbose,
                                                                   nCpu,
-                                                                  nameLength,
-                                                                  lameInt1,
-                                                                  lameInt2,
-                                                                  lameExt1,
-                                                                  lameExt2,
-                                                                  xMin,yMin,
-                                                                  zMin,xMax,
-                                                                  yMax,zMax,nX,
-                                                                  nY,nZ,deltaX,
-                                                                  deltaY,deltaZ,
-                                                                  lsType,lsX,
-                                                                  lsY,lsZ,lsR,
-                                                                  metCst,metErr,
-                                                                  metMin,metMax,
-                                                                  trickMatrix,
-                                                                  approxMode,
-                                                                  iterMax,
-                                                                  iterTolD0P,
-                                                                  iterTolD1P,
-                                                                  iterTolD2P,
-                                                                  saveType,
-                                                                  saveMesh,
-                                                                  saveData,
-                                                                  savePrint,
-                                                                  saveWhere,
-                                                                  pathLength,
-                                                                  pPathMedit,
-                                                                  pPathMmg3d,
-                                                                  pPathMshdist,
-                                                                  pPathElastic,
-                                                                  pPathAdvect,
-                                                                  hminIso,
-                                                                  hmaxIso,
-                                                                  hausdIso,
-                                                                  hgradIso,
-                                                                  hminMet,
-                                                                  hmaxMet,
-                                                                  hausdMet,
-                                                                  hgradMet,
-                                                                  hminLs,hmaxLs,
-                                                                  hausdLs,
-                                                                  hgradLs,
-                                                                  hmodeLag,
-                                                                  hminLag,
-                                                                  hmaxLag,
-                                                                  hausdLag,
-                                                                  hgradLag,
-                                                                  nIter,
-                                                                  residual,
-                                                                  deltaT,
-                                                                  noCfl,orb1,
-                                                                  orb2,orb3,
-                                                                  orb4,orb5,
-                                                                  orb6,orb7,
-                                                                  orb8,orb9,
-                                                                  orb10,orb11,
-                                                                  orb12,orb13,
-                                                                  orb14,orb15,
-                                                                  orb16,orb17,
-                                                                  orb18,orb19,
-                                                                  orb20,cstA,
-                                                                  cstB,cstC,
-                                                                  csta,cstb,
-                                                                  cstc,cstaa,
-                                                                   cstbb,cstcc);
+                                                                  rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
                         PRINT_TEST_END(counter,counterSuccess,counterFail,
                                             returnValue,expectedValue,readChar);
                    }
@@ -2888,54 +1472,33 @@ void testCheckAllPreprocessorConstants(void)
                 {
                     PRINT_TEST_START(counter,expectedValue);
                     returnValue=checkAllPreprocessorConstants(optMode,verbose,
-                                                              nCpu,nameLength,
-                                                              lameInt1,lameInt2,
-                                                              lameExt1,lameExt2,
-                                                              xMin,yMin,zMin,
-                                                              xMax,yMax,zMax,nX,
-                                                              nY,nZ,deltaX,
-                                                              deltaY,deltaZ,
-                                                              lsType,lsX,lsY,
-                                                              lsZ,lsR,metCst,
-                                                              metErr,metMin,
-                                                              metMax,
-                                                              trickMatrix,
-                                                              approxMode,
-                                                              iterMax,
-                                                              iterTolD0P,
-                                                              iterTolD1P,
-                                                              iterTolD2P,
-                                                              saveType,saveMesh,
-                                                              saveData,
-                                                              savePrint,
-                                                              saveWhere,
-                                                              pathLength,
-                                                              pPathMedit,
-                                                              pPathMmg3d,
-                                                              pPathMshdist,
-                                                              pPathElastic,
-                                                              pPathAdvect,
-                                                              hminIso,hmaxIso,
-                                                              hausdIso,hgradIso,
-                                                              hminMet,hmaxMet,
-                                                              hausdMet,hgradMet,
-                                                              hminLs,hmaxLs,
-                                                              hausdLs,hgradLs,
-                                                              hmodeLag,hminLag,
-                                                              hmaxLag,hausdLag,
-                                                              hgradLag,nIter,
-                                                              residual,deltaT,
-                                                              noCfl,orb1,orb2,
-                                                              orb3,orb4,orb5,
-                                                              orb6,orb7,orb8,
-                                                              orb9,orb10,orb11,
-                                                              orb12,orb13,orb14,
-                                                              orb15,orb16,orb17,
-                                                              orb18,orb19,orb20,
-                                                              cstA,cstB,cstC,
-                                                              csta,cstb,cstc,
-                                                              cstaa,cstbb,
-                                                                         cstcc);
+                                                              nCpu,rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
                     PRINT_TEST_END(counter,counterSuccess,counterFail,
                                             returnValue,expectedValue,readChar);
                 }
@@ -2947,373 +1510,221 @@ void testCheckAllPreprocessorConstants(void)
     }
     nIter=N_ITER;
 
-    for (orb1=-ORB_1S; orb1<=ORB_1S; orb1+=ORB_1S)
+    for (orb1=-ORB_S; orb1<=ORB_S; orb1+=ORB_S)
     {
-        for (orb2=-ORB_2PX; orb2<=ORB_2PX; orb2+=ORB_2PX)
+        for (orb2=-ORB_PX; orb2<=ORB_PX; orb2+=ORB_PX)
         {
-            for (orb3=-ORB_2PY; orb3<=ORB_2PY; orb3+=ORB_2PY)
+            for (orb3=-ORB_PY; orb3<=ORB_PY; orb3+=ORB_PY)
             {
-                for (orb4=-ORB_2PZ; orb4<=ORB_2PZ; orb4+=ORB_2PZ)
+                for (orb4=-ORB_PZ; orb4<=ORB_PZ; orb4+=ORB_PZ)
                 {
-                     for (orb5=-ORB_3DXX; orb5<=ORB_3DXX; orb5+=ORB_3DXX)
+                     for (orb5=-ORB_DXX; orb5<=ORB_DXX; orb5+=ORB_DXX)
                      {
                         PRINT_TEST_START(counter,expectedValue);
                         returnValue=checkAllPreprocessorConstants(optMode,
                                                                   verbose,
                                                                   nCpu,
-                                                                  nameLength,
-                                                                  lameInt1,
-                                                                  lameInt2,
-                                                                  lameExt1,
-                                                                  lameExt2,
-                                                                  xMin,yMin,
-                                                                  zMin,xMax,
-                                                                  yMax,zMax,nX,
-                                                                  nY,nZ,deltaX,
-                                                                  deltaY,deltaZ,
-                                                                  lsType,lsX,
-                                                                  lsY,lsZ,lsR,
-                                                                  metCst,metErr,
-                                                                  metMin,metMax,
-                                                                  trickMatrix,
-                                                                  approxMode,
-                                                                  iterMax,
-                                                                  iterTolD0P,
-                                                                  iterTolD1P,
-                                                                  iterTolD2P,
-                                                                  saveType,
-                                                                  saveMesh,
-                                                                  saveData,
-                                                                  savePrint,
-                                                                  saveWhere,
-                                                                  pathLength,
-                                                                  pPathMedit,
-                                                                  pPathMmg3d,
-                                                                  pPathMshdist,
-                                                                  pPathElastic,
-                                                                  pPathAdvect,
-                                                                  hminIso,
-                                                                  hmaxIso,
-                                                                  hausdIso,
-                                                                  hgradIso,
-                                                                  hminMet,
-                                                                  hmaxMet,
-                                                                  hausdMet,
-                                                                  hgradMet,
-                                                                  hminLs,hmaxLs,
-                                                                  hausdLs,
-                                                                  hgradLs,
-                                                                  hmodeLag,
-                                                                  hminLag,
-                                                                  hmaxLag,
-                                                                  hausdLag,
-                                                                  hgradLag,
-                                                                  nIter,
-                                                                  residual,
-                                                                  deltaT,
-                                                                  noCfl,orb1,
-                                                                  orb2,orb3,
-                                                                  orb4,orb5,
-                                                                  orb6,orb7,
-                                                                  orb8,orb9,
-                                                                  orb10,orb11,
-                                                                  orb12,orb13,
-                                                                  orb14,orb15,
-                                                                  orb16,orb17,
-                                                                  orb18,orb19,
-                                                                  orb20,cstA,
-                                                                  cstB,cstC,
-                                                                  csta,cstb,
-                                                                  cstc,cstaa,
-                                                                   cstbb,cstcc);
+                                                                  rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
                         PRINT_TEST_END(counter,counterSuccess,counterFail,
                                             returnValue,expectedValue,readChar);
                     }
-                    orb5=ORB_3DXX;
+                    orb5=ORB_DXX;
                 }
-                orb4=ORB_2PZ;
+                orb4=ORB_PZ;
             }
-            orb3=ORB_2PY;
+            orb3=ORB_PY;
         }
-        orb2=ORB_2PX;
+        orb2=ORB_PX;
     }
-    orb1=ORB_1S;
+    orb1=ORB_S;
 
-    for (orb6=-ORB_3DYY; orb6<=ORB_3DYY; orb6+=ORB_3DYY)
+    for (orb6=-ORB_DYY; orb6<=ORB_DYY; orb6+=ORB_DYY)
     {
-        for (orb7=-ORB_3DZZ; orb7<=ORB_3DZZ; orb7+=ORB_3DZZ)
+        for (orb7=-ORB_DZZ; orb7<=ORB_DZZ; orb7+=ORB_DZZ)
         {
-            for (orb8=-ORB_3DXY; orb8<=ORB_3DXY; orb8+=ORB_3DXY)
+            for (orb8=-ORB_DXY; orb8<=ORB_DXY; orb8+=ORB_DXY)
             {
-                for (orb9=-ORB_3DXZ; orb9<=ORB_3DXZ; orb9+=ORB_3DXZ)
+                for (orb9=-ORB_DXZ; orb9<=ORB_DXZ; orb9+=ORB_DXZ)
                 {
-                    for (orb10=-ORB_3DYZ; orb10<=ORB_3DYZ; orb10+=ORB_3DYZ)
+                    for (orb10=-ORB_DYZ; orb10<=ORB_DYZ; orb10+=ORB_DYZ)
                     {
                         PRINT_TEST_START(counter,expectedValue);
                         returnValue=checkAllPreprocessorConstants(optMode,
                                                                   verbose,
                                                                   nCpu,
-                                                                  nameLength,
-                                                                  lameInt1,
-                                                                  lameInt2,
-                                                                  lameExt1,
-                                                                  lameExt2,
-                                                                  xMin,yMin,
-                                                                  zMin,xMax,
-                                                                  yMax,zMax,nX,
-                                                                  nY,nZ,deltaX,
-                                                                  deltaY,deltaZ,
-                                                                  lsType,lsX,
-                                                                  lsY,lsZ,lsR,
-                                                                  metCst,metErr,
-                                                                  metMin,metMax,
-                                                                  trickMatrix,
-                                                                  approxMode,
-                                                                  iterMax,
-                                                                  iterTolD0P,
-                                                                  iterTolD1P,
-                                                                  iterTolD2P,
-                                                                  saveType,
-                                                                  saveMesh,
-                                                                  saveData,
-                                                                  savePrint,
-                                                                  saveWhere,
-                                                                  pathLength,
-                                                                  pPathMedit,
-                                                                  pPathMmg3d,
-                                                                  pPathMshdist,
-                                                                  pPathElastic,
-                                                                  pPathAdvect,
-                                                                  hminIso,
-                                                                  hmaxIso,
-                                                                  hausdIso,
-                                                                  hgradIso,
-                                                                  hminMet,
-                                                                  hmaxMet,
-                                                                  hausdMet,
-                                                                  hgradMet,
-                                                                  hminLs,hmaxLs,
-                                                                  hausdLs,
-                                                                  hgradLs,
-                                                                  hmodeLag,
-                                                                  hminLag,
-                                                                  hmaxLag,
-                                                                  hausdLag,
-                                                                  hgradLag,
-                                                                  nIter,
-                                                                  residual,
-                                                                  deltaT,
-                                                                  noCfl,orb1,
-                                                                  orb2,orb3,
-                                                                  orb4,orb5,
-                                                                  orb6,orb7,
-                                                                  orb8,orb9,
-                                                                  orb10,orb11,
-                                                                  orb12,orb13,
-                                                                  orb14,orb15,
-                                                                  orb16,orb17,
-                                                                  orb18,orb19,
-                                                                  orb20,cstA,
-                                                                  cstB,cstC,
-                                                                  csta,cstb,
-                                                                  cstc,cstaa,
-                                                                   cstbb,cstcc);
+                                                                  rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
                         PRINT_TEST_END(counter,counterSuccess,counterFail,
                                             returnValue,expectedValue,readChar);
                     }
-                    orb10=ORB_3DYZ;
+                    orb10=ORB_DYZ;
                 }
-                orb9=ORB_3DXZ;
+                orb9=ORB_DXZ;
             }
-            orb8=ORB_3DXY;
+            orb8=ORB_DXY;
         }
-        orb7=ORB_3DZZ;
+        orb7=ORB_DZZ;
     }
-    orb6=ORB_3DYY;
+    orb6=ORB_DYY;
 
-    for (orb11=-ORB_4FXXX; orb11<=ORB_4FXXX; orb11+=ORB_4FXXX)
+    for (orb11=-ORB_FXXX; orb11<=ORB_FXXX; orb11+=ORB_FXXX)
     {
-        for (orb12=-ORB_4FYYY; orb12<=ORB_4FYYY; orb12+=ORB_4FYYY)
+        for (orb12=-ORB_FYYY; orb12<=ORB_FYYY; orb12+=ORB_FYYY)
         {
-            for (orb13=-ORB_4FZZZ; orb13<=ORB_4FZZZ; orb13+=ORB_4FZZZ)
+            for (orb13=-ORB_FZZZ; orb13<=ORB_FZZZ; orb13+=ORB_FZZZ)
             {
-                for (orb14=-ORB_4FXXY; orb14<=ORB_4FXXY; orb14+=ORB_4FXXY)
+                for (orb14=-ORB_FXXY; orb14<=ORB_FXXY; orb14+=ORB_FXXY)
                 {
-                    for (orb15=-ORB_4FXXZ; orb15<=ORB_4FXXZ; orb15+=ORB_4FXXZ)
+                    for (orb15=-ORB_FXXZ; orb15<=ORB_FXXZ; orb15+=ORB_FXXZ)
                      {
                         PRINT_TEST_START(counter,expectedValue);
                         returnValue=checkAllPreprocessorConstants(optMode,
                                                                   verbose,
                                                                   nCpu,
-                                                                  nameLength,
-                                                                  lameInt1,
-                                                                  lameInt2,
-                                                                  lameExt1,
-                                                                  lameExt2,
-                                                                  xMin,yMin,
-                                                                  zMin,xMax,
-                                                                  yMax,zMax,nX,
-                                                                  nY,nZ,deltaX,
-                                                                  deltaY,deltaZ,
-                                                                  lsType,lsX,
-                                                                  lsY,lsZ,lsR,
-                                                                  metCst,metErr,
-                                                                  metMin,metMax,
-                                                                  trickMatrix,
-                                                                  approxMode,
-                                                                  iterMax,
-                                                                  iterTolD0P,
-                                                                  iterTolD1P,
-                                                                  iterTolD2P,
-                                                                  saveType,
-                                                                  saveMesh,
-                                                                  saveData,
-                                                                  savePrint,
-                                                                  saveWhere,
-                                                                  pathLength,
-                                                                  pPathMedit,
-                                                                  pPathMmg3d,
-                                                                  pPathMshdist,
-                                                                  pPathElastic,
-                                                                  pPathAdvect,
-                                                                  hminIso,
-                                                                  hmaxIso,
-                                                                  hausdIso,
-                                                                  hgradIso,
-                                                                  hminMet,
-                                                                  hmaxMet,
-                                                                  hausdMet,
-                                                                  hgradMet,
-                                                                  hminLs,hmaxLs,
-                                                                  hausdLs,
-                                                                  hgradLs,
-                                                                  hmodeLag,
-                                                                  hminLag,
-                                                                  hmaxLag,
-                                                                  hausdLag,
-                                                                  hgradLag,
-                                                                  nIter,
-                                                                  residual,
-                                                                  deltaT,
-                                                                  noCfl,orb1,
-                                                                  orb2,orb3,
-                                                                  orb4,orb5,
-                                                                  orb6,orb7,
-                                                                  orb8,orb9,
-                                                                  orb10,orb11,
-                                                                  orb12,orb13,
-                                                                  orb14,orb15,
-                                                                  orb16,orb17,
-                                                                  orb18,orb19,
-                                                                  orb20,cstA,
-                                                                  cstB,cstC,
-                                                                  csta,cstb,
-                                                                  cstc,cstaa,
-                                                                   cstbb,cstcc);
+                                                                  rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
                         PRINT_TEST_END(counter,counterSuccess,counterFail,
                                             returnValue,expectedValue,readChar);
                     }
-                    orb15=ORB_4FXXZ;
+                    orb15=ORB_FXXZ;
                 }
-                orb14=ORB_4FXXY;
+                orb14=ORB_FXXY;
             }
-            orb13=ORB_4FZZZ;
+            orb13=ORB_FZZZ;
         }
-        orb12=ORB_4FYYY;
+        orb12=ORB_FYYY;
     }
-    orb11=ORB_4FXXX;
+    orb11=ORB_FXXX;
 
-    for (orb16=-ORB_4FYYZ; orb16<=ORB_4FYYZ; orb16+=ORB_4FYYZ)
+    for (orb16=-ORB_FYYZ; orb16<=ORB_FYYZ; orb16+=ORB_FYYZ)
     {
-        for (orb17=-ORB_4FXYY; orb17<=ORB_4FXYY; orb17+=ORB_4FXYY)
+        for (orb17=-ORB_FXYY; orb17<=ORB_FXYY; orb17+=ORB_FXYY)
         {
-            for (orb18=-ORB_4FXZZ; orb18<=ORB_4FXZZ; orb18+=ORB_4FXZZ)
+            for (orb18=-ORB_FXZZ; orb18<=ORB_FXZZ; orb18+=ORB_FXZZ)
             {
-                for (orb19=-ORB_4FYZZ; orb19<=ORB_4FYZZ; orb19+=ORB_4FYZZ)
+                for (orb19=-ORB_FYZZ; orb19<=ORB_FYZZ; orb19+=ORB_FYZZ)
                 {
-                    for (orb20=-ORB_4FXYZ; orb20<=ORB_4FXYZ; orb20+=ORB_4FXYZ)
+                    for (orb20=-ORB_FXYZ; orb20<=ORB_FXYZ; orb20+=ORB_FXYZ)
                      {
                         PRINT_TEST_START(counter,expectedValue);
                         returnValue=checkAllPreprocessorConstants(optMode,
                                                                   verbose,
                                                                   nCpu,
-                                                                  nameLength,
-                                                                  lameInt1,
-                                                                  lameInt2,
-                                                                  lameExt1,
-                                                                  lameExt2,
-                                                                  xMin,yMin,
-                                                                  zMin,xMax,
-                                                                  yMax,zMax,nX,
-                                                                  nY,nZ,deltaX,
-                                                                  deltaY,deltaZ,
-                                                                  lsType,lsX,
-                                                                  lsY,lsZ,lsR,
-                                                                  metCst,metErr,
-                                                                  metMin,metMax,
-                                                                  trickMatrix,
-                                                                  approxMode,
-                                                                  iterMax,
-                                                                  iterTolD0P,
-                                                                  iterTolD1P,
-                                                                  iterTolD2P,
-                                                                  saveType,
-                                                                  saveMesh,
-                                                                  saveData,
-                                                                  savePrint,
-                                                                  saveWhere,
-                                                                  pathLength,
-                                                                  pPathMedit,
-                                                                  pPathMmg3d,
-                                                                  pPathMshdist,
-                                                                  pPathElastic,
-                                                                  pPathAdvect,
-                                                                  hminIso,
-                                                                  hmaxIso,
-                                                                  hausdIso,
-                                                                  hgradIso,
-                                                                  hminMet,
-                                                                  hmaxMet,
-                                                                  hausdMet,
-                                                                  hgradMet,
-                                                                  hminLs,hmaxLs,
-                                                                  hausdLs,
-                                                                  hgradLs,
-                                                                  hmodeLag,
-                                                                  hminLag,
-                                                                  hmaxLag,
-                                                                  hausdLag,
-                                                                  hgradLag,
-                                                                  nIter,
-                                                                  residual,
-                                                                  deltaT,
-                                                                  noCfl,orb1,
-                                                                  orb2,orb3,
-                                                                  orb4,orb5,
-                                                                  orb6,orb7,
-                                                                  orb8,orb9,
-                                                                  orb10,orb11,
-                                                                  orb12,orb13,
-                                                                  orb14,orb15,
-                                                                  orb16,orb17,
-                                                                  orb18,orb19,
-                                                                  orb20,cstA,
-                                                                  cstB,cstC,
-                                                                  csta,cstb,
-                                                                  cstc,cstaa,
-                                                                   cstbb,cstcc);
+                                                                  rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
                         PRINT_TEST_END(counter,counterSuccess,counterFail,
                                             returnValue,expectedValue,readChar);
                     }
-                    orb20=ORB_4FXYZ;
+                    orb20=ORB_FXYZ;
                 }
-                orb19=ORB_4FYZZ;
+                orb19=ORB_FYZZ;
             }
-            orb18=ORB_4FXZZ;
+            orb18=ORB_FXZZ;
         }
-        orb17=ORB_4FXYY;
+        orb17=ORB_FXYY;
     }
-    orb16=ORB_4FYYZ;
+    orb16=ORB_FYYZ;
 
     for (cstA=CST_A-1.e-18; cstA<=CST_A+1.e-18; cstA+=1.e-18)
     {
@@ -3323,43 +1734,33 @@ void testCheckAllPreprocessorConstants(void)
             {
                 PRINT_TEST_START(counter,expectedValue);
                 returnValue=checkAllPreprocessorConstants(optMode,verbose,nCpu,
-                                                          nameLength,lameInt1,
-                                                          lameInt2,lameExt1,
-                                                          lameExt2,xMin,yMin,
-                                                          zMin,xMax,yMax,zMax,
-                                                          nX,nY,nZ,deltaX,
-                                                          deltaY,deltaZ,lsType,
-                                                          lsX,lsY,lsZ,lsR,
-                                                          metCst,metErr,metMin,
-                                                          metMax,trickMatrix,
-                                                          approxMode,iterMax,
-                                                          iterTolD0P,iterTolD1P,
-                                                          iterTolD2P,saveType,
-                                                          saveMesh,saveData,
-                                                          savePrint,saveWhere,
-                                                          pathLength,pPathMedit,
-                                                          pPathMmg3d,
-                                                          pPathMshdist,
-                                                          pPathElastic,
-                                                          pathAdvect,hminIso,
-                                                          hmaxIso,hausdIso,
-                                                          hgradIso,hminMet,
-                                                          hmaxMet,hausdMet,
-                                                          hgradMet,hminLs,
-                                                          hmaxLs,hausdLs,
-                                                          hgradLs,hmodeLag,
-                                                          hminLag,hmaxLag,
-                                                          hausdLag,hgradLag,
-                                                          nIter,residual,deltaT,
-                                                          noCfl,orb1,orb2,orb3,
-                                                          orb4,orb5,orb6,orb7,
-                                                          orb8,orb9,orb10,orb11,
-                                                          orb12,orb13,orb14,
-                                                          orb15,orb16,orb17,
-                                                          orb18,orb19,orb20,
-                                                          cstA,cstB,cstC,csta,
-                                                          cstb,cstc,cstaa,cstbb,
-                                                                         cstcc);
+                                                          rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
                 PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,
                                                         expectedValue,readChar);
             }
@@ -3377,43 +1778,33 @@ void testCheckAllPreprocessorConstants(void)
             {
                 PRINT_TEST_START(counter,expectedValue);
                 returnValue=checkAllPreprocessorConstants(optMode,verbose,nCpu,
-                                                          nameLength,lameInt1,
-                                                          lameInt2,lameExt1,
-                                                          lameExt2,xMin,yMin,
-                                                          zMin,xMax,yMax,zMax,
-                                                          nX,nY,nZ,deltaX,
-                                                          deltaY,deltaZ,lsType,
-                                                          lsX,lsY,lsZ,lsR,
-                                                          metCst,metErr,metMin,
-                                                          metMax,trickMatrix,
-                                                          approxMode,iterMax,
-                                                          iterTolD0P,iterTolD1P,
-                                                          iterTolD2P,saveType,
-                                                          saveMesh,saveData,
-                                                          savePrint,saveWhere,
-                                                          pathLength,pPathMedit,
-                                                          pPathMmg3d,
-                                                          pPathMshdist,
-                                                          pPathElastic,
-                                                          pathAdvect,hminIso,
-                                                          hmaxIso,hausdIso,
-                                                          hgradIso,hminMet,
-                                                          hmaxMet,hausdMet,
-                                                          hgradMet,hminLs,
-                                                          hmaxLs,hausdLs,
-                                                          hgradLs,hmodeLag,
-                                                          hminLag,hmaxLag,
-                                                          hausdLag,hgradLag,
-                                                          nIter,residual,deltaT,
-                                                          noCfl,orb1,orb2,orb3,
-                                                          orb4,orb5,orb6,orb7,
-                                                          orb8,orb9,orb10,orb11,
-                                                          orb12,orb13,orb14,
-                                                          orb15,orb16,orb17,
-                                                          orb18,orb19,orb20,
-                                                          cstA,cstB,cstC,csta,
-                                                          cstb,cstc,cstaa,cstbb,
-                                                                         cstcc);
+                                                          rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
                 PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,
                                                         expectedValue,readChar);
             }
@@ -3425,120 +1816,280 @@ void testCheckAllPreprocessorConstants(void)
 
     for (cstaa=CST_aa-1.e-17; cstaa<=CST_aa+1.e-17; cstaa+=1.e-17)
     {
-         for (cstbb=CST_bb-1.e-17; cstbb<=CST_bb+1.e-17; cstbb+=1.e-17)
-         {
-             for (cstcc=CST_cc-1.e-16; cstcc<=CST_cc+1.e-16; cstcc+=1.e-16)
-             {
-                 expectedValue=0;
-                 if (cstaa==CST_aa && cstbb==CST_bb && cstcc==CST_cc)
-                 {
-                     expectedValue=1;
-                 }
+        for (cstbb=CST_bb-1.e-17; cstbb<=CST_bb+1.e-17; cstbb+=1.e-17)
+        {
+            for (cstcc=CST_cc-1.e-16; cstcc<=CST_cc+1.e-16; cstcc+=1.e-16)
+            {
                 PRINT_TEST_START(counter,expectedValue);
                 returnValue=checkAllPreprocessorConstants(optMode,verbose,nCpu,
-                                                          nameLength,lameInt1,
-                                                          lameInt2,lameExt1,
-                                                          lameExt2,xMin,yMin,
-                                                          zMin,xMax,yMax,zMax,
-                                                          nX,nY,nZ,deltaX,
-                                                          deltaY,deltaZ,lsType,
-                                                          lsX,lsY,lsZ,lsR,
-                                                          metCst,metErr,metMin,
-                                                          metMax,trickMatrix,
-                                                          approxMode,iterMax,
-                                                          iterTolD0P,iterTolD1P,
-                                                          iterTolD2P,saveType,
-                                                          saveMesh,saveData,
-                                                          savePrint,saveWhere,
-                                                          pathLength,pPathMedit,
-                                                          pPathMmg3d,
-                                                          pPathMshdist,
-                                                          pPathElastic,
-                                                          pathAdvect,hminIso,
-                                                          hmaxIso,hausdIso,
-                                                          hgradIso,hminMet,
-                                                          hmaxMet,hausdMet,
-                                                          hgradMet,hminLs,
-                                                          hmaxLs,hausdLs,
-                                                          hgradLs,hmodeLag,
-                                                          hminLag,hmaxLag,
-                                                          hausdLag,hgradLag,
-                                                          nIter,residual,deltaT,
-                                                          noCfl,orb1,orb2,orb3,
-                                                          orb4,orb5,orb6,orb7,
-                                                          orb8,orb9,orb10,orb11,
-                                                          orb12,orb13,orb14,
-                                                          orb15,orb16,orb17,
-                                                          orb18,orb19,orb20,
-                                                          cstA,cstB,cstC,csta,
-                                                          cstb,cstc,cstaa,cstbb,
-                                                                         cstcc);
-                PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,
-                                                        expectedValue,readChar);
-                }
-                cstcc=CST_cc;
+                                                           rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
+                PRINT_TEST_END(counter,counterSuccess,counterFail,
+                                            returnValue,expectedValue,readChar);
+            }
+            cstcc=CST_cc;
         }
         cstbb=CST_bb;
     }
     cstaa=CST_aa;
 
-    expectedValue=1;
-    PRINT_TEST_START(counter,expectedValue);
-    returnValue=checkAllPreprocessorConstants(optMode,verbose,nCpu,nameLength,
-                                              lameInt1,lameInt2,lameExt1,
-                                              lameExt2,xMin,yMin,zMin,xMax,yMax,
-                                              zMax,nX,nY,nZ,deltaX,deltaY,
+    for (cstOne=CST_ONE-1.e-16; cstOne<=CST_ONE+1.e-16; cstOne+=1.e-16)
+    {
+        for (cstTwo=CST_TWO-1.e-16; cstTwo<=CST_TWO+1.e-16; cstTwo+=1.e-16)
+        {
+            for (cstThree=CST_THREE-1.e-16; cstThree<=CST_THREE+1.e-16;
+                                                               cstThree+=1.e-16)
+            {
+                PRINT_TEST_START(counter,expectedValue);
+                returnValue=checkAllPreprocessorConstants(optMode,verbose,nCpu,
+                                                           rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
                                               deltaZ,lsType,lsX,lsY,lsZ,lsR,
                                               metCst,metErr,metMin,metMax,
-                                              trickMatrix,approxMode,iterMax,
-                                              iterTolD0P,iterTolD1P,iterTolD2P,
-                                              saveType,saveMesh,saveData,
-                                              savePrint,saveWhere,pathLength,
-                                              pPathMedit,pPathMmg3d,
-                                              pPathMshdist,pPathElastic,
-                                              pPathAdvect,hminIso,hmaxIso,
-                                              hausdIso,hgradIso,hminMet,hmaxMet,
-                                              hausdMet,hgradMet,hminLs,hmaxLs,
-                                              hausdLs,hgradLs,hmodeLag,hminLag,
-                                              hmaxLag,hausdLag,hgradLag,nIter,
-                                              residual,deltaT,noCfl,orb1,orb2,
-                                              orb3,orb4,orb5,orb6,orb7,orb8,
-                                              orb9,orb10,orb11,orb12,orb13,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
                                               orb14,orb15,orb16,orb17,orb18,
                                               orb19,orb20,cstA,cstB,cstC,csta,
-                                                   cstb,cstc,cstaa,cstbb,cstcc);
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
+                PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,
+                                                        expectedValue,readChar);
+            }
+            cstThree=CST_THREE;
+        }
+        cstTwo=CST_TWO;
+    }
+    cstOne=CST_ONE;
+
+    for (cst1=CST_1-1.e-16; cst1<=CST_1+1.e-16; cst1+=1.e-16)
+    {
+        for (cst2=CST_2-1.e-17; cst2<=CST_2+1.e-17; cst2+=1.e-17)
+        {
+            for (cst3=CST_3-1.e-16; cst3<=CST_3+1.e-16; cst3+=1.e-16)
+            {
+                for (cst22=CST_22-1.e-16; cst22<=CST_22+1.e-16; cst22+=1.e-16)
+                {
+                    for (cst33=CST_33-1.e-17; cst33<=CST_33+1.e-17;
+                                                                  cst33+=1.e-17)
+                    {
+                        expectedValue=0;
+                        if (cst1==CST_1 && cst2==CST_2 && cst3==CST_3 &&
+                                                 cst22==CST_22 && cst33==CST_33)
+                        {
+                            expectedValue=1;
+                        }
+
+                        PRINT_TEST_START(counter,expectedValue);
+                        returnValue=checkAllPreprocessorConstants(optMode,
+                                                                  verbose,
+                                                                  nCpu,
+                                                                  rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
+                        PRINT_TEST_END(counter,counterSuccess,counterFail,
+                                            returnValue,expectedValue,readChar);
+                    }
+                    cst33=CST_33;
+                }
+                cst22=CST_22;
+            }
+            cst3=CST_3;
+        }
+        cst2=CST_2;
+    }
+    cst1=CST_1;
+
+    expectedValue=1;
+    PRINT_TEST_START(counter,expectedValue);
+    verbose=1;
+    returnValue=checkAllPreprocessorConstants(optMode,verbose,nCpu,rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
+    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
+                                                                      readChar);
+
+    verbose=1;
+    PRINT_TEST_START(counter,expectedValue);
+    returnValue=checkAllPreprocessorConstants(optMode,verbose,nCpu,rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
+    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
+                                                                      readChar);
+
+    verbose=0;
+    PRINT_TEST_START(counter,expectedValue);
+    returnValue=checkAllPreprocessorConstants(optMode,verbose,nCpu,rhoOpt,
+                                              nameLength,lameInt1,lameInt2,
+                                              lameExt1,lameExt2,bohrUnit,
+                                              bohrRadius,selectOrb,orbOrtho,
+                                              selectBox,xMin,yMin,zMin,xMax,
+                                              yMax,zMax,nX,nY,nZ,deltaX,deltaY,
+                                              deltaZ,lsType,lsX,lsY,lsZ,lsR,
+                                              metCst,metErr,metMin,metMax,
+                                              trickMatrix,approxMode,iterIni,
+                                              iterMax,iterTolD0P,iterTolD1P,
+                                              iterTolD2P,saveType,saveMesh,
+                                              saveData,savePrint,saveWhere,
+                                              pathLength,pPathTest[0],
+                                              pPathTest[1],pPathTest[2],
+                                              pPathTest[3],pPathTest[4],hminIso,
+                                              hmaxIso,hausdIso,hgradIso,hminMet,
+                                              hmaxMet,hausdMet,hgradMet,hminLs,
+                                              hmaxLs,hausdLs,hgradLs,hmodeLag,
+                                              hminLag,hmaxLag,hausdLag,hgradLag,
+                                              nIter,residual,deltaT,noCfl,orb1,
+                                              orb2,orb3,orb4,orb5,orb6,orb7,
+                                              orb8,orb9,orb10,orb11,orb12,orb13,
+                                              orb14,orb15,orb16,orb17,orb18,
+                                              orb19,orb20,cstA,cstB,cstC,csta,
+                                              cstb,cstc,cstaa,cstbb,cstcc,
+                                              cstOne,cstTwo,cstThree,cst1,cst2,
+                                                              cst3,cst22,cst33);
     PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
                                                                       readChar);
 
     PRINT_TEST_START(counter,expectedValue);
-    returnValue=checkAllPreprocessorConstants(OPT_MODE,VERBOSE,N_CPU,
-                                              NAME_LENGTH,LAME_INT1,LAME_INT2,
-                                              LAME_EXT1,LAME_EXT2,X_MIN,Y_MIN,
-                                              Z_MIN,X_MAX,Y_MAX,Z_MAX,N_X,N_Y,
-                                              N_Z,DELTA_X,DELTA_Y,DELTA_Z,
-                                              LS_TYPE,LS_X,LS_Y,LS_Z,LS_R,
-                                              MET_CST,MET_ERR,MET_MIN,MET_MAX,
-                                              TRICK_MATRIX,APPROX_MODE,ITER_MAX,
-                                              ITER_TOLD0P,ITER_TOLD1P,
-                                              ITER_TOLD2P,SAVE_TYPE,SAVE_MESH,
-                                              SAVE_DATA,SAVE_PRINT,SAVE_WHERE,
-                                              PATH_LENGTH,PATH_MEDIT,PATH_MMG3D,
-                                              PATH_MSHDIST,PATH_ELASTIC,
-                                              PATH_ADVECT,HMIN_ISO,HMAX_ISO,
-                                              HAUSD_ISO,HGRAD_ISO,HMIN_MET,
-                                              HMAX_MET,HAUSD_MET,HGRAD_MET,
-                                              HMIN_LS,HMAX_LS,HAUSD_LS,HGRAD_LS,
-                                              HMODE_LAG,HMIN_LAG,HMAX_LAG,
-                                              HAUSD_LAG,HGRAD_LAG,N_ITER,
-                                              RESIDUAL,DELTA_T,NO_CFL,ORB_1S,
-                                              ORB_2PX,ORB_2PY,ORB_2PZ,ORB_3DXX,
-                                              ORB_3DYY,ORB_3DZZ,ORB_3DXY,
-                                              ORB_3DXZ,ORB_3DYZ,ORB_4FXXX,
-                                              ORB_4FYYY,ORB_4FZZZ,ORB_4FXXY,
-                                              ORB_4FXXZ,ORB_4FYYZ,ORB_4FXYY,
-                                              ORB_4FXZZ,ORB_4FYZZ,ORB_4FXYZ,
-                                              CST_A,CST_B,CST_C,CST_a,CST_b,
-                                                    CST_c,CST_aa,CST_bb,CST_cc);
+    returnValue=checkAllPreprocessorConstants(OPT_MODE,VERBOSE,N_CPU,RHO_OPT,
+                                       NAME_LENGTH,LAME_INT1,LAME_INT2,
+                                       LAME_EXT1,LAME_EXT2,BOHR_UNIT,
+                                       BOHR_RADIUS,SELECT_ORB,ORB_ORTHO,
+                                       SELECT_BOX,X_MIN,Y_MIN,Z_MIN,X_MAX,Y_MAX,
+                                       Z_MAX,N_X,N_Y,N_Z,DELTA_X,DELTA_Y,
+                                       DELTA_Z,LS_TYPE,LS_X,LS_Y,LS_Z,LS_R,
+                                       MET_CST,MET_ERR,MET_MIN,MET_MAX,
+                                       TRICK_MATRIX,APPROX_MODE,ITER_INI,
+                                       ITER_MAX,ITER_TOLD0P,ITER_TOLD1P,
+                                       ITER_TOLD2P,SAVE_TYPE,SAVE_MESH,
+                                       SAVE_DATA,SAVE_PRINT,SAVE_WHERE,
+                                       PATH_LENGTH,PATH_MEDIT,PATH_MMG3D,
+                                       PATH_MSHDIST,PATH_ELASTIC,PATH_ADVECT,
+                                       HMIN_ISO,HMAX_ISO,HAUSD_ISO,HGRAD_ISO,
+                                       HMIN_MET,HMAX_MET,HAUSD_MET,HGRAD_MET,
+                                       HMIN_LS,HMAX_LS,HAUSD_LS,HGRAD_LS,
+                                       HMODE_LAG,HMIN_LAG,HMAX_LAG,HAUSD_LAG,
+                                       HGRAD_LAG,N_ITER,RESIDUAL,DELTA_T,NO_CFL,
+                                       ORB_S,ORB_PX,ORB_PY,ORB_PZ,ORB_DXX,
+                                       ORB_DYY,ORB_DZZ,ORB_DXY,ORB_DXZ,ORB_DYZ,
+                                       ORB_FXXX,ORB_FYYY,ORB_FZZZ,ORB_FXXY,
+                                       ORB_FXXZ,ORB_FYYZ,ORB_FXYY,ORB_FXZZ,
+                                       ORB_FYZZ,ORB_FXYZ,CST_A,CST_B,CST_C,
+                                       CST_a,CST_b,CST_c,CST_aa,CST_bb,CST_cc,
+                                       CST_ONE,CST_TWO,CST_THREE,CST_1,CST_2,
+                                                           CST_3,CST_22,CST_33);
     PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
                                                                       readChar);
 
@@ -3559,6 +2110,7 @@ void testCheckAllPreprocessorConstants(void)
     return;
 }
 
+/*
 // Unit tests on initialFileExists of main.c file
 void testInitialFileExists(void)
 {
