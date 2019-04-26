@@ -216,11 +216,12 @@ int main(int argc, char *argv[])
     // Check values of all preprocessor constants (default values of Parameters)
     if (!checkAllPreprocessorConstants(OPT_MODE,VERBOSE,N_CPU,RHO_OPT,
                                        NAME_LENGTH,LAME_INT1,LAME_INT2,
-                                       LAME_EXT1,LAME_EXT2,BOHR_UNIT,SELECT_ORB,
-                                       ORB_ORTHO,SELECT_BOX,X_MIN,Y_MIN,Z_MIN,
-                                       X_MAX,Y_MAX,Z_MAX,N_X,N_Y,N_Z,DELTA_X,
-                                       DELTA_Y,DELTA_Z,LS_TYPE,LS_X,LS_Y,LS_Z,
-                                       LS_R,MET_CST,MET_ERR,MET_MIN,MET_MAX,
+                                       LAME_EXT1,LAME_EXT2,BOHR_UNIT,
+                                       BOHR_RADIUS,SELECT_ORB,ORB_ORTHO,
+                                       SELECT_BOX,X_MIN,Y_MIN,Z_MIN,X_MAX,Y_MAX,
+                                       Z_MAX,N_X,N_Y,N_Z,DELTA_X,DELTA_Y,
+                                       DELTA_Z,LS_TYPE,LS_X,LS_Y,LS_Z,LS_R,
+                                       MET_CST,MET_ERR,MET_MIN,MET_MAX,
                                        TRICK_MATRIX,APPROX_MODE,ITER_INI,
                                        ITER_MAX,ITER_TOLD0P,ITER_TOLD1P,
                                        ITER_TOLD2P,SAVE_TYPE,SAVE_MESH,
@@ -239,7 +240,7 @@ int main(int argc, char *argv[])
                                        ORB_FYZZ,ORB_FXYZ,CST_A,CST_B,CST_C,
                                        CST_a,CST_b,CST_c,CST_aa,CST_bb,CST_cc,
                                        CST_ONE,CST_TWO,CST_THREE,CST_1,CST_2,
-                                               CST_3,CST_22,CST_33,BOHR_RADIUS))
+                                                           CST_3,CST_22,CST_33))
     {
         PRINT_ERROR("In main: checkAllPreprocessorConstants function ");
         fprintf(stderr,"returned zero instead of one.\n");
@@ -251,60 +252,9 @@ int main(int argc, char *argv[])
 
         FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
     }
-
 /*
-    // NEW: change if necessary the name of the *.input file into a *.info one
-    // calloc returns a pointer to the allocated memory, or NULL if it fails
-    // strlen returns the length of the string but not including the '\0'
-    // strncpy function returns a pointer to the resulting string
-    lengthName=strlen(argv[1]);
-    fileLocation=(char*)calloc(lengthName+1,sizeof(char));
-    if (fileLocation==NULL)
-    {
-        PRINT_ERROR("In main: could not allocate memory for the local ");
-        fprintf(stderr,"fileLocation (char*) variable.\n");
-        FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
-    }
-    strncpy(fileLocation,argv[1],lengthName+1);
-    if (fileLocation[lengthName-6]=='.' && fileLocation[lengthName-5]=='i' &&
-         fileLocation[lengthName-4]=='n' && fileLocation[lengthName-3]=='p' &&
-         fileLocation[lengthName-2]=='u' && fileLocation[lengthName-1]=='t' &&
-                                                 fileLocation[lengthName]=='\0')
-    {
-        fileLocation[lengthName-6]='.';
-        fileLocation[lengthName-5]='i';
-        fileLocation[lengthName-4]='n';
-        fileLocation[lengthName-3]='f';
-        fileLocation[lengthName-2]='o';
-        fileLocation[lengthName-1]='\0';
-        if (initialFileExists(fileLocation,lengthName+1)==1)
-        {
-            // remove returns 0 on success, otherwise -1
-            // free function does not return any value
-            if (remove(fileLocation))
-            {
-                PRINT_ERROR("In main: wrong return (=-1) of the standard ");
-                fprintf(stderr,"remove c-function in the attempt of removing ");
-                fprintf(stderr,"removing the %s file.\n",fileLocation);
-                free(fileLocation);
-                fileLocation=NULL;
-                FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,
-                                                                  EXIT_FAILURE);
-            }
-        }
-        if (!copyFileLocation(argv[1],lengthName+1,fileLocation))
-        {
-            PRINT_ERROR("In main: copyFileLocation function returned zero ");
-            fprintf(stderr,"instead of one.\n");
-            free(fileLocation);
-            fileLocation=NULL;
-            FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,
-                                                                  EXIT_FAILURE);
-        }
-    }
-
     // Load parameters from a *.input file pointed by argv[1]
-    if (!loadParameters(&parameters,fileLocation))
+    if (!loadParameters(&parameters,argv[1]))
     {
         PRINT_ERROR("In main: loadParameters function returned zero instead ");
         fprintf(stderr,"of one.\n");
@@ -684,12 +634,10 @@ char* endTimerAtError(void)
 ////////////////////////////////////////////////////////////////////////////////
 // The function checkStringFromLength evaluates the length (including the
 // terminating nul character '\0') of stringTocheck, which must be comprised
-// between minimumLength and maximumLength (in the strict sense if the
-// terminating nul character is not counted or in the large sense if it is).
-// It has the char* stringTocheck and the two int variables
-// (0<minimumLength<=maximumLength) as input arguments and it returns zero if
-// an error is encountered, otherwise it returns the (positive) length of
-// stringToCheck
+// between minimumLength and maximumLength. It has the char* stringTocheck and
+// the two int variables (0<minimumLength<=maximumLength) as input arguments and
+// it returns zero if an error is encountered, otherwise it returns the
+// (positive) length of stringToCheck
 ////////////////////////////////////////////////////////////////////////////////
 int checkStringFromLength(char* stringToCheck, int minimumLength,
                                                               int maximumLength)
@@ -754,11 +702,12 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
 int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
                                   double rhoOpt, int nameLength,
                                   double lameInt1,double lameInt2,
-                                  double lameExt1,double lameExt2, int bohrUnit,
+                                  double lameExt1, double lameExt2,
+                                  int bohrUnit, double bohrRadius,
                                   double selectOrb, int orbOrtho,
                                   double selectBox, double xMin, double yMin,
                                   double zMin, double xMax, double yMax,
-                                  double zMax, int nX, int nY,int nZ,
+                                  double zMax, int nX, int nY, int nZ,
                                   double deltaX, double deltaY, double deltaZ,
                                   int lsType, double lsX, double lsY,
                                   double lsZ, double lsR, double metCst,
@@ -789,7 +738,7 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
                                   double cstaa, double cstbb, double cstcc,
                                   double cstOne, double cstTwo, double cstThree,
                                   double cst1, double cst2, double cst3,
-                                  double cst22, double cst33, double bohrRadius)
+                                                     double cst22, double cst33)
 {
     int boolean=0;
     double dx=0., dy=0., dz=0.;
@@ -847,16 +796,27 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
     }
 #endif
 
+    // Check RHO_OPT
+    boolean=(rhoOpt>0.);
+    if (!boolean && verbose)
+    {
+        fprintf(stdout,"\nWarning in checkAllPreprocessorConstants function: ");
+        fprintf(stdout,"the default initial scaling factor ");
+        fprintf(stdout,"RHO_OPT=%lf (defined in loadParameters.h ",rhoOpt);
+        fprintf(stdout,"file) which is associated with the shape gradient ");
+        fprintf(stdout,"does not have a positive (double) value.\n");
+    }
+
     // Check NAME_LENGTH
-    boolean=(nameLength>6);
+    boolean=(nameLength>7);
     if (!boolean)
     {
         PRINT_ERROR("In checkAllPreprocessorConstants: ");
         fprintf(stderr,"NAME_LENGTH=%d should be an integer ",nameLength);
-        fprintf(stderr,"(strictly) greater than six (to store at least a ");
+        fprintf(stderr,"(strictly) greater than seven (to store at least a ");
         fprintf(stderr,"name that contains something more than the *.input ");
-        fprintf(stderr,"extension).\nPlease modify the preprocessor constant ");
-        fprintf(stderr,"accordingly in loadParameters.h file.\n");
+        fprintf(stderr,"file extension).\nPlease modify the preprocessor ");
+        fprintf(stderr,"constant accordingly in loadParameters.h file.\n");
         return 0;
     }
 
@@ -871,6 +831,63 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
         fprintf(stderr,"(LAME_EXT1=%lf) > 0.0\n",lameExt1);
         fprintf(stderr,"(LAME_EXT2=%lf) > 0.0\n",lameExt2);
         fprintf(stderr,"Please modify the preprocessor constants accordingly ");
+        fprintf(stderr,"in loadParameters.h file.\n");
+        return 0;
+    }
+
+    // Check BOHR_UNIT
+    boolean=(bohrUnit==0 || bohrUnit==1);
+    if (!boolean)
+    {
+        PRINT_ERROR("In checkAllPreprocessorConstants: ");
+        fprintf(stderr,"BOHR_UNIT=%d can only be set to 0 or 1.\n",bohrUnit);
+        fprintf(stderr,"Please modify the preprocessor constant accordingly ");
+        fprintf(stderr,"in loadParameters.h file.\n");
+        return 0;
+    }
+
+    // Check BOHR_RADIUS
+    boolean=(bohrRadius==.5291772109217);
+    if (!boolean)
+    {
+        PRINT_ERROR("In checkAllPreprocessorConstants: expecting\n");
+        fprintf(stderr,"(BOHR_RADIUS=%.18lf) == 0.5291772109217\n",bohrRadius);
+        fprintf(stderr,"Please modify the preprocessor constant accordingly ");
+        fprintf(stderr,"in computeData.h file.\n");
+        return 0;
+    }
+
+    // Check SELECT_ORB
+    boolean=(selectOrb>=0. && selectOrb<.01);
+    if (!boolean)
+    {
+        PRINT_ERROR("In checkAllPreprocessorConstants: expecting\n");
+        fprintf(stderr,"0.0 <= (SELECT_ORB=%lf) < 0.01\n",selectOrb);
+        fprintf(stderr,"Please modify the preprocessor constant accordingly ");
+        fprintf(stderr,"in loadParameters.h file.\n");
+        return 0;
+    }
+
+    // Check ORB_ORTHO
+    boolean=(orbOrtho==0 || orbOrtho==1);
+    if (!boolean)
+    {
+        PRINT_ERROR("In checkAllPreprocessorConstants: ");
+        fprintf(stderr,"ORB_ORTHO=%d can only be set to 0 or 1.\n",orbOrtho);
+        fprintf(stderr,"Please modify the preprocessor constant accordingly ");
+        fprintf(stderr,"in loadParameters.h file.\n");
+        return 0;
+    }
+
+    // Check SELECT_BOX
+    boolean=((selectBox>=0. && selectBox<=.1) ||
+                                               (selectBox>=.9 && selectBox<1.));
+    if (!boolean)
+    {
+        PRINT_ERROR("In checkAllPreprocessorConstants: expecting\n");
+        fprintf(stderr,"0.0 <= (SELECT_BOX=%lf) <= 0.1\nor\n",selectBox);
+        fprintf(stderr,"0.9 <= (SELECT_BOX=%lf) <  1.0\n",selectBox);
+        fprintf(stderr,"Please modify the preprocessor constant accordingly ");
         fprintf(stderr,"in loadParameters.h file.\n");
         return 0;
     }
@@ -921,9 +938,9 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
         return 0;
     }
 
-    boolean=(lsX>=xMin && lsX<=xMax);
-    boolean=(boolean && lsY>=yMin && lsY<=yMax);
-    boolean=(boolean && lsZ>=zMin && lsZ<=zMax);
+    boolean=(lsX>xMin && lsX<xMax);
+    boolean=(boolean && lsY>yMin && lsY<yMax);
+    boolean=(boolean && lsZ>zMin && lsZ<zMax);
     if (!boolean && verbose)
     {
         fprintf(stdout,"\nWarning in checkAllPreprocessorConstants function: ");
@@ -996,11 +1013,21 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
     }
 
     // Check the preprocessor constants related to the stop criteria
-    boolean=(iterMax>=0 && iterTolD0P>=0. && iterTolD1P>=0. && iterTolD2P>=0.);
+    boolean=(iterIni>=0 && iterIni<=iterMax);
     if (!boolean)
     {
         PRINT_ERROR("In checkAllPreprocessorConstants: expecting\n");
-        fprintf(stderr,"(ITER_MAX=%d) >= 0\n",iterMax);
+        fprintf(stderr,"(ITER_INI=%d) >= 0\n",iterIni);
+        fprintf(stderr,"(ITER_MAX=%d) >= ITER_INI\n",iterMax);
+        fprintf(stderr,"Please modify the preprocessor constants accordingly ");
+        fprintf(stderr,"in loadParameters.h file.\n");
+        return 0;
+    }
+
+    boolean=(iterTolD0P>=0. && iterTolD1P>=0. && iterTolD2P>=0.);
+    if (!boolean)
+    {
+        PRINT_ERROR("In checkAllPreprocessorConstants: expecting\n");
         fprintf(stderr,"(ITER_TOLD0P=%lf) >= 0.0\n",iterTolD0P);
         fprintf(stderr,"(ITER_TOLD1P=%lf) >= 0.0\n",iterTolD1P);
         fprintf(stderr,"(ITER_TOLD2P=%lf) >= 0.0\n",iterTolD2P);
@@ -1055,10 +1082,10 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
         fprintf(stderr,"one of the preprocessor constants PATH_MEDIT, ");
         fprintf(stderr,"PATH_MMG3D, PATH_MSHDIST, PATH_ELASTIC, or ");
         fprintf(stderr,"PATH_ADVECT is not a string of length strictly less ");
-        fprintf(stderr,"than PATH_LENGTH (=%d), which must be an ",pathLength);
-        fprintf(stderr,"integer (strictly) greater than one.\nPlease modify ");
-        fprintf(stderr,"the preprocessor constants accordingly in ");
-        fprintf(stderr,"loadParameters.h file.\n");
+        fprintf(stderr,"than PATH_LENGTH (=%d), which must be ",pathLength);
+        fprintf(stderr,"also an integer (strictly) greater than one.\n");
+        fprintf(stderr,"Please modify the preprocessor constants accordingly ");
+        fprintf(stderr,"in loadParameters.h file.\n");
         return 0;
     }
 
@@ -1125,7 +1152,6 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
         return 0;
     }
 
-
     // Check preprocessor constants related to parameters used in mshdist/advect
     boolean=(nIter>=0 && residual>=0. && deltaT>0.);
     if (!boolean)
@@ -1187,7 +1213,7 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
         fprintf(stderr,"(CST_B=%.18lf) == 0.018781320953002642\n",cstB);
         fprintf(stderr,"(CST_C=%.18lf) == 0.012248840519393658\n",cstC);
         fprintf(stderr,"Please modify the preprocessor constants accordingly ");
-        fprintf(stderr,"in optimization.h file.\n");
+        fprintf(stderr,"in computeData.h file.\n");
         return 0;
     }
 
@@ -1200,7 +1226,7 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
         fprintf(stderr,"(CST_b=%.18lf) == 0.310885919263300610\n",cstb);
         fprintf(stderr,"(CST_c=%.18lf) == 0.092735250310891226\n",cstc);
         fprintf(stderr,"Please modify the preprocessor constants accordingly ");
-        fprintf(stderr,"in optimization.h file.\n");
+        fprintf(stderr,"in computeData.h file.\n");
         return 0;
     }
 
@@ -1213,7 +1239,7 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
         fprintf(stderr,"(CST_bb=%.18lf) == 0.067342242210098170\n",cstbb);
         fprintf(stderr,"(CST_cc=%.18lf) == 0.721794249067326322\n",cstcc);
         fprintf(stderr,"Please modify the preprocessor constants accordingly ");
-        fprintf(stderr,"in optimization.h file.\n");
+        fprintf(stderr,"in computeData.h file.\n");
         return 0;
     }
 
@@ -1227,7 +1253,7 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
         fprintf(stderr,"(CST_TWO=%.18lf) == 0.125939180544827153\n",cstTwo);
         fprintf(stderr,"(CST_THREE=%.18lf) == 0.132394152788506181\n",cstThree);
         fprintf(stderr,"Please modify the preprocessor constants accordingly ");
-        fprintf(stderr,"in optimization.h file.\n");
+        fprintf(stderr,"in computeData.h file.\n");
         return 0;
     }
 
@@ -1240,7 +1266,7 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
         fprintf(stderr,"(CST_2=%.18lf) == 0.101286507323456339\n",cst2);
         fprintf(stderr,"(CST_3=%.18lf) == 0.470142064105115090\n",cst3);
         fprintf(stderr,"Please modify the preprocessor constants accordingly ");
-        fprintf(stderr,"in optimization.h file.\n");
+        fprintf(stderr,"in computeData.h file.\n");
         return 0;
     }
 
@@ -1251,7 +1277,7 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
         fprintf(stderr,"(CST_22=%.18lf) == 0.797426985353087322\n",cst22);
         fprintf(stderr,"(CST_33=%.18lf) == 0.059715871789769820\n",cst33);
         fprintf(stderr,"Please modify the preprocessor constants accordingly ");
-        fprintf(stderr,"in optimization.h file.\n");
+        fprintf(stderr,"in computeData.h file.\n");
         return 0;
     }
 

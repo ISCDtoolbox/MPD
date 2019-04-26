@@ -602,7 +602,7 @@ typedef struct {
                              *    in its structure; if set to one, then it means
                              *    that the given mesh has no internal domain and
                              *    in this case, a (default) initial domain is
-                             *    built according to the \ref ls_type, \ref 
+                             *    built according to the \ref ls_type, \ref
                              *    ls_x, \ref ls_y, \ref ls_z, and \ref ls_r
                              *    variables; otherwise, it must be set to zero
                              *    and it considers that a default computational
@@ -1277,7 +1277,7 @@ typedef struct {
 ////////////////////////////////////////////////////////////////////////////////
 // /**
 // * \struct Probabilities main.h
-// * \brief It can store all the different types of probabilities to find 
+// * \brief It can store all the different types of probabilities to find
 // *        exactly a certain number of electrons in a given domain.
 // */
 // typedef struct {
@@ -1331,7 +1331,7 @@ typedef struct {
                              *    than the \ref ndata value. */
 
     int* opt;                /*!< Pointer used to dynamically define the array
-                             *    storing the type of optimization mode used 
+                             *    storing the type of optimization mode used
                              *    during the MPD iterative process; its
                              *    values should always be stay between minus
                              *    two and four (see the description of the
@@ -2059,65 +2059,76 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
 
 /**
 * \fn int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
-*                                       int nameLength, double lameInt1,
-*                                       double lameInt2, double lameExt1,
-*                                       double lameExt2, double xMin,
+*                                       double rhoOpt, int nameLength,
+*                                       double lameInt1,double lameInt2,
+*                                       double lameExt1, double lameExt2,
+*                                       int bohrUnit, double bohrRadius,
+*                                       double selectOrb, int orbOrtho,
+*                                       double selectBox, double xMin,
 *                                       double yMin, double zMin, double xMax,
 *                                       double yMax, double zMax, int nX,
-*                                       int nY,int nZ, double deltaX,
+*                                       int nY, int nZ, double deltaX,
 *                                       double deltaY, double deltaZ,
 *                                       int lsType, double lsX, double lsY,
 *                                       double lsZ, double lsR, double metCst,
 *                                       double metErr, double metMin,
 *                                       double metMax, int trickMatrix,
-*                                       int approxMode, int iterMax,
-*                                       double iterTolD0P, double iterTolD1P,
-*                                       double iterTolD2P, int saveType,
-*                                       int saveMesh, int saveData,
-*                                       int savePrint, int saveWhere,
-*                                       int pathLength, char* pathMedit,
-*                                       char* pathMmg3d, char* pathMshdist,
-*                                       char* pathElastic, char* pathAdvect,
-*                                       double hminIso, double hmaxIso,
-*                                       double hausdIso, double hgradIso,
-*                                       double hminMet, double hmaxMet,
-*                                       double hausdMet, double hgradMet,
-*                                       double hminLs, double hmaxLs,
-*                                       double hausdLs, double hgradLs,
-*                                       int hmodeLag, double hminLag,
-*                                       double hmaxLag, double hausdLag,
-*                                       double hgradLag, int nIter,
-*                                       double residual, double deltaT,
-*                                       int noCfl, int orb1, int orb2, int orb3,
-*                                       int orb4, int orb5, int orb6, int orb7,
-*                                       int orb8, int orb9, int orb10,
-*                                       int orb11, int orb12, int orb13,
-*                                       int orb14, int orb15, int orb16,
-*                                       int orb17, int orb18, int orb19,
-*                                       int orb20, double cstA, double cstB,
-*                                       double cstC, double csta, double cstb,
-*                                       double cstc, double cstaa, double cstbb,
-*                                       double cstcc, double cstOne,
-*                                       double cstTwo, double cstThree,
-*                                       double cst1, double cst2, double cst3,
-*                                       double cst22, double cst33,
-*                                                 double invPhi, double invPhi2)
+*                                       int approxMode, int iterIni,
+*                                       int iterMax, double iterTolD0P,
+*                                       double iterTolD1P, double iterTolD2P,
+*                                       int saveType, int saveMesh,
+*                                       int saveData, int savePrint,
+*                                       int saveWhere, int pathLength,
+*                                       char* pathMedit, char* pathMmg3d,
+*                                       char* pathMshdist, char* pathElastic,
+*                                       char* pathAdvect, double hminIso,
+*                                       double hmaxIso, double hausdIso,
+*                                       double hgradIso, double hminMet,
+*                                       double hmaxMet, double hausdMet,
+*                                       double hgradMet, double hminLs,
+*                                       double hmaxLs, double hausdLs,
+*                                       double hgradLs, int hmodeLag,
+*                                       double hminLag, double hmaxLag,
+*                                       double hausdLag, double hgradLag,
+*                                       int nIter, double residual,
+*                                       double deltaT, int noCfl, int orb1,
+*                                       int orb2, int orb3, int orb4, int orb5,
+*                                       int orb6, int orb7, int orb8, int orb9,
+*                                       int orb10, int orb11, int orb12,
+*                                       int orb13, int orb14, int orb15,
+*                                       int orb16, int orb17, int orb18,
+*                                       int orb19, int orb20, double cstA,
+*                                       double cstB, double cstC, double csta,
+*                                       double cstb, double cstc, double cstaa,
+*                                       double cstbb, double cstcc,
+*                                       double cstOne, double cstTwo,
+*                                       double cstThree, double cst1,
+*                                       double cst2, double cst3, double cst22,
+*                                                                  double cst33)
 * \brief It tests if all the preprocessor constants are valid.
 *
 * \param[in] optMode It can only be set to -2/-1/0/1/2/3/4 (see \ref OPT_MODE
 *                    description for further details). Otherwise, an error is
 *                    returned by \ref checkAllPreprocessorConstants function.
 *
-* \param[in] verbose It can only be set to 0 or 1 (see \ref VERBOSE description
-*                    for further details). Otherwise, an error is returned by
-*                    \ref checkAllPreprocessorConstants function.
+* \param[in] verbose It can only be set to 0, 1 or 2 (see \ref VERBOSE
+*                    description for further details). Otherwise, an error is
+*                    returned by \ref checkAllPreprocessorConstants function.
 *
 * \param[in] nCpu It must be a positive integer (see \ref N_CPU description for
-*                 further details). Otherwise, an error is returned by \ref
-*                 checkAllPreprocessorConstants function.
+*                 further details). If in addition, the OPENMP library has been
+*                 used to compile the MPD program, it is also checked that the
+*                 value is not (strictly) greater than the total number of
+*                 threads currently available on the computer, thank to the
+*                 omp_get_max_threads function. Otherwise, an error is returned
+*                 by \ref checkAllPreprocessorConstants function.
 *
-* \param[in] nameLength It must be an integer (strictly) greater than six (see
-*                       \ref NAME_LENGTH description for further details).
+* \param[in] rhoOpt It must be a double value (see \ref RHO_OPT description for
+*                   further details). Otherwise, an error is returned by \ref
+*                   checkAllPreprocessorConstants function.
+*
+* \param[in] nameLength It must be an integer (strictly) greater than seven
+*                       (see \ref NAME_LENGTH description for further details).
 *                       Otherwise, an error is returned by
 *                       checkAllPreprocessorConstants function.
 *
@@ -2144,6 +2155,30 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
 *                     returned by \ref checkAllPreprocessorConstants function.
 *                     A typical value is given by 3400.0 for the second Lamé's
 *                     coefficient.
+*
+* \param[in] bohrUnit It can only be set to 0 or 1 (see \ref BOHR_UNIT
+*                     description for further details). Otherwise, an error is
+*                     returned by \ref checkAllPreprocessorConstants function.
+*
+* \param[in] bohrRadius It must be exactly equal to 0.5291772109217 (see \ref
+*                       BOHR_RADIUS description for further details).
+*                       Otherwise, an error is returned by \ref
+*                       checkAllPreprocessorConstants function.
+*
+* \param[in] selectOrb It must be a non-negative double value (strictly) less
+*                      than 0.01 (see \ref SELECT_ORB description for further
+*                      details). Otherwise, an error is returned by \ref
+*                      checkAllPreprocessorConstants function.
+*
+* \param[in] orbOrtho It can only be set to 0 or 1 (see \ref ORB_ORTHO
+*                     description for further details). Otherwise, an error is
+*                     returned by \ref checkAllPreprocessorConstants function.
+*
+* \param[in] selectBox It must be either a non-negative double value less or
+*                      equal to 0.1; or a double value (strictly) less than one
+*                      and greater or equal to 0.9 (see \ref SELECT_BOX
+*                      description for further details). Otherwise, an error is
+*                      returned by \ref checkAllPreprocessorConstants function.
 *
 * \param[in] xMin It must be a double value that is (strictly) lower than the
 *                 xMax variable (see \ref X_MIN description for further details)
@@ -2271,9 +2306,14 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
 *                        is returned by \ref checkAllPreprocessorConstants
 *                        function.
 *
-* \param[in] iterMax It must be a non-negative integer (see \ref ITER_MAX
+* \param[in] iterIni It must be a non-negative integer (see \ref ITER_INI
 *                    description for further details). Otherwise, an error is
 *                    returned by \ref checkAllPreprocessorConstants function.
+*
+* \param[in] iterMax It must be a non-negative integer greater or equal to
+*                    the iterIni variable. (see \ref ITER_MAX description for
+*                    further details). Otherwise, an error is returned by
+*                    \ref checkAllPreprocessorConstants function.
 *
 * \param[in] iterTolD0P It must be a non-negative double value (see \ref
 *                       ITER_TOLD0P description for further details). Otherwise,
@@ -2611,16 +2651,6 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
 *                  CST_33 description for further details). Otherwise, an error
 *                  is returned by \ref checkAllPreprocessorConstants function.
 *
-* \param[in] invPhi It must be exactly equal to 0.618033988749894848 (see \ref
-*                   INV_PHI description for further details). Otherwise, an
-*                   error is returned by the \ref checkAllPreprocessorConstants
-*                   function.
-*
-* \param[in] invPhi2 It must be exactly equal to 0.381966011250105152 (see \ref
-*                    INV_PHI2 description for further details). Otherwise, an
-*                    error is returned by the \ref checkAllPreprocessorConstants
-*                    function.
-*
 * \return It returns zero if an error is encountered. Otherwise, one is returned
 *         in case of success.
 *
@@ -2633,14 +2663,24 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
 * include all the preprocessor constants as input arguments. This allwos us to
 * make their values vary during the different unitary tests.
 */
+// * \param[in] invPhi It must be exactly equal to 0.618033988749894848 (see
+// *                   \ref INV_PHI description for further details). Otherwise,
+// *                   an error is returned by the \ref
+// *                   checkAllPreprocessorConstants function.
+// *
+// * \param[in] invPhi2 It must be exactly equal to 0.381966011250105152 (see
+// *                    \ref INV_PHI2 description for further details).
+// *                    Otherwise, an error is returned by the \ref
+// *                    checkAllPreprocessorConstants function.
 int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
                                   double rhoOpt, int nameLength,
                                   double lameInt1,double lameInt2,
-                                  double lameExt1,double lameExt2, int bohrUnit,
+                                  double lameExt1, double lameExt2,
+                                  int bohrUnit, double bohrRadius,
                                   double selectOrb, int orbOrtho,
                                   double selectBox, double xMin, double yMin,
                                   double zMin, double xMax, double yMax,
-                                  double zMax, int nX, int nY,int nZ,
+                                  double zMax, int nX, int nY, int nZ,
                                   double deltaX, double deltaY, double deltaZ,
                                   int lsType, double lsX, double lsY,
                                   double lsZ, double lsR, double metCst,
@@ -2671,8 +2711,7 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
                                   double cstaa, double cstbb, double cstcc,
                                   double cstOne, double cstTwo, double cstThree,
                                   double cst1, double cst2, double cst3,
-                                  double cst22, double cst33,
-                                                             double bohrRadius);
+                                                    double cst22, double cst33);
 
 /**
 * \fn int initialFileExists(char* fileLocation, int nameLength)

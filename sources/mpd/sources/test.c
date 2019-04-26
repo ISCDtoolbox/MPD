@@ -50,7 +50,7 @@ void test(void)
 //    testFreeParameterMemory();
 
 //    testCheckStringFromLength();
-//    testCheckAllPreprocessorConstants();
+    testCheckAllPreprocessorConstants();
 //    testInitialFileExists();
 //    testCloseTheFile();
 
@@ -350,8 +350,9 @@ void testEndTimerAtError(void)
     return;
 }
 
-/*
+////////////////////////////////////////////////////////////////////////////////
 // Unit (random) tests on checkStringFromLength of main.c file
+////////////////////////////////////////////////////////////////////////////////
 void testCheckStringFromLength(void)
 {
     time_t startTimer=0, endTimer=0;
@@ -946,6 +947,7 @@ void testCheckStringFromLength(void)
     return;
 }
 
+/*
 // Unit tests on checkAllPreprocessorConstants of main.c file
 void testCheckAllPreprocessorConstants(void)
 {
