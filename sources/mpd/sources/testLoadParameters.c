@@ -456,7 +456,6 @@ void testFreeParameterMemory(void)
     return;
 }
 
-/*
 ////////////////////////////////////////////////////////////////////////////////
 // Unit (random) tests on setupDefaultParameters of loadParameters.c
 ////////////////////////////////////////////////////////////////////////////////
@@ -467,57 +466,74 @@ void testSetupDefaultParameters(void)
     int counterFail=0, readChar=0;
 
     size_t lengthName=0;
-    char *nameInfo=NULL, nameTest[NAME_LENGTH+11]={'\0'};
-    int iRandom=0, i=0, j=0, boolean=0, iLength=0;
+    char *nameInputFile=NULL, nameTest[NAME_LENGTH+11]={'\0'};
+    char pStringToCheckBefore[6]={'a','b','1','1','d','1'};
+    char pStringToCheckAfter[6]={'A','1','C','1','\0','\0'};
+    int iRandom=0, iLength=0, i=0, j=0, k=0, l=0, boolean=0;
     Parameters *pParameters=NULL, parameters;
 
-    char pStringToPrint[10][13]={"name_info","name_data","name_chem",
+    char pStringToPrint[10][13]={"name_input","name_result","name_chem",
                                  "name_mesh","name_elas","path_medit",
                                  "path_mmg3d","path_mshdist","path_elastic",
                                                                  "path_advect"};
-    char **pString[10]={&parameters.name_info,&parameters.name_data,
+
+    char **pString[10]={&parameters.name_input,&parameters.name_result,
                         &parameters.name_chem,&parameters.name_mesh,
                         &parameters.name_elas,&parameters.path_medit,
                         &parameters.path_mmg3d,&parameters.path_mshdist,
                               &parameters.path_elastic,&parameters.path_advect};
+
     char pPathReference[5][PATH_LENGTH]={PATH_MEDIT,PATH_MMG3D,PATH_MSHDIST,
                                                       PATH_ELASTIC,PATH_ADVECT};
+
     char *pStringReference[10]={nameTest,NULL,NULL,NULL,NULL,pPathReference[0],
                                 pPathReference[1],pPathReference[2],
                                            pPathReference[3],pPathReference[4]};
-    char pIntegerToPrint[23][13]={"name_length","path_length","opt_mode",
-                                  "verbose","n_cpu","nu_electrons","nu_spin",
-                                  "orb_rhf","n_x","n_y","n_z","ls_type",
-                                  "trick_matrix","approx_mode","iter_max",
-                                  "save_type","save_mesh","save_data",
-                                  "save_print","save_where","hmode_lag",
-                                                             "n_iter","no_cfl"};
-    int *pInteger[23]={&parameters.name_length,&parameters.path_length,
+
+    char pIntegerToPrint[28][13]={"name_length","path_length","opt_mode",
+                                  "verbose","n_cpu","nu_electrons","bohr_unit",
+                                  "orb_ortho","ne_electrons","multi_det",
+                                  "orb_rhf","n_x","n_y","n_z","ls_ini",
+                                  "ls_type","trick_matrix","approx_mode",
+                                  "iter_ini","iter_max","save_type","save_mesh",
+                                  "save_data","save_print","save_where",
+                                                 "hmode_lag","n_iter","no_cfl"};
+
+    int *pInteger[28]={&parameters.name_length,&parameters.path_length,
                        &parameters.opt_mode,&parameters.verbose,
                        &parameters.n_cpu,&parameters.nu_electrons,
-                       &parameters.nu_spin,&parameters.orb_rhf,&parameters.n_x,
-                       &parameters.n_y,&parameters.n_z,&parameters.ls_type,
+                       &parameters.bohr_unit,&parameters.orb_ortho,
+                       &parameters.ne_electrons,&parameters.multi_det,
+                       &parameters.orb_rhf,&parameters.n_x,&parameters.n_y,
+                       &parameters.n_z,&parameters.ls_ini,&parameters.ls_type,
                        &parameters.trick_matrix,&parameters.approx_mode,
-                       &parameters.iter_max,&parameters.save_type,
-                       &parameters.save_mesh,&parameters.save_data,
-                       &parameters.save_print,&parameters.save_where,
-                       &parameters.hmode_lag,&parameters.n_iter,
-                                                            &parameters.no_cfl};
-    int pIntegerReference[23]={NAME_LENGTH,PATH_LENGTH,OPT_MODE,VERBOSE,N_CPU,0,
-                              0,0,N_X,N_Y,N_Z,LS_TYPE,TRICK_MATRIX,APPROX_MODE,
-                              ITER_MAX,SAVE_TYPE,SAVE_MESH,SAVE_DATA,SAVE_PRINT,
+                       &parameters.iter_ini,&parameters.iter_max,
+                       &parameters.save_type,&parameters.save_mesh,
+                       &parameters.save_data,&parameters.save_print,
+                       &parameters.save_where,&parameters.hmode_lag,
+                                         &parameters.n_iter,&parameters.no_cfl};
+
+    int pIntegerReference[28]={NAME_LENGTH,PATH_LENGTH,OPT_MODE,VERBOSE,N_CPU,0,
+                               BOHR_UNIT,ORB_ORTHO,0,1,0,N_X,N_Y,N_Z,0,LS_TYPE,
+                               TRICK_MATRIX,APPROX_MODE,ITER_INI,ITER_MAX,
+                               SAVE_TYPE,SAVE_MESH,SAVE_DATA,SAVE_PRINT,
                                             SAVE_WHERE,HMODE_LAG,N_ITER,NO_CFL};
-    char pDoubleToPrint[37][12]={"x_min","y_min","z_min","x_max","y_max",
-                                 "z_max","delta_x","delta_y","delta_z","ls_x",
-                                 "ls_y","ls_z","ls_r","met_err","met_min",
-                                 "met_max","iter_told0p","iter_told1p",
-                                 "iter_told2p","hmin_iso","hmax_iso",
-                                 "hausd_iso","hgrad_iso","hmin_met","hmax_met",
-                                 "hausd_met","hgrad_met","hmin_ls","hmax_ls",
-                                 "hausd_ls","hgrad_ls","hmin_lag","hmax_lag",
-                                  "hausd_lag","hgrad_lag","residual","delta_t"};
-    double *pDouble[37]={&parameters.x_min,&parameters.y_min,&parameters.z_min,
-                         &parameters.x_max,&parameters.y_max,&parameters.z_max,
+
+    char pDoubleToPrint[40][12]={"rho_opt","select_orb","select_box","x_min",
+                                 "y_min","z_min","x_max","y_max","z_max",
+                                 "delta_x","delta_y","delta_z","ls_x","ls_y",
+                                 "ls_z","ls_r","met_err","met_min","met_max",
+                                 "iter_told0p","iter_told1p","iter_told2p",
+                                 "hmin_iso","hmax_iso","hausd_iso","hgrad_iso",
+                                 "hmin_met","hmax_met","hausd_met","hgrad_met",
+                                 "hmin_ls","hmax_ls","hausd_ls","hgrad_ls",
+                                 "hmin_lag","hmax_lag","hausd_lag","hgrad_lag",
+                                                          "residual","delta_t"};
+
+    double *pDouble[40]={&parameters.rho_opt,&parameters.select_orb,
+                         &parameters.select_box,&parameters.x_min,
+                         &parameters.y_min,&parameters.z_min,&parameters.x_max,
+                         &parameters.y_max,&parameters.z_max,
                          &parameters.delta_x,&parameters.delta_y,
                          &parameters.delta_z,&parameters.ls_x,&parameters.ls_y,
                          &parameters.ls_z,&parameters.ls_r,&parameters.met_err,
@@ -533,25 +549,26 @@ void testSetupDefaultParameters(void)
                          &parameters.hmax_lag,&parameters.hausd_lag,
                          &parameters.hgrad_lag,&parameters.residual,
                                                            &parameters.delta_t};
-    double pDoubleReference[37]={X_MIN,Y_MIN,Z_MIN,X_MAX,Y_MAX,Z_MAX,DELTA_X,
-                                 DELTA_Y,DELTA_Z,LS_X,LS_Y,LS_Z,LS_R,MET_ERR,
-                                 MET_MIN,MET_MAX,ITER_TOLD0P,ITER_TOLD1P,
-                                 ITER_TOLD2P,HMIN_ISO,HMAX_ISO,HAUSD_ISO,
-                                 HGRAD_ISO,HMIN_MET,HMAX_MET,HAUSD_MET,
-                                 HGRAD_MET,HMIN_LS,HMAX_LS,HAUSD_LS,HGRAD_LS,
-                                 HMIN_LAG,HMAX_LAG,HAUSD_LAG,HGRAD_LAG,RESIDUAL,
-                                                                       DELTA_T};
+
+    double pDoubleReference[40]={RHO_OPT,SELECT_ORB,SELECT_BOX,X_MIN,Y_MIN,
+                                 Z_MIN,X_MAX,Y_MAX,Z_MAX,DELTA_X,DELTA_Y,
+                                 DELTA_Z,LS_X,LS_Y,LS_Z,LS_R,MET_ERR,MET_MIN,
+                                 MET_MAX,ITER_TOLD0P,ITER_TOLD1P,ITER_TOLD2P,
+                                 HMIN_ISO,HMAX_ISO,HAUSD_ISO,HGRAD_ISO,HMIN_MET,
+                                 HMAX_MET,HAUSD_MET,HGRAD_MET,HMIN_LS,HMAX_LS,
+                                 HAUSD_LS,HGRAD_LS,HMIN_LAG,HMAX_LAG,HAUSD_LAG,
+                                                    HGRAD_LAG,RESIDUAL,DELTA_T};
 
     // Initializing to zero the structure of parameters
     for (i=0; i<10; i++)
     {
         *pString[i]=NULL;
     }
-    for (i=0; i<23; i++)
+    for (i=0; i<28; i++)
     {
         *pInteger[i]=0;
     }
-    for (i=0; i<37; i++)
+    for (i=0; i<40; i++)
     {
         *pDouble[i]=.0;
     }
@@ -563,578 +580,102 @@ void testSetupDefaultParameters(void)
     expectedValue=0;
     PRINT_TEST_START(counter,expectedValue);
     fprintf(stdout,"pParameters=%p\n",(void*)pParameters);
-    fprintf(stdout,"nameTest=%p\n",(void*)nameInfo);
-    returnValue=setupDefaultParameters(pParameters,nameInfo);
+    fprintf(stdout,"nameInputFile=%p\n",(void*)nameInputFile);
+    returnValue=setupDefaultParameters(pParameters,nameInputFile);
     PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
                                                                       readChar);
 
     pParameters=&parameters;
     PRINT_TEST_START(counter,expectedValue);
     fprintf(stdout,"pParameters=%p\n",(void*)pParameters);
-    fprintf(stdout,"nameTest=%p\n",(void*)nameInfo);
-    returnValue=setupDefaultParameters(pParameters,nameInfo);
+    fprintf(stdout,"nameInputFile=%p\n",(void*)nameInputFile);
+    returnValue=setupDefaultParameters(pParameters,nameInputFile);
     PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
                                                                       readChar);
 
-    nameInfo=nameTest;
+    nameInputFile=nameTest;
     pParameters=NULL;
     PRINT_TEST_START(counter,expectedValue);
     fprintf(stdout,"pParameters=%p\n",(void*)pParameters);
-    fprintf(stdout,"nameTest=%p\n",(void*)nameInfo);
-    returnValue=setupDefaultParameters(pParameters,nameInfo);
+    fprintf(stdout,"nameInputFile=%p\n",(void*)nameInputFile);
+    returnValue=setupDefaultParameters(pParameters,nameInputFile);
     PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
                                                                       readChar);
 
     pParameters=&parameters;
     PRINT_TEST_START(counter,expectedValue);
     fprintf(stdout,"pParameters=%p\n",(void*)pParameters);
-    fprintf(stdout,"nameTest=%p\n",(void*)nameInfo);
-    returnValue=setupDefaultParameters(pParameters,nameInfo);
+    fprintf(stdout,"nameInputFile=%p\n",(void*)nameInputFile);
+    returnValue=setupDefaultParameters(pParameters,nameInputFile);
     PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
                                                                       readChar);
 
     nameTest[NAME_LENGTH+10]='\0';
-    for (iLength=-NAME_LENGTH; iLength<=NAME_LENGTH; iLength+=NAME_LENGTH)
+    for (iLength=-NAME_LENGTH-20; iLength<=NAME_LENGTH+20; iLength++)
     {
-        for (i=0; i<32; i++)
+        for (i=-5; i<6; i++)
         {
-            switch(i)
+            for (j=0; j<6; j++)
             {
-                case 0:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength-4)
-                        {
-                            nameTest[j]='a';
-                        }
-                        else if (j==iLength-4)
-                        {
-                            nameTest[j]='\0';
-                        }
-                        else
-                        {
-                            nameTest[j]='A';
-                        }
-                    }
-                    break;
-
-                case 1:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength-4)
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                        else if (j==iLength-4)
-                        {
-                            nameTest[j]='\0';
-                        }
-                        else
-                        {
-                            nameTest[j]='B';
-                        }
-                    }
-                    break;
-
-                case 2:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength-4)
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                        else if (j==iLength-4)
-                        {
-                            nameTest[j]='\0';
-                        }
-                        else
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                    }
-                    break;
-
-                case 3:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength-4)
-                        {
-                            nameTest[j]='c';
-                        }
-                        else if (j==iLength-4)
-                        {
-                            nameTest[j]='\0';
-                        }
-                        else
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                    }
-                    break;
-
-                case 4:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength-4)
-                        {
-                            nameTest[j]='d';
-                        }
-                        else
-                        {
-                            nameTest[j]='\0';
-                        }
-                    }
-                    break;
-
-                case 5:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength-4)
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                        else
-                        {
-                            nameTest[j]='\0';
-                        }
-                    }
-                    break;
-
-                case 6:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength-1)
-                        {
-                            nameTest[j]='e';
-                        }
-                        else if (j==iLength-1)
-                        {
-                            nameTest[j]='\0';
-                        }
-                        else
-                        {
-                            nameTest[j]='E';
-                        }
-                    }
-                    break;
-
-                case 7:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength-1)
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                        else if (j==iLength-1)
-                        {
-                            nameTest[j]='\0';
-                        }
-                        else
-                        {
-                            nameTest[j]='F';
-                        }
-                    }
-                    break;
-
-                case 8:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength-1)
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                        else if (j==iLength-1)
-                        {
-                            nameTest[j]='\0';
-                        }
-                        else
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                    }
-                    break;
-
-                case 9:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength-1)
-                        {
-                            nameTest[j]='g';
-                        }
-                        else if (j==iLength-1)
-                        {
-                            nameTest[j]='\0';
-                        }
-                        else
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                    }
-                    break;
-
-                case 10:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength-1)
-                        {
-                            nameTest[j]='h';
-                        }
-                        else
-                        {
-                            nameTest[j]='\0';
-                        }
-                    }
-                    break;
-
-                case 11:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength-1)
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                        else
-                        {
-                            nameTest[j]='\0';
-                        }
-                    }
-                    break;
-
-                case 12:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength)
-                        {
-                            nameTest[j]='i';
-                        }
-                        else if (j==iLength)
-                        {
-                            nameTest[j]='\0';
-                        }
-                        else
-                        {
-                            nameTest[j]='I';
-                        }
-                    }
-                    break;
-
-                case 13:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength)
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                        else if (j==iLength)
-                        {
-                            nameTest[j]='\0';
-                        }
-                        else
-                        {
-                            nameTest[j]='J';
-                        }
-                    }
-                    break;
-
-                case 14:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength)
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                        else if (j==iLength)
-                        {
-                            nameTest[j]='\0';
-                        }
-                        else
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                    }
-                    break;
-
-                case 15:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength)
-                        {
-                            nameTest[j]='k';
-                        }
-                        else if (j==iLength)
-                        {
-                            nameTest[j]='\0';
-                        }
-                        else
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                    }
-                    break;
-
-                case 16:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength)
-                        {
-                            nameTest[j]='l';
-                        }
-                        else
-                        {
-                            nameTest[j]='\0';
-                        }
-                    }
-                    break;
-
-                case 17:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength)
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                        else
-                        {
-                            nameTest[j]='\0';
-                        }
-                    }
-                    break;
-
-                case 18:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength+1)
-                        {
-                            nameTest[j]='m';
-                        }
-                        else if (j==iLength+1)
-                        {
-                            nameTest[j]='\0';
-                        }
-                        else
-                        {
-                            nameTest[j]='M';
-                        }
-                    }
-                    break;
-
-                case 19:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength+1)
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                        else if (j==iLength+1)
-                        {
-                            nameTest[j]='\0';
-                        }
-                        else
-                        {
-                            nameTest[j]='N';
-                        }
-                    }
-                    break;
-
-                case 20:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength+1)
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                        else if (j==iLength+1)
-                        {
-                            nameTest[j]='\0';
-                        }
-                        else
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                    }
-                    break;
-
-                case 21:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength+1)
-                        {
-                            nameTest[j]='o';
-                        }
-                        else if (j==iLength+1)
-                        {
-                            nameTest[j]='\0';
-                        }
-                        else
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                    }
-                    break;
-
-                case 22:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength+1)
-                        {
-                            nameTest[j]='p';
-                        }
-                        else
-                        {
-                            nameTest[j]='\0';
-                        }
-                    }
-                    break;
-
-                case 23:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength+1)
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                        else
-                        {
-                            nameTest[j]='\0';
-                        }
-                    }
-                    break;
-
-                case 24:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength+4)
-                        {
-                            nameTest[j]='q';
-                        }
-                        else if (j==iLength+4)
-                        {
-                            nameTest[j]='\0';
-                        }
-                        else
-                        {
-                            nameTest[j]='Q';
-                        }
-                    }
-                    break;
-
-                case 25:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength+4)
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                        else if (j==iLength+4)
-                        {
-                            nameTest[j]='\0';
-                        }
-                        else
-                        {
-                            nameTest[j]='R';
-                        }
-                    }
-                    break;
-
-                case 26:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength+4)
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                        else if (j==iLength+4)
-                        {
-                            nameTest[j]='\0';
-                        }
-                        else
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                    }
-                    break;
-
-                case 27:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength+4)
-                        {
-                            nameTest[j]='s';
-                        }
-                        else if (j==iLength+4)
-                        {
-                            nameTest[j]='\0';
-                        }
-                        else
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                    }
-                    break;
-
-                case 28:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength+4)
-                        {
-                            nameTest[j]='t';
-                        }
-                        else
-                        {
-                            nameTest[j]='\0';
-                        }
-                    }
-                    break;
-
-                case 29:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        if (j<iLength+4)
-                        {
-                            nameTest[j]=rand()%90+33;
-                        }
-                        else
-                        {
-                            nameTest[j]='\0';
-                        }
-                    }
-                    break;
-
-                case 30:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        nameTest[j]=rand()%90+33;
-                    }
-                    break;
-
-                case 31:
-                    for (j=0; j<NAME_LENGTH+10; j++)
-                    {
-                        nameTest[j]=rand()%90+33;
-                    }
-                    nameTest[rand()%(NAME_LENGTH+10)]='\0';
-                    break;
-            }
-            expectedValue=1;
-            lengthName=strlen(nameTest);
-            if (lengthName<6 || lengthName>=NAME_LENGTH)
-            {
-                expectedValue=0;
-            }
-            PRINT_TEST_START(counter,expectedValue);
-            fprintf(stdout,"nameTest=%s\n",nameTest);
-            fprintf(stdout,"(%ld characters)\n",lengthName);
-            returnValue=setupDefaultParameters(pParameters,nameInfo);
-            if (returnValue)
-            {
-                for (j=0; j<10; j++)
+                for (k=0; k<2; k++)
                 {
-                    free(*pString[j]);
-                    *pString[j]=NULL;
+                    for (l=0; l<NAME_LENGTH+10; l++)
+                    {
+                        nameTest[l]=rand()%90+33;
+                    }
+
+                    if (k)
+                    {
+                        for (l=0; l<NAME_LENGTH+10; l++)
+                        {
+                            if (l<iLength+i)
+                            {
+                                if (pStringToCheckBefore[j]!='1')
+                                {
+                                    nameTest[l]=pStringToCheckBefore[j];
+                                }
+                            }
+                            else if (l==iLength+i)
+                            {
+                                nameTest[l]='\0';
+                            }
+                            else
+                            {
+                                if (pStringToCheckBefore[j]!='1')
+                                {
+                                    nameTest[l]=pStringToCheckAfter[j];
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        nameTest[rand()%(NAME_LENGTH+10)]='\0';
+                    }
+
+                    expectedValue=1;
+                    lengthName=strlen(nameTest);
+                    if (lengthName<7 || lengthName>=NAME_LENGTH)
+                    {
+                        expectedValue=0;
+                    }
+                    PRINT_TEST_START(counter,expectedValue);
+                    fprintf(stdout,"nameInputFile=%s\n",nameTest);
+                    fprintf(stdout,"(%ld characters)\n",lengthName);
+                    returnValue=setupDefaultParameters(pParameters,
+                                                                 nameInputFile);
+                    if (returnValue)
+                    {
+                        for (l=0; l<10; l++)
+                        {
+                            free(*pString[l]);
+                            *pString[l]=NULL;
+                        }
+                    }
+                    PRINT_TEST_END(counter,counterSuccess,counterFail,
+                                            returnValue,expectedValue,readChar);
                 }
             }
-            PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,
-                                                        expectedValue,readChar);
         }
     }
 
@@ -1168,33 +709,33 @@ void testSetupDefaultParameters(void)
                 (*pString[i])[rand()%lengthName]='\0';
             }
         }
-        for (i=0; i<23; i++)
+        for (i=0; i<28; i++)
         {
             *pInteger[i]=rand()%221-20;
         }
-        for (i=0; i<37; i++)
+        for (i=0; i<40; i++)
         {
             *pDouble[i]=(double)(rand()%6001-3000)/1000.;
         }
 
         expectedValue=0;
-        if (strlen(nameTest)<NAME_LENGTH && strlen(nameTest)>5)
+        if (strlen(nameTest)<NAME_LENGTH && strlen(nameTest)>6)
         {
             expectedValue=1;
         }
         PRINT_TEST_START(counter,expectedValue);
 
         // Printing the values of the different variables
-        fprintf(stdout,"nameTest=%s\n",nameInfo);
+        fprintf(stdout,"nameInputFile=%s\n",nameInputFile);
         for (i=0; i<10; i++)
         {
             fprintf(stdout,"%s=%s\n",pStringToPrint[i],*pString[i]);
         }
-        for (i=0; i<23; i++)
+        for (i=0; i<28; i++)
         {
             fprintf(stdout,"%s=%d\n",pIntegerToPrint[i],*pInteger[i]);
         }
-        for (i=0; i<37; i++)
+        for (i=0; i<40; i++)
         {
             fprintf(stdout,"%s=%lf\n",pDoubleToPrint[i],*pDouble[i]);
         }
@@ -1206,7 +747,7 @@ void testSetupDefaultParameters(void)
         }
 
         // Testing the function
-        returnValue=setupDefaultParameters(pParameters,nameInfo);
+        returnValue=setupDefaultParameters(pParameters,nameInputFile);
 
         // Checking if the setting up of default values worked
         boolean=0;
@@ -1221,11 +762,11 @@ void testSetupDefaultParameters(void)
                 boolean=(boolean || strcmp(*pString[i],pStringReference[i]));
             }
         }
-        for (i=0; i<23; i++)
+        for (i=0; i<28; i++)
         {
             boolean=(boolean || *pInteger[i]!=pIntegerReference[i]);
         }
-        for (i=0; i<37; i++)
+        for (i=0; i<40; i++)
         {
             boolean=(boolean || *pDouble[i]!=pDoubleReference[i]);
         }
@@ -1245,14 +786,14 @@ void testSetupDefaultParameters(void)
             for (i=0; i<10; i++)
             {
                 fprintf(stdout,"(%s=%s) =",pStringToPrint[i],*pString[i]);
-                fprintf(stdout,"= %s\n",pStringReference[i]);
+                fprintf(stdout,"== %s\n",pStringReference[i]);
             }
-            for (i=0; i<23; i++)
+            for (i=0; i<28; i++)
             {
                 fprintf(stdout,"(%s=%d) =",pIntegerToPrint[i],*pInteger[i]);
                 fprintf(stdout,"= %d\n",pIntegerReference[i]);
             }
-            for (i=0; i<37; i++)
+            for (i=0; i<40; i++)
             {
                 fprintf(stdout,"(%s=%lf) =",pDoubleToPrint[i],*pDouble[i]);
                 fprintf(stdout,"= %lf\n",pDoubleReference[i]);
@@ -1290,6 +831,7 @@ void testSetupDefaultParameters(void)
     return;
 }
 
+/*
 ////////////////////////////////////////////////////////////////////////////////
 // Unit (random) tests on getLengthAfterKeywordBeginning of loadParameters.c
 ////////////////////////////////////////////////////////////////////////////////

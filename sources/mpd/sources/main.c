@@ -252,19 +252,22 @@ int main(int argc, char *argv[])
 
         FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
     }
-/*
+
     // Load parameters from a *.input file pointed by argv[1]
     if (!loadParameters(&parameters,argv[1]))
     {
         PRINT_ERROR("In main: loadParameters function returned zero instead ");
         fprintf(stderr,"of one.\n");
-        free(fileLocation);
-        fileLocation=NULL;
+
+        // Printing also a simpler error message in the standard output
+        fprintf(stdout,"\n%s\nERROR: cannot load properly the ",STR_ERROR);
+        fprintf(stdout,"parameters contained in %s file.\n",argv[1]);
+        fprintf(stdout,"%s\n",STR_ERROR);
+
         FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
     }
-    free(fileLocation);
-    fileLocation=NULL;
 
+/*
     // Set the number of threads for the parallelization
     if (parameters.n_cpu<1)
     {
@@ -1301,7 +1304,6 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
     return 1;
 }
 
-/*
 ////////////////////////////////////////////////////////////////////////////////
 // The function initialFileExists checks if a file exists at the location
 // pointed by fileLocation, which must be a string of length less than
@@ -1383,6 +1385,7 @@ void closeTheFile(FILE** pFileToClose)
     return;
 }
 
+/*
 ////////////////////////////////////////////////////////////////////////////////
 // The function copyFileLocation tries to copy a file (using system function)
 // located at fileLocation (a path name of length strictly less than nameLength)

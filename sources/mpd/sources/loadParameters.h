@@ -1098,7 +1098,7 @@ void initializeParameterStructure(Parameters* pParameters);
 void freeParameterMemory(Parameters* pParameters);
 
 /**
-* \fn int setupDefaultParameters(Parameters* pParameters, char* nameInfo)
+* \fn int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
 * \brief It initializes all the variable of the structure pointed by pParameters
 *       to their associated default values.
 *
@@ -1108,10 +1108,10 @@ void freeParameterMemory(Parameters* pParameters);
 *                         is returned by the \ref setupDefaultParameters
 *                         function.
 *
-* \param[in] nameInfo A pointer that points to a string that is intended to
-*                     store the path name of an existing *.info (input) file.
-*                     Its content will be copied in the name_info variable of
-*                     the Parameters structure.
+* \param[in] nameInputFile A pointer that points to a string that is intended to
+*                          store the path name of an existing *.input file. Its
+*                          content will be copied in the name_input variable of
+*                          the Parameters structure.
 *
 * \return It returns one if the structure pointed by pParameters has been
 *         successfully initialized to its default values. Otherwise, zero is
@@ -1121,14 +1121,14 @@ void freeParameterMemory(Parameters* pParameters);
 * pointed by the pParameters variable to its default values given by the
 * preprocessor constants of loadParameters.h file. In particular, it dynamically
 * allocates some memory in order to store the content of the string pointed by
-* nameInfo into the name_info variable of the Parameters structure. We recall
-* that the length of the nameInfo variable must be (strictly) lower than
-* NAME_LENGTH. Such operations are also performed in order to set up the path_*
-* variables to their default (path-name) contents. The \ref
+* nameInputFile into the name_input variable of the Parameters structure. We
+* recall that the length of the nameInputFile variable must be (strictly) lower
+* than NAME_LENGTH. Such operations are also performed in order to set up the
+* path_* variables to their default (path-name) contents. The \ref
 * setupDefaultParameters function should be static but has been defined as
 * non-static in order to perform unit-test on it.
 */
-int setupDefaultParameters(Parameters* pParameters, char* nameInfo);
+int setupDefaultParameters(Parameters* pParameters, char* nameInputFile);
 
 /**
 * \fn int getLengthAfterKeywordBeginning(char keywordBeginning[3], int counter)
@@ -1725,38 +1725,6 @@ int readInfoFileAndGetParameters(Parameters* pParameters);
 int checkValuesOfAllParameters(Parameters* pParameters);
 
 /**
-* \fn int loadParameters(Parameters* pParameters, char* nameInfo)
-* \brief It loads the values given in an *.info (input) file pointed by
-*        nameInfo, and stores them in the variables of the structure pointed by
-*        pParameters. All the variables that have not been assigned are filled
-*        with some default values.
-*
-* \param[out] pParameters A pointer that points to the Parameters structure
-*                         (defined in main.h file) of the \ref main function.
-*
-* \param[in] nameInfo A pointer that points to a string that is intended to
-*                     store the path name of an existing *.info (input) file.
-*
-* \return It returns one if the structure pointed by pParameters has been
-*         successfully initialized to its prescribed values. Otherwise, zero is
-*         returned if an error is encountered in the process.
-
-* The function \ref loadParameters takes the informations given in an *.info
-* (input) file pointed by the nameInfo variable, and combines it with the
-* default values given by the preprocessor constants of the loadParameters.h
-* file, in order to initialize all the (double/integer/string) variables of the
-* Parameters structure of the \ref main function, pointed by the pParameters
-* variable. In particular, the *.info file must contain at least (minimal
-* configuration) the *.wfn/ *.chem (chemical) file, preceded by the 'name_chem'
-* keyword, the (positive) number of electrons to look for, preceded by the
-* 'nu_electrons' keyword, and optionally the *.mesh/ *.cube (mesh) file to
-* start with, preceded by the 'name_mesh' keyword (if not specify a cube or a
-* sphere is built depending on the ls_type variable of the Parameters
-* structure).
-*/
-int loadParameters(Parameters* pParameters, char* nameInfo);
-
-/**
 * \fn int writingDefaultElasticFile(Parameters* pParameters)
 * \brief It write a default *.elas file if such a file is needed and has not
 *        been specified in the *.info (input) file.
@@ -1802,6 +1770,38 @@ int writingDefaultElasticFile(Parameters* pParameters);
 *         Otherwise, zero is returned if an error is encountered in the process.
 */
 int writingRestartFile(Parameters* pParameters);
+
+/**
+* \fn int loadParameters(Parameters* pParameters, char* nameInputFile)
+* \brief It loads the values given in an *.input file pointed by nameInputFile,
+*        and stores them in the variables of the structure pointed by
+*        pParameters. All the variables that have not been assigned are filled
+*        with some default values.
+*
+* \param[out] pParameters A pointer that points to the Parameters structure
+*                         (defined in main.h file) of the \ref main function.
+*
+* \param[in] nameInputFile A pointer that points to a string that is intended to
+*                          store the path name of an existing *.input file.
+*
+* \return It returns one if the structure pointed by pParameters has been
+*         successfully initialized to its prescribed values. Otherwise, zero is
+*         returned if an error is encountered in the process.
+
+* The function \ref loadParameters takes the informations given in an *.input
+* file pointed by the nameInputFile variable, and combines it with the default
+* values given by the preprocessor constants of the loadParameters.h file, in
+* order to initialize all the (double/integer/string) variables of the
+* Parameters structure of the \ref main function, pointed by the pParameters
+* variable. In particular, the *.input file must contain at least (minimal
+* configuration) the *.wfn/ *.chem (chemical) file, preceded by the 'name_chem'
+* keyword, the (positive) number of electrons to look for, preceded by the
+* 'nu_electrons' keyword, and optionally the *.mesh/ *.cube (mesh) file to
+* start with, preceded by the 'name_mesh' keyword (if not specify a cube or a
+* sphere is built depending on the ls_type variable of the Parameters
+* structure). Such file must also end with the 'end_data' keyword.
+*/
+int loadParameters(Parameters* pParameters, char* nameInputFile);
 
 #endif
 

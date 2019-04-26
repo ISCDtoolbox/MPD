@@ -208,7 +208,7 @@ int allocateMemoryForData(Parameters* pParameters, Data* pData,
 // file names can store name of size lower than pParameters->name_length +
 // additionalLength. Finally, it updates the pParameters->name_length variable.
 // It has the Parameters* (defined in main.h) and the int additionalLength
-// variables as input arguments and it returns one one succes otherwise zero
+// variables as input arguments and it returns one one success otherwise zero
 ////////////////////////////////////////////////////////////////////////////////
 int addLengthForFileName(Parameters* pParameters, int additionalLength)
 {

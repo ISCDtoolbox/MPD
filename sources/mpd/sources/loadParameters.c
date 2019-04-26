@@ -169,38 +169,38 @@ void freeParameterMemory(Parameters* pParameters)
     return;
 }
 
-/*
 ////////////////////////////////////////////////////////////////////////////////
 // The function setupDefaultParameters fills all the variables of the structure
 // pointed by pParameters to their default values (given by the preprocessor
-// constants of loadParameters.h). The nameInfo variable, which should contain
-// the name of the *.info (input) file, is stored in the name_info variable of
+// constants of loadParameters.h). The nameInputFile variable, which should
+// contain the name of the *.input file, is stored in the name_input variable of
 // the structure Parameters. The function has the Parameters* variable (defined
-// in main.h) and the char* nameInfo variable as input arguments and it returns
-// zero if an error occurred, otherwise one is returned in case of success
+// in main.h) and the char* nameInputFile variable as input arguments and it
+// returns zero if an error occurred, otherwise one is returned for success
 ////////////////////////////////////////////////////////////////////////////////
-int setupDefaultParameters(Parameters* pParameters, char* nameInfo)
+int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
 {
     // Check if the input variable pParameters is pointing to NULL
     if (pParameters==NULL)
     {
-        PRINT_ERROR("In setupDefaultParameters: the pParameters ");
-        fprintf(stderr,"(input) variable is pointing to the ");
-        fprintf(stderr,"%p address.\n",(void*)pParameters);
+        PRINT_ERROR("In setupDefaultParameters: the (input) variable ");
+        fprintf(stderr,"pParameters=%p does not point to ",(void*)pParameters);
+        fprintf(stderr,"to a valid address.\n");
         return 0;
     }
 
-    // Check if the nameInfo is a string of length less than NAME_LENGTH
-    if (!checkStringFromLength(nameInfo,7,NAME_LENGTH))
+    // Check if nameInputFile is a string of length less than NAME_LENGTH
+    if (!checkStringFromLength(nameInputFile,8,NAME_LENGTH))
     {
         PRINT_ERROR("In setupDefaultParameters: checkStringFromLength ");
         fprintf(stderr,"function returned zero, which is not the expected ");
         fprintf(stderr,"value here, after having checked that the input ");
-        fprintf(stderr,"char* variable called nameInfo, which was supposed ");
-        fprintf(stderr,"to store the name of the (input) *.info file, is not ");
-        fprintf(stderr,"a string of length strictly less than %d ",NAME_LENGTH);
-        fprintf(stderr,"(and more than 5 to contain at least something more ");
-        fprintf(stderr,"than the *.info extension).\n");
+        fprintf(stderr,"char* variable called nameInputFile, which was ");
+        fprintf(stderr,"supposed to store the name of the *.input file, is ");
+        fprintf(stderr,"not a string of length strictly less than ");
+        fprintf(stderr,"%d (and strictly more than 5 to contain ",NAME_LENGTH);
+        fprintf(stderr,"at least something more than the *.input ");
+        fprintf(stderr,"extension).\n");
         return 0;
     }
 
@@ -208,31 +208,41 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInfo)
     pParameters->opt_mode=OPT_MODE;
     pParameters->verbose=VERBOSE;
     pParameters->n_cpu=N_CPU;
+    pParameters->rho_opt=RHO_OPT;
     pParameters->name_length=NAME_LENGTH;
 
     // calloc function returns a pointer to the allocated memory, otherwise NULL
-    pParameters->name_info=(char*)calloc(NAME_LENGTH,sizeof(char));
-    if (pParameters->name_info==NULL)
+    pParameters->name_input=(char*)calloc(NAME_LENGTH,sizeof(char));
+    if (pParameters->name_input==NULL)
     {
         PRINT_ERROR("In setupDefaultParameters: could not allocate memory ");
-        fprintf(stderr,"for the char* pParameters->name_info variable.\n");
+        fprintf(stderr,"for the char* pParameters->name_input variable.\n");
         return 0;
     }
 
     // strncpy function returns a pointer to the string (not used here)
-    strncpy(pParameters->name_info,nameInfo,NAME_LENGTH);
-    fprintf(stdout,"\nDefault values for parameters will be changed from ");
-    fprintf(stdout,"%s file.",pParameters->name_info);
+    strncpy(pParameters->name_input,nameInputFile,NAME_LENGTH);
+    if (pParameters->verbose)
+    {
+        fprintf(stdout,"\nPrescribed values for parameters will be loaded ");
+        fprintf(stdout,"from %s file.",pParameters->name_input);
+    }
 
-    pParameters->name_data=NULL;
+    pParameters->name_result=NULL;
     pParameters->name_chem=NULL;
     pParameters->name_mesh=NULL;
     pParameters->name_elas=NULL;
 
     pParameters->nu_electrons=0;
-    pParameters->nu_spin=0;
+    pParameters->bohr_unit=BOHR_UNIT;
+    pParameters->select_orb=SELECT_ORB;
+    pParameters->orb_ortho=ORB_ORTHO;
+
+    pParameters->ne_electrons=0;
+    pParameters->multi_det=1;
     pParameters->orb_rhf=0;
 
+    pParameters->select_box=SELECT_BOX;
     pParameters->x_min=X_MIN;
     pParameters->y_min=Y_MIN;
     pParameters->z_min=Z_MIN;
@@ -249,6 +259,7 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInfo)
     pParameters->delta_y=DELTA_Y;
     pParameters->delta_z=DELTA_Z;
 
+    pParameters->ls_ini=0;
     pParameters->ls_type=LS_TYPE;
     pParameters->ls_x=LS_X;
     pParameters->ls_y=LS_Y;
@@ -262,6 +273,7 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInfo)
     pParameters->trick_matrix=TRICK_MATRIX;
     pParameters->approx_mode=APPROX_MODE;
 
+    pParameters->iter_ini=ITER_INI;
     pParameters->iter_max=ITER_MAX;
     pParameters->iter_told0p=ITER_TOLD0P;
     pParameters->iter_told1p=ITER_TOLD1P;
@@ -348,6 +360,7 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInfo)
     return 1;
 }
 
+/*
 ////////////////////////////////////////////////////////////////////////////////
 // The function getLengthAfterKeywordBeginning returns the number of characters
 // to read at line counter (including the terminating nul one '\0') depending
@@ -4611,36 +4624,39 @@ int writingRestartFile(Parameters* pParameters)
 
     return 1;
 }
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 // The function loadParameters initializes all the variables of the structure
-// pointed by pParameters thanks to the values given in an *.info (input) file
-// pointed by nameInfo. The variables of the structure Parameters that are not
-// specified in the *.info file are filled with some default values (given by
+// pointed by pParameters thanks to the values given in an *.input file pointed
+// by nameInputFile. The variables of the structure Parameters that are not
+// specified in the *.input file are filled with some default values (given by
 // the preprocessor constants defined in loadParameters.h file). However, the
-// *.info file must contain at least (minimal configuration) the *.wfn/ *.chem
-// (chemical) file, preceded by 'name_chem' keyword, the (positive) number of
-// electrons to look for, preceded by 'nu_electrons' keyword, and optionally the
-// *.mesh/ *.cube (mesh) file to start with, preceded by 'name_mesh' keyword (if
-// not specify a cube or a sphere is built depending on the ls_type variable of
-// the structure Parameters). The function loadParameters has the Parameters*
+// *.input file must contain at least (minimal configuration) the *.wfn/ *.chem
+// (chemical) file, preceded by the 'name_chem' keyword, the (positive) number
+// of electrons to look for, preceded by the 'nu_electrons' keyword, and
+// optionally the *.mesh/ *.cube (mesh) file to start with, preceded by the
+// 'name_mesh' keyword (if not specify a cube or a sphere is built depending on
+// the ls_type variable of the structure Parameters). Such file must also end
+// with the 'end_data' keyword. The function loadParameters has the Parameters*
 // variable (defined in main.h) and a char* variable as input arguments and it
 // returns one on success, otherwise zero is returned if an error is encountered
 ////////////////////////////////////////////////////////////////////////////////
-int loadParameters(Parameters* pParameters, char* nameInfo)
+int loadParameters(Parameters* pParameters, char* nameInputFile)
 {
     // Initializing the structure pParameters to zero
     initializeParameterStructure(pParameters);
 
     // Set up the default parameters
-    if (!setupDefaultParameters(pParameters,nameInfo))
+    if (!setupDefaultParameters(pParameters,nameInputFile))
     {
         PRINT_ERROR("In loadParameters: setupDefaultParameters ");
         fprintf(stderr,"function returned zero instead of one.\n");
         return 0;
     }
 
-   // Read and update parameters contained in the *.info file
+/*
+   // Read and update parameters contained in the *.input file
    if (!readInfoFileAndGetParameters(pParameters))
    {
        PRINT_ERROR("In loadParameters: readInfoFileAndGetParameters function ");
@@ -4655,9 +4671,7 @@ int loadParameters(Parameters* pParameters, char* nameInfo)
        fprintf(stderr,"returned zero instead of one.\n");
        return 0;
    }
-
+*/
    return 1;
 }
-*/
-
 
