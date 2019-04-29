@@ -180,7 +180,7 @@ void freeParameterMemory(Parameters* pParameters)
 ////////////////////////////////////////////////////////////////////////////////
 int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
 {
-    int lengthName=0;
+    int lengthName=0, i=0;
 
     // Check if the input variable pParameters is pointing to NULL
     if (pParameters==NULL)
@@ -224,10 +224,44 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
 
     // strncpy function returns a pointer to the string (not used here)
     strncpy(pParameters->name_input,nameInputFile,NAME_LENGTH);
+
+    // Check for './' or '~/' shortchut in pParameters->name_input
+    if (pParameters->name_input[0]=='.' && pParameters->name_input[1]=='/')
+    {
+        lengthName=strlen(pParameters->name_input);
+        for (i=2; i<lengthName; i++)
+        {
+            pParameters->name_input[i-2]=pParameters->name_input[i];
+        }
+        pParameters->name_input[lengthName-2]='\0';
+        pParameters->name_input[lengthName-1]='\0';
+        pParameters->name_input[lengthName]='\0';
+    }
+   /* else
+    {
+        lengthName=checkForTildeAndReplaceByHomePath(&pParameters->name_input,
+                                                      pParameters->name_length);
+        if (!lengthName)
+        {
+            PRINT_ERROR("In setupDefaultParameters: ");
+            fprintf(stderr,"checkForTildeAndReplaceByHomePath function ");
+            fprintf(stderr,"returned zero, which is not the expected value ");
+            fprintf(stderr,"here, while attempting to modify the home path ");
+            fprintf(stderr,"directory in the pParameters->name_input ");
+            fprintf(stderr,"variable.\n");
+            return 0;
+        }
+        else if (lengthName>pParameters->name_length)
+        {
+            pParameters->name_length=lengthName;
+        }
+    }*/
+
     if (pParameters->verbose)
     {
         fprintf(stdout,"\nPrescribed values for parameters will be loaded ");
         fprintf(stdout,"from %s file.",pParameters->name_input);
+fprintf(stdout,"name_length=%d\n",pParameters->name_length);
     }
 
     pParameters->name_result=NULL;
@@ -312,8 +346,6 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
     {
         pParameters->path_length=lengthName;
     }
-fprintf(stdout,"path_length=%d path_medit=%s\n",pParameters->path_length,pParameters->path_medit);
-
 
     pParameters->path_mmg3d=(char*)calloc(pParameters->path_length,
                                                                   sizeof(char));
