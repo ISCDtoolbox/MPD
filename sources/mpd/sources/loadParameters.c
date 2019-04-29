@@ -180,6 +180,8 @@ void freeParameterMemory(Parameters* pParameters)
 ////////////////////////////////////////////////////////////////////////////////
 int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
 {
+    int lengthName=0;
+
     // Check if the input variable pParameters is pointing to NULL
     if (pParameters==NULL)
     {
@@ -286,50 +288,132 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
     pParameters->save_where=SAVE_WHERE;
 
     pParameters->path_length=PATH_LENGTH;
-    pParameters->path_medit=(char*)calloc(PATH_LENGTH,sizeof(char));
+    pParameters->path_medit=(char*)calloc(pParameters->path_length,
+                                                                  sizeof(char));
     if (pParameters->path_medit==NULL)
     {
         PRINT_ERROR("In setupDefaultParameters: could not allocate memory ");
         fprintf(stderr,"for the char* pParameters->path_medit variable.\n");
         return 0;
     }
-    strncpy(pParameters->path_medit,PATH_MEDIT,PATH_LENGTH);
+    strncpy(pParameters->path_medit,PATH_MEDIT,pParameters->path_length);
+    lengthName=checkForTildeAndReplaceByHomePath(&pParameters->path_medit,
+                                                      pParameters->path_length);
+    if (!lengthName)
+    {
+        PRINT_ERROR("In setupDefaultParameters: ");
+        fprintf(stderr,"checkForTildeAndReplaceByHomePath function returned ");
+        fprintf(stderr,"zero, which is not the expected value here, while ");
+        fprintf(stderr,"attempting to modify the home path directory in the ");
+        fprintf(stderr,"pParameters->path_medit variable.\n");
+        return 0;
+    }
+    else if (lengthName>pParameters->path_length)
+    {
+        pParameters->path_length=lengthName;
+    }
+fprintf(stdout,"path_length=%d path_medit=%s\n",pParameters->path_length,pParameters->path_medit);
 
-    pParameters->path_mmg3d=(char*)calloc(PATH_LENGTH,sizeof(char));
+
+    pParameters->path_mmg3d=(char*)calloc(pParameters->path_length,
+                                                                  sizeof(char));
     if (pParameters->path_mmg3d==NULL)
     {
         PRINT_ERROR("In setupDefaultParameters: could not allocate memory ");
         fprintf(stderr,"for the char* pParameters->path_mmg3d variable.\n");
         return 0;
     }
-    strncpy(pParameters->path_mmg3d,PATH_MMG3D,PATH_LENGTH);
+    strncpy(pParameters->path_mmg3d,PATH_MMG3D,pParameters->path_length);
+    lengthName=checkForTildeAndReplaceByHomePath(&pParameters->path_mmg3d,
+                                                      pParameters->path_length);
+    if (!lengthName)
+    {
+        PRINT_ERROR("In setupDefaultParameters: ");
+        fprintf(stderr,"checkForTildeAndReplaceByHomePath function returned ");
+        fprintf(stderr,"zero, which is not the expected value here, while ");
+        fprintf(stderr,"attempting to modify the home path directory in the ");
+        fprintf(stderr,"pParameters->path_mmg3d variable.\n");
+        return 0;
+    }
+    else if (lengthName>pParameters->path_length)
+    {
+        pParameters->path_length=lengthName;
+    }
 
-    pParameters->path_mshdist=(char*)calloc(PATH_LENGTH,sizeof(char));
+    pParameters->path_mshdist=(char*)calloc(pParameters->path_length,
+                                                                  sizeof(char));
     if (pParameters->path_mshdist==NULL)
     {
         PRINT_ERROR("In setupDefaultParameters: could not allocate memory ");
         fprintf(stderr,"for the char* pParameters->path_mshdist variable.\n");
         return 0;
     }
-    strncpy(pParameters->path_mshdist,PATH_MSHDIST,PATH_LENGTH);
+    strncpy(pParameters->path_mshdist,PATH_MSHDIST,pParameters->path_length);
+    lengthName=checkForTildeAndReplaceByHomePath(&pParameters->path_mshdist,
+                                                      pParameters->path_length);
+    if (!lengthName)
+    {
+        PRINT_ERROR("In setupDefaultParameters: ");
+        fprintf(stderr,"checkForTildeAndReplaceByHomePath function returned ");
+        fprintf(stderr,"zero, which is not the expected value here, while ");
+        fprintf(stderr,"attempting to modify the home path directory in the ");
+        fprintf(stderr,"pParameters->path_mshdist variable.\n");
+        return 0;
+    }
+    else if (lengthName>pParameters->path_length)
+    {
+        pParameters->path_length=lengthName;
+    }
 
-    pParameters->path_elastic=(char*)calloc(PATH_LENGTH,sizeof(char));
+    pParameters->path_elastic=(char*)calloc(pParameters->path_length,
+                                                                  sizeof(char));
     if (pParameters->path_elastic==NULL)
     {
         PRINT_ERROR("In setupDefaultParameters: could not allocate memory ");
         fprintf(stderr,"for the char* pParameters->path_elastic variable.\n");
         return 0;
     }
-    strncpy(pParameters->path_elastic,PATH_ELASTIC,PATH_LENGTH);
+    strncpy(pParameters->path_elastic,PATH_ELASTIC,pParameters->path_length);
+    lengthName=checkForTildeAndReplaceByHomePath(&pParameters->path_elastic,
+                                                      pParameters->path_length);
+    if (!lengthName)
+    {
+        PRINT_ERROR("In setupDefaultParameters: ");
+        fprintf(stderr,"checkForTildeAndReplaceByHomePath function returned ");
+        fprintf(stderr,"zero, which is not the expected value here, while ");
+        fprintf(stderr,"attempting to modify the home path directory in the ");
+        fprintf(stderr,"pParameters->path_elastic variable.\n");
+        return 0;
+    }
+    else if (lengthName>pParameters->path_length)
+    {
+        pParameters->path_length=lengthName;
+    }
 
-    pParameters->path_advect=(char*)calloc(PATH_LENGTH,sizeof(char));
+    pParameters->path_advect=(char*)calloc(pParameters->path_length,
+                                                                  sizeof(char));
     if (pParameters->path_advect==NULL)
     {
         PRINT_ERROR("In setupDefaultParameters: could not allocate memory ");
         fprintf(stderr,"for the char* pParameters->path_advect variable.\n");
         return 0;
     }
-    strncpy(pParameters->path_advect,PATH_ADVECT,PATH_LENGTH);
+    strncpy(pParameters->path_advect,PATH_ADVECT,pParameters->path_length);
+    lengthName=checkForTildeAndReplaceByHomePath(&pParameters->path_advect,
+                                                      pParameters->path_length);
+    if (!lengthName)
+    {
+        PRINT_ERROR("In setupDefaultParameters: ");
+        fprintf(stderr,"checkForTildeAndReplaceByHomePath function returned ");
+        fprintf(stderr,"zero, which is not the expected value here, while ");
+        fprintf(stderr,"attempting to modify the home path directory in the ");
+        fprintf(stderr,"pParameters->path_advect variable.\n");
+        return 0;
+    }
+    else if (lengthName>pParameters->path_length)
+    {
+        pParameters->path_length=lengthName;
+    }
 
     pParameters->hmin_iso=HMIN_ISO;
     pParameters->hmax_iso=HMAX_ISO;

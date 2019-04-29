@@ -2746,6 +2746,57 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
 int initialFileExists(char* fileLocation, int nameLength);
 
 /**
+* \fn int checkForTildeAndReplaceByHomePath(char** pStringToCheck,
+*                                                             int maximumLength)
+* \brief It checks if pStringToCheck is pointing to a string of (positive)
+*        length (strictly) less than maximumLength, and looks if it begins with
+*        the usual shortcut '~/' for the home path directory. If it is the case,
+*        then it recovers the full path for the home directory and replaces it
+*        in the string pointed by pStringToCheck, adding adding some extra
+*        length and reallocating some extra memory if needed.
+*
+* \param[in,out] pStringToCheck As an input, it is expected to point to a string
+*                               of positive length (strictly) less than the
+*                               maximumLength variable. Otherwise (i.e. if
+*                               pStringToCheck==NULL, *pStringToCheck==NULL, or
+*                               if the terminating nul character '\0' is
+*                               strictly located before the second position of
+*                               the array or after the maximumLength one), an
+*                               error is returned by the \ref 
+*                               checkForTildeAndReplaceByHomePath function.
+*                               Moreover, if the string pointed by
+*                               pStringToCheck begins with '~/', then the home
+*                               path directory is written and read in a
+*                               getHomePath.txt file (which is deleted after on
+*                               success) in order to replace '~/' by the full
+*                               full home path directory name obtained inside
+*                               the string pointed by pStringToCheck. If some
+*                               extra length is needed, then some extra memory
+*                               is reallocated for the string pointed by the
+*                               pStringToCheck variable.
+*
+* \param[in] maximumLength Maximal length allowed for the string pointed by
+*                          pStringToCheck as an input (including the
+*                          terminating nul character '\0'). It must be
+*                          (strictly) greater than one, otherwise an error is
+*                          returned by the \ref
+*                          checkForTildeAndReplaceByHomePath function.
+*
+* \return It returns zero if an error is encountered, otherwise the (positive)
+*         length of the (new) updated string pointed by pStringToCheck is
+*         returned (including the terminating nul character '\0').
+*
+* The function \ref checkForTildeAndReplaceByHomePath evaluates the length
+* (including the terminating nul character '\0') of the string pointed by
+* pStringTocheck, which must be comprised between two and the maximumLength
+* variable (provided that maximumLength>=2). In addition, if the string pointed
+* by pStringToCheck begins with '~/', then the '~' character is replaced by the
+* full home path directory name, adding some extra memory for the string pointed
+* by pStringToCheck if it is necessary.
+*/
+int checkForTildeAndReplaceByHomePath(char** pStringToCheck, int maximumLength);
+
+/**
 * \fn void closeTheFile(FILE** pFileToClose)
 * \brief It tries to properly close a FILE* variable via its associated pointer
 *        pFileToClose.
