@@ -457,6 +457,196 @@ void testFreeParameterMemory(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Unit (random) tests on checkForTildeAndReplaceByHomePath of the 
+// loadParameters.c file
+////////////////////////////////////////////////////////////////////////////////
+void testCheckForTildeAndReplaceByHomePath(void)
+{
+    time_t startTimer=0, endTimer=0;
+    int returnValue=0, expectedValue=0, counter=0, counterSuccess=0;
+    int counterFail=0, readChar=0;
+
+    size_t lengthPath=strlen(getenv("HOME"))-1;
+    char *stringToCheck=NULL, **pStringToCheck=NULL;
+    int i=0, j=0, k=0, l=0, kTest=0, maximumLength=0;
+    char pStringToCheckBefore[6]={'a','b','1','1','d','1'};
+    char pStringToCheckAfter[6]={'A','1','C','1','\0','\0'};
+
+    // Test starts
+    time(&startTimer);
+    fprintf(stdout,"\nTesting checkForTildeAndReplaceByHomePath function.\n");
+
+    expectedValue=0;
+    PRINT_TEST_START(counter,expectedValue);
+    fprintf(stdout,"pStringToCheck=%p\n",(void*)pStringToCheck);
+    fprintf(stdout,"maximumLength=%d\n",maximumLength);
+    returnValue=checkForTildeAndReplaceByHomePath(pStringToCheck,maximumLength);
+    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
+                                                                      readChar);
+
+    pStringToCheck=&stringToCheck;
+    PRINT_TEST_START(counter,expectedValue);
+    fprintf(stdout,"pStringToCheck=%p\n",(void*)pStringToCheck);
+    fprintf(stdout,"stringToCheck=%p\n",(void*)stringToCheck);
+    fprintf(stdout,"maximumLength=%d\n",maximumLength);
+    returnValue=checkForTildeAndReplaceByHomePath(pStringToCheck,maximumLength);
+    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
+                                                                      readChar);
+
+    stringToCheck=(char*)calloc(31,sizeof(char));
+    if (stringToCheck==NULL)
+    {
+        fprintf(stdout,"\nWarning in testCheckForTildeAndReplaceByHomePath ");
+        fprintf(stdout,"function: we could not allocate memory for the ");
+        fprintf(stdout,"local (char*) stringToCheck variable.\n");
+        expectedValue=-1;
+    }
+    else
+    {
+        stringToCheck[0]='\0';
+        stringToCheck[30]='\0';
+    }
+    PRINT_TEST_START(counter,expectedValue);
+    fprintf(stdout,"pStringToCheck=%p\n",(void*)pStringToCheck);
+    fprintf(stdout,"stringToCheck=%p\n",stringToCheck);
+    fprintf(stdout,"maximumLength=%d\n",maximumLength);
+    returnValue=checkForTildeAndReplaceByHomePath(pStringToCheck,maximumLength);
+    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
+                                                                      readChar);
+
+    maximumLength=2;
+    PRINT_TEST_START(counter,expectedValue);
+    fprintf(stdout,"pStringToCheck=%p\n",(void*)pStringToCheck);
+    fprintf(stdout,"stringToCheck=%s\n",stringToCheck);
+    fprintf(stdout,"maximumLength=%d\n",maximumLength);
+    returnValue=checkForTildeAndReplaceByHomePath(pStringToCheck,maximumLength);
+    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
+                                                                      readChar);
+
+    free(stringToCheck);
+    stringToCheck=NULL;
+    for (maximumLength=-35; maximumLength<35; maximumLength++)
+    {
+        for (i=-35; i<35; i++)
+        {
+            for (j=0; j<6; j++)
+            {
+                for (k=0; k<4; k++)
+                {
+                    for (kTest=0; kTest<2; kTest++)
+                    {
+                        stringToCheck=(char*)calloc(31,sizeof(char));
+                        if (stringToCheck==NULL)
+                        {
+                            fprintf(stdout,"\nWarning in ");
+                            fprintf(stdout,
+                                      "testCheckForTildeAndReplaceByHomePath ");
+                            fprintf(stdout,"function: we could not allocate ");
+                            fprintf(stdout,"memory for the local (char*) ");
+                            fprintf(stdout,"stringToCheck variable.\n");
+                            expectedValue=-1;
+                        }
+                        else
+                        {
+                            stringToCheck[0]='\0';
+                            for (l=0; l<30; l++)
+                            {
+                                stringToCheck[l]=rand()%90+33;
+                            }
+
+                            if (k>1)
+                            {
+                                stringToCheck[0]='~';
+                            }
+                            if (k==1 || k==3)
+                            {
+                                stringToCheck[1]='/';
+                            }
+                        
+                            if (kTest)
+                            {
+                                for (l=0; l<30; l++)
+                                {
+                                    if (l<maximumLength+i)
+                                    {
+                                        if (pStringToCheckBefore[j]!='1')
+                                        {
+                                             stringToCheck[l]=
+                                                        pStringToCheckBefore[j];
+                                        }
+                                    }
+                                    else if (l==maximumLength+i)
+                                    {
+                                        stringToCheck[l]='\0';
+                                    }
+                                    else
+                                    {
+                                        if (pStringToCheckBefore[j]!='1')
+                                        {
+                                            stringToCheck[l]=
+                                                         pStringToCheckAfter[j];
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                stringToCheck[rand()%30]='\0';
+                            }
+
+                            expectedValue=1+strlen(stringToCheck);
+                            if (maximumLength<2 || expectedValue>maximumLength
+                                                             || expectedValue<2)
+                            {
+                                expectedValue=0;
+                            }
+                            else if (stringToCheck[0]=='~' &&
+                                                          stringToCheck[1]=='/')
+                            {
+                                expectedValue+=lengthPath;
+                            }
+                        }
+
+                        PRINT_TEST_START(counter,expectedValue);
+                        fprintf(stdout,"stringToCheck=%s ",stringToCheck);
+                        fprintf(stdout,"(%d ",(int)strlen(stringToCheck));
+                        fprintf(stdout,"letters)\n");
+                        fprintf(stdout,"maximumLength=%d\n",maximumLength);
+                        returnValue=
+                               checkForTildeAndReplaceByHomePath(pStringToCheck,
+                                                                 maximumLength);
+                        fprintf(stdout,"stringToCheck=%s ",stringToCheck);
+                        fprintf(stdout,"(%d ",(int)strlen(stringToCheck));
+                        fprintf(stdout,"letters after)\n");
+                        PRINT_TEST_END(counter,counterSuccess,counterFail,
+                                            returnValue,expectedValue,readChar);
+                        free(stringToCheck);
+                        stringToCheck=NULL;
+                    }
+                }
+            }
+        }
+    }
+
+    // End of the tests
+    fprintf(stdout,"\nTotal: %d tests (%d succeeded, ",counter,counterSuccess);
+    fprintf(stdout,"%d failed) done in ",counterFail);
+    time(&endTimer);
+    if (difftime(endTimer,startTimer)<60.)
+    {
+        fprintf(stdout,"%lf seconds.\n",difftime(endTimer,startTimer));
+    }
+    else
+    {
+        fprintf(stdout,"%lf minutes.\n",difftime(endTimer,startTimer)/60.);
+    }
+    fflush(stdout);
+
+    return;
+}
+
+/*
+////////////////////////////////////////////////////////////////////////////////
 // Unit (random) tests on setupDefaultParameters of loadParameters.c
 ////////////////////////////////////////////////////////////////////////////////
 void testSetupDefaultParameters(void)
@@ -786,7 +976,7 @@ void testSetupDefaultParameters(void)
             for (i=0; i<10; i++)
             {
                 fprintf(stdout,"(%s=%s) =",pStringToPrint[i],*pString[i]);
-                fprintf(stdout,"== %s\n",pStringReference[i]);
+                fprintf(stdout,"= %s\n",pStringReference[i]);
             }
             for (i=0; i<28; i++)
             {
@@ -831,7 +1021,6 @@ void testSetupDefaultParameters(void)
     return;
 }
 
-/*
 ////////////////////////////////////////////////////////////////////////////////
 // Unit (random) tests on getLengthAfterKeywordBeginning of loadParameters.c
 ////////////////////////////////////////////////////////////////////////////////

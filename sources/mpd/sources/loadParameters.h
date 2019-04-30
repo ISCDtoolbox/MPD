@@ -1098,6 +1098,57 @@ void initializeParameterStructure(Parameters* pParameters);
 void freeParameterMemory(Parameters* pParameters);
 
 /**
+* \fn int checkForTildeAndReplaceByHomePath(char** pStringToCheck,
+*                                                             int maximumLength)
+* \brief It checks if pStringToCheck is pointing to a string of (positive)
+*        length (strictly) less than maximumLength, and looks if it begins with
+*        the usual shortcut '~/' for the home path directory. If it is the case,
+*        then it recovers the full path for the home directory and replaces it
+*        in the string pointed by pStringToCheck, adding adding some extra
+*        length and reallocating some extra memory if needed.
+*
+* \param[in,out] pStringToCheck As an input, it is expected to point to a string
+*                               of positive length (strictly) less than the
+*                               maximumLength variable. Otherwise (i.e. if
+*                               pStringToCheck==NULL, *pStringToCheck==NULL, or
+*                               if the terminating nul character '\0' is
+*                               strictly located before the second position of
+*                               the array or after the maximumLength one), an
+*                               error is returned by the \ref 
+*                               checkForTildeAndReplaceByHomePath function.
+*                               Moreover, if the string pointed by
+*                               pStringToCheck begins with '~/', then the home
+*                               path directory is written and read in a
+*                               getHomePath.txt file (which is deleted after on
+*                               success) in order to replace '~/' by the full
+*                               full home path directory name obtained inside
+*                               the string pointed by pStringToCheck. If some
+*                               extra length is needed, then some extra memory
+*                               is reallocated for the string pointed by the
+*                               pStringToCheck variable.
+*
+* \param[in] maximumLength Maximal length allowed for the string pointed by
+*                          pStringToCheck as an input (including the
+*                          terminating nul character '\0'). It must be
+*                          (strictly) greater than one, otherwise an error is
+*                          returned by the \ref
+*                          checkForTildeAndReplaceByHomePath function.
+*
+* \return It returns zero if an error is encountered, otherwise the (positive)
+*         length of the (new) updated string pointed by pStringToCheck is
+*         returned (including the terminating nul character '\0').
+*
+* The function \ref checkForTildeAndReplaceByHomePath evaluates the length
+* (including the terminating nul character '\0') of the string pointed by
+* pStringTocheck, which must be comprised between two and the maximumLength
+* variable (provided that maximumLength>=2). In addition, if the string pointed
+* by pStringToCheck begins with '~/', then the '~' character is replaced by the
+* full home path directory name, adding some extra memory for the string pointed
+* by pStringToCheck if it is necessary.
+*/
+int checkForTildeAndReplaceByHomePath(char** pStringToCheck, int maximumLength);
+
+/**
 * \fn int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
 * \brief It initializes all the variable of the structure pointed by pParameters
 *       to their associated default values.
@@ -1134,15 +1185,15 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile);
 * \fn int getLengthAfterKeywordBeginning(char keywordBeginning[3], int counter)
 * \brief It evaluates the number of characters to read after keywordBeginning,
 *        which depends on the different possibilities allowed by its content,
-         referring to the (counter)-th keyword of the *.info file.
+         referring to the (counter)-th keyword of the *.input file.
 *
 * \param[in] keywordBeginning An array containing two characters and the
 *                             terminating nul one '\0'. They represents the
 *                             beginning of the (counter)-th keyword whose end
 *                             needs to be read properly. This keyword can be the
-*                             name of any variables (70 possibilities except
-*                             name_info which is replaced by the end_data
-*                             keyword, ending the reading in the *.info
+*                             name of any variables (78 possibilities except
+*                             name_input which is replaced by the end_data
+*                             keyword, ending the reading in the *.input
 *                             file; any other information placed after will not
 *                             be read and considered as a comment) stored in
 *                             the Parameters structure. The array must contain
@@ -1150,22 +1201,22 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile);
 *                             otherwise an error is returned by the \ref
 *                             getLengthAfterKeywordBeginning function.
 *
-* \param[in] counter An integer referring to the line of the *.info file
-*                    at which the keyword is read. This integer is mainly use
-*                    help the user to locate any syntax error found while
-*                    reading the *.info file. More precisely, (counter-1) refers
-*                    to the number of keywords that have already been
+* \param[in] counter An integer referring to the line of the *.input file
+*                    at which the keyword is read. This integer is mainly
+*                    helping the user to locate any syntax error found while
+*                    reading the *.input file. More precisely, (counter-1)
+*                    refers to the number of keywords that have already been
 *                    successfully read and the counter variable to the one whose
 *                    first two letters are stored in keywordBeginning. The
-*                    integer must be comprised between one and seventy
+*                    integer must be comprised between one and seventy-eight
 *                    (case where all the variables of the Parameters structure
-*                    are specified, except the name_info one, already storing
-*                    the name of the *.info file given in the input command line
-*                    of the MPD program, and replaced by the end_data keyword,
-*                    which ends the reading in the *.info file; any other
-*                    information placed after will not be read and considered
-*                    as a comment). Otherwise, an error is returned by the \ref
-*                    getLengthAfterKeywordBeginning function.
+*                    are specified, except the name_input one, already storing
+*                    the name of the *.input file given in the command-line
+*                    argument of the MPD program, and replaced by the end_data
+*                    keyword, which ends the reading in the *.input file; any
+*                    other information placed after will not be read and
+*                    considered as a comment). Otherwise, an error is returned
+*                    by the \ref getLengthAfterKeywordBeginning function.
 *
 * \return It returns an integer (strictly) comprised between one and twelve.
 *         Otherwise, zero is returned if an error is encountered. To be more
@@ -1173,38 +1224,40 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile);
 *         character is needed to distinguish (n_)c(pu), (n_)x, (n_)y, (n_)z,
 *         and (n_)i(ter) keywords in the Parameters structure). Three is
 *         returned if keywordBeginning stores 'ls' (two characters are needed
-*         to distinguish (ls)_t(ype), (ls)_x, (ls)_y, (ls)_z, and (ls)_r
-*         keywords in the Parameters structure). Four is returned if
+*         to distinguish (ls)_i(ni), (ls)_t(ype), (ls)_x, (ls)_y, (ls)_z, and
+*         (ls)_r keywords in the Parameters structure). Four is returned if
 *         keywordBeginning stores 'x_', 'y_', or 'z_' (three characters are
 *         needed to distinguish (x_)min, (x_)max, (y_)min, (y_)max, (z_)min,
 *         and (z_)max keywords in the Parameters structure). Five is returned
 *         if keywordBeginning stores 'no' (four characters are needed to read
 *         (no)_cfl keyword in the Parameters structure). Six is returned if
-*         keywordBeginning stores 've', 'nu', 'or', 'de', 'me', or 'hm' (five
-*         characters are needed to distinguish (ve)rbose, (nu)_elec(trons),
-*         (nu)_spin, (or)b_rhf, (de)lta_x, (de)lta_y, (de)lta_z, (de)lta_t,
-*         (me)t_err, (me)t_min, (me)t_max, (hm)in_is(o), (hm)ax_is(o),
-*         (hm)in_me(t), (hm)ax_me(t), (hm)in_ls, (hm)ax_ls, (hm)ode_l(ag),
-*         (hm)in_la(g), and (hm)ax_la(g) keywords in the Parameters structure).
-*         Seven is returned if keywordBeginning stores 'op', 'en' 'it', 'ha',
-*         'hg', or 're' (six characters are needed to distinguish (op)t_mode,
+*         keywordBeginning stores 've', 'rh', 'or', 'de', 'me', or 'hm' (five
+*         characters are needed to distinguish (ve)rbose, (rh)o_orb, (or)b_rhf
+*         (or)b_ort(ho), (de)lta_x, (de)lta_y, (de)lta_z, (de)lta_t, (me)t_err,
+*         (me)t_min, (me)t_max, (hm)in_is(o), (hm)ax_is(o), (hm)in_me(t),
+*         (hm)ax_me(t), (hm)in_ls, (hm)ax_ls, (hm)ode_l(ag), (hm)in_la(g), and
+*         (hm)ax_la(g) keywords in the Parameters structure). Seven is returned
+*         if keywordBeginning stores 'op', 'en', 'it', 'ha', 'hg', or 're' (six
+*         characters are needed to distinguish (op)t_mode, (it)er_ini,
 *         (it)er_max, (it)er_tol(d0p), (it)er_tol(d1p), (it)er_tol(d2p),
 *         (ha)usd_is(o), (ha)usd_me(t), (ha)usd_ls, (ha)usd_la(g),
 *         (hg)rad_is(o), (hg)rad_me(t), (hg)rad_ls, (hg)rad_la(g), and
 *         (re)sidual keywords in the Parameters structure, but also the
-*         (en)d_data keyword). Eight is returned if keywordBeginning stores 'na'
-*         or 'sa' (seven characters are needed to distinguish (na)me_leng(th),
-*         (na)me_data, (na)me_chem, (na)me_mesh, (na)me_elas, (sa)ve_type,
-*         (sa)ve_mesh, (sa)ve_data, (sa)ve_prin(t), and (sa)ve_wher(e) keywords
-*         in the Parameters structure). Nine is returned if keywordBeginning
-*         stores 'pa' (eight characters are needed to distinguish
-*         (pa)th_lengt(h), (pa)th_medit, (pa)th_mmg3d, (pa)th_mshdi(st),
-*         (pa)th_elast(ic), and (pa)th_advec(t) keywords in the Parameters
-*         structure). Ten is returned if keywordBeginning stores 'ap' (nine
-*         characters are needed to read (ap)prox_mode keyword in the Parameters
-*         structure). Finally, eleven is returned if keywordBeginning stores
-*         'tr' (ten characters are needed to  read (tr)ick_matrix keyword in the
-*         Parameters structure). In any other situations (i.e. if the input
+*         (en)d_data keyword). Eight is returned if keywordBeginning stores
+*         'na', 'bo', 'mu', or 'sa' (seven characters are needed to distinguish
+*         (na)me_leng(th), (na)me_result, (na)me_chem, (na)me_mesh, (na)me_elas,
+*         (bo)hr_unit, (mu)ltidet, (sa)ve_type, (sa)ve_mesh, (sa)ve_data,
+*         (sa)ve_prin(t), and (sa)ve_wher(e) keywords in the Parameters
+*         structure). Nine is returned if keywordBeginning stores 'se' or 'pa'
+*         (eight characters are needed to distinguish (se)lect_orb,
+*         (se)lect_box, (pa)th_lengt(h), (pa)th_medit, (pa)th_mmg3d,
+*         (pa)th_mshdi(st), (pa)th_elast(ic), and (pa)th_advec(t) keywords in
+*         the Parameters structure). Ten is returned if keywordBeginning stores
+*         'ap' (nine characters are needed to read (ap)prox_mode keyword in the
+*         Parameters structure). Finally, eleven is returned if
+*         keywordBeginning stores 'nu', 'ne', or 'tr' (ten characters are needed
+*         to read (nu)_elecrons, (ne)_electrons, and (tr)ick_matrix keyword in
+*         the Parameters structure). In any other situations (i.e. if the input
 *         variables does not have the expected content), an error is displayed
 *         in the standard error stream and zero is returned by the \ref
 *         getLengthAfterKeywordBeginning function.
@@ -1214,13 +1267,12 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile);
 */
 int getLengthAfterKeywordBeginning(char keywordBeginning[3], int counter);
 
-
 /**
 * \fn int getTypeAfterKeyword(char keywordMiddle[11], int lengthMiddle,
 *                                                                   int counter)
 * \brief Depending on the string keywordMiddle of length lengthMiddle, it
 *        returns an integer corresponding to the type of variables to be read
-*        after the (counter)-th keyword in the *.info file.
+*        after the (counter)-th keyword in the *.input file.
 *
 * \param[in] keywordMiddle An array containing (lengthMiddle-1) non-nul
 *                          characters followed by the terminating nul one '\0'.
@@ -1229,9 +1281,9 @@ int getLengthAfterKeywordBeginning(char keywordBeginning[3], int counter);
 *                          needs to be specified in order to be read after
 *                          properly and securely the by fscanf standard
 *                          c-function. This keyword can be the name of any
-*                          variables (70 possibilities except name_info which
+*                          variables (78 possibilities except name_input which
 *                          is replaced by the end_data keyword, ending the
-*                          reading in the *.info file; any other information
+*                          reading in the *.input file; any other information
 *                          placed after will not be read and considered as a
 *                          comment) stored in the Parameters structure. The
 *                          array must contain exactly, starting from the
@@ -1247,22 +1299,22 @@ int getLengthAfterKeywordBeginning(char keywordBeginning[3], int counter);
 *                         eleven, otherwise an error is returned by the \ref
 *                         getTypeAfterKeyword function.
 *
-* \param[in] counter An integer referring to the line of the *.info file
-*                    at which the keyword is read. This integer is mainly use
-*                    help the user to locate any syntax error found while
-*                    reading the *.info file. More precisely, (counter-1) refers
-*                    to the number of keywords that have already been
+* \param[in] counter An integer referring to the line of the *.input file
+*                    at which the keyword is read. This integer is mainly
+*                    helping the user to locate any syntax error found while
+*                    reading the *.input file. More precisely, (counter-1)
+*                    refers to the number of keywords that have already been
 *                    successfully read and the counter variable to the one whose
 *                    is being evaluated by the \ref getTypeAfterKeyword
 *                    function. The integer must be comprised between one and
-*                    seventy (case where all the variables of the Parameters
-*                    structure are specified, except the name_info one, already
-*                    storing the name of the*.info file given in the input
-*                    command line of the MPD program, and replaced by the
-*                    end_data keyword, which ends the reading in the *.info
-*                    file; any other information placed after will not be read
-*                    and considered as a comment). Otherwise, an error is
-*                    returned by the \ref getTypeAfterKeyword function.
+*                    seventy-eight (case where all the variables of the
+*                    Parameters structure are specified, except the name_input
+*                    one, already storing the name of the*.input file given in
+*                    the command-line argument of the MPD program, and replaced
+*                    by the end_data keyword, which ends the reading in the
+*                    *.input file; any other information placed after will not
+*                    be read and considered as a comment). Otherwise, an error
+*                    is returned by the \ref getTypeAfterKeyword function.
 *
 * \return It returns minus one if no type is associated with the keywordMiddle
 *         variable, i.e. if the corresponding keyword is the (en)d_data one. It
@@ -1270,27 +1322,29 @@ int getLengthAfterKeywordBeginning(char keywordBeginning[3], int counter);
 *         value, and three if it is a string. Otherwise, zero is returned if an
 *         error is encountered. To be more precise, minus one is returned if
 *         keywordMiddle stores (en)d_data, which would end the reading of the
-*         *.info file. One is returned if keywordMiddle stores either
-*         (op)t_mode, (ve)rbose, (n_)c(pu), (na)me_leng(th), (nu)_elec(trons),
-*         (nu)_spin, (or)b_rhf, (n_)x, (n_)y, (n_)z, (ls)_t(ype),
-*         (tr)ick_matrix, (ap)prox_mode, (it)er_max, (sa)ve_type, (sa)ve_mesh,
+*         *.input file. One is returned if keywordMiddle stores either
+*         (op)t_mode, (ve)rbose, (n_)c(pu), (na)me_leng(th), (nu)_electrons,
+*         (bo)hr_unit, (or)b_ort(ho), (ne)_electrons, (mu)lti_det, (or)b_rhf,
+*         (n_)x, (n_)y, (n_)z, (ls)_i(ni), (ls)_t(ype), (tr)ick_matrix,
+*         (ap)prox_mode, (it)er_ini, (it)er_max, (sa)ve_type, (sa)ve_mesh,
 *         (sa)ve_data, (sa)ve_prin(t), (sa)ve_wher(e), (pa)th_lengt(h),
 *         (hm)ode_l(ag), (n_)i(ter) or (no)_cfl to refer to the corresponding
-*         integer variables (23) of the Parameters structure. Two is returned if
-*         keywordMiddle stores either (x_)min, (x_)max, (y_)min, (y_)max,
-*         (z_)min, (z_)max, (de)lta_x, (de)lta_y, (de)lta_z, (ls)_x, (ls)_y,
-*         (ls)_z, (ls)_r, (me)t_err, (me)t_min, (me)t_max, (it)er_tol(d0p),
-*         (it)er_tol(d1p), (it)er_tol(d2p), (hm)in_is(o), (hm)ax_is(o),
-*         (hm)in_me(t), (hm)ax_me(t), (hm)in_ls, (hm)ax_ls, (hm)in_la(g),
-*         (hm)ax_la(g), (ha)usd_is(o), (ha)usd_me(t), (ha)usd_ls, (ha)usd_la(g),
+*         integer variables (28) of the Parameters structure. Two is returned if
+*         keywordMiddle stores either (rh)o_orb, (se)lect_orb, (se)lect_box,
+*         (x_)min, (x_)max, (y_)min, (y_)max, (z_)min, (z_)max, (de)lta_x,
+*         (de)lta_y, (de)lta_z, (ls)_x, (ls)_y, (ls)_z, (ls)_r, (me)t_err,
+*         (me)t_min, (me)t_max, (it)er_tol(d0p), (it)er_tol(d1p),
+*         (it)er_tol(d2p), (hm)in_is(o), (hm)ax_is(o), (hm)in_me(t),
+*         (hm)ax_me(t), (hm)in_ls, (hm)ax_ls, (hm)in_la(g), (hm)ax_la(g),
+*         (ha)usd_is(o), (ha)usd_me(t), (ha)usd_ls, (ha)usd_la(g),
 *         (hg)rad_is(o), (hg)rad_me(t), (hg)rad_ls, (hg)rad_la(g), (de)lta_t, or
-*         (re)sidual to refer to the corresponding double variables (37) of the
+*         (re)sidual to refer to the corresponding double variables (40) of the
 *         Parameters structure. Three is returned if keywordMiddle stores either
-*         (na)_data, (na)me_chem, (na)me_mesh, (na)me_elas, (pa)th_medit,
+*         (na)me_resu(lt), (na)me_chem, (na)me_mesh, (na)me_elas, (pa)th_medit,
 *         (pa)th_mmg3d, (pa)th_mshdi(st), (pa)th_elast(ic), or (pa)th_advec(t)
 *         to refer to the corresponding string (char*) variables (9) of the
-*         Parameters structure, (except the name_info one, already storing the
-*         name of the *.info file). In any other situations (i.e. if the input
+*         Parameters structure, (except the name_input one, already storing the
+*         name of the *.input file). In any other situations (i.e. if the input
 *         variables does not have the expected content), an error is displayed
 *         in the standard error stream and zero is returned by the \ref
 *         getTypeAfterKeyword function.
@@ -1305,16 +1359,17 @@ int getTypeAfterKeyword(char keywordMiddle[11], int lengthMiddle, int counter);
                                                                     int counter)
 * \brief Depending on the string keywordMiddle of length lengthMiddle, it
 *        evaluates the number of characters to be read after keywordMiddle so as
-*        to complete the reading of the (counter)-th keyword in the *.info file.
+*        to complete the reading of the (counter)-th keyword in the *.input
+*        file.
 *
 * \param[in] keywordMiddle An array containing (lengthMiddle-1) non-nul
 *                          characters followed by the terminating nul one '\0'.
 *                          They represent the second part of the (counter)-th
 *                          keyword, whose third and final part needs to be read
 *                          properly. This keyword can be the name of any
-*                          variables (70 possibilities except name_info which
+*                          variables (78 possibilities except name_input which
 *                          is replaced by the end_data keyword, ending the
-*                          reading in the *.info file; any other information
+*                          reading in the *.input file; any other information
 *                          placed after will not be read and considered as a
 *                          comment) stored in the Parameters structure. The
 *                          array must contain exactly, starting from the
@@ -1330,57 +1385,57 @@ int getTypeAfterKeyword(char keywordMiddle[11], int lengthMiddle, int counter);
 *                         eleven, otherwise an error is returned by the \ref
 *                         getLengthAfterKeywordMiddle function.
 *
-* \param[in] counter An integer referring to the line of the *.info file
-*                    at which the keyword is read. This integer is mainly use
-*                    help the user to locate any syntax error found while
-*                    reading the *.info file. More precisely, (counter-1) refers
-*                    to the number of keywords that have already been
+* \param[in] counter An integer referring to the line of the *.input file
+*                    at which the keyword is read. This integer is mainly
+*                    helping the user to locate any syntax error found while
+*                    reading the *.input file. More precisely, (counter-1)
+*                    refers to the number of keywords that have already been
 *                    successfully read and the counter variable to the one whose
 *                    last letters need to be read properly by the \ref
 *                    getLengthAfterKeywordMiddle function. The integer must be
-*                    comprised between one and seventy (case where all the
+*                    comprised between one and seventy-eight (case where all the
 *                    variables of the Parameters structure are specified, except
-*                    the name_info one, already storing the name of the*.info
-*                    file given in the input command line of the MPD program,
+*                    the name_input one, already storing the name of the *.input
+*                    file given in the command-line argument of the MPD program,
 *                    and replaced by the end_data keyword, which ends the
-*                    reading in the *.info file; any other information placed
+*                    reading in the *.input file; any other information placed
 *                    after will not be read and considered as a comment).
 *                    Otherwise, an error is returned by the \ref
 *                    getLengthAfterKeywordMiddle function.
 *
 * \return It returns an integer (strictly) comprised between one (nothing more
-*         to read) and six. Otherwise, zero is returned if an error is
+*         to read) and four. Otherwise, zero is returned if an error is
 *         encountered. To be more precise, one is returned if keywordMiddle
-*         stores either (op)t_mode, (ve)rbose, (en)d_data (na)me_data,
-*         (na)me_chem, (na)me_mesh, (na)me_elas, (nu)_spin, (or)b_rhf, (x_)min,
-*         (x_)max, (y_)min, (y_)max, (z_)min, (z_)max, (n_)x, (n_)y, (n_)z,
-*         (de)lta_x, (de)lta_y, (de)lta_z, (ls)_x, (ls)_y, (ls)_z, (ls)_r,
-*         (me)t_err, (me)t_min, (me)t_max, (tr)ick_matrix, (ap)prox_mode,
-*         (it)er_max, (sa)ve_type,(sa)ve_mesh, (sa)ve_data, (pa)th_medit,
-*         (pa)th_mmg3d, (hm)_in_ls, (hm)ax_ls, (ha)usd_ls, (hg)rad_ls,
-*         (re)sidual, (de)lta_t, or (no)_cfl, which means that nothing needs to
-*         be read after in order to complete the reading of the (counter)-th
-*         keyword. It means we know if it corresponds to the 'end_data' keyword
-*         or to which variables of the Parameters structure it is referring to.
-*         Two is returned if keywordMiddle stores either (sa)ve_prin(t),
-*         (sa)ve_wher(e), (pa)th_lengt(h), (pa)th_advec(t), (hm)in_is(o),
-*         (hm)ax_is(o), (hm)in_me(t), (hm)ax_me(t), (hm)in_la(g), (hm)ax_la(g),
-*         (ha)usd_is(o), (ha)usd_me(t), (ha)usd_la(g), (hg)rad_is(o),
-*         (hg)rad_me(t), (hg)rad_la(g), which means that one characters needs to
-*         be read after in order to complete the reading on the (counter)-th
-*         keyword. Three is returned if keywordMiddle stores either (n_)c(pu),
-*         (na)me_leng(th), (pa)th_mshdi(st), (pa)th_elast(ic), or (hm)ode_l(ag),
-*         which means that two characters needs to be read after in order to
-*         complete the reading on the (counter)-th keyword. Four is returned if
-*         keywordMiddle stores either (ls)_t(ype), (it)er_tol(d0p),
-*         (it)er_tol(d1p), (it)er_tol(d2p), or (n_)i(ter) which means that
-*         three characters needs to be read in order to complete the reading of
-*         the (counter)-th keyword. Finally, six is returned if (nu)_elec(trons)
-*         is stored in keywordMiddle, which means that five letters needs to be
-*         read in order to complete the reading of the (counter)-th keyword. In
-*         any other situations (i.e. if the input variables does not have the
-*         expected content), an error is displayed in the standard error stream
-*         and zero is returned by the \ref getLengthAfterKeywordMiddle function.
+*         stores either (op)t_mode, (ve)rbose, (rh)o_opt, (en)d_data,
+*         (na)me_chem, (na)me_mesh, (na)me_elas, (nu)_electrons, (bo)hr_unit,
+*         (se)lect_orb, (ne)_electrons, (mu)lti_det, (or)b_rhf, (se)lect_box,
+*         (x_)min, (x_)max, (y_)min, (y_)max, (z_)min, (z_)max, (n_)x, (n_)y,
+*         (n_)z, (de)lta_x, (de)lta_y, (de)lta_z, (ls)_x, (ls)_y, (ls)_z,
+*         (ls)_r, (me)t_err, (me)t_min, (me)t_max, (tr)ick_matrix,
+*         (ap)prox_mode, (it)er_ini, (it)er_max, (sa)ve_type, (sa)ve_mesh,
+*         (sa)ve_data, (pa)th_medit, (pa)th_mmg3d, (hm)_in_ls, (hm)ax_ls,
+*         (ha)usd_ls, (hg)rad_ls, (re)sidual, (de)lta_t, or (no)_cfl, which
+*         means that nothing needs to e read after in order to complete the
+*         reading of the (counter)-th keyword. It means we know if it
+*         corresponds to the 'end_data' keyword or to which variables of the
+*         Parameters structure it is referring to. Two is returned if
+*         keywordMiddle stores either (sa)ve_prin(t), (sa)ve_wher(e),
+*         (pa)th_lengt(h), (pa)th_advec(t), (hm)in_is(o), (hm)ax_is(o),
+*         (hm)in_me(t), (hm)ax_me(t), (hm)in_la(g), (hm)ax_la(g), (ha)usd_is(o),
+*         (ha)usd_me(t), (ha)usd_la(g), (hg)rad_is(o), (hg)rad_me(t),
+*         (hg)rad_la(g), which means that one characters needs to be read after
+*         in order to complete the reading on the (counter)-th keyword. Three
+*         is returned if keywordMiddle stores either (n_)c(pu), (na)me_leng(th),
+*         (na)me_resu(lt), (or)b_ort(ho), (ls)_i(ni), (pa)th_mshdi(st),
+*         (pa)th_elast(ic), or (hm)ode_l(ag), which means that two characters
+*         needs to be read after in order to omplete the reading on the
+*         (counter)-th keyword. Four is returned if keywordMiddle stores either
+*         (ls)_t(ype), (it)er_tol(d0p), (it)er_tol(d1p), (it)er_tol(d2p), or
+*         (n_)i(ter) which means that three characters needs to be read in order
+*         to complete the reading of the (counter)-th keyword. In any other
+*         situations (i.e. if the input variables does not have the expected
+*         content), an error is displayed in the standard error stream and zero
+*         is returned by the \ref getLengthAfterKeywordMiddle function.
 *
 * The \ref getLengthAfterKeywordMiddle function should be static but has been
 * defined as non-static in order to perform unit-test on it.
@@ -1389,36 +1444,37 @@ int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
                                                                    int counter);
 
 /**
-* \fn int detectRepetition(int repetition[70], char keywordBeginning[3],
-*                          char keywordMiddle[11], char keywordEnd[6],
+* \fn int detectRepetition(int repetition[78], char keywordBeginning[3],
+*                          char keywordMiddle[11], char keywordEnd[4],
 *                                  int lengthMiddle, int lengthEnd, int counter)
 * \brief It adds one in the array repetition at the location corresponding to
-*        to the (counter)-th keyword of the *.info file, read as the
+*        to the (counter)-th keyword of the *.input file, read as the
 *        concatenation of keywordBeginning+keywordMiddle(+keywordEnd), where
-*        keywordBeginning has length two, keywordMiddle has lengthMiddle and
-*        keywordEnd has lengthEnd.
+*        keywordBeginning has length two, keywordMiddle has lengthMiddle (and
+*        keywordEnd has lengthEnd).
 *
-* \param[out] repetition An array of seventy integers saving the number of
-*                        occurences of the corresponding keywords in the *.info
-*                        file. The keyword position in the array is the one
-*                        given in the structure Parameters, except for the
-*                        end_data keyword which has the position of the
-*                        name_info variable, already storing the name of the
-*                        *.info file given in the input command line of the
-*                        MPD program. We recall that the end_data keyword ends
-*                        the reading in the *.info file; any other information
-*                        placed after will not be read and considered as a
-*                        comment.
+* \param[out] repetition An array of seventy-eight integers saving the number of
+*                        occurences of the corresponding keywords in the *.input
+*                        file. The keyword position in the array is (almost) the
+*                        one given in the structure Parameters, (except for the
+*                        x_*, y_*, z_*, hmin_*, hmax_*, hausd_*, and hgrad_*
+*                        keywords; also the end_data keyword which has the
+*                        position of the name_input variable, already storing
+*                        the name of the *.input file given in the command-line
+*                        argument of the MPD program). We recall that the
+*                        end_data keyword ends the reading in the *.input file;
+*                        any other information placed after will not be read and
+*                        considered as a comment.
 *
 * \param[in] keywordBeginning An array containing two characters and the
 *                             terminating nul one '\0'. They represents the
 *                             beginning of the (counter)-th keyword whose
 *                             potential repetition in the upper part of the
-*                             *.info file is intended to be detected. This
-*                             keyword can be the name of any variables (70
-*                             possibilities except name_info which is replaced
+*                             *.input file is intended to be detected. This
+*                             keyword can be the name of any variables (78
+*                             possibilities except name_input which is replaced
 *                             by the end_data keyword, ending the reading in
-*                             the *.info file; any other information placed
+*                             the *.input file; any other information placed
 *                             after will not be read and considered as a
 *                             comment) stored in the Parameters structure. The
 *                             array must contain two non-nul characters followed
@@ -1430,30 +1486,30 @@ int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
 *                          They represent the second part of the (counter)-th
 *                          keyword, whose final part is stored in keywordEnd
 *                          (only if lengthEnd>1). This keyword can be the name
-*                          of any variables (70 possibilities except name_info
+*                          of any variables (78 possibilities except name_input
 *                          which is replaced by the end_data keyword, ending
-*                          the reading in the *.info file; any other information
-*                          placed after will not be read and considered as a
-*                          comment) stored in the Parameters structure. The
-*                          array must contain exactly, starting from the
-*                          beginning (lengthMiddle-1) non-nul characters
-*                          followed by a nul one, otherwise an error is returned
-*                          by the \ref detectRepetition function.
+*                          the reading in the *.input file; any other
+*                          information placed after will not be read and
+*                          considered as a comment) stored in the Parameters
+*                          structure. The array must contain exactly, starting
+*                          from the beginning (lengthMiddle-1) non-nul
+*                          characters followed by a nul one, otherwise an error
+*                          is returned by the \ref detectRepetition function.
 *
 * \param[in] keywordEnd An array containing (lengthEnd-1) non-nul characters
 *                       followed by the terminating nul one '\0'. If
 *                       lengthEnd>1, they represent the third part of the
 *                       (counter)-th keyword, whose occurence is intented to be
 *                       incremented by one in the array repetition. This
-*                       keyword can be the name of any variables (70
-*                       possibilities except name_info which is replaced by the
-*                       end_data keyword, ending the reading in the *.info file;
-*                       any other information placed after will not be read and
-*                       considered as a comment) stored in the Parameters
-*                       structure. The array must contain exactly, starting
-*                       from the beginning (lengthEnd-1) non-nul characters
-*                       followed by a nul one, otherwise an error is returned by
-*                       the \ref detectRepetition function.
+*                       keyword can be the name of any variables (78
+*                       possibilities except name_input which is replaced by the
+*                       end_data keyword, ending the reading in the *.input
+*                       file; any other information placed after will not be
+*                       read and considered as a comment) stored in the
+*                       Parameters structure. The array must contain exactly,
+*                       starting from the beginning (lengthEnd-1) non-nul
+*                       characters followed by a nul one, otherwise an error is
+*                       returned by the \ref detectRepetition function.
 *
 * \param[in] lengthMiddle An integer referring to the length of the
 *                         keywordMiddle variable, including the terminating nul
@@ -1471,25 +1527,25 @@ int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
 *                      keywordBeginning+keyworMiddle. The lengthEnd variable is
 *                      intended to store the return value of the \ref
 *                      getLengthAfterKeywordMiddle function. Hence, it must be
-*                      comprised between one and six, otherwise an error is
+*                      comprised between one and four, otherwise an error is
 *                      returned by the \ref detectRepetition function.
 *
-* \param[in] counter An integer referring to the line of the *.info file
-*                    at which the keyword is read. This integer is mainly use
-*                    help the user to locate any syntax error found while
-*                    reading the *.info file. More precisely, (counter-1) refers
-*                    to the number of keywords that have already been
+* \param[in] counter An integer referring to the line of the *.input file
+*                    at which the keyword is read. This integer is mainly
+*                    helping the user to locate any syntax error found while
+*                    reading the *.input file. More precisely, (counter-1)
+*                    refers to the number of keywords that have already been
 *                    successfully read and the counter variable to the one *                    whose occurence is intented to be incremented by one in
 *                    the array repetition by the \ref detectRepetition function.
-*                    The integer must be comprised between one and seventy
+*                    The integer must be comprised between one and seventy-eight
 *                    (case where all the variables of the Parameters structure
-*                    are specified, except the name_info one, already storing
-*                    the name of the*.info file given in the input command line
-*                    of the MPD program, and replaced by the end_data keyword,
-*                    which ends the reading in the *.info file; any other
-*                    information placed after will not be read and considered
-*                    as a comment). Otherwise, an error is returned by the \ref
-*                    detectRepetition function.
+*                    are specified, except the name_input one, already storing
+*                    the name of the*.input file given in the command-line
+*                    argument of the MPD program, and replaced by the end_data
+*                    keyword, which ends the reading in the *.input file; any
+*                    other information placed after will not be read and
+*                    considered as a comment). Otherwise, an error is returned
+*                    by the \ref detectRepetition function.
 *
 * \return It returns one if the (counter)-th keyword is successfully identified
 *         and its associated location in the array repetition successfully
@@ -1501,14 +1557,14 @@ int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
 * The \ref detectRepetition function should be static but has been defined as
 * non-static in order to perform unit-test on it.
 */
-int detectRepetition(int repetition[70], char keywordBeginning[3],
-                     char keywordMiddle[11], char keywordEnd[6],
+int detectRepetition(int repetition[78], char keywordBeginning[3],
+                     char keywordMiddle[11], char keywordEnd[4],
                                   int lengthMiddle, int lengthEnd, int counter);
 
 /**
 * \fn int changeValuesOfParameters(Parameters* pParameters,
 *                                  char keywordBeginning[3],
-*                                  char keywordMiddle[11], char keywordEnd[6],
+*                                  char keywordMiddle[11], char keywordEnd[4],
 *                                  char* readStringIn, int lengthMiddle,
 *                                  int lengthEnd, int counter,
 *                                          int readIntegerIn, double readDouble)
@@ -1663,7 +1719,7 @@ int detectRepetition(int repetition[70], char keywordBeginning[3],
 * defined as non-static in order to perform unit-test on it.
 */
 int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
-                             char keywordMiddle[11], char keywordEnd[6],
+                             char keywordMiddle[11], char keywordEnd[4],
                              char* readStringIn, int lengthMiddle,
                              int lengthEnd, int counter, int readIntegerIn,
                                                              double readDouble);

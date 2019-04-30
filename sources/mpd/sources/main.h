@@ -445,17 +445,6 @@ typedef struct {
                              *    electrons in the chemical system stored in
                              *    the \ref ne_electrons variable. */
 
-//  int nu_spin;             /*!< If set to zero, the MPD program will maximize
-//                           *    the probability to find exactly \ref
-//                           *    nu_electrons in the domain; if set to a
-//                           *    negative/positive value that is not (strictly)
-//                           *    lower/greater than (-/+) \ref nu_electrons, it
-//                           *    also computes the probability to find exactly
-//                           *    \ref nu_electrons in the domain, with exactly
-//                           *    |\ref nu_spin| electrons having spin down/up
-//                           *    and \ref nu_electrons - |\ref nu_spin| having
-//                           *    spin up/down; other values are forbidden. */
-
     int bohr_unit;           /*!< If set to one, then the unit used in the
                              *    *.wfn / *.chem file for locating the centers
                              *    of the nuclei is assumed to be in Bohrs;
@@ -1275,35 +1264,6 @@ typedef struct {
 ////////////////////////////////////////////////////////////////////////////////
 // Definition of the structures used to save the data in the MPD algorithm
 ////////////////////////////////////////////////////////////////////////////////
-// /**
-// * \struct Probabilities main.h
-// * \brief It can store all the different types of probabilities to find
-// *        exactly a certain number of electrons in a given domain.
-// */
-// typedef struct {
-//  double* pk;              /*!< Pointer used to dynamically define the array
-//                           *    storing at the k-th position the probability
-//                           *    to find exactly k electrons in a given domain;
-//                           *    if it is not pointing to NULL, the values of
-//                           *    the array it is pointing to should never be
-//                           *    negative and (strictly) greater than one,
-//                           *    while its size should always correspond to the
-//                           *    nprob variable of the Data structure. */
-//
-//  double* pkl;             /*!< Pointer used to dynamically define the array
-//                           *    storing the matrix coefficients whose (k,l)-th
-//                           *    one represents the (spin-dependant)
-//                           *    probability to find exactly (k+l) electrons
-//                           *    in a given domain, with exactly k spin-up and
-//                           *    l spin-down ones; if it is not pointing to
-//                           *    NULL, the values of the array it is pointing
-//                           *    to should never be negative and (strictly)
-//                           *    greater than one, while its size should always
-//                           *    correspond to the (nprob)x(nprob) value, where
-//                           *    the nprob variable refers to the one of
-//                           *    the Data structure. */
-// } Probabilities;
-
 /**
 * \struct Data main.h
 * \brief It can store all different types of data saved by the MPD algorithm.
@@ -2744,57 +2704,6 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
 * variable.
 */
 int initialFileExists(char* fileLocation, int nameLength);
-
-/**
-* \fn int checkForTildeAndReplaceByHomePath(char** pStringToCheck,
-*                                                             int maximumLength)
-* \brief It checks if pStringToCheck is pointing to a string of (positive)
-*        length (strictly) less than maximumLength, and looks if it begins with
-*        the usual shortcut '~/' for the home path directory. If it is the case,
-*        then it recovers the full path for the home directory and replaces it
-*        in the string pointed by pStringToCheck, adding adding some extra
-*        length and reallocating some extra memory if needed.
-*
-* \param[in,out] pStringToCheck As an input, it is expected to point to a string
-*                               of positive length (strictly) less than the
-*                               maximumLength variable. Otherwise (i.e. if
-*                               pStringToCheck==NULL, *pStringToCheck==NULL, or
-*                               if the terminating nul character '\0' is
-*                               strictly located before the second position of
-*                               the array or after the maximumLength one), an
-*                               error is returned by the \ref 
-*                               checkForTildeAndReplaceByHomePath function.
-*                               Moreover, if the string pointed by
-*                               pStringToCheck begins with '~/', then the home
-*                               path directory is written and read in a
-*                               getHomePath.txt file (which is deleted after on
-*                               success) in order to replace '~/' by the full
-*                               full home path directory name obtained inside
-*                               the string pointed by pStringToCheck. If some
-*                               extra length is needed, then some extra memory
-*                               is reallocated for the string pointed by the
-*                               pStringToCheck variable.
-*
-* \param[in] maximumLength Maximal length allowed for the string pointed by
-*                          pStringToCheck as an input (including the
-*                          terminating nul character '\0'). It must be
-*                          (strictly) greater than one, otherwise an error is
-*                          returned by the \ref
-*                          checkForTildeAndReplaceByHomePath function.
-*
-* \return It returns zero if an error is encountered, otherwise the (positive)
-*         length of the (new) updated string pointed by pStringToCheck is
-*         returned (including the terminating nul character '\0').
-*
-* The function \ref checkForTildeAndReplaceByHomePath evaluates the length
-* (including the terminating nul character '\0') of the string pointed by
-* pStringTocheck, which must be comprised between two and the maximumLength
-* variable (provided that maximumLength>=2). In addition, if the string pointed
-* by pStringToCheck begins with '~/', then the '~' character is replaced by the
-* full home path directory name, adding some extra memory for the string pointed
-* by pStringToCheck if it is necessary.
-*/
-int checkForTildeAndReplaceByHomePath(char** pStringToCheck, int maximumLength);
 
 /**
 * \fn void closeTheFile(FILE** pFileToClose)

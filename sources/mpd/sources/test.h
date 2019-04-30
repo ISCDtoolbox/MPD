@@ -193,11 +193,11 @@ void testCheckAllPreprocessorConstants(void);
 void testInitialFileExists(void);
 
 /**
-* \fn static void testCloseTheFile(void)
-* \brief It performs unit tests on the \ref closeTheFile function of the main.c
-*        file.
+* \fn void testCheckForTildeAndReplaceByHomePath(void)
+* \brief It performs unit (random) tests on the \ref
+*        checkForTildeAndReplaceByHomePath function of loadParameters.c file.
 */
-void testCloseTheFile(void);
+void testCheckForTildeAndReplaceByHomePath(void);
 
 /**
 * \fn void testSetupDefaultParameters(void)
@@ -205,6 +205,13 @@ void testCloseTheFile(void);
 *        function of the loadParameters.c file.
 */
 void testSetupDefaultParameters(void);
+
+/**
+* \fn static void testCloseTheFile(void)
+* \brief It performs unit tests on the \ref closeTheFile function of the main.c
+*        file.
+*/
+void testCloseTheFile(void);
 
 /**
 * \fn void testGetLengthAfterKeywordBeginning(void)

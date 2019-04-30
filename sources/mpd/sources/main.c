@@ -206,6 +206,19 @@ int main(int argc, char *argv[])
     {
         FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
     }
+    else if (argv[1][0]=='~' && argv[1][1]=='/')
+    {
+        PRINT_ERROR("In main: please replace the first '~' character of the ");
+        fprintf(stderr,"command-line argument (=%s) by the full home ",argv[1]);
+        fprintf(stderr,"directory path name and try to launch again the MPD ");
+        fprintf(stderr,"program.\n");
+
+        fprintf(stdout,"\n%s\nERROR: in the command-line argument, ",STR_ERROR);
+        fprintf(stdout,"replace the first ~ by the home ");
+        fprintf(stdout,"directory.\n%s\n",STR_ERROR);
+
+        FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
+    }
 
 #ifdef UNIT_TESTS
     // We set the seed for rand() function then we test the selected functions
@@ -1353,230 +1366,6 @@ int initialFileExists(char* fileLocation, int nameLength)
     nameFile=NULL;
 
     return 1;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// The function checkForTildeAndReplaceByHomePath evaluates if pStringToCheck
-// is pointing to a string of (positive) length (including the terminating nul
-// character '\0') less than maximumLength thanks to the checkStringFromLength
-// function. Then, it looks if the string pointed by pStringToCheck begins with
-// the usual shortcut '~/' for the home path directory. If it is the case, then
-// it recovers the full path for the home directory and replace it inside the
-// string pointed by pStringToCheck, adding some extra length if needed. It has
-// the char** pStringTocheck and the int variable maximumLength (>1) as input
-// arguments. It returns zero if an error is encountered, otherwise it returns
-// the (positive) length of the new updated string pointed by pStringToCheck
-// (including the terminating character '\0')
-////////////////////////////////////////////////////////////////////////////////
-int checkForTildeAndReplaceByHomePath(char** pStringToCheck, int maximumLength)
-{
-    size_t lengthString=0, lengthPath=0, lengthTotal=0;
-    char *pathName=NULL, *newString=NULL;
-    int readChar=0, i=0, j=0, jMax=0;
-    FILE *fileName=NULL;
-
-    // Check if pStringToCheck is pointing to NULL
-    if (pStringToCheck==NULL)
-    {
-        PRINT_ERROR("In checkForTildeAndReplaceByHomePath: the input ");
-        fprintf(stderr,"(char**) variable ");
-        fprintf(stderr,"pStringToCheck=%p ",(void*)pStringToCheck);
-        fprintf(stderr,"does not point to a valid address.\n");
-        return 0;
-    }
-
-    // Check the length of the string pointed by pStringToCheck
-    lengthString=checkStringFromLength(*pStringToCheck,2,maximumLength);
-    if (!lengthString)
-    {
-        PRINT_ERROR("In checkForTildeAndReplaceByHomePath: ");
-        fprintf(stderr,"checkStringFromLength function returned zero, which ");
-        fprintf(stderr,"is not the expected value here.\n");
-        return 0;
-    }
-
-    // Check for the '~/' home path directory
-    if ((*pStringToCheck)[0]=='~' && (*pStringToCheck)[1]=='/')
-    {
-        // Remove getHomePath.txt if the file already exists
-        i=initialFileExists("getHomePath.txt",16);
-        if (abs(i)!=1)
-        {
-            PRINT_ERROR("In checkForTildeAndReplaceByHomePath: ");
-            fprintf(stderr,"initialFileExists function returned zero instead ");
-            fprintf(stderr,"of (+/-) one.\n");
-            return 0;
-        }
-        else if (i==1)
-        {
-            // remove returns 0 on success, otherwise -1
-            if (remove("getHomePath.txt"))
-            {
-                PRINT_ERROR("In checkForTildeAndReplaceByHomePath: wrong ");
-                fprintf(stderr,"return (=-1) of the standard remove ");
-                fprintf(stderr,"c-function in the attempt of removing the ");
-                fprintf(stderr,"getHomePath.txt file.\n");
-                return 0;
-            }
-        }
-
-        // system returns is -1 on error, otherwise the return command status
-        if (system("echo $HOME >getHomePath.txt"))
-        {
-            PRINT_ERROR("In checkForTildeAndReplaceByHomePath: wrong return ");
-            fprintf(stderr,"(=-1) of the standard system c-function in the ");
-            fprintf(stderr,"attempt of writing the home path directory name ");
-            fprintf(stderr,"in the getHomePath.txt file.\n");
-            return 0;
-        }
-
-        // fopen function returns a FILE pointer, otherwise NULL (file must have
-        // been previously created to get a non-NULL pointer in reading mode)
-        fileName=fopen("getHomePath.txt","r");
-        if (fileName==NULL)
-        {
-            PRINT_ERROR("In checkForTildeAndReplaceByHomePath: we were not ");
-            fprintf(stderr,"able to open properly the getHomePath.txt file.\n");
-            return 0;
-        }
-
-        // Count the number of characters saved in getHomePath.txt
-        // fgetc returns the char read as an unsigned char cast to an int or EOF
-        lengthPath=0;
-        readChar=fgetc(fileName);
-        while (readChar!='\n' && readChar!=EOF) 
-        {
-            lengthPath++;
-            readChar=fgetc(fileName);
-        }
-
-        // fclose function returns zero if the input FILE* variable is
-        // successfully closed, otherwise EOF (end-of-file) is returned
-        if (fclose(fileName))
-        {
-            PRINT_ERROR("In checkForTildeAndReplaceByHomePath: we were not ");
-            fprintf(stderr,"able to close properly the getHomePath.txt ");
-            fprintf(stderr,"file.\n");
-            fileName=NULL;
-            return 0;
-        }
-        fileName=NULL;
-
-        // Allocate memory for the (new) path name if the length is positive
-        if (!lengthPath)
-        {
-            PRINT_ERROR("In checkForTildeAndReplaceByHomePath: the ");
-            fprintf(stderr,"getHomePath.txt file does not contain any home ");
-            fprintf(stderr,"path directory name.\n");
-            return 0;
-        }
-        lengthTotal=lengthPath+lengthString-1;
-
-        // calloc returns a pointer to the allocated memory, otherwise NULL
-        pathName=(char*)calloc(lengthTotal,sizeof(char));
-        if (pathName==NULL)
-        {
-            PRINT_ERROR("In checkForTildeAndReplaceByHomePath: could not ");
-            fprintf(stderr,"allocate memory for the local char* pathName ");
-            fprintf(stderr,"variable.\n");
-            return 0;
-        }
-
-        // Read the path name and store it in pathName
-        fileName=fopen("getHomePath.txt","r");
-        if (fileName==NULL)
-        {
-            PRINT_ERROR("In checkForTildeAndReplaceByHomePath: we were not ");
-            fprintf(stderr,"able to (re-)open properly the getHomePath.txt ");
-            fprintf(stderr,"file.\n");
-            free(pathName);
-            pathName=NULL;
-            return 0;
-        }
-
-        i=0;
-        readChar=fgetc(fileName);
-        while (readChar!='\n' && readChar!=EOF && i<(int)lengthPath)
-        {
-            pathName[i]=(char)readChar;
-            readChar=fgetc(fileName);
-            i++;
-        }
-        pathName[i]='\0';
-
-        if (fclose(fileName))
-        {
-            PRINT_ERROR("In checkForTildeAndReplaceByHomePath: we were not ");
-            fprintf(stderr,"able to close (again) the getHomePath.txt file.\n");
-            free(pathName);
-            pathName=NULL;
-            fileName=NULL;
-            return 0;
-        }
-        fileName=NULL;
-
-        if (i!=(int)lengthPath || pathName[0]!='/')
-        {
-            PRINT_ERROR("In checkForTildeAndReplaceByHomePath: something ");
-            fprintf(stderr,"wrong in the reading of the home path directory ");
-            fprintf(stderr,"name written in the getHomePath.txt file; ");
-            fprintf(stderr,"expecting %d characters instead ",(int)lengthPath);
-            fprintf(stderr,"of %d and the string %s has been read ",i,pathName);
-            fprintf(stderr,"for the home path directory name (which should ");
-            fprintf(stderr,"also start with the '/' character).\n");
-            free(pathName);
-            pathName=NULL;
-            return 0;
-        }
-
-        if (remove("getHomePath.txt"))
-        {
-            PRINT_ERROR("In checkForTildeAndReplaceByHomePath: wrong return ");
-            fprintf(stderr,"(=-1) of the standard remove c-function in the ");
-            fprintf(stderr,"attempt of removing the getHomePath.txt file.\n");
-            free(pathName);
-            pathName=NULL;
-            return 0;
-        }
-
-        // Add the old path name to the remaining part of the pathName variable
-        jMax=lengthTotal;
-        for (j=i; j<jMax; j++)
-        {
-            pathName[j]=(*pStringToCheck)[j-i+1];
-        }
-        pathName[jMax-1]='\0';
-
-        // realloc returns a pointer to the newly allocated memory, or NULL
-        if (jMax>maximumLength)
-        {
-            newString=(char*)realloc(*pStringToCheck,lengthTotal*sizeof(char));
-            if (newString==NULL)
-            {
-                PRINT_ERROR("In checkForTildeAndReplaceByHomePath: could not ");
-                fprintf(stderr,"reallocate memory for the string pointed by ");
-                fprintf(stderr,"the input (char**) pStringToCheck variable.\n");
-                free(pathName);
-                pathName=NULL;
-                return 0;
-            }
-            *pStringToCheck=newString;
-
-            // strncpy function returns a pointer to the string (not used here)
-            strncpy(*pStringToCheck,pathName,lengthTotal);
-        }
-        else
-        {       
-            strncpy(*pStringToCheck,pathName,maximumLength);
-        }
-        lengthString=lengthTotal;
-
-        // Free the memory allocated for pathName
-        free(pathName);
-        pathName=NULL;
-    }
-
-    return lengthString;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

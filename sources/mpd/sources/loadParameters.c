@@ -170,6 +170,231 @@ void freeParameterMemory(Parameters* pParameters)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// The function checkForTildeAndReplaceByHomePath evaluates if pStringToCheck
+// is pointing to a string of (positive) length (including the terminating nul
+// character '\0') less than maximumLength thanks to the checkStringFromLength
+// function. Then, it looks if the string pointed by pStringToCheck begins with
+// the usual shortcut '~/' for the home path directory. If it is the case, then
+// it recovers the full path for the home directory and replace it inside the
+// string pointed by pStringToCheck, adding some extra length if needed. It has
+// the char** pStringTocheck and the int variable maximumLength (>1) as input
+// arguments. It returns zero if an error is encountered, otherwise it returns
+// the (positive) length of the new updated string pointed by pStringToCheck
+// (including the terminating character '\0')
+////////////////////////////////////////////////////////////////////////////////
+int checkForTildeAndReplaceByHomePath(char** pStringToCheck, int maximumLength)
+{
+    size_t lengthString=0, lengthPath=0, lengthTotal=0;
+    char *pathName=NULL, *newString=NULL;
+    int readChar=0, i=0, iMax=0, j=0, jMax=0;
+    FILE *fileName=NULL;
+
+    // Check if pStringToCheck is pointing to NULL
+    if (pStringToCheck==NULL)
+    {
+        PRINT_ERROR("In checkForTildeAndReplaceByHomePath: the input ");
+        fprintf(stderr,"(char**) variable ");
+        fprintf(stderr,"pStringToCheck=%p ",(void*)pStringToCheck);
+        fprintf(stderr,"does not point to a valid address.\n");
+        return 0;
+    }
+
+    // Check the length of the string pointed by pStringToCheck
+    lengthString=checkStringFromLength(*pStringToCheck,2,maximumLength);
+    if (!lengthString)
+    {
+        PRINT_ERROR("In checkForTildeAndReplaceByHomePath: ");
+        fprintf(stderr,"checkStringFromLength function returned zero, which ");
+        fprintf(stderr,"is not the expected value here.\n");
+        return 0;
+    }
+
+    // Check for the '~/' home path directory
+    if ((*pStringToCheck)[0]=='~' && (*pStringToCheck)[1]=='/')
+    {
+        // Remove getHomePath.txt if the file already exists
+        i=initialFileExists("getHomePath.txt",16);
+        if (abs(i)!=1)
+        {
+            PRINT_ERROR("In checkForTildeAndReplaceByHomePath: ");
+            fprintf(stderr,"initialFileExists function returned zero instead ");
+            fprintf(stderr,"of (+/-) one.\n");
+            return 0;
+        }
+        else if (i==1)
+        {
+            // remove returns 0 on success, otherwise -1
+            if (remove("getHomePath.txt"))
+            {
+                PRINT_ERROR("In checkForTildeAndReplaceByHomePath: wrong ");
+                fprintf(stderr,"return (=-1) of the standard remove ");
+                fprintf(stderr,"c-function in the attempt of removing the ");
+                fprintf(stderr,"getHomePath.txt file.\n");
+                return 0;
+            }
+        }
+
+        // system returns is -1 on error, otherwise the return command status
+        if (system("echo $HOME >getHomePath.txt"))
+        {
+            PRINT_ERROR("In checkForTildeAndReplaceByHomePath: wrong return ");
+            fprintf(stderr,"(=-1) of the standard system c-function in the ");
+            fprintf(stderr,"attempt of writing the home directory path name ");
+            fprintf(stderr,"in the getHomePath.txt file.\n");
+            return 0;
+        }
+
+        // fopen function returns a FILE pointer, otherwise NULL (file must have
+        // been previously created to get a non-NULL pointer in reading mode)
+        fileName=fopen("getHomePath.txt","r");
+        if (fileName==NULL)
+        {
+            PRINT_ERROR("In checkForTildeAndReplaceByHomePath: we were not ");
+            fprintf(stderr,"able to open properly the getHomePath.txt file.\n");
+            return 0;
+        }
+
+        // Count the number of characters saved in getHomePath.txt
+        // fgetc returns the char read as an unsigned char cast to an int or EOF
+        lengthPath=0;
+        readChar=fgetc(fileName);
+        while (readChar!='\n' && readChar!=EOF) 
+        {
+            lengthPath++;
+            readChar=fgetc(fileName);
+        }
+
+        // fclose function returns zero if the input FILE* variable is
+        // successfully closed, otherwise EOF (end-of-file) is returned
+        if (fclose(fileName))
+        {
+            PRINT_ERROR("In checkForTildeAndReplaceByHomePath: we were not ");
+            fprintf(stderr,"able to close properly the getHomePath.txt ");
+            fprintf(stderr,"file.\n");
+            fileName=NULL;
+            return 0;
+        }
+        fileName=NULL;
+
+        // Allocate memory for the (new) path name if the length is positive
+        if (!lengthPath)
+        {
+            PRINT_ERROR("In checkForTildeAndReplaceByHomePath: the ");
+            fprintf(stderr,"getHomePath.txt file does not contain any home ");
+            fprintf(stderr,"directory path name.\n");
+            return 0;
+        }
+        lengthTotal=lengthPath+lengthString-1;
+
+        // calloc returns a pointer to the allocated memory, otherwise NULL
+        pathName=(char*)calloc(lengthTotal,sizeof(char));
+        if (pathName==NULL)
+        {
+            PRINT_ERROR("In checkForTildeAndReplaceByHomePath: could not ");
+            fprintf(stderr,"allocate memory for the local char* pathName ");
+            fprintf(stderr,"variable.\n");
+            return 0;
+        }
+
+        // Read the path name and store it in pathName
+        fileName=fopen("getHomePath.txt","r");
+        if (fileName==NULL)
+        {
+            PRINT_ERROR("In checkForTildeAndReplaceByHomePath: we were not ");
+            fprintf(stderr,"able to (re-)open properly the getHomePath.txt ");
+            fprintf(stderr,"file.\n");
+            free(pathName);
+            pathName=NULL;
+            return 0;
+        }
+
+        i=0;
+        iMax=lengthPath;
+        readChar=fgetc(fileName);
+        while (readChar!='\n' && readChar!=EOF && i<iMax)
+        {
+            pathName[i]=(char)readChar;
+            readChar=fgetc(fileName);
+            i++;
+        }
+        pathName[i]='\0';
+
+        if (fclose(fileName))
+        {
+            PRINT_ERROR("In checkForTildeAndReplaceByHomePath: we were not ");
+            fprintf(stderr,"able to close (again) the getHomePath.txt file.\n");
+            free(pathName);
+            pathName=NULL;
+            fileName=NULL;
+            return 0;
+        }
+        fileName=NULL;
+
+        if (i!=iMax || pathName[0]!='/')
+        {
+            PRINT_ERROR("In checkForTildeAndReplaceByHomePath: something ");
+            fprintf(stderr,"went wrong in the reading of the home directory ");
+            fprintf(stderr,"path name written in the getHomePath.txt file; ");
+            fprintf(stderr,"expecting %d characters instead of %d and ",iMax,i);
+            fprintf(stderr,"the string %s has been read for the ",pathName);
+            fprintf(stderr,"home directory path name (which should also ");
+            fprintf(stderr,"starts with the '/' character).\n");
+            free(pathName);
+            pathName=NULL;
+            return 0;
+        }
+
+        if (remove("getHomePath.txt"))
+        {
+            PRINT_ERROR("In checkForTildeAndReplaceByHomePath: wrong return ");
+            fprintf(stderr,"(=-1) of the standard remove c-function in the ");
+            fprintf(stderr,"attempt of removing the getHomePath.txt file.\n");
+            free(pathName);
+            pathName=NULL;
+            return 0;
+        }
+
+        // Add the old path name to the remaining part of the pathName variable
+        jMax=lengthTotal;
+        for (j=i; j<jMax; j++)
+        {
+            pathName[j]=(*pStringToCheck)[j-i+1];
+        }
+        pathName[jMax-1]='\0';
+
+        // realloc returns a pointer to the newly allocated memory, or NULL
+        if (jMax>maximumLength)
+        {
+            newString=(char*)realloc(*pStringToCheck,lengthTotal*sizeof(char));
+            if (newString==NULL)
+            {
+                PRINT_ERROR("In checkForTildeAndReplaceByHomePath: could not ");
+                fprintf(stderr,"reallocate memory for the string pointed by ");
+                fprintf(stderr,"the input (char**) pStringToCheck variable.\n");
+                free(pathName);
+                pathName=NULL;
+                return 0;
+            }
+            *pStringToCheck=newString;
+
+            // strncpy function returns a pointer to the string (not used here)
+            strncpy(*pStringToCheck,pathName,lengthTotal);
+        }
+        else
+        {       
+            strncpy(*pStringToCheck,pathName,maximumLength);
+        }
+        lengthString=lengthTotal;
+
+        // Free the memory allocated for pathName
+        free(pathName);
+        pathName=NULL;
+    }
+
+    return lengthString;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // The function setupDefaultParameters fills all the variables of the structure
 // pointed by pParameters to their default values (given by the preprocessor
 // constants of loadParameters.h). The nameInputFile variable, which should
@@ -200,7 +425,7 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
         fprintf(stderr,"char* variable called nameInputFile, which was ");
         fprintf(stderr,"supposed to store the name of the *.input file, is ");
         fprintf(stderr,"not a string of length strictly less than ");
-        fprintf(stderr,"%d (and strictly more than 5 to contain ",NAME_LENGTH);
+        fprintf(stderr,"%d (and strictly more than 6 to contain ",NAME_LENGTH);
         fprintf(stderr,"at least something more than the *.input ");
         fprintf(stderr,"extension).\n");
         return 0;
@@ -225,43 +450,21 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
     // strncpy function returns a pointer to the string (not used here)
     strncpy(pParameters->name_input,nameInputFile,NAME_LENGTH);
 
-    // Check for './' or '~/' shortchut in pParameters->name_input
+    // Check for './' at the beginning of the string of pParameters->name_input
     if (pParameters->name_input[0]=='.' && pParameters->name_input[1]=='/')
     {
-        lengthName=strlen(pParameters->name_input);
-        for (i=2; i<lengthName; i++)
+        for (i=2; i<NAME_LENGTH; i++)
         {
             pParameters->name_input[i-2]=pParameters->name_input[i];
         }
-        pParameters->name_input[lengthName-2]='\0';
-        pParameters->name_input[lengthName-1]='\0';
-        pParameters->name_input[lengthName]='\0';
+        pParameters->name_input[NAME_LENGTH-2]='\0';
+        pParameters->name_input[NAME_LENGTH-1]='\0';
     }
-   /* else
-    {
-        lengthName=checkForTildeAndReplaceByHomePath(&pParameters->name_input,
-                                                      pParameters->name_length);
-        if (!lengthName)
-        {
-            PRINT_ERROR("In setupDefaultParameters: ");
-            fprintf(stderr,"checkForTildeAndReplaceByHomePath function ");
-            fprintf(stderr,"returned zero, which is not the expected value ");
-            fprintf(stderr,"here, while attempting to modify the home path ");
-            fprintf(stderr,"directory in the pParameters->name_input ");
-            fprintf(stderr,"variable.\n");
-            return 0;
-        }
-        else if (lengthName>pParameters->name_length)
-        {
-            pParameters->name_length=lengthName;
-        }
-    }*/
 
     if (pParameters->verbose)
     {
         fprintf(stdout,"\nPrescribed values for parameters will be loaded ");
         fprintf(stdout,"from %s file.",pParameters->name_input);
-fprintf(stdout,"name_length=%d\n",pParameters->name_length);
     }
 
     pParameters->name_result=NULL;
@@ -338,7 +541,8 @@ fprintf(stdout,"name_length=%d\n",pParameters->name_length);
         PRINT_ERROR("In setupDefaultParameters: ");
         fprintf(stderr,"checkForTildeAndReplaceByHomePath function returned ");
         fprintf(stderr,"zero, which is not the expected value here, while ");
-        fprintf(stderr,"attempting to modify the home path directory in the ");
+        fprintf(stderr,"attempting to replace the first '~' character by the ");
+        fprintf(stderr,"full home directory path name in the ");
         fprintf(stderr,"pParameters->path_medit variable.\n");
         return 0;
     }
@@ -363,7 +567,8 @@ fprintf(stdout,"name_length=%d\n",pParameters->name_length);
         PRINT_ERROR("In setupDefaultParameters: ");
         fprintf(stderr,"checkForTildeAndReplaceByHomePath function returned ");
         fprintf(stderr,"zero, which is not the expected value here, while ");
-        fprintf(stderr,"attempting to modify the home path directory in the ");
+        fprintf(stderr,"attempting to replace the first '~' character by the ");
+        fprintf(stderr,"full home directory path name in the ");
         fprintf(stderr,"pParameters->path_mmg3d variable.\n");
         return 0;
     }
@@ -388,7 +593,8 @@ fprintf(stdout,"name_length=%d\n",pParameters->name_length);
         PRINT_ERROR("In setupDefaultParameters: ");
         fprintf(stderr,"checkForTildeAndReplaceByHomePath function returned ");
         fprintf(stderr,"zero, which is not the expected value here, while ");
-        fprintf(stderr,"attempting to modify the home path directory in the ");
+        fprintf(stderr,"attempting to replace the first '~' character by the ");
+        fprintf(stderr,"full home directory path name in the ");
         fprintf(stderr,"pParameters->path_mshdist variable.\n");
         return 0;
     }
@@ -413,7 +619,8 @@ fprintf(stdout,"name_length=%d\n",pParameters->name_length);
         PRINT_ERROR("In setupDefaultParameters: ");
         fprintf(stderr,"checkForTildeAndReplaceByHomePath function returned ");
         fprintf(stderr,"zero, which is not the expected value here, while ");
-        fprintf(stderr,"attempting to modify the home path directory in the ");
+        fprintf(stderr,"attempting to replace the first '~' character by the ");
+        fprintf(stderr,"full home directory path name in the ");
         fprintf(stderr,"pParameters->path_elastic variable.\n");
         return 0;
     }
@@ -438,7 +645,8 @@ fprintf(stdout,"name_length=%d\n",pParameters->name_length);
         PRINT_ERROR("In setupDefaultParameters: ");
         fprintf(stderr,"checkForTildeAndReplaceByHomePath function returned ");
         fprintf(stderr,"zero, which is not the expected value here, while ");
-        fprintf(stderr,"attempting to modify the home path directory in the ");
+        fprintf(stderr,"attempting to replace the first '~' character by the ");
+        fprintf(stderr,"full home directory path name in the ");
         fprintf(stderr,"pParameters->path_advect variable.\n");
         return 0;
     }
@@ -476,7 +684,6 @@ fprintf(stdout,"name_length=%d\n",pParameters->name_length);
     return 1;
 }
 
-/*
 ////////////////////////////////////////////////////////////////////////////////
 // The function getLengthAfterKeywordBeginning returns the number of characters
 // to read at line counter (including the terminating nul one '\0') depending
@@ -489,13 +696,13 @@ int getLengthAfterKeywordBeginning(char keywordBeginning[3], int counter)
 {
     int returnValue=0;
 
-    // Check that counter is between 1 and 70 (total number of keywords)
-    if (counter<1 || counter>70)
+    // Check that counter is between 1 and 78 (total number of keywords)
+    if (counter<1 || counter>78)
     {
         PRINT_ERROR("In getLengthAfterKeywordBeginning: the input variable ");
         fprintf(stderr,"counter, corresponding to the %d-th keyword ",counter);
-        fprintf(stderr,"read, should be an integer between one and seventy ");
-        fprintf(stderr,"(the total number of different possible keywords).\n");
+        fprintf(stderr,"read, should be an integer between 1 and 78 (the ");
+        fprintf(stderr,"total number of different possible keywords).\n");
         return 0;
     }
 
@@ -532,7 +739,7 @@ int getLengthAfterKeywordBeginning(char keywordBeginning[3], int counter)
     {
        returnValue=5;
     }
-    else if (!strcmp(keywordBeginning,"ve") || !strcmp(keywordBeginning,"nu") ||
+    else if (!strcmp(keywordBeginning,"ve") || !strcmp(keywordBeginning,"rh") ||
              !strcmp(keywordBeginning,"or") || !strcmp(keywordBeginning,"de") ||
                !strcmp(keywordBeginning,"me") || !strcmp(keywordBeginning,"hm"))
     {
@@ -544,11 +751,12 @@ int getLengthAfterKeywordBeginning(char keywordBeginning[3], int counter)
     {
        returnValue=7;
     }
-    else if (!strcmp(keywordBeginning,"na") || !strcmp(keywordBeginning,"sa"))
+    else if (!strcmp(keywordBeginning,"na") || !strcmp(keywordBeginning,"bo") ||
+               !strcmp(keywordBeginning,"mu") || !strcmp(keywordBeginning,"sa"))
     {
        returnValue=8;
     }
-    else if (!strcmp(keywordBeginning,"pa"))
+    else if (!strcmp(keywordBeginning,"se") || !strcmp(keywordBeginning,"pa"))
     {
        returnValue=9;
     }
@@ -556,7 +764,8 @@ int getLengthAfterKeywordBeginning(char keywordBeginning[3], int counter)
     {
        returnValue=10;
     }
-    else if (!strcmp(keywordBeginning,"tr"))
+    else if (!strcmp(keywordBeginning,"nu") || !strcmp(keywordBeginning,"ne") ||
+                                                 !strcmp(keywordBeginning,"tr"))
     {
        returnValue=11;
     }
@@ -585,13 +794,13 @@ int getTypeAfterKeyword(char keywordMiddle[11], int lengthMiddle, int counter)
 {
     int returnValue=0, boolean1=0, boolean2=0, boolean3=0;
 
-    // Check that counter is between 1 and 70 (total number of keywords)
-    if (counter<1 || counter>70)
+    // Check that counter is between 1 and 78 (total number of keywords)
+    if (counter<1 || counter>78)
     {
         PRINT_ERROR("In getTypeAfterKeyword: the input variable counter, ");
         fprintf(stderr,"corresponding to the %d-th keyword read, ",counter);
-        fprintf(stderr,"should be an integer between one and and seventy ");
-        fprintf(stderr,"(the total number of different possible keywords).\n");
+        fprintf(stderr,"should be an integer between 1 and 78 (the total ");
+        fprintf(stderr,"number of different possible keywords).\n");
         return 0;
     }
 
@@ -624,15 +833,19 @@ int getTypeAfterKeyword(char keywordMiddle[11], int lengthMiddle, int counter)
     boolean1=(boolean1 || !strcmp(keywordMiddle,"rbose"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"c"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"me_leng"));
-    boolean1=(boolean1 || !strcmp(keywordMiddle,"_elec"));
-    boolean1=(boolean1 || !strcmp(keywordMiddle,"_spin"));
+    boolean1=(boolean1 || !strcmp(keywordMiddle,"_electrons"));
+    boolean1=(boolean1 || !strcmp(keywordMiddle,"hr_unit"));
+    boolean1=(boolean1 || !strcmp(keywordMiddle,"b_ort"));
+    boolean1=(boolean1 || !strcmp(keywordMiddle,"lti_det"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"b_rhf"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"x"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"y"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"z"));
+    boolean1=(boolean1 || !strcmp(keywordMiddle,"_i"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"_t"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"ick_matrix"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"prox_mode"));
+    boolean1=(boolean1 || !strcmp(keywordMiddle,"er_ini"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"er_max"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"ve_type"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"ve_mesh"));
@@ -644,7 +857,10 @@ int getTypeAfterKeyword(char keywordMiddle[11], int lengthMiddle, int counter)
     boolean1=(boolean1 || !strcmp(keywordMiddle,"i"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"_cfl"));
 
-    boolean2=(!strcmp(keywordMiddle,"min"));
+    boolean2=(!strcmp(keywordMiddle,"o_opt"));
+    boolean2=(boolean2 || !strcmp(keywordMiddle,"lect_orb"));
+    boolean2=(boolean2 || !strcmp(keywordMiddle,"lect_box"));
+    boolean2=(boolean2 || !strcmp(keywordMiddle,"min"));
     boolean2=(boolean2 || !strcmp(keywordMiddle,"max"));
     boolean2=(boolean2 || !strcmp(keywordMiddle,"lta_x"));
     boolean2=(boolean2 || !strcmp(keywordMiddle,"lta_y"));
@@ -676,8 +892,7 @@ int getTypeAfterKeyword(char keywordMiddle[11], int lengthMiddle, int counter)
     boolean2=(boolean2 || !strcmp(keywordMiddle,"sidual"));
     boolean2=(boolean2 || !strcmp(keywordMiddle,"lta_t"));
 
-
-    boolean3=(!strcmp(keywordMiddle,"me_data"));
+    boolean3=(!strcmp(keywordMiddle,"me_resu"));
     boolean3=(boolean3 || !strcmp(keywordMiddle,"me_chem"));
     boolean3=(boolean3 || !strcmp(keywordMiddle,"me_mesh"));
     boolean3=(boolean3 || !strcmp(keywordMiddle,"me_elas"));
@@ -730,13 +945,13 @@ int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
 {
     int returnValue=0, boolean1=0, boolean2=0, boolean3=0, boolean4=0;
 
-    // Check that counter is between 1 and 70 (total number of keywords)
-    if (counter<1 || counter>70)
+    // Check that counter is between 1 and 78 (total number of keywords)
+    if (counter<1 || counter>78)
     {
         PRINT_ERROR("In getLengthAfterKeywordMiddle: the input variable ");
         fprintf(stderr,"counter, corresponding to the %d-th keyword ",counter);
-        fprintf(stderr,"read, should be an integer between one and seventy ");
-        fprintf(stderr,"(the total number of different possible keywords).\n");
+        fprintf(stderr,"read, should be an integer between 1 and 78 (the ");
+        fprintf(stderr,"total number of different possible keywords).\n");
         return 0;
     }
 
@@ -769,13 +984,17 @@ int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
     // if the 1st string argument is shorter (resp. longer) than the 2nd one
     boolean1=(!strcmp(keywordMiddle,"t_mode"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"rbose"));
+    boolean1=(boolean1 || !strcmp(keywordMiddle,"o_opt"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"d_data"));
-    boolean1=(boolean1 || !strcmp(keywordMiddle,"me_data"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"me_chem"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"me_mesh"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"me_elas"));
-    boolean1=(boolean1 || !strcmp(keywordMiddle,"_spin"));
+    boolean1=(boolean1 || !strcmp(keywordMiddle,"_electrons"));
+    boolean1=(boolean1 || !strcmp(keywordMiddle,"hr_unit"));
+    boolean1=(boolean1 || !strcmp(keywordMiddle,"lect_orb"));
+    boolean1=(boolean1 || !strcmp(keywordMiddle,"lti_det"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"b_rhf"));
+    boolean1=(boolean1 || !strcmp(keywordMiddle,"lect_box"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"min"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"max"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"x"));
@@ -793,6 +1012,7 @@ int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
     boolean1=(boolean1 || !strcmp(keywordMiddle,"t_min"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"ick_matrix"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"prox_mode"));
+    boolean1=(boolean1 || !strcmp(keywordMiddle,"er_ini"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"er_max"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"ve_type"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"ve_mesh"));
@@ -826,6 +1046,9 @@ int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
 
     boolean3=(!strcmp(keywordMiddle,"c"));
     boolean3=(boolean3 || !strcmp(keywordMiddle,"me_leng"));
+    boolean3=(boolean3 || !strcmp(keywordMiddle,"me_resu"));
+    boolean3=(boolean3 || !strcmp(keywordMiddle,"b_ort"));
+    boolean3=(boolean3 || !strcmp(keywordMiddle,"_i"));
     boolean3=(boolean3 || !strcmp(keywordMiddle,"th_mshdi"));
     boolean3=(boolean3 || !strcmp(keywordMiddle,"th_elast"));
     boolean3=(boolean3 || !strcmp(keywordMiddle,"ode_l"));
@@ -834,11 +1057,7 @@ int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
     boolean4=(boolean4 || !strcmp(keywordMiddle,"er_tol"));
     boolean4=(boolean4 || !strcmp(keywordMiddle,"i"));
 
-    if (!strcmp(keywordMiddle,"_elec"))
-    {
-        returnValue=6;
-    }
-    else if (boolean4)
+    if (boolean4)
     {
         returnValue=4;
     }
@@ -870,25 +1089,25 @@ int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
 
 ////////////////////////////////////////////////////////////////////////////////
 // The function detectRepetition simply adds one in the array repetition at the
-// location corresponding to the (counter)-th keyword in the *.info file read as
+// location corresponding to the (counter)-th keyword in *.input file read as
 // the concatenation of the strings keywordBeginning+keywordMiddle(+keywordEnd)
 // where keywordMiddle has size lengthMiddle and keywordEnd has size lengthEnd
-// It has the int[70] repetition, three char[] variables (keywordBeginning[3],
-// keywordMiddle[11], and keywordEnd[6]), and three int variables (lengthMiddle,
+// It has the int[78] repetition, three char[] variables (keywordBeginning[3],
+// keywordMiddle[11], and keywordEnd[4]), and three int variables (lengthMiddle,
 // lengthEnd, and counter) as input arguments and it returns one on success,
 // otherwise zero is returned if an error occurred
 ////////////////////////////////////////////////////////////////////////////////
-int detectRepetition(int repetition[70], char keywordBeginning[3],
-                     char keywordMiddle[11], char keywordEnd[6],
+int detectRepetition(int repetition[78], char keywordBeginning[3],
+                     char keywordMiddle[11], char keywordEnd[4],
                                    int lengthMiddle, int lengthEnd, int counter)
 {
-    // Check that counter is between 1 and 70 (total number of keywords)
-    if (counter<1 || counter>70)
+    // Check that counter is between 1 and 78 (total number of keywords)
+    if (counter<1 || counter>78)
     {
         PRINT_ERROR("In detectRepetition: the input variable counter ");
         fprintf(stderr,"corresponding to the %d-th keyword read, ",counter);
-        fprintf(stderr,"should be an integer between one and and seventy ");
-        fprintf(stderr,"(the total number of different possible keywords).\n");
+        fprintf(stderr,"should be an integer between 1 and and 78 (the total ");
+        fprintf(stderr,"number of different possible keywords).\n");
         return 0;
     }
 
@@ -926,12 +1145,12 @@ int detectRepetition(int repetition[70], char keywordBeginning[3],
         return 0;
     }
 
-    // Check that lengthEnd stores keywordEnd's size (between 1 and 6)
-    if (lengthEnd<1 || lengthEnd>6)
+    // Check that lengthEnd stores keywordEnd's size (between 1 and 4)
+    if (lengthEnd<1 || lengthEnd>4)
     {
         PRINT_ERROR("In detectRepetition: the input lengthEnd variable ");
         fprintf(stderr,"(=%d) should be an integer comprised ",lengthEnd);
-        fprintf(stderr,"between one and six, corresponding to the length ");
+        fprintf(stderr,"between one and four, corresponding to the length ");
         fprintf(stderr,"of last part of the %d-th keyword read.\n",counter);
         return 0;
     }
@@ -944,7 +1163,7 @@ int detectRepetition(int repetition[70], char keywordBeginning[3],
             PRINT_ERROR("In detectRepetition: checkStringFromLength function ");
             fprintf(stderr,"returned zero, which is not the expected value ");
             fprintf(stderr,"here, after having checked that the input ");
-            fprintf(stderr,"char[6] variable keywordMEnd is not a string ");
+            fprintf(stderr,"char[4] variable keywordMEnd is not a string ");
             fprintf(stderr,"made of %d characters, which were ",lengthEnd-1);
             fprintf(stderr,"supposed to be the last ones read on the ");
             fprintf(stderr,"%d-th keyword.\n",counter);
@@ -952,7 +1171,7 @@ int detectRepetition(int repetition[70], char keywordBeginning[3],
         }
     }
 
-    // Distinguishing the 70 different cases and excluding non-valid keywords
+    // Distinguishing the 78 different cases and excluding non-valid keywords
     // strcmp returns 0 if the two strings are equal, otherwise <0 (resp. >0)
     // if the 1st string argument is shorter (resp. longer) than the 2nd one
     if (!strcmp(keywordBeginning,"op") && !strcmp(keywordMiddle,"t_mode"))
@@ -968,303 +1187,341 @@ int detectRepetition(int repetition[70], char keywordBeginning[3],
     {
         repetition[2]++;
     }
-    else if (!strcmp(keywordBeginning,"na") && !strcmp(keywordMiddle,"me_leng")
-                                                    && !strcmp(keywordEnd,"th"))
+    else if (!strcmp(keywordBeginning,"rh") && !strcmp(keywordMiddle,"o_opt"))
     {
         repetition[3]++;
     }
-    else if (!strcmp(keywordBeginning,"en") && !strcmp(keywordMiddle,"d_data"))
+    else if (!strcmp(keywordBeginning,"na") && !strcmp(keywordMiddle,"me_leng")
+                                                    && !strcmp(keywordEnd,"th"))
     {
         repetition[4]++;
     }
-    else if (!strcmp(keywordBeginning,"na") && !strcmp(keywordMiddle,"me_data"))
+    else if (!strcmp(keywordBeginning,"en") && !strcmp(keywordMiddle,"d_data"))
     {
         repetition[5]++;
     }
-    else if (!strcmp(keywordBeginning,"na") && !strcmp(keywordMiddle,"me_chem"))
+    else if (!strcmp(keywordBeginning,"na") && !strcmp(keywordMiddle,"me_resu")
+                                                    && !strcmp(keywordEnd,"lt"))
     {
         repetition[6]++;
     }
-    else if (!strcmp(keywordBeginning,"na") && !strcmp(keywordMiddle,"me_mesh"))
+    else if (!strcmp(keywordBeginning,"na") && !strcmp(keywordMiddle,"me_chem"))
     {
         repetition[7]++;
     }
-    else if (!strcmp(keywordBeginning,"na") && !strcmp(keywordMiddle,"me_elas"))
+    else if (!strcmp(keywordBeginning,"na") && !strcmp(keywordMiddle,"me_mesh"))
     {
         repetition[8]++;
     }
-    else if (!strcmp(keywordBeginning,"nu") && !strcmp(keywordMiddle,"_elec")
-                                                 && !strcmp(keywordEnd,"trons"))
+    else if (!strcmp(keywordBeginning,"na") && !strcmp(keywordMiddle,"me_elas"))
     {
         repetition[9]++;
     }
-    else if (!strcmp(keywordBeginning,"nu") && !strcmp(keywordMiddle,"_spin"))
+    else if (!strcmp(keywordBeginning,"nu") &&
+                                            !strcmp(keywordMiddle,"_electrons"))
     {
         repetition[10]++;
     }
-    else if (!strcmp(keywordBeginning,"or") && !strcmp(keywordMiddle,"b_rhf"))
+    else if (!strcmp(keywordBeginning,"bo") && !strcmp(keywordMiddle,"hr_unit"))
     {
         repetition[11]++;
     }
-    else if (!strcmp(keywordBeginning,"x_") && !strcmp(keywordMiddle,"min"))
+    else if (!strcmp(keywordBeginning,"se") &&
+                                              !strcmp(keywordMiddle,"lect_orb"))
     {
         repetition[12]++;
     }
-    else if (!strcmp(keywordBeginning,"x_") && !strcmp(keywordMiddle,"max"))
+    else if (!strcmp(keywordBeginning,"or") && !strcmp(keywordMiddle,"b_ort")
+                                                    && !strcmp(keywordEnd,"ho"))
     {
         repetition[13]++;
     }
-    else if (!strcmp(keywordBeginning,"y_") && !strcmp(keywordMiddle,"min"))
+    else if (!strcmp(keywordBeginning,"ne") &&
+                                            !strcmp(keywordMiddle,"_electrons"))
     {
         repetition[14]++;
     }
-    else if (!strcmp(keywordBeginning,"y_") && !strcmp(keywordMiddle,"max"))
+    else if (!strcmp(keywordBeginning,"mu") && !strcmp(keywordMiddle,"lti_det"))
     {
         repetition[15]++;
     }
-    else if (!strcmp(keywordBeginning,"z_") && !strcmp(keywordMiddle,"min"))
+    else if (!strcmp(keywordBeginning,"or") && !strcmp(keywordMiddle,"b_rhf"))
     {
         repetition[16]++;
     }
-    else if (!strcmp(keywordBeginning,"z_") && !strcmp(keywordMiddle,"max"))
+    else if (!strcmp(keywordBeginning,"se") &&
+                                              !strcmp(keywordMiddle,"lect_box"))
     {
         repetition[17]++;
     }
-    else if (!strcmp(keywordBeginning,"n_") && !strcmp(keywordMiddle,"x"))
+    else if (!strcmp(keywordBeginning,"x_") && !strcmp(keywordMiddle,"min"))
     {
         repetition[18]++;
     }
-    else if (!strcmp(keywordBeginning,"n_") && !strcmp(keywordMiddle,"y"))
+    else if (!strcmp(keywordBeginning,"x_") && !strcmp(keywordMiddle,"max"))
     {
         repetition[19]++;
     }
-    else if (!strcmp(keywordBeginning,"n_") && !strcmp(keywordMiddle,"z"))
+    else if (!strcmp(keywordBeginning,"y_") && !strcmp(keywordMiddle,"min"))
     {
         repetition[20]++;
     }
-    else if (!strcmp(keywordBeginning,"de") && !strcmp(keywordMiddle,"lta_x"))
+    else if (!strcmp(keywordBeginning,"y_") && !strcmp(keywordMiddle,"max"))
     {
         repetition[21]++;
     }
-    else if (!strcmp(keywordBeginning,"de") && !strcmp(keywordMiddle,"lta_y"))
+    else if (!strcmp(keywordBeginning,"z_") && !strcmp(keywordMiddle,"min"))
     {
         repetition[22]++;
     }
-    else if (!strcmp(keywordBeginning,"de") && !strcmp(keywordMiddle,"lta_z"))
+    else if (!strcmp(keywordBeginning,"z_") && !strcmp(keywordMiddle,"max"))
     {
         repetition[23]++;
+    }
+    else if (!strcmp(keywordBeginning,"n_") && !strcmp(keywordMiddle,"x"))
+    {
+        repetition[24]++;
+    }
+    else if (!strcmp(keywordBeginning,"n_") && !strcmp(keywordMiddle,"y"))
+    {
+        repetition[25]++;
+    }
+    else if (!strcmp(keywordBeginning,"n_") && !strcmp(keywordMiddle,"z"))
+    {
+        repetition[26]++;
+    }
+    else if (!strcmp(keywordBeginning,"de") && !strcmp(keywordMiddle,"lta_x"))
+    {
+        repetition[27]++;
+    }
+    else if (!strcmp(keywordBeginning,"de") && !strcmp(keywordMiddle,"lta_y"))
+    {
+        repetition[28]++;
+    }
+    else if (!strcmp(keywordBeginning,"de") && !strcmp(keywordMiddle,"lta_z"))
+    {
+        repetition[29]++;
+    }
+    else if (!strcmp(keywordBeginning,"ls") && !strcmp(keywordMiddle,"_i") &&
+                                                       !strcmp(keywordEnd,"ni"))
+    {
+        repetition[30]++;
     }
     else if (!strcmp(keywordBeginning,"ls") && !strcmp(keywordMiddle,"_t") &&
                                                       !strcmp(keywordEnd,"ype"))
     {
-        repetition[24]++;
+        repetition[31]++;
     }
     else if (!strcmp(keywordBeginning,"ls") && !strcmp(keywordMiddle,"_x"))
     {
-        repetition[25]++;
+        repetition[32]++;
     }
     else if (!strcmp(keywordBeginning,"ls") && !strcmp(keywordMiddle,"_y"))
     {
-        repetition[26]++;
+        repetition[33]++;
     }
     else if (!strcmp(keywordBeginning,"ls") && !strcmp(keywordMiddle,"_z"))
     {
-        repetition[27]++;
+        repetition[34]++;
     }
     else if (!strcmp(keywordBeginning,"ls") && !strcmp(keywordMiddle,"_r"))
     {
-        repetition[28]++;
+        repetition[35]++;
     }
     else if (!strcmp(keywordBeginning,"me") && !strcmp(keywordMiddle,"t_err"))
     {
-        repetition[29]++;
+        repetition[36]++;
     }
     else if (!strcmp(keywordBeginning,"me") && !strcmp(keywordMiddle,"t_min"))
     {
-        repetition[30]++;
+        repetition[37]++;
     }
     else if (!strcmp(keywordBeginning,"me") && !strcmp(keywordMiddle,"t_max"))
     {
-        repetition[31]++;
+        repetition[38]++;
     }
     else if (!strcmp(keywordBeginning,"tr") &&
                                             !strcmp(keywordMiddle,"ick_matrix"))
     {
-        repetition[32]++;
+        repetition[39]++;
     }
     else if (!strcmp(keywordBeginning,"ap") &&
                                              !strcmp(keywordMiddle,"prox_mode"))
     {
-        repetition[33]++;
+        repetition[40]++;
+    }
+    else if (!strcmp(keywordBeginning,"it") && !strcmp(keywordMiddle,"er_ini"))
+    {
+        repetition[41]++;
     }
     else if (!strcmp(keywordBeginning,"it") && !strcmp(keywordMiddle,"er_max"))
     {
-        repetition[34]++;
+        repetition[42]++;
     }
     else if (!strcmp(keywordBeginning,"it") && !strcmp(keywordMiddle,"er_tol")
                                                    && !strcmp(keywordEnd,"d0p"))
     {
-        repetition[35]++;
+        repetition[43]++;
     }
     else if (!strcmp(keywordBeginning,"it") && !strcmp(keywordMiddle,"er_tol")
                                                    && !strcmp(keywordEnd,"d1p"))
     {
-        repetition[36]++;
+        repetition[44]++;
     }
     else if (!strcmp(keywordBeginning,"it") && !strcmp(keywordMiddle,"er_tol")
                                                    && !strcmp(keywordEnd,"d2p"))
     {
-        repetition[37]++;
+        repetition[45]++;
     }
     else if (!strcmp(keywordBeginning,"sa") && !strcmp(keywordMiddle,"ve_type"))
     {
-        repetition[38]++;
+        repetition[46]++;
     }
     else if (!strcmp(keywordBeginning,"sa") && !strcmp(keywordMiddle,"ve_mesh"))
     {
-        repetition[39]++;
+        repetition[47]++;
     }
     else if (!strcmp(keywordBeginning,"sa") && !strcmp(keywordMiddle,"ve_data"))
     {
-        repetition[40]++;
+        repetition[48]++;
     }
     else if (!strcmp(keywordBeginning,"sa") && !strcmp(keywordMiddle,"ve_prin")
                                                      && !strcmp(keywordEnd,"t"))
     {
-        repetition[41]++;
+        repetition[49]++;
     }
     else if (!strcmp(keywordBeginning,"sa") && !strcmp(keywordMiddle,"ve_wher")
                                                      && !strcmp(keywordEnd,"e"))
     {
-        repetition[42]++;
+        repetition[50]++;
     }
     else if (!strcmp(keywordBeginning,"pa") && !strcmp(keywordMiddle,"th_lengt")
                                                      && !strcmp(keywordEnd,"h"))
     {
-        repetition[43]++;
+        repetition[51]++;
     }
     else if (!strcmp(keywordBeginning,"pa") &&
                                               !strcmp(keywordMiddle,"th_medit"))
     {
-        repetition[44]++;
+        repetition[52]++;
     }
     else if (!strcmp(keywordBeginning,"pa") &&
                                               !strcmp(keywordMiddle,"th_mmg3d"))
     {
-        repetition[45]++;
+        repetition[53]++;
     }
     else if (!strcmp(keywordBeginning,"pa") && !strcmp(keywordMiddle,"th_mshdi")
                                                     && !strcmp(keywordEnd,"st"))
     {
-        repetition[46]++;
+        repetition[54]++;
     }
     else if (!strcmp(keywordBeginning,"pa") && !strcmp(keywordMiddle,"th_elast")
                                                     && !strcmp(keywordEnd,"ic"))
     {
-        repetition[47]++;
+        repetition[55]++;
     }
     else if (!strcmp(keywordBeginning,"pa") && !strcmp(keywordMiddle,"th_advec")
                                                      && !strcmp(keywordEnd,"t"))
     {
-        repetition[48]++;
+        repetition[56]++;
     }
     else if (!strcmp(keywordBeginning,"hm") && !strcmp(keywordMiddle,"in_is") &&
                                                         !strcmp(keywordEnd,"o"))
     {
-        repetition[49]++;
+        repetition[57]++;
     }
     else if (!strcmp(keywordBeginning,"hm") && !strcmp(keywordMiddle,"ax_is") &&
                                                         !strcmp(keywordEnd,"o"))
     {
-        repetition[50]++;
+        repetition[58]++;
     }
     else if (!strcmp(keywordBeginning,"hm") && !strcmp(keywordMiddle,"in_me") &&
                                                         !strcmp(keywordEnd,"t"))
     {
-        repetition[51]++;
+        repetition[59]++;
     }
     else if (!strcmp(keywordBeginning,"hm") && !strcmp(keywordMiddle,"ax_me") &&
                                                         !strcmp(keywordEnd,"t"))
     {
-        repetition[52]++;
+        repetition[60]++;
     }
     else if (!strcmp(keywordBeginning,"hm") && !strcmp(keywordMiddle,"in_ls"))
     {
-        repetition[53]++;
+        repetition[61]++;
     }
     else if (!strcmp(keywordBeginning,"hm") && !strcmp(keywordMiddle,"ax_ls"))
     {
-        repetition[54]++;
+        repetition[62]++;
     }
     else if (!strcmp(keywordBeginning,"hm") && !strcmp(keywordMiddle,"ode_l") &&
                                                        !strcmp(keywordEnd,"ag"))
     {
-        repetition[55]++;
+        repetition[63]++;
     }
     else if (!strcmp(keywordBeginning,"hm") && !strcmp(keywordMiddle,"in_la") &&
                                                         !strcmp(keywordEnd,"g"))
     {
-        repetition[56]++;
+        repetition[64]++;
     }
     else if (!strcmp(keywordBeginning,"hm") && !strcmp(keywordMiddle,"ax_la") &&
                                                         !strcmp(keywordEnd,"g"))
     {
-        repetition[57]++;
+        repetition[65]++;
     }
     else if (!strcmp(keywordBeginning,"ha") && !strcmp(keywordMiddle,"usd_is")
                                                      && !strcmp(keywordEnd,"o"))
     {
-        repetition[58]++;
+        repetition[66]++;
     }
     else if (!strcmp(keywordBeginning,"ha") && !strcmp(keywordMiddle,"usd_me")
                                                      && !strcmp(keywordEnd,"t"))
     {
-        repetition[59]++;
+        repetition[67]++;
     }
     else if (!strcmp(keywordBeginning,"ha") && !strcmp(keywordMiddle,"usd_ls"))
     {
-        repetition[60]++;
+        repetition[68]++;
     }
     else if (!strcmp(keywordBeginning,"ha") && !strcmp(keywordMiddle,"usd_la")
                                                      && !strcmp(keywordEnd,"g"))
     {
-        repetition[61]++;
+        repetition[69]++;
     }
     else if (!strcmp(keywordBeginning,"hg") && !strcmp(keywordMiddle,"rad_is")
                                                      && !strcmp(keywordEnd,"o"))
     {
-        repetition[62]++;
+        repetition[70]++;
     }
     else if (!strcmp(keywordBeginning,"hg") && !strcmp(keywordMiddle,"rad_me")
                                                      && !strcmp(keywordEnd,"t"))
     {
-        repetition[63]++;
+        repetition[71]++;
     }
     else if (!strcmp(keywordBeginning,"hg") && !strcmp(keywordMiddle,"rad_ls"))
     {
-        repetition[64]++;
+        repetition[72]++;
     }
     else if (!strcmp(keywordBeginning,"hg") && !strcmp(keywordMiddle,"rad_la")
                                                      && !strcmp(keywordEnd,"g"))
     {
-        repetition[65]++;
+        repetition[73]++;
     }
     else if (!strcmp(keywordBeginning,"n_") && !strcmp(keywordMiddle,"i") &&
                                                       !strcmp(keywordEnd,"ter"))
     {
-        repetition[66]++;
+        repetition[74]++;
     }
     else if (!strcmp(keywordBeginning,"re") && !strcmp(keywordMiddle,"sidual"))
     {
-        repetition[67]++;
+        repetition[75]++;
     }
     else if (!strcmp(keywordBeginning,"de") && !strcmp(keywordMiddle,"lta_t"))
     {
-        repetition[68]++;
+        repetition[76]++;
     }
     else if (!strcmp(keywordBeginning,"no") && !strcmp(keywordMiddle,"_cfl"))
     {
-        repetition[69]++;
+        repetition[77]++;
     }
     else
     {
@@ -1286,7 +1543,7 @@ int detectRepetition(int repetition[70], char keywordBeginning[3],
 ////////////////////////////////////////////////////////////////////////////////
 // The function changeValuesOfParameters saves the value stored either in
 // readIntegerIn, readDouble, or readStringIn in the structure pointed by
-// pParameters, depending on the type of the (counter)-th keyword in the *.info
+// pParameters, depending on the type of the (counter)-th keyword in the *.input
 // file, read as a concatenation of keywordBeginning+keywordMiddle(+keywordEnd)
 // where keywordMiddle has size lengthMiddle, and keywordEnd has size lengthEnd.
 // It has the Parameters* variable (defined in main.h), 3 char[] variables
@@ -1296,7 +1553,7 @@ int detectRepetition(int repetition[70], char keywordBeginning[3],
 // returns one on success, otherwise zero is returned if an error is encountered
 ////////////////////////////////////////////////////////////////////////////////
 int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
-                             char keywordMiddle[11], char keywordEnd[6],
+                             char keywordMiddle[11], char keywordEnd[4],
                              char* readStringIn, int lengthMiddle,
                              int lengthEnd, int counter, int readIntegerIn,
                                                               double readDouble)
@@ -1308,14 +1565,14 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
     // Test if the input variable pParameters is pointing to NULL
     if (pParameters==NULL)
     {
-        PRINT_ERROR("In changeValuesOfParameters: the input pParameters ");
-        fprintf(stderr,"variable is pointing to the ");
-        fprintf(stderr,"%p address.\n",(void*)pParameters);
+        PRINT_ERROR("In changeValuesOfParameters: the (input) variable ");
+        fprintf(stderr,"pParameters=%p does not point to ",(void*)pParameters);
+        fprintf(stderr,"a valid address.\n");
         return 0;
     }
 
-    // Check that pParameters stores correct strings for name_info and path_*
-    boolean=checkStringFromLength(pParameters->name_info,7,
+    // Check that pParameters stores correct strings for name_input and path_*
+    boolean=checkStringFromLength(pParameters->name_input,8,
                                                       pParameters->name_length);
     boolean=(boolean && checkStringFromLength(pParameters->path_medit,2,
                                                      pParameters->path_length));
@@ -1332,20 +1589,20 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
         PRINT_ERROR("In changeValuesOfParameters: checkStringFromLength ");
         fprintf(stderr,"function returned zero, which is not the expected ");
         fprintf(stderr,"value here, after having successively checked that ");
-        fprintf(stderr,"one of the char* variables name_info, path_medit, ");
+        fprintf(stderr,"one of the char* variables name_input, path_medit, ");
         fprintf(stderr,"path_mmg3d, path_mshdist, path_elastic, or ");
         fprintf(stderr,"path_advect of the input structure pointed by ");
         fprintf(stderr,"pParameters is not a string with the correct size.\n");
         return 0;
     }
 
-    // Check that counter is between 1 and 70 (total number of keywords)
-    if (counter<1 || counter>70)
+    // Check that counter is between 1 and 78 (total number of keywords)
+    if (counter<1 || counter>78)
     {
         PRINT_ERROR("In changeValuesOfParameters: the input variable counter ");
         fprintf(stderr,"corresponding to the %d-th keyword read, ",counter);
-        fprintf(stderr,"should be an integer between one and and seventy ");
-        fprintf(stderr,"(the total number of different possible keywords).\n");
+        fprintf(stderr,"should be an integer between 1 and and 78 (the total ");
+        fprintf(stderr,"number of different possible keywords).\n");
         return 0;
     }
 
@@ -1386,12 +1643,12 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
         return 0;
     }
 
-    // Check that lengthEnd stores keywordEnd's size (between 1 and 6)
-    if (lengthEnd<1 || lengthEnd>6)
+    // Check that lengthEnd stores keywordEnd's size (between 1 and 4)
+    if (lengthEnd<1 || lengthEnd>4)
     {
         PRINT_ERROR("In changeValuesOfParameters: the input lengthEnd ");
         fprintf(stderr,"variable (=%d) should be an integer ",lengthEnd);
-        fprintf(stderr,"comprised between one and six, corresponding to the ");
+        fprintf(stderr,"comprised between one and four, corresponding to the ");
         fprintf(stderr,"length of last part of the %d-th keyword ",counter);
         fprintf(stderr,"read.\n");
         return 0;
@@ -1405,7 +1662,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             PRINT_ERROR("In changeValuesOfParameters: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
             fprintf(stderr,"expected value here, after having checked that ");
-            fprintf(stderr,"the input char[6] variable keywordMEnd is not a ");
+            fprintf(stderr,"the input char[4] variable keywordMEnd is not a ");
             fprintf(stderr,"string made of %d characters, which ",lengthEnd-1);
             fprintf(stderr,"were supposed to be the last ones read on the ");
             fprintf(stderr,"%d-th keyword.\n",counter);
@@ -1413,7 +1670,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
         }
     }
 
-    // Change the values of pParameters depending on the 70 different cases
+    // Change the values of pParameters depending on the 78 different cases
     // strcmp returns 0 if the two strings are equal, otherwise <0 (resp. >0)
     // if the 1st string argument is shorter (resp. longer) than the 2nd one
     if (!strcmp(keywordBeginning,"op") && !strcmp(keywordMiddle,"t_mode"))
@@ -1428,6 +1685,10 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
                                                        !strcmp(keywordEnd,"pu"))
     {
         pParameters->n_cpu=readIntegerIn;
+    }
+    else if (!strcmp(keywordBeginning,"rh") && !strcmp(keywordMiddle,"o_opt"))
+    {
+        pParameters->rho_opt=readDouble;
     }
     else if (!strcmp(keywordBeginning,"na") && !strcmp(keywordMiddle,"me_leng")
                                                     && !strcmp(keywordEnd,"th"))
@@ -1444,38 +1705,39 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             fprintf(stderr,"(NAME_LENGTH=%d) accordingly in ",NAME_LENGTH);
             fprintf(stderr,"loadParameters.h file or change the value of ");
             fprintf(stderr,"name_length keyword for a sufficiently larger ");
-            fprintf(stderr,"one in the input *.info file.\n");
+            fprintf(stderr,"one in the *.input file.\n");
             return 0;
         }
         else if (readIntegerIn>pParameters->name_length)
         {
             size=readIntegerIn;
 
-           // Reallocate memory for the name_info keyword: the realloc function
+           // Reallocate memory for the name_input keyword: the realloc function
            // returns a pointer to allocated memory, otherwise NULL
-            stringCopy=(char*)realloc(pParameters->name_info,size*sizeof(char));
+            stringCopy=(char*)realloc(pParameters->name_input,
+                                                             size*sizeof(char));
             if (stringCopy==NULL)
             {
                 PRINT_ERROR("In changeValuesOfParameters: could not ");
                 fprintf(stderr,"reallocate memory for the char* ");
-                fprintf(stderr,"pParameters->name_info variable.\n");
+                fprintf(stderr,"pParameters->name_input variable.\n");
                 return 0;
             }
-            pParameters->name_info=stringCopy;
+            pParameters->name_input=stringCopy;
 
-            // Reallocate memory for the name_data keyword if not NULL
-            if (pParameters->name_data!=NULL)
+            // Reallocate memory for the name_result keyword if not NULL
+            if (pParameters->name_result!=NULL)
             {
-                stringCopy=(char*)realloc(pParameters->name_data,
+                stringCopy=(char*)realloc(pParameters->name_result,
                                                              size*sizeof(char));
                 if (stringCopy==NULL)
                 {
                     PRINT_ERROR("In changeValuesOfParameters: could not ");
                     fprintf(stderr,"reallocate memory for the char* ");
-                    fprintf(stderr,"pParameters->name_data variable.\n");
+                    fprintf(stderr,"pParameters->name_result variable.\n");
                     return 0;
                 }
-                pParameters->name_data=stringCopy;
+                pParameters->name_result=stringCopy;
             }
 
             // Reallocate memory for the name_chem keyword if not NULL
@@ -1531,47 +1793,49 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
     {
         // Nothing to do for the end_data keyword
     }
-    else if (!strcmp(keywordBeginning,"na") && !strcmp(keywordMiddle,"me_data"))
+    else if (!strcmp(keywordBeginning,"na") && !strcmp(keywordMiddle,"me_resu")
+                                                    && !strcmp(keywordEnd,"lt"))
     {
-        // Check if this is the first time pParameters->name_data is found
-        if (pParameters->name_data!=NULL)
+        // Check if this is the first time pParameters->name_result is found
+        if (pParameters->name_result!=NULL)
         {
-            PRINT_ERROR("In changeValuesOfParameters: the name_data char* ");
-            fprintf(stderr,"variable (=%p) of ",(void*)pParameters->name_data);
-            fprintf(stderr,"the structure pointed by pParameters has not ");
-            fprintf(stderr,"been correctly initialized to the NULL pointer.\n");
+            PRINT_ERROR("In changeValuesOfParameters: the char* variable ");
+            fprintf(stderr,"name_result ");
+            fprintf(stderr,"(=%p) of the ",(void*)pParameters->name_result);
+            fprintf(stderr,"structure pointed by pParameters has been ");
+            fprintf(stderr,"correctly initialized to the NULL pointer.\n");
             return 0;
         }
 
-        // Check readStringIn has a size less than pParameters->name_length (>6)
-        if (!checkStringFromLength(readStringIn,7,pParameters->name_length))
+        // Check readStringIn has a size less than pParameters->name_length (>7)
+        if (!checkStringFromLength(readStringIn,8,pParameters->name_length))
         {
             PRINT_ERROR("In changeValuesOfParameters: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
             fprintf(stderr,"expected value here, after having checked that ");
             fprintf(stderr,"the input char* variable readStringIn, ");
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
-            fprintf(stderr,"sucessfully read as name_data, is not a string ");
+            fprintf(stderr,"sucessfully read as name_result, is not a string ");
             fprintf(stderr,"of length (strictly) less than ");
-            fprintf(stderr,"%d (and more than 5 in ",pParameters->name_length);
-            fprintf(stderr,"order to store something more than the *.data ");
+            fprintf(stderr,"%d (and more than 6 in ",pParameters->name_length);
+            fprintf(stderr,"order to store something more than the *.input ");
             fprintf(stderr,"extension).\n");
             return 0;
         }
 
-        // Allocate memory for name_data: calloc function returns a pointer to
+        // Allocate memory for name_result: calloc function returns a pointer to
         // the allocated memory, otherwise NULL; strncpy function returns a
         // pointer to the string (not used here)
         size=pParameters->name_length;
-        pParameters->name_data=(char*)calloc(size,sizeof(char));
-        if (pParameters->name_data==NULL)
+        pParameters->name_result=(char*)calloc(size,sizeof(char));
+        if (pParameters->name_result==NULL)
         {
             PRINT_ERROR("In changeValuesOfParameters: could not allocate ");
-            fprintf(stderr,"memory for the char* pParameters->name_data ");
+            fprintf(stderr,"memory for the char* pParameters->name_result ");
             fprintf(stderr,"variable.\n");
             return 0;
         }
-        strncpy(pParameters->name_data,readStringIn,size);
+        strncpy(pParameters->name_result,readStringIn,size);
     }
     else if (!strcmp(keywordBeginning,"na") && !strcmp(keywordMiddle,"me_chem"))
     {
@@ -1585,8 +1849,8 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             return 0;
         }
 
-        // Check readStringIn has a size less than pParameters->name_length (>6)
-        if (!checkStringFromLength(readStringIn,7,pParameters->name_length))
+        // Check readStringIn has a size less than pParameters->name_length (>7)
+        if (!checkStringFromLength(readStringIn,8,pParameters->name_length))
         {
             PRINT_ERROR("In changeValuesOfParameters: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
@@ -1595,7 +1859,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
             fprintf(stderr,"sucessfully read as name_chem, is not a string ");
             fprintf(stderr,"of length (strictly) less than ");
-            fprintf(stderr,"%d (and more than 5 in ",pParameters->name_length);
+            fprintf(stderr,"%d (and more than 6 in ",pParameters->name_length);
             fprintf(stderr,"order to store something more than the *.chem ");
             fprintf(stderr,"or *.wfn extension).\n");
             return 0;
@@ -1625,8 +1889,8 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             return 0;
         }
 
-        // Check readStringIn has a size less than pParameters->name_length (>6)
-        if (!checkStringFromLength(readStringIn,7,pParameters->name_length))
+        // Check readStringIn has a size less than pParameters->name_length (>7)
+        if (!checkStringFromLength(readStringIn,8,pParameters->name_length))
         {
             PRINT_ERROR("In changeValuesOfParameters: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
@@ -1635,7 +1899,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
             fprintf(stderr,"sucessfully read as name_mesh, is not a string ");
             fprintf(stderr,"of length (strictly) less than ");
-            fprintf(stderr,"%d (and more than 5 in ",pParameters->name_length);
+            fprintf(stderr,"%d (and more than 6 in ",pParameters->name_length);
             fprintf(stderr,"order to store something more than the *.mesh ");
             fprintf(stderr,"or *.cube extension).\n");
             return 0;
@@ -1665,8 +1929,8 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             return 0;
         }
 
-        // Check readStringIn has a size less than pParameters->name_length (>6)
-        if (!checkStringFromLength(readStringIn,7,pParameters->name_length))
+        // Check readStringIn has a size less than pParameters->name_length (>7)
+        if (!checkStringFromLength(readStringIn,8,pParameters->name_length))
         {
             PRINT_ERROR("In changeValuesOfParameters: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
@@ -1675,7 +1939,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
             fprintf(stderr,"sucessfully read as name_elas, is not a string ");
             fprintf(stderr,"of length (strictly) less than ");
-            fprintf(stderr,"%d (and more than 5 in ",pParameters->name_length);
+            fprintf(stderr,"%d (and more than 6 in ",pParameters->name_length);
             fprintf(stderr,"order to store something more than the *.elas ");
             fprintf(stderr,"extension).\n");
             return 0;
@@ -1693,18 +1957,42 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
         }
         strncpy(pParameters->name_elas,readStringIn,size);
     }
-    else if (!strcmp(keywordBeginning,"nu") && !strcmp(keywordMiddle,"_elec")
-                                                 && !strcmp(keywordEnd,"trons"))
+    else if (!strcmp(keywordBeginning,"nu") &&
+                                            !strcmp(keywordMiddle,"_electrons"))
     {
         pParameters->nu_electrons=readIntegerIn;
     }
-    else if (!strcmp(keywordBeginning,"nu") && !strcmp(keywordMiddle,"_spin"))
+    else if (!strcmp(keywordBeginning,"bo") && !strcmp(keywordMiddle,"hr_unit"))
     {
-        pParameters->nu_spin=readIntegerIn;
+        pParameters->bohr_unit=readIntegerIn;
+    }
+    else if (!strcmp(keywordBeginning,"se") &&
+                                              !strcmp(keywordMiddle,"lect_orb"))
+    {
+        pParameters->select_orb=readDouble;
+    }
+    else if (!strcmp(keywordBeginning,"or") && !strcmp(keywordMiddle,"b_ort")
+                                                    && !strcmp(keywordEnd,"ho"))
+    {
+        pParameters->orb_ortho=readIntegerIn;
+    }
+    else if (!strcmp(keywordBeginning,"ne") &&
+                                            !strcmp(keywordMiddle,"_electrons"))
+    {
+        pParameters->ne_electrons=readIntegerIn;
+    }
+    else if (!strcmp(keywordBeginning,"mu") && !strcmp(keywordMiddle,"lti_det"))
+    {
+        pParameters->multi_det=readIntegerIn;
     }
     else if (!strcmp(keywordBeginning,"or") && !strcmp(keywordMiddle,"b_rhf"))
     {
         pParameters->orb_rhf=readIntegerIn;
+    }
+    else if (!strcmp(keywordBeginning,"se") &&
+                                              !strcmp(keywordMiddle,"lect_box"))
+    {
+        pParameters->select_box=readDouble;
     }
     else if (!strcmp(keywordBeginning,"x_") && !strcmp(keywordMiddle,"min"))
     {
@@ -1754,6 +2042,11 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
     {
         pParameters->delta_z=readDouble;
     }
+    else if (!strcmp(keywordBeginning,"ls") && !strcmp(keywordMiddle,"_i") &&
+                                                       !strcmp(keywordEnd,"ni"))
+    {
+        pParameters->ls_ini=readIntegerIn;
+    }
     else if (!strcmp(keywordBeginning,"ls") && !strcmp(keywordMiddle,"_t") &&
                                                       !strcmp(keywordEnd,"ype"))
     {
@@ -1796,6 +2089,10 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
                                              !strcmp(keywordMiddle,"prox_mode"))
     {
         pParameters->approx_mode=readIntegerIn;
+    }
+    else if (!strcmp(keywordBeginning,"it") && !strcmp(keywordMiddle,"er_ini"))
+    {
+        pParameters->iter_ini=readIntegerIn;
     }
     else if (!strcmp(keywordBeginning,"it") && !strcmp(keywordMiddle,"er_max"))
     {
@@ -1853,7 +2150,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             fprintf(stderr,"(PATH_LENGTH=%d) accordingly in ",PATH_LENGTH);
             fprintf(stderr,"loadParameters.h file or change the value of ");
             fprintf(stderr,"path_length keyword for a sufficiently larger ");
-            fprintf(stderr,"one in the input *.info file.\n");
+            fprintf(stderr,"one in the *.input file.\n");
             return 0;
         }
         else if (readIntegerIn>pParameters->path_length)
@@ -2143,7 +2440,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
 
     return 1;
 }
-
+/*
 ////////////////////////////////////////////////////////////////////////////////
 // The function readInfoFileAndGetParameters reads the *.info file whose name
 // has already been stored in the name_info variable of the structure pointed

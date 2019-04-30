@@ -52,9 +52,10 @@ void test(void)
 //    testCheckStringFromLength();
 //    testCheckAllPreprocessorConstants();
 //    testInitialFileExists();
-//    testCloseTheFile();
-
+//    testCheckForTildeAndReplaceByHomePath();
 //    testSetupDefaultParameters();
+
+//    testCloseTheFile();
 //    testGetLengthAfterKeywordBeginning();
 //    testGetTypeAfterKeyword();
 //    testGetLengthAfterKeywordMiddle();
@@ -377,8 +378,8 @@ void testCheckStringFromLength(void)
     fprintf(stdout,"maximumLength=%d\n",maximumLength);
     returnValue=checkStringFromLength(pStringToCheck,minimumLength,
                                                                  maximumLength);
-    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,
-                                                        expectedValue,readChar);
+    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
+                                                                      readChar);
 
     pStringToCheck=stringToCheck;
     PRINT_TEST_START(counter,expectedValue);
@@ -387,8 +388,8 @@ void testCheckStringFromLength(void)
     fprintf(stdout,"maximumLength=%d\n",maximumLength);
     returnValue=checkStringFromLength(pStringToCheck,minimumLength,
                                                                  maximumLength);
-    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,
-                                                        expectedValue,readChar);
+    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
+                                                                      readChar);
 
     for (maximumLength=-10; maximumLength<11; maximumLength++)
     {
