@@ -416,18 +416,17 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
         return 0;
     }
 
-    // Check if nameInputFile is a string of length less than NAME_LENGTH
-    if (!checkStringFromLength(nameInputFile,8,NAME_LENGTH))
+    // Check the nameInputFile variable
+    if (!checkInputFileName(nameInputFile,NAME_LENGTH))
     {
-        PRINT_ERROR("In setupDefaultParameters: checkStringFromLength ");
-        fprintf(stderr,"function returned zero, which is not the expected ");
-        fprintf(stderr,"value here, after having checked that the input ");
-        fprintf(stderr,"char* variable called nameInputFile, which was ");
-        fprintf(stderr,"supposed to store the name of the *.input file, is ");
-        fprintf(stderr,"not a string of length strictly less than ");
-        fprintf(stderr,"%d (and strictly more than 6 to contain ",NAME_LENGTH);
-        fprintf(stderr,"at least something more than the *.input ");
-        fprintf(stderr,"extension).\n");
+        PRINT_ERROR("In setupDefaultParameters: checkInputFileName function ");
+        fprintf(stderr,"returned zero instead of one, after having checked ");
+        fprintf(stderr,"that the input char* variable called nameInputFile, ");
+        fprintf(stderr,"which was supposed to store the name of the *.input ");
+        fprintf(stderr,"file, is not a string of length strictly less than ");
+        fprintf(stderr,"%d (and strictly more than 7) that ",NAME_LENGTH);
+        fprintf(stderr,"contains a (non-empty) name ended by the '.input' ");
+        fprintf(stderr,"file extension.\n");
         return 0;
     }
 
@@ -461,7 +460,7 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
         pParameters->name_input[NAME_LENGTH-1]='\0';
     }
 
-    if (pParameters->verbose)
+    if (pParameters->verbose>0)
     {
         fprintf(stdout,"\nPrescribed values for parameters will be loaded ");
         fprintf(stdout,"from %s file.",pParameters->name_input);
@@ -1802,13 +1801,13 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             PRINT_ERROR("In changeValuesOfParameters: the char* variable ");
             fprintf(stderr,"name_result ");
             fprintf(stderr,"(=%p) of the ",(void*)pParameters->name_result);
-            fprintf(stderr,"structure pointed by pParameters has been ");
+            fprintf(stderr,"structure pointed by pParameters has not been ");
             fprintf(stderr,"correctly initialized to the NULL pointer.\n");
             return 0;
         }
 
-        // Check readStringIn has a size less than pParameters->name_length (>7)
-        if (!checkStringFromLength(readStringIn,8,pParameters->name_length))
+        // Check readStringIn has a size less than pParameters->name_length (>8)
+        if (!checkStringFromLength(readStringIn,9,pParameters->name_length))
         {
             PRINT_ERROR("In changeValuesOfParameters: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
@@ -1817,8 +1816,8 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
             fprintf(stderr,"sucessfully read as name_result, is not a string ");
             fprintf(stderr,"of length (strictly) less than ");
-            fprintf(stderr,"%d (and more than 6 in ",pParameters->name_length);
-            fprintf(stderr,"order to store something more than the *.input ");
+            fprintf(stderr,"%d (and more than 7 in ",pParameters->name_length);
+            fprintf(stderr,"order to store something more than the *.result ");
             fprintf(stderr,"extension).\n");
             return 0;
         }
@@ -1850,7 +1849,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
         }
 
         // Check readStringIn has a size less than pParameters->name_length (>7)
-        if (!checkStringFromLength(readStringIn,8,pParameters->name_length))
+        if (!checkStringFromLength(readStringIn,7,pParameters->name_length))
         {
             PRINT_ERROR("In changeValuesOfParameters: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
@@ -1859,7 +1858,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
             fprintf(stderr,"sucessfully read as name_chem, is not a string ");
             fprintf(stderr,"of length (strictly) less than ");
-            fprintf(stderr,"%d (and more than 6 in ",pParameters->name_length);
+            fprintf(stderr,"%d (and more than 5 in ",pParameters->name_length);
             fprintf(stderr,"order to store something more than the *.chem ");
             fprintf(stderr,"or *.wfn extension).\n");
             return 0;
@@ -1890,7 +1889,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
         }
 
         // Check readStringIn has a size less than pParameters->name_length (>7)
-        if (!checkStringFromLength(readStringIn,8,pParameters->name_length))
+        if (!checkStringFromLength(readStringIn,7,pParameters->name_length))
         {
             PRINT_ERROR("In changeValuesOfParameters: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
@@ -1899,7 +1898,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
             fprintf(stderr,"sucessfully read as name_mesh, is not a string ");
             fprintf(stderr,"of length (strictly) less than ");
-            fprintf(stderr,"%d (and more than 6 in ",pParameters->name_length);
+            fprintf(stderr,"%d (and more than 5 in ",pParameters->name_length);
             fprintf(stderr,"order to store something more than the *.mesh ");
             fprintf(stderr,"or *.cube extension).\n");
             return 0;
@@ -1930,7 +1929,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
         }
 
         // Check readStringIn has a size less than pParameters->name_length (>7)
-        if (!checkStringFromLength(readStringIn,8,pParameters->name_length))
+        if (!checkStringFromLength(readStringIn,7,pParameters->name_length))
         {
             PRINT_ERROR("In changeValuesOfParameters: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
@@ -1939,7 +1938,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
             fprintf(stderr,"sucessfully read as name_elas, is not a string ");
             fprintf(stderr,"of length (strictly) less than ");
-            fprintf(stderr,"%d (and more than 6 in ",pParameters->name_length);
+            fprintf(stderr,"%d (and more than 5 in ",pParameters->name_length);
             fprintf(stderr,"order to store something more than the *.elas ");
             fprintf(stderr,"extension).\n");
             return 0;
@@ -2440,22 +2439,21 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
 
     return 1;
 }
-/*
+
 ////////////////////////////////////////////////////////////////////////////////
-// The function readInfoFileAndGetParameters reads the *.info file whose name
-// has already been stored in the name_info variable of the structure pointed
+// The function readInputFileAndGetParameters reads the *.input file whose name
+// has already been stored in the name_input variable of the structure pointed
 // by pParameters, and it adjusts the structure Parameters accordingly. It has
 // the Parameters* variable (defined in main.h) as input argument and it
 // returns zero if an error occurs, otherwise one is returned in case of success
 ////////////////////////////////////////////////////////////////////////////////
-int readInfoFileAndGetParameters(Parameters* pParameters)
+int readInputFileAndGetParameters(Parameters* pParameters)
 {
     char keywordBeginning[3]={'\0'}, keywordMiddle[11]={'\0'};
-    char keywordEnd[6]={'\0'}, *readStringOut=NULL, *readStringIn=NULL;
-    char *fileName=NULL;
+    char keywordEnd[4]={'\0'}, *readStringOut=NULL, *readStringIn=NULL;
     size_t lengthString=0;
     int lengthMiddle=0, lengthEnd=0, readIntegerIn=0, readIntegerOut=0;
-    int readChar=0, lengthName=0, keywordType=0, repetition[70]={0}, i=0;
+    int readChar=0, keywordType=0, repetition[78]={0}, i=0;
     int counter=0, boolean=0;
     double readDouble=.0;
     FILE *infoFile=NULL;
@@ -2463,20 +2461,27 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
     // Check if the input variable pParameters is pointing to NULL
     if (pParameters==NULL)
     {
-        PRINT_ERROR("In readInfoFileAndGetParameters: the input pParameters ");
-        fprintf(stderr,"variable is pointing to the ");
-        fprintf(stderr,"%p address.\n",(void*)pParameters);
+        PRINT_ERROR("In readInputFileAndGetParameters: the input variable ");
+        fprintf(stderr,"pParameters=%p does not point to ",(void*)pParameters);
+        fprintf(stderr,"a valid address.\n");
         return 0;
     }
 
-    // Check if the name_length and path_length variables store correct values
-    if (pParameters->name_length<7 || pParameters->path_length<2)
+    // Check the pParameters->name_length and pParameters->name_input variables
+    if (!checkInputFileName(pParameters->name_input,pParameters->name_length))
     {
-        PRINT_ERROR("In readInfoFileAndGetParameters: the input pParameters ");
-        fprintf(stderr,"structure does not have its name_length ");
-        fprintf(stderr,"(=%d) and path_length ",pParameters->name_length);
-        fprintf(stderr," (=%d) variables strictly ",pParameters->path_length);
-        fprintf(stderr,"greater than six and one, respectively.\n");
+        PRINT_ERROR("In readInputFileAndGetParameters: checkInputFileName ");
+        fprintf(stderr,"function returned zero instead of one.\n");
+        return 0;
+    }
+
+    // Check if the path_length variable
+    if (pParameters->path_length<2)
+    {
+        PRINT_ERROR("In readInputFileAndGetParameters: the input pParameters ");
+        fprintf(stderr,"structure does not have its path_length ");
+        fprintf(stderr,"(=%d) variable strictly  ",pParameters->path_length);
+        fprintf(stderr,"greater than one.\n");
         return 0;
     }
 
@@ -2486,18 +2491,18 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
     readStringIn=(char*)calloc(lengthString,sizeof(char));
     if (readStringIn==NULL)
     {
-        PRINT_ERROR("In readInfoFileAndGetParameters: could not allocate ");
-        fprintf(stderr,"memory for the char* (local) variable readStringIn.\n");
+        PRINT_ERROR("In readInputFileAndGetParameters: could not allocate ");
+        fprintf(stderr,"memory for the (local) char* variable readStringIn.\n");
         return 0;
     }
 
-    // Check if the *.info file have been previously created
-    fileName=pParameters->name_info;
-    if (initialFileExists(fileName,pParameters->name_length)!=1)
+    // Check if the *.input file have been previously created
+    if (initialFileExists(pParameters->name_input,pParameters->name_length)!=1)
     {
-        PRINT_ERROR("In readInfoFileAndGetParameters: initialFileExists ");
-        fprintf(stderr,"function did not return one which is the expected ");
-        fprintf(stderr,"value here.\n");
+        PRINT_ERROR("In readInputFileAndGetParameters: initialFileExists ");
+        fprintf(stderr,"function did not return one, which is the expected ");
+        fprintf(stderr,"value here. The file %s ",pParameters->name_input);
+        fprintf(stderr,"could not be found at the given location.\n");
 
         // free function does not return value (void output)
         free(readStringIn);
@@ -2505,48 +2510,14 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
         return 0;
     }
 
-    // Check that *.info file name has length greater than six (including '/0')
-    // strlen function returns the length of the string. Here, it can be saved
-    // as an int (and not size_t) because initialFileExists function has already
-    // checked that fileName is a string of length less than
-    // pParameters->name_length (which is an int)
-    lengthName=strlen(fileName);
-    if (lengthName<6)
-    {
-        PRINT_ERROR("In readInfoFileAndGetParameters: ");
-        fprintf(stderr,"%s file name should at least contain six ",fileName);
-        fprintf(stderr,"characters instead of %d ",lengthName-1);
-        fprintf(stderr,"(in order to end with something more than the *.info ");
-        fprintf(stderr,"extension).\n");
-        free(readStringIn);
-        readStringIn=NULL;
-        return 0;
-    }
-
-    // Check if the *.info file name ends with the ".info" extension
-    boolean=(fileName[lengthName-5]=='.' && fileName[lengthName-4]=='i');
-    boolean=(boolean && fileName[lengthName-3]=='n');
-    boolean=(boolean && fileName[lengthName-2]=='f');
-    boolean=(boolean && fileName[lengthName-1]=='o');
-    boolean=(boolean && fileName[lengthName]=='\0');
-    if (!boolean)
-    {
-        PRINT_ERROR("In readInfoFileAndGetParameters: ");
-        fprintf(stderr,"%s file name does not end with with the ",fileName);
-        fprintf(stderr,"'.info' extension.\n");
-        free(readStringIn);
-        readStringIn=NULL;
-        return 0;
-    }
-
-    // Check if the *.info file is opened (it must have been created before)
+    // Check if the *.input file is opened (it must have been created before)
     // fopen function returns a FILE pointer on success, otherwise NULL
-    fprintf(stdout,"\nOpening %s file. ",fileName);
-    infoFile=fopen(fileName,"r");
+    fprintf(stdout,"\nOpening %s file. ",pParameters->name_input);
+    infoFile=fopen(pParameters->name_input,"r");
     if (infoFile==NULL)
     {
-        PRINT_ERROR("In readInfoFileAndGetParameters: we were not able to ");
-        fprintf(stderr,"read into the %s file.\n",fileName);
+        PRINT_ERROR("In readInputFileAndGetParameters: we were not able to ");
+        fprintf(stderr,"read into the %s file.\n",pParameters->name_input);
         free(readStringIn);
         readStringIn=NULL;
         return 0;
@@ -2556,11 +2527,11 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
     readIntegerOut=fscanf(infoFile," ");
     if (readIntegerOut)
     {
-        PRINT_ERROR("In readInfoFileAndGetParameters: wrong return ");
+        PRINT_ERROR("In readInputFileAndGetParameters: wrong return ");
         fprintf(stderr,"(=%d) of the fscanf function ",readIntegerOut);
         fprintf(stderr,"(EOF=%d) while attempting to read the ",EOF);
         fprintf(stderr,"first white space characters (in case there was ");
-        fprintf(stderr,"some) of the %s file.\n",fileName);
+        fprintf(stderr,"some) of the %s file.\n",pParameters->name_input);
         closeTheFile(&infoFile);
         free(readStringIn);
         readStringIn=NULL;
@@ -2568,7 +2539,7 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
     }
 
     counter=0;
-    while (counter<70)
+    while (counter<78)
     {
         counter++;
 
@@ -2577,8 +2548,8 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
         readStringOut=fgets(keywordBeginning,3,infoFile);
         if (readStringOut==NULL)
         {
-            PRINT_ERROR("In readInfoFileAndGetParameters: wrong return ");
-            fprintf(stderr,"%p of the fgets function ",(void*)readStringOut);
+            PRINT_ERROR("In readInputFileAndGetParameters: wrong return ");
+            fprintf(stderr,"=%p of the fgets function ",(void*)readStringOut);
             fprintf(stderr,"in the attempt of reading the first two letters ");
             fprintf(stderr,"of the %d-th keyword.\n",counter);
             closeTheFile(&infoFile);
@@ -2588,12 +2559,14 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
         }
 
         // Treat the case where 'e' in end_data has already been read as double
-        // fseek function returns zero on success otherwise a non-zero value
+        // strcmp returns 0 if the two strings are ==, otherwise <0 (resp. >0)
+        // if the 1st string argument is shorter (resp. longer) than the 2nd one
         if (!strcmp(keywordBeginning,"nd"))
         {
+            // fseek function returns zero on success otherwise a non-zero value
             if (fseek(infoFile,-3,SEEK_CUR))
             {
-                PRINT_ERROR("In readInfoFileAndGetParameters: wrong return ");
+                PRINT_ERROR("In readInputFileAndGetParameters: wrong return ");
                 fprintf(stderr,"of the fseek function in the attempt of ");
                 fprintf(stderr,"reading the beginning of what may be");
                 fprintf(stderr,"'end_data' for the %d-th keyword ",counter);
@@ -2603,13 +2576,15 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
                 readStringIn=NULL;
                 return 0;
             }
+
+            // fgetc returns the unsigned char read cast to an int or EOF
             boolean=(fgetc(infoFile)=='e' && fgetc(infoFile)=='n');
             boolean=(boolean && fgetc(infoFile)=='d' && fgetc(infoFile)=='_');
             boolean=(boolean && fgetc(infoFile)=='d' && fgetc(infoFile)=='a');
             boolean=(boolean && fgetc(infoFile)=='t' && fgetc(infoFile)=='a');
             if (!boolean)
             {
-                PRINT_ERROR("In readInfoFileAndGetParameters: the first two ");
+                PRINT_ERROR("In readInputFileAndGetParameters: the first two ");
                 fprintf(stderr,"letters read (=%s) for the ",keywordBeginning);
                 fprintf(stderr,"%d-th keyword do not correspond to ",counter);
                 fprintf(stderr,"the beginning of any known keyword of the ");
@@ -2623,7 +2598,7 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
             }
             if (fseek(infoFile,-6,SEEK_CUR))
             {
-                PRINT_ERROR("In readInfoFileAndGetParameters: wrong return ");
+                PRINT_ERROR("In readInputFileAndGetParameters: wrong return ");
                 fprintf(stderr,"of the fseek function in the attempt of ");
                 fprintf(stderr,"reading 'end_data' for the %d-th ",counter);
                 fprintf(stderr,"keyword.\n");
@@ -2635,13 +2610,70 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
             strncpy(keywordBeginning,"en",3);
         }
 
+        // Skip the commented lines (those beginning with ##)
+        while (!strcmp(keywordBeginning,"##"))
+        {
+            do
+            {
+                readChar=fgetc(infoFile);
+            } while (readChar!='\n' && readChar!=EOF);
+
+            if (readChar==EOF)
+            {
+                PRINT_ERROR("In readInputFileAndGetParameters: wrong return ");
+                fprintf(stderr,"of the standard fgetc c-function or ");
+                fprintf(stderr,"end-of-file (EOF=%d) reached without the ",EOF);
+                fprintf(stderr,"end_data keyword written and read in the ");
+                fprintf(stderr,"%s file.\n",pParameters->name_input);
+                closeTheFile(&infoFile);
+                free(readStringIn);
+                readStringIn=NULL;
+                return 0;
+            }
+
+            readIntegerOut=fscanf(infoFile," ");
+            if (readIntegerOut)
+            {
+                PRINT_ERROR("In readInputFileAndGetParameters: wrong return ");
+                fprintf(stderr,"(=%d) of the standard fscanf ",readIntegerOut);
+                fprintf(stderr,"c-function (EOF=%d) while attempting ",EOF);
+                fprintf(stderr,"to read the white space characters (in case ");
+                fprintf(stderr,"there was some) after the string ");
+                fprintf(stderr,"(=%s) associated with the ",readStringIn);
+                fprintf(stderr,"%d-th keyword ",counter);
+                fprintf(stderr,"(=%s%s",keywordBeginning,keywordMiddle);
+                if (lengthEnd>1)
+                {
+                    fprintf(stderr,"%s",keywordEnd);
+                }
+                fprintf(stderr,").\n");
+                closeTheFile(&infoFile);
+                free(readStringIn);
+                readStringIn=NULL;
+                return 0;
+            }
+
+            readStringOut=fgets(keywordBeginning,3,infoFile);
+            if (readStringOut==NULL)
+            {
+                PRINT_ERROR("In readInputFileAndGetParameters: wrong return ");
+                fprintf(stderr,"=%p of the fgets ",(void*)readStringOut);
+                fprintf(stderr,"function in the attempt of reading the first ");
+                fprintf(stderr,"two letters of the %d-th keyword.\n",counter);
+                closeTheFile(&infoFile);
+                free(readStringIn);
+                readStringIn=NULL;
+                return 0;
+            }
+        }
+
         // Get length of the next keyword part to read (stored in lengthMiddle)
         boolean=getLengthAfterKeywordBeginning(keywordBeginning,counter);
         if (!boolean)
         {
-            PRINT_ERROR("In readInfoFileAndGetParameters: ");
+            PRINT_ERROR("In readInputFileAndGetParameters: ");
             fprintf(stderr,"getLengthAfterKeywordBeginning function ");
-            fprintf(stderr,"returned zero which is not the expected value ");
+            fprintf(stderr,"returned zero, which is not the expected value ");
             fprintf(stderr,"here.\n");
             closeTheFile(&infoFile);
             free(readStringIn);
@@ -2654,9 +2686,9 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
         readStringOut=fgets(keywordMiddle,lengthMiddle,infoFile);
         if (readStringOut==NULL)
         {
-            PRINT_ERROR("In readInfoFileAndGetParameters: wrong return ");
-            fprintf(stderr,"%p of fgets function in the ",(void*)readStringOut);
-            fprintf(stderr,"attempt of reading the next part ");
+            PRINT_ERROR("In readInputFileAndGetParameters: wrong return ");
+            fprintf(stderr,"=%p of fgets function in ",(void*)readStringOut);
+            fprintf(stderr,"the attempt of reading the next part ");
             fprintf(stderr,"%s* of the %d-th ",keywordBeginning,counter);
             fprintf(stderr,"keyword.\n");
             closeTheFile(&infoFile);
@@ -2669,9 +2701,9 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
         boolean=getTypeAfterKeyword(keywordMiddle,lengthMiddle,counter);
         if (!boolean)
         {
-            PRINT_ERROR("In readInfoFileAndGetParameters: ");
-            fprintf(stderr,"getTypeAfterKeyword function returned zero which ");
-            fprintf(stderr,"is not the expected value here.\n");
+            PRINT_ERROR("In readInputFileAndGetParameters: ");
+            fprintf(stderr,"getTypeAfterKeyword function returned zero, ");
+            fprintf(stderr,"which is not the expected value here.\n");
             closeTheFile(&infoFile);
             free(readStringIn);
             readStringIn=NULL;
@@ -2683,9 +2715,9 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
         boolean=getLengthAfterKeywordMiddle(keywordMiddle,lengthMiddle,counter);
         if (!boolean)
         {
-            PRINT_ERROR("In readInfoFileAndGetParameters: ");
+            PRINT_ERROR("In readInputFileAndGetParameters: ");
             fprintf(stderr,"getLengthAfterkeywordMiddle function returned ");
-            fprintf(stderr,"zero which is not the expected value here.\n");
+            fprintf(stderr,"zero, which is not the expected value here.\n");
             closeTheFile(&infoFile);
             free(readStringIn);
             readStringIn=NULL;
@@ -2697,14 +2729,14 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
         if (lengthEnd>1)
         {
             readStringOut=fgets(keywordEnd,lengthEnd,infoFile);
-            for (i=lengthEnd; i<6; i++)
+            for (i=lengthEnd; i<4; i++)
             {
                 keywordEnd[i]='\0';
             }
             if (readStringOut==NULL)
             {
-                PRINT_ERROR("In readInfoFileAndGetParameters: wrong return ");
-                fprintf(stderr,"%p of the fgets ",(void*)readStringOut);
+                PRINT_ERROR("In readInputFileAndGetParameters: wrong return ");
+                fprintf(stderr,"=%p of the fgets ",(void*)readStringOut);
                 fprintf(stderr,"function in the attempt of reading the final ");
                 fprintf(stderr,"part %s%s* ",keywordBeginning,keywordMiddle);
                 fprintf(stderr,"of the %d-th keyword.\n",counter);
@@ -2719,18 +2751,18 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
         if (!detectRepetition(repetition,keywordBeginning,keywordMiddle,
                                      keywordEnd,lengthMiddle,lengthEnd,counter))
         {
-            PRINT_ERROR("In readInfoFileAndGetParameters: detectRepetition ");
+            PRINT_ERROR("In readInputFileAndGetParameters: detectRepetition ");
             fprintf(stderr,"function returned zero instead of one.\n");
             closeTheFile(&infoFile);
             free(readStringIn);
             readStringIn=NULL;
             return 0;
         }
-        for (i=0; i<70; i++)
+        for (i=0; i<78; i++)
         {
             if (repetition[i]>1)
             {
-                PRINT_ERROR("In readInfoFileAndGetParameters: the ");
+                PRINT_ERROR("In readInputFileAndGetParameters: the ");
                 fprintf(stderr,"%d-th keyword (=%s",counter,keywordBeginning);
                 fprintf(stderr,"%s",keywordMiddle);
                 if (lengthEnd>1)
@@ -2738,9 +2770,9 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
                     fprintf(stderr,"%s",keywordEnd);
                 }
                 fprintf(stderr,") has already been read before in the upper ");
-                fprintf(stderr,"part of the %s file. Please avoid ",fileName);
-                fprintf(stderr,"repetitions by modifying the file ");
-                fprintf(stderr,"accordingly.\n");
+                fprintf(stderr,"part of the %s file. ",pParameters->name_input);
+                fprintf(stderr,"Please avoid repetitions by modifying the ");
+                fprintf(stderr,"file accordingly.\n");
                 closeTheFile(&infoFile);
                 free(readStringIn);
                 readStringIn=NULL;
@@ -2752,14 +2784,14 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
         switch (keywordType)
         {
             case -1:
-                counter=70;
+                counter=78;
                 break;
 
             case 1:
                 readIntegerOut=fscanf(infoFile," %d ",&readIntegerIn);
                 if (readIntegerOut!=1)
                 {
-                    PRINT_ERROR("In readInfoFileAndGetParameters: wrong ");
+                    PRINT_ERROR("In readInputFileAndGetParameters: wrong ");
                     fprintf(stderr,"return (=%d) of the ",readIntegerOut);
                     fprintf(stderr,"fscanf function in the attempt of ");
                     fprintf(stderr,"reading the value associated with the ");
@@ -2781,7 +2813,7 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
                 readIntegerOut=fscanf(infoFile," %lf ",&readDouble);
                 if (readIntegerOut!=1)
                 {
-                    PRINT_ERROR("In readInfoFileAndGetParameters: wrong ");
+                    PRINT_ERROR("In readInputFileAndGetParameters: wrong ");
                     fprintf(stderr,"return (=%d) of the ",readIntegerOut);
                     fprintf(stderr,"fscanf function in the attempt of ");
                     fprintf(stderr,"reading the value associated with the ");
@@ -2812,7 +2844,7 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
                                                      lengthString*sizeof(char));
                    if (readStringOut==NULL)
                     {
-                        PRINT_ERROR("In readInfoFileAndGetParameters: could ");
+                        PRINT_ERROR("In readInputFileAndGetParameters: could ");
                         fprintf(stderr,"not reallocate memory for the ");
                         fprintf(stderr,"(local) char* readStringIn ");
                         fprintf(stderr,"variable.\n");
@@ -2828,7 +2860,7 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
                 readIntegerOut=fscanf(infoFile," ");
                 if (readIntegerOut)
                 {
-                    PRINT_ERROR("In readInfoFileAndGetParameters: wrong ");
+                    PRINT_ERROR("In readInputFileAndGetParameters: wrong ");
                     fprintf(stderr,"return (=%d) of the ",readIntegerOut);
                     fprintf(stderr,"fscanf function (EOF=%d) while ",EOF);
                     fprintf(stderr,"attempting to read the white space ");
@@ -2851,7 +2883,7 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
                     readChar=fgetc(infoFile);
                     if (readChar==EOF)
                     {
-                        PRINT_ERROR("In readInfoFileAndGetParameters: ");
+                        PRINT_ERROR("In readInputFileAndGetParameters: ");
                         fprintf(stderr,"end-of-file (EOF=%d) reached ",EOF);
                         fprintf(stderr,"without the end_data keyword ");
                         fprintf(stderr,"encountered or wrong return ");
@@ -2881,7 +2913,7 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
 
                 if (readChar!=' ' && readChar!='\n' && i==(int)lengthString)
                 {
-                   PRINT_ERROR("In readInfoFileAndGetParameters: it seems ");
+                   PRINT_ERROR("In readInputFileAndGetParameters: it seems ");
                    fprintf(stderr,"that the name pointed by one of the ");
                    fprintf(stderr,"name_* or path_* variables associated ");
                    fprintf(stderr,"with the %d-th keyword has more ",counter);
@@ -2902,7 +2934,7 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
                 readIntegerOut=fscanf(infoFile," ");
                 if (readIntegerOut)
                 {
-                    PRINT_ERROR("In readInfoFileAndGetParameters: wrong ");
+                    PRINT_ERROR("In readInputFileAndGetParameters: wrong ");
                     fprintf(stderr,"return (=%d) of the ",readIntegerOut);
                     fprintf(stderr,"fscanf function (EOF=%d) while ",EOF);
                     fprintf(stderr,"attempting to read the white space ");
@@ -2924,7 +2956,7 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
                 break;
 
             default:
-                PRINT_ERROR("In readInfoFileAndGetParameters: the local ");
+                PRINT_ERROR("In readInputFileAndGetParameters: the local ");
                 fprintf(stderr,"variable keywordType (=%d) ",keywordType);
                 fprintf(stderr,"cannot only store the -1, 1, 2 or 3 values.\n");
                 closeTheFile(&infoFile);
@@ -2940,7 +2972,7 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
                                       lengthMiddle,lengthEnd,counter,
                                                       readIntegerIn,readDouble))
         {
-            PRINT_ERROR("In readInfoFileAndGetParameters: ");
+            PRINT_ERROR("In readInputFileAndGetParameters: ");
             fprintf(stderr,"changeValuesOfParameters function returned zero ");
             fprintf(stderr,"instead of one.\n");
             closeTheFile(&infoFile);
@@ -2954,17 +2986,121 @@ int readInfoFileAndGetParameters(Parameters* pParameters)
     free(readStringIn);
     readStringIn=NULL;
 
-    // Closing the *.info file: fclose function returns zero if the input FILE*
+    // Closing the *.input file: fclose function returns zero if the input FILE*
     // variable is successfully closed, otherwise EOF (end-of-file) is returned
     if (fclose(infoFile))
     {
-        PRINT_ERROR("In readInfoFileAndGetParameters: the ");
-        fprintf(stderr,"%s file has not been closed properly.\n",fileName);
+        PRINT_ERROR("In readInputFileAndGetParameters: the ");
+        fprintf(stderr,"%s file has not been closed ",pParameters->name_input);
+        fprintf(stderr,"properly.\n");
         infoFile=NULL;
         return 0;
     }
     fprintf(stdout,"Closing file.\n");
     infoFile=NULL;
+
+    return 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// The function writingDefaultElasticFile writes a default *.elas file in the
+// case no file has been specified in the *.input file (using the name_elas
+// keyword) i.e. if pParameters->name_elas is set to NULL. It uses the Lame
+// coefficients given in the corresponding LAME_* preprocessor constants
+// (defined in loadParameters.h). It has the Parameters* (defined in main.h)
+// variable as input arguments and it returns one if the default *.elas file
+// has been successfully written (and the pParameters->name_elas variable
+// successfully updated) otherwise zero is returned if an error is encountered
+////////////////////////////////////////////////////////////////////////////////
+int writingDefaultElasticFile(Parameters* pParameters)
+{
+    size_t lengthName=0;
+    FILE *elasticFile=NULL;
+
+    // Testing if the input variable pParameters is pointing to NULL
+    if (pParameters==NULL)
+    {
+        PRINT_ERROR("In writingDefaultElasticFile: the input variable ");
+        fprintf(stderr,"pParameters=%p does not point to ",(void*)pParameters);
+        fprintf(stderr,"a valid address.\n");
+        return 0;
+    }
+
+    // Check the pParameters->name_input variable
+    if (!checkInputFileName(pParameters->name_input,pParameters->name_length))
+    {
+        PRINT_ERROR("In writingDefaultElasticFile: checkInputFileName ");
+        fprintf(stderr,"function returned zero instead of one.\n");
+        return 0;
+    }
+
+    // Check that we are in the situation where a default *.elas file is needed
+    if (pParameters->name_elas!=NULL)
+    {
+        PRINT_ERROR("In writingDefaultElasticFile: we cannot generate a ");
+        fprintf(stderr,"default *.elas file because one has already been ");
+        fprintf(stderr,"specified in the %s file.\n",pParameters->name_input);
+        return 0;
+    }
+
+    // calloc returns a pointer to the allocated memory, otherwise NULL
+    lengthName=pParameters->name_length;
+    pParameters->name_elas=(char*)calloc(lengthName,sizeof(char));
+    if (pParameters->name_elas==NULL)
+    {
+        PRINT_ERROR("In writingDefaultElasticFile: could not allocate memory ");
+        fprintf(stderr,"for the (char*) pParameters->name_elas variable.\n");
+        return 0;
+    }
+
+    // strncpy function returns a pointer to the string (not used here)
+    // strlen function returns the length of the string (not including '\0')
+    strncpy(pParameters->name_elas,pParameters->name_input,lengthName);
+    lengthName=strlen(pParameters->name_input);
+    pParameters->name_elas[lengthName-6]='.';
+    pParameters->name_elas[lengthName-5]='e';
+    pParameters->name_elas[lengthName-4]='l';
+    pParameters->name_elas[lengthName-3]='a';
+    pParameters->name_elas[lengthName-2]='s';
+    pParameters->name_elas[lengthName-1]='\0';
+
+    // Check if the *.elas file is opened (warning: overwrite if it exists)
+    // fopen function returns a FILE pointer on success, otherwise NULL
+    if (pParameters->verbose>0)
+    {
+        fprintf(stdout,"\nOpening %s file. ",pParameters->name_elas);
+    }
+    elasticFile=fopen(pParameters->name_elas,"w+");
+    if (elasticFile==NULL)
+    {
+        PRINT_ERROR("In writingDefaultElasticFile: we were not able to open ");
+        fprintf(stderr,"and write into the %s file.\n",pParameters->name_elas);
+        return 0;
+    }
+    if (pParameters->verbose>0)
+    {
+        fprintf(stdout,"Writing elastic parameters. ");
+    }
+
+    fprintf(elasticFile,"Dirichlet\n1\n10 Triangles f \n\nLame\n2\n");
+    fprintf(elasticFile,"2 %lf %lf \n",LAME_EXT1,LAME_EXT2);
+    fprintf(elasticFile,"3 %lf %lf \n",LAME_INT1,LAME_INT2);
+
+    // Closing the *.elas file: fclose function returns zero if the input FILE*
+    // variable is successfully closed, otherwise EOF (end-of-file) is returned
+    if (fclose(elasticFile))
+    {
+        PRINT_ERROR("In writingDefaultElasticFile: the ");
+        fprintf(stderr,"%s file has not been closed ",pParameters->name_elas);
+        fprintf(stderr,"properly.\n");
+        elasticFile=NULL;
+        return 0;
+    }
+    if (pParameters->verbose>0)
+    {
+        fprintf(stdout,"Closing file.\n");
+    }
+    elasticFile=NULL;
 
     return 1;
 }
@@ -2983,74 +3119,49 @@ int checkValuesOfAllParameters(Parameters* pParameters)
     double dx=0., dy=0., dz=0.;
 
     // Testing if the input variable pParameters is pointing to NULL
-    boolean=(pParameters!=NULL);
-    if (!boolean)
+    if (pParameters==NULL)
     {
-        PRINT_ERROR("In checkValuesOfAllParameters: the input pParameters ");
-        fprintf(stderr,"variable is pointing to the ");
-        fprintf(stderr,"%p address.\n",(void*)pParameters);
+        PRINT_ERROR("In checkValuesOfAllParameters: the input variable ");
+        fprintf(stderr,"pParameters=%p does not point to ",(void*)pParameters);
+        fprintf(stderr,"a valid address.\n");
         return 0;
     }
 
-    // Check pParameters->name_length
-    boolean=(pParameters->name_length>=DEF_MAX(7,NAME_LENGTH));
+    // Check the pParameters->name_length variable
+    boolean=(pParameters->name_length>=DEF_MAX(8,NAME_LENGTH));
     if (!boolean)
     {
         PRINT_ERROR("In checkValuesOfAllParameters: the variable name_length ");
         fprintf(stderr,"(=%d) of the structure ",pParameters->name_length);
         fprintf(stderr,"pointed by pParameters must be an integer ");
-        fprintf(stderr,"(strictly) greater than six (to store at least ");
-        fprintf(stderr,"something more than the *.info extension) and which ");
+        fprintf(stderr,"(strictly) greater than seven (to store at least ");
+        fprintf(stderr,"something more than the *.input extension) and which ");
         fprintf(stderr,"is at least equal or greater than its initial ");
         fprintf(stderr,"default value (=%d).\n",NAME_LENGTH);
         return 0;
     }
 
-    // Check pParameters->name_info
-    boolean=checkStringFromLength(pParameters->name_info,7,
-                                                      pParameters->name_length);
-    if (!boolean)
+    // Check the pParameters->name_input variable
+    if (!checkInputFileName(pParameters->name_input,pParameters->name_length))
     {
-        PRINT_ERROR("In checkValuesOfAllParameters: checkStringFromLength ");
-        fprintf(stderr,"function returned zero, which is not the expected ");
-        fprintf(stderr,"value here, after having checked that the char* ");
-        fprintf(stderr,"name_info variable of the structure pointed by ");
-        fprintf(stderr,"pParameters is not a string of length (strictly) ");
-        fprintf(stderr,"less than %d (and more than ",pParameters->name_length);
-        fprintf(stderr,"5 in order to store at least something more than the ");
-        fprintf(stderr,"*.info extension).\n");
-        return 0;
-    }
-
-    // Check if the *.info name ends with the ".info" extension
-    // strlen function returns the length of the string (without the nul char)
-    lengthName=strlen(pParameters->name_info);
-    if (pParameters->name_info[lengthName-5]!='.' ||
-                                    pParameters->name_info[lengthName-4]!='i' ||
-                                    pParameters->name_info[lengthName-3]!='n' ||
-                                    pParameters->name_info[lengthName-2]!='f' ||
-                                    pParameters->name_info[lengthName-1]!='o' ||
-                                       pParameters->name_info[lengthName]!='\0')
-    {
-        PRINT_ERROR("In checkValuesOfAllParameters: the char* name_info ");
-        fprintf(stderr,"variable of the structure pointed by pParameters ");
-        fprintf(stderr," points to the %s file name, ",pParameters->name_info);
-        fprintf(stderr,"which does not end with the '.info' extension.\n");
+        PRINT_ERROR("In checkValuesOfAllParameters: checkInputFileName ");
+        fprintf(stderr,"function returned zero instead of one.\n");
         return 0;
     }
 
     // Check pParameters->verbose
-    boolean=(pParameters->verbose==0 || pParameters->verbose==1);
+    boolean=(pParameters->verbose==0 || pParameters->verbose==1 ||
+                                                       pParameters->verbose==2);
     if (!boolean)
     {
         PRINT_ERROR("In checkValuesOfAllParameters: the verbose variable ");
         fprintf(stderr,"(=%d) of the structure pointed ",pParameters->verbose);
-        fprintf(stderr,"by pParameters can only be set to 0 or 1.\nPlease ");
+        fprintf(stderr,"by pParameters can only be set to 0, 1 or 2.\nPlease ");
         fprintf(stderr,"modify the value accordingly after the 'verbose' ");
-        fprintf(stderr,"keyword in %s file.\n",pParameters->name_info);
+        fprintf(stderr,"keyword in %s file.\n",pParameters->name_input);
         return 0;
     }
-    if (pParameters->verbose)
+    if (pParameters->verbose>1)
     {
         fprintf(stdout,"Checking validity of all values in the structure ");
         fprintf(stdout,"Parameters.\n");
@@ -3064,7 +3175,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"(=%d) of the structure pointed ",pParameters->opt_mode);
         fprintf(stderr,"by pParameters can only be set to -2, -1, 0, 1, 2, ");
         fprintf(stderr,"3, or 4.\nPlease modify the value accordingly after ");
-        fprintf(stderr,"the 'opt_mode' keyword in %s ",pParameters->name_info);
+        fprintf(stderr,"the 'opt_mode' keyword in %s ",pParameters->name_input);
         fprintf(stderr,"file.\n");
         return 0;
     }
@@ -3077,89 +3188,197 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"(=%d) of the structure pointed by ",pParameters->n_cpu);
         fprintf(stderr,"pParameters must be a positive integer.\nPlease ");
         fprintf(stderr,"modify the value accordingly after the 'n_cpu' ");
-        fprintf(stderr,"keyword in %s file.\n",pParameters->name_info);
+        fprintf(stderr,"keyword in %s file.\n",pParameters->name_input);
         return 0;
     }
 
-    // Check pParameters->name_data
-    if (pParameters->name_data!=NULL)
+#ifdef _OPENMP
+    boolean=(pParameters->n_cpu<=omp_get_max_threads());
+    if (!boolean)
     {
-        boolean=checkStringFromLength(pParameters->name_data,7,
+        PRINT_ERROR("In checkValuesOfAllParameters: the n_cpu variable ");
+        fprintf(stderr,"(=%d) of the structure pointed by ",pParameters->n_cpu);
+        fprintf(stderr,"pParameters cannot be greater than the total ");
+        fprintf(stderr,"number of threads (=%d) ",omp_get_max_threads());
+        fprintf(stderr,"currently available on your computer.\nPlease ");
+        fprintf(stderr,"modify the value accordingly after the 'n_cpu' ");
+        fprintf(stderr,"keyword in %s file.\n",pParameters->name_input);
+        return 0;
+    }
+#endif
+
+    // Check pParameters->rho_opt
+    boolean=(pParameters->rho_opt>0.);
+    if (!boolean && verbose>1)
+    {
+        fprintf(stdout,"\nWarning in checkValuesOfAllParameters function: ");
+        fprintf(stdout,"the initial scaling factor pParameters->rho_opt ");
+        fprintf(stdout,"(=%lf) associated with the ",pParameters->rho_opt);
+        fprintf(stdout,"shape gradient does not have a positive (double) ");
+        fprintf(stdout,"value.\n\n");
+    }
+
+    // Check pParameters->name_result
+    if (pParameters->name_result!=NULL)
+    {
+        boolean=checkStringFromLength(pParameters->name_result,9,
                                                       pParameters->name_length);
         if (!boolean)
         {
             PRINT_ERROR("In checkValuesOfAllParameters: ");
             fprintf(stderr,"checkStringFromLength function returned zero, ");
             fprintf(stderr,"which is not the expected value here, after ");
-            fprintf(stderr,"having checked that the char* name_data variable ");
+            fprintf(stderr,"having checked that the name_result variable ");
             fprintf(stderr,"of the structure pointed by pParameters is not ");
             fprintf(stderr,"a string of length (strictly) less than ");
-            fprintf(stderr,"%d (and more than 5 in ",pParameters->name_length);
+            fprintf(stderr,"%d (and more than 7 in ",pParameters->name_length);
             fprintf(stderr,"order to store at least something more than the ");
-            fprintf(stderr," *.data extension).\nPlease specify in the ");
-            fprintf(stderr,"%s file a valid name ",pParameters->name_info);
-            fprintf(stderr,"after the 'name_data' keyword, or extend ");
+            fprintf(stderr," *.result extension).\nPlease specify in the ");
+            fprintf(stderr,"%s file a valid name ",pParameters->name_input);
+            fprintf(stderr,"after the 'name_result' keyword, or extend ");
             fprintf(stderr,"properly the allowed length for name_* file ");
             fprintf(stderr,"names thanks to the 'name_length' keyword, or ");
             fprintf(stderr,"simply remove this keyword line in order to ");
-            fprintf(stderr,"generate a default *.data file.\n");
+            fprintf(stderr,"generate a default *.result file.\n");
             return 0;
         }
 
-        // Check if the *.data name ends with the ".data" extension
-        lengthName=strlen(pParameters->name_data);
-        if (pParameters->name_data[lengthName-5]!='.' ||
-                                    pParameters->name_data[lengthName-4]!='d' ||
-                                    pParameters->name_data[lengthName-3]!='a' ||
-                                    pParameters->name_data[lengthName-2]!='t' ||
-                                    pParameters->name_data[lengthName-1]!='a' ||
-                                       pParameters->name_data[lengthName]!='\0')
+        // Check if the *.result name ends with the ".result" extension
+        lengthName=strlen(pParameters->name_result);
+        boolean=(pParameters->name_result[lengthName-7]=='.');
+        boolean=(boolean && pParameters->name_result[lengthName-6]=='r');
+        boolean=(boolean && pParameters->name_result[lengthName-5]=='e');
+        boolean=(boolean && pParameters->name_result[lengthName-4]=='s');
+        boolean=(boolean && pParameters->name_result[lengthName-3]=='u');
+        boolean=(boolean && pParameters->name_result[lengthName-2]=='l');
+        boolean=(boolean && pParameters->name_result[lengthName-1]=='t');
+        boolean=(boolean && pParameters->name_result[lengthName]=='\0');
+        if (!boolean)
         {
-            PRINT_ERROR("In checkValuesOfAllParameters: the char* name_data ");
+            PRINT_ERROR("In checkValuesOfAllParameters: the name_result ");
             fprintf(stderr,"variable of the structure pointed by pParameters ");
-            fprintf(stderr,"points to the %s file ",pParameters->name_data);
-            fprintf(stderr,"name, which does not end with with the '.data' ");
+            fprintf(stderr,"points to the %s file ",pParameters->name_result);
+            fprintf(stderr,"name, which does not end with with the '.result' ");
             fprintf(stderr,"extension.\nPlease specify in the ");
-            fprintf(stderr,"%s file a valid name ",pParameters->name_info);
-            fprintf(stderr,"after the 'name_data' keyword, or simply ");
+            fprintf(stderr,"%s file a valid name ",pParameters->name_input);
+            fprintf(stderr,"after the 'name_result' keyword, or simply ");
             fprintf(stderr,"remove this keyword line in order to generate a ");
-            fprintf(stderr,"default *.data file name.\n");
+            fprintf(stderr,"default *.result file name.\n");
             return 0;
         }
     }
     else
     {
-        if (pParameters->verbose)
+        if (pParameters->verbose>1)
         {
             fprintf(stdout,"\nWarning in checkValuesOfAllParameters ");
-            fprintf(stdout,"function: no *.data file name has been ");
+            fprintf(stdout,"function: no *.result file name has been ");
             fprintf(stdout,"loaded in the structure pointed by pParameters. ");
             fprintf(stdout,"A default file name will thus be generated ");
-            fprintf(stdout,"thanks to the %s file ",pParameters->name_info);
-            fprintf(stdout,"name (where the '.info' extension will be ");
-            fprintf(stdout,"replaced by the '.data' one).\n\n");
+            fprintf(stdout,"thanks to the %s file ",pParameters->name_input);
+            fprintf(stdout,"name (where the '.input' extension will be ");
+            fprintf(stdout,"replaced by the '.result' one).\n\n");
+        }
+        
+        if (pParameters->name_length==8)
+        {
+            // In this (rare) case, we must add 1 char. for non-nul name_* var. 
+            lengthName=pParameters->name_length+1;
+
+            // realloc returns a pointer to the allocated memory, otherwise NULL
+            fileLocation=(char*)realloc(pParameters->name_input,
+                                                       lengthName*sizeof(char));
+            if (fileLocation==NULL)
+            {
+                PRINT_ERROR("In checkValuesOfAllParameters: could not ");
+                fprintf(stderr,"reallocate memory for the ");
+                fprintf(stderr,"pParameters->name_input variable.\n");
+                return 0;
+            }
+            pParameters->name_input=fileLocation;
+
+            if (pParameters->name_chem!=NULL)
+            {
+                fileLocation=(char*)realloc(pParameters->name_chem,
+                                                       lengthName*sizeof(char));
+                if (fileLocation==NULL)
+                {
+                    PRINT_ERROR("In checkValuesOfAllParameters: could not ");
+                    fprintf(stderr,"reallocate memory for the ");
+                    fprintf(stderr,"pParameters->name_chem variable.\n");
+                    return 0;
+                }
+                pParameters->name_chem=fileLocation;
+            }
+            else
+            {
+                PRINT_ERROR("In checkValuesOfAllParameters: the variable ");
+                fprintf(stderr,"pParameters->name_chem=%p",
+                                                 (void*)pParameters->name_chem);
+                fprintf(stderr,"must point to a valid address\nPlease, ");
+                fprintf(stderr,"specify in the %s ",pParameters->name_input);
+                fprintf(stderr,"file a valid name after the 'name_chem' ");
+                fprintf(stderr,"keyword since a (*.chem/ *.wfn) chemical ");
+                fprintf(stderr,"file is mandatory in order to load the ");
+                fprintf(stderr,"chemical data properly.\n");
+                return 0;
+            }
+
+            if (pParameters->name_mesh!=NULL)
+            {
+                fileLocation=(char*)realloc(pParameters->name_mesh,
+                                                       lengthName*sizeof(char));
+                if (fileLocation==NULL)
+                {
+                    PRINT_ERROR("In checkValuesOfAllParameters: could not ");
+                    fprintf(stderr,"reallocate memory for the ");
+                    fprintf(stderr,"pParameters->name_mesh variable.\n");
+                    return 0;
+                }
+                pParameters->name_mesh=fileLocation;
+            }
+
+            if (pParameters->name_elas!=NULL)
+            {
+                fileLocation=(char*)realloc(pParameters->name_elas,
+                                                       lengthName*sizeof(char));
+                if (fileLocation==NULL)
+                {
+                    PRINT_ERROR("In checkValuesOfAllParameters: could not ");
+                    fprintf(stderr,"reallocate memory for the ");
+                    fprintf(stderr,"pParameters->name_elas variable.\n");
+                    return 0;
+                }
+                pParameters->name_elas=fileLocation;
+            }
+
+            // Do not forget to update the pParameters->name_length variable
+            pParameters->name_length=lengthName;
         }
 
         // calloc returns a pointer to the allocated memory, otherwise NULL
-        pParameters->name_data=(char*)calloc(pParameters->name_length,
+        pParameters->name_result=(char*)calloc(pParameters->name_length,
                                                                   sizeof(char));
-        if (pParameters->name_data==NULL)
+        if (pParameters->name_result==NULL)
         {
             PRINT_ERROR("In checkValuesOfAllParameters: could not allocate ");
-            fprintf(stderr,"memory for the pParameters->name_data variable.\n");
+            fprintf(stderr,"memory for the pParameters->name_result ");
+            fprintf(stderr,"variable.\n");
             return 0;
         }
 
         // strncpy function returns a pointer to the string (not counting '\0')
-        strncpy(pParameters->name_data,pParameters->name_info,
+        strncpy(pParameters->name_result,pParameters->name_input,
                                                       pParameters->name_length);
-        lengthName=strlen(pParameters->name_data);
-        pParameters->name_data[lengthName-5]='.';
-        pParameters->name_data[lengthName-4]='d';
-        pParameters->name_data[lengthName-3]='a';
-        pParameters->name_data[lengthName-2]='t';
-        pParameters->name_data[lengthName-1]='a';
-        pParameters->name_data[lengthName]='\0';
+        lengthName=strlen(pParameters->name_result);
+        pParameters->name_result[lengthName-6]='.';
+        pParameters->name_result[lengthName-5]='r';
+        pParameters->name_result[lengthName-4]='e';
+        pParameters->name_result[lengthName-3]='s';
+        pParameters->name_result[lengthName-2]='u';
+        pParameters->name_result[lengthName-1]='l';
+        pParameters->name_result[lengthName]='t';
+        pParameters->name_result[lengthName]='\0';
     }
 
     // Check pParameters->name_chem
@@ -3175,13 +3394,13 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"less than %d (and more than ",pParameters->name_length);
         fprintf(stderr,"5 in order to store at least something more than the ");
         fprintf(stderr,"*.chem or *.wfn extension).\nPlease, specify in the ");
-        fprintf(stderr,"%s file a valid name after ",pParameters->name_info);
+        fprintf(stderr,"%s file a valid name after ",pParameters->name_input);
         fprintf(stderr,"the 'name_chem' keyword since a (*.chem/ *.wfn) ");
         fprintf(stderr,"chemical file is mandatory in order to load the ");
         fprintf(stderr,"chemical data properly.\n");
         return 0;
     }
-
+////
     // Check pParameters->ls_type
     boolean=(pParameters->ls_type==0 || pParameters->ls_type==1);
     if (!boolean)
@@ -3190,7 +3409,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"(=%d) of the structure pointed ",pParameters->ls_type);
         fprintf(stderr,"by pParameters can only be set to 0 or 1.\nPlease ");
         fprintf(stderr,"modify the value accordingly after the 'ls_type' ");
-        fprintf(stderr,"keyword in %s file.\n",pParameters->name_info);
+        fprintf(stderr,"keyword in %s file.\n",pParameters->name_input);
         return 0;
     }
 
@@ -3210,7 +3429,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"%d (and more than 5 in ",pParameters->name_length);
             fprintf(stderr,"order to store at least something more than the ");
             fprintf(stderr," *.mesh or *.cube extension).\nPlease specify in ");
-            fprintf(stderr,"the %s file a valid name ",pParameters->name_info);
+            fprintf(stderr,"the %s file a valid name ",pParameters->name_input);
             fprintf(stderr,"after the 'name_mesh' keyword, or extend ");
             fprintf(stderr,"properly the allowed length for name_* file ");
             fprintf(stderr,"names thanks to the 'name_length' keyword, or ");
@@ -3227,8 +3446,8 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stdout,"function: no *.mesh file name has been loaded in ");
             fprintf(stdout,"the structure pointed by pParameters. A default ");
             fprintf(stdout,"file name will thus be generated thanks to the ");
-            fprintf(stdout,"%s file name (where the ",pParameters->name_info);
-            fprintf(stdout,"'.info' extension will be replaced by the ");
+            fprintf(stdout,"%s file name (where the ",pParameters->name_input);
+            fprintf(stdout,"'.input' extension will be replaced by the ");
             fprintf(stdout,"'.mesh' one). The initial domain contained ");
             if (pParameters->ls_type)
             {
@@ -3261,7 +3480,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
                 fprintf(stderr,"%d (and more than 5 ",pParameters->name_length);
                 fprintf(stderr,"in order to store at least something more ");
                 fprintf(stderr,"than the *.elas extension).\nPlease specify ");
-                fprintf(stderr,"in the %s file a ",pParameters->name_info);
+                fprintf(stderr,"in the %s file a ",pParameters->name_input);
                 fprintf(stderr,"valid name after the 'name_elas' keyword, or ");
                 fprintf(stderr,"extend if necessary the allowed length for ");
                 fprintf(stderr,"name_* file names thanks to the ");
@@ -3283,7 +3502,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
                 fprintf(stderr,"instead of %ld (in order to end ",lengthName-1);
                 fprintf(stderr,"with something more than the *.elas ");
                 fprintf(stderr,"extension).\nPlease specify in the ");
-                fprintf(stderr,"%s file a valid name ",pParameters->name_info);
+                fprintf(stderr,"%s file a valid name ",pParameters->name_input);
                 fprintf(stderr,"after the 'name_elas' keyword, or simply ");
                 fprintf(stderr,"remove this keyword line in order to ");
                 fprintf(stderr,"generate a default*.elas file.\n");
@@ -3304,7 +3523,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
                 fprintf(stderr,"%s file name, which ",pParameters->name_elas);
                 fprintf(stderr,"does not end with with the '.elas' ");
                 fprintf(stderr,"extension.\nPlease specify in the ");
-                fprintf(stderr,"%s file a valid name ",pParameters->name_info);
+                fprintf(stderr,"%s file a valid name ",pParameters->name_input);
                 fprintf(stderr,"after the 'name_elas' keyword, or simply ");
                 fprintf(stderr,"remove this keyword line in order to ");
                 fprintf(stderr,"generate a default *.elas file name.\n");
@@ -3323,7 +3542,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             }
 
             // Set the default *.elas name
-            strncpy(fileLocation,pParameters->name_info,lengthName);
+            strncpy(fileLocation,pParameters->name_input,lengthName);
             lengthName=strlen(fileLocation);
             fileLocation[lengthName-5]='.';
             fileLocation[lengthName-4]='e';
@@ -3383,8 +3602,8 @@ int checkValuesOfAllParameters(Parameters* pParameters)
                 fprintf(stdout,"loaded in the structure pointed by ");
                 fprintf(stdout,"pParameters. A default file name will thus ");
                 fprintf(stdout,"be generated thanks to the ");
-                fprintf(stdout,"%s file name (where ",pParameters->name_info);
-                fprintf(stdout,"the '.info' extension will be replaced by ");
+                fprintf(stdout,"%s file name (where ",pParameters->name_input);
+                fprintf(stdout,"the '.input' extension will be replaced by ");
                 fprintf(stdout,"the '.elas' one), and default values will be ");
                 fprintf(stdout,"inserted in this *.elas file.\n\n");
             }
@@ -3410,7 +3629,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"mode (=%d) does not ",pParameters->opt_mode);
             fprintf(stderr,"require such a file.\nPlease delete the line ");
             fprintf(stderr,"containing the 'name_elas' keyword in ");
-            fprintf(stderr,"%s file.\n",pParameters->name_info);
+            fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
         }
     }
@@ -3423,7 +3642,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"variable (=%d) of the ",pParameters->nu_electrons);
         fprintf(stderr,"structure pointed by pParameters must be a positive ");
         fprintf(stderr,"integer.\nPlease specify a valid value after the ");
-        fprintf(stderr,"'nu_electrons' keyword in %s ",pParameters->name_info);
+        fprintf(stderr,"'nu_electrons' keyword in %s ",pParameters->name_input);
         fprintf(stderr,"file since a positive number of electrons to look ");
         fprintf(stderr,"for is mandatory for proceeding further.\n");
         return 0;
@@ -3439,7 +3658,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"than -%d or greater than ",pParameters->nu_electrons);
         fprintf(stderr,"%d.\nPlease modify the ",pParameters->nu_electrons);
         fprintf(stderr,"value accordingly after the 'nu_spin' keyword in ");
-        fprintf(stderr,"%s file.\n",pParameters->name_info);
+        fprintf(stderr,"%s file.\n",pParameters->name_input);
         return 0;
     }
 
@@ -3451,7 +3670,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"(=%d) of the structure pointed ",pParameters->orb_rhf);
         fprintf(stderr,"by pParameters can only be set to 0 or 1.\nPlease ");
         fprintf(stderr,"modify the value accordingly after the 'orb_rhf' ");
-        fprintf(stderr,"keyword in %s file.\n",pParameters->name_info);
+        fprintf(stderr,"keyword in %s file.\n",pParameters->name_input);
         return 0;
     }
 
@@ -3477,7 +3696,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"(pParameters->n_y=%d) > 2\n",pParameters->n_y);
         fprintf(stderr,"(pParameters->n_z=%d) > 2\n",pParameters->n_z);
         fprintf(stderr,"Please modify the values accordingly after the ");
-        fprintf(stderr,"corresponding keywords in %s ",pParameters->name_info);
+        fprintf(stderr,"corresponding keywords in %s ",pParameters->name_input);
         fprintf(stderr,"file.\n");
         return 0;
     }
@@ -3501,7 +3720,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"(pParameters->delta_z=%.18lf) ",pParameters->delta_z);
         fprintf(stderr,"== %.18lf\nPlease modify the values accordingly ",dz);
         fprintf(stderr,"after the corresponding keywords in ");
-        fprintf(stderr,"%s file.\n",pParameters->name_info);
+        fprintf(stderr,"%s file.\n",pParameters->name_input);
         return 0;
     }
 
@@ -3547,7 +3766,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         }
         fprintf(stderr,"must be positive.\nPlease modify the value ");
         fprintf(stderr,"accordingly after the 'ls_r' keyword in ");
-        fprintf(stderr,"%s file.\n",pParameters->name_info);
+        fprintf(stderr,"%s file.\n",pParameters->name_input);
         return 0;
     }
 
@@ -3566,7 +3785,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"(pParameters->met_max=%lf) ",pParameters->met_max);
             fprintf(stderr," > pParameters->met_min\nPlease modify the ");
             fprintf(stderr,"values accordingly after the corresponding ");
-            fprintf(stderr,"keywords in %s file.\n",pParameters->name_info);
+            fprintf(stderr,"keywords in %s file.\n",pParameters->name_input);
             return 0;
         }
     }
@@ -3585,7 +3804,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"(=%d) does not require ",pParameters->opt_mode);
             fprintf(stderr,"them.\nPlease delete the line(s) containing the ");
             fprintf(stderr,"corresponding keyword(s) in ");
-            fprintf(stderr,"%s file.\n",pParameters->name_info);
+            fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
         }
     }
@@ -3601,7 +3820,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"structure pointed by pParameters can only be set ");
             fprintf(stderr,"to 0 or 1.\nPlease modify the value accordingly ");
             fprintf(stderr,"after the 'trick_matrix' keyword in ");
-            fprintf(stderr,"%s file.\n",pParameters->name_info);
+            fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
         }
     }
@@ -3617,7 +3836,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"optimization mode (=%d) ",pParameters->opt_mode);
             fprintf(stderr,"does not require it.\nPlease delete the line ");
             fprintf(stderr,"containing the 'trick_matrix' keyword in ");
-            fprintf(stderr,"%s file.\n",pParameters->name_info);
+            fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
         }
     }
@@ -3633,7 +3852,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"structure pointed by pParameters can only be set ");
             fprintf(stderr,"to 0 or 1.\nPlease modify the value accordingly ");
             fprintf(stderr,"after the 'approx_mode' keyword in ");
-            fprintf(stderr,"%s file.\n",pParameters->name_info);
+            fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
         }
     }
@@ -3649,7 +3868,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"optimization mode (=%d) ",pParameters->opt_mode);
             fprintf(stderr,"does not require it.\nPlease delete the line ");
             fprintf(stderr,"containing the 'approx_mode' keyword in ");
-            fprintf(stderr,"%s file.\n",pParameters->name_info);
+            fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
         }
     }
@@ -3669,7 +3888,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"(pParameters->iter_told2p");
         fprintf(stderr,"=%lf) >= 0.0\nPlease modify ",pParameters->iter_told2p);
         fprintf(stderr,"the values accordingly after the corresponding ");
-        fprintf(stderr,"keywords in %s file.\n",pParameters->name_info);
+        fprintf(stderr,"keywords in %s file.\n",pParameters->name_input);
         return 0;
     }
 
@@ -3682,7 +3901,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"(=%d) of the structure ",pParameters->save_type);
         fprintf(stderr,"pointed by pParameters can only be set to 0, 1 or ");
         fprintf(stderr,"2.\nPlease modify the value accordingly after the ");
-        fprintf(stderr,"'save_type' keyword in %s ",pParameters->name_info);
+        fprintf(stderr,"'save_type' keyword in %s ",pParameters->name_input);
         fprintf(stderr,"file.\n");
         return 0;
     }
@@ -3698,7 +3917,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"structure pointed by pParameters must be ");
         fprintf(stderr,"non-negative integers.\nPlease modify the values ");
         fprintf(stderr,"accordingly after the corresponding keywords in ");
-        fprintf(stderr,"%s file.\n",pParameters->name_info);
+        fprintf(stderr,"%s file.\n",pParameters->name_input);
         return 0;
     }
 
@@ -3710,7 +3929,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"pointed by pParameters can only be set to 1, 2, 3, ");
         fprintf(stderr,"4, 5, 6, or 7.\nPlease modify the value accordingly ");
         fprintf(stderr,"after the 'save_type' keyword in ");
-        fprintf(stderr,"%s file.\n",pParameters->name_info);
+        fprintf(stderr,"%s file.\n",pParameters->name_input);
         return 0;
     }
 
@@ -3741,7 +3960,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"(strictly) less than %d ",pParameters->path_length);
         fprintf(stderr,"(and more than 1 in order to store at least ");
         fprintf(stderr,"something more than the terminating nul character).\n");
-        fprintf(stderr,"Please specify in the %s file ",pParameters->name_info);
+        fprintf(stderr,"Please specify in the %s file ",pParameters->name_input);
         fprintf(stderr,"a valid path name needed for the medit software ");
         fprintf(stderr,"after the 'path_medit' keyword or extend properly ");
         fprintf(stderr,"the allowed length for path_* names thanks to the ");
@@ -3776,7 +3995,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"the medit software (=%s) ",pParameters->path_medit);
         fprintf(stderr,"does not seem to work.\nPlease check that the path ");
         fprintf(stderr,"placed after the 'path_medit' keyword is valid in ");
-        fprintf(stderr,"%s file, or if no such line ",pParameters->name_info);
+        fprintf(stderr,"%s file, or if no such line ",pParameters->name_input);
         fprintf(stderr,"exists, add one if the default PATH_MEDIT ");
         fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MEDIT);
         fprintf(stderr,"loadParameters.h file is not correct.\n");
@@ -3799,7 +4018,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"the medit software (=%s) ",pParameters->path_medit);
         fprintf(stderr,"does not seem to work.\nPlease check that the path ");
         fprintf(stderr,"placed after the 'path_medit' keyword is valid in ");
-        fprintf(stderr,"%s file, or if no such line ",pParameters->name_info);
+        fprintf(stderr,"%s file, or if no such line ",pParameters->name_input);
         fprintf(stderr,"exists, add one if the default PATH_MEDIT ");
         fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MEDIT);
         fprintf(stderr,"loadParameters.h file is not correct.\n");
@@ -3835,7 +4054,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"less than %d (and more ",pParameters->path_length);
             fprintf(stderr,"(than 1 in order to store at least something ");
             fprintf(stderr,"more than the terminating nul character).\nPlease");
-            fprintf(stderr,"specify in the %s file ",pParameters->name_info);
+            fprintf(stderr,"specify in the %s file ",pParameters->name_input);
             fprintf(stderr,"a valid path name needed for the mmg3d software ");
             fprintf(stderr,"after the 'path_mmg3d' keyword or extend ");
             fprintf(stderr,"properly the allowed length for path_* names ");
@@ -3862,7 +4081,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"(=%s) does not seem to ",pParameters->path_mmg3d);
             fprintf(stderr,"work.\nPlease check that the path placed after ");
             fprintf(stderr,"the 'path_mmg3d' keyword is valid in ");
-            fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
+            fprintf(stderr,"%s file, or if no such ",pParameters->name_input);
             fprintf(stderr,"line exists, add one if the default PATH_MMG3D ");
             fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MMG3D);
             fprintf(stderr,"loadParameters.h file is not correct.\n");
@@ -3885,7 +4104,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"(=%s) does not seem to ",pParameters->path_mmg3d);
             fprintf(stderr,"work.\nPlease check that the path placed after ");
             fprintf(stderr,"the 'path_mmg3d' keyword is valid in ");
-            fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
+            fprintf(stderr,"%s file, or if no such ",pParameters->name_input);
             fprintf(stderr,"line exists, add one if the default PATH_MMG3D ");
             fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MMG3D);
             fprintf(stderr,"loadParameters.h file is not correct.\n");
@@ -3929,7 +4148,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
                 fprintf(stderr,"(=%d) does not require ",pParameters->opt_mode);
                 fprintf(stderr,"such a software.\nPlease delete the line ");
                 fprintf(stderr,"containing the 'path_mmg3d' keyword in ");
-                fprintf(stderr,"%s file.\n",pParameters->name_info);
+                fprintf(stderr,"%s file.\n",pParameters->name_input);
                 free(fileLocation);
                 fileLocation=NULL;
                 return 0;
@@ -3953,7 +4172,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"less than %d (and more ",pParameters->path_length);
             fprintf(stderr,"(than 1 in order to store at least something ");
             fprintf(stderr,"more than the terminating nul character).\nPlease");
-            fprintf(stderr,"specify in the %s file ",pParameters->name_info);
+            fprintf(stderr,"specify in the %s file ",pParameters->name_input);
             fprintf(stderr,"a valid path name needed for the mshdist ");
             fprintf(stderr,"software after the 'path_mshdist' keyword or");
             fprintf(stderr,"extend properly the allowed length for path_* ");
@@ -3980,7 +4199,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"(=%s) does not seem to ",pParameters->path_mshdist);
             fprintf(stderr,"work.\nPlease check that the path placed after ");
             fprintf(stderr,"the 'path_mshdist' keyword is valid in ");
-            fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
+            fprintf(stderr,"%s file, or if no such ",pParameters->name_input);
             fprintf(stderr,"line exists, add one if the default PATH_MSHDIST ");
             fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MSHDIST);
             fprintf(stderr,"loadParameters.h file is not correct.\n");
@@ -4004,7 +4223,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"(=%s) does not seem to ",pParameters->path_mshdist);
             fprintf(stderr,"work.\nPlease check that the path placed after ");
             fprintf(stderr,"the 'path_mshdist' keyword is valid in ");
-            fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
+            fprintf(stderr,"%s file, or if no such ",pParameters->name_input);
             fprintf(stderr,"line exists, add one if the default PATH_MSHDIST ");
             fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MSHDIST);
             fprintf(stderr,"loadParameters.h file is not correct.\n");
@@ -4048,7 +4267,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
                 fprintf(stderr,"(=%d) does not require ",pParameters->opt_mode);
                 fprintf(stderr,"such a software.\nPlease delete the line ");
                 fprintf(stderr,"containing the 'path_mshdist' keyword in ");
-                fprintf(stderr,"%s file.\n",pParameters->name_info);
+                fprintf(stderr,"%s file.\n",pParameters->name_input);
                 free(fileLocation);
                 fileLocation=NULL;
                 return 0;
@@ -4075,7 +4294,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"%d (and more than 1 in ",pParameters->path_length);
             fprintf(stderr,"order to store at least something more than the ");
             fprintf(stderr,"terminating nul character).\nPlease specify in ");
-            fprintf(stderr,"the %s file some valid ",pParameters->name_info);
+            fprintf(stderr,"the %s file some valid ",pParameters->name_input);
             fprintf(stderr,"path names needed for the elastic and advect ");
             fprintf(stderr,"softwares, respectively after the 'path_elastic' ");
             fprintf(stderr,"and 'path_advect' keywords or extend properly ");
@@ -4103,7 +4322,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"(=%s) does not seem to ",pParameters->path_elastic);
             fprintf(stderr,"work.\nPlease check that the path placed after ");
             fprintf(stderr,"the 'path_elastic' keyword is valid in ");
-            fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
+            fprintf(stderr,"%s file, or if no such ",pParameters->name_input);
             fprintf(stderr,"line exists, add one if the default PATH_ELASTIC ");
             fprintf(stderr,"preprocessor constant (=%s) in ",PATH_ELASTIC);
             fprintf(stderr,"loadParameters.h file is not correct.\n");
@@ -4127,7 +4346,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"(=%s) does not seem to ",pParameters->path_elastic);
             fprintf(stderr,"work.\nPlease check that the path placed after ");
             fprintf(stderr,"the 'path_elastic' keyword is valid in ");
-            fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
+            fprintf(stderr,"%s file, or if no such ",pParameters->name_input);
             fprintf(stderr,"line exists, add one if the default PATH_ELASTIC ");
             fprintf(stderr,"preprocessor constant (=%s) in ",PATH_ELASTIC);
             fprintf(stderr,"loadParameters.h file is not correct.\n");
@@ -4163,7 +4382,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"(=%s) does not seem to ",pParameters->path_advect);
             fprintf(stderr,"work.\nPlease check that the path placed after ");
             fprintf(stderr,"the 'path_advect' keyword is valid in ");
-            fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
+            fprintf(stderr,"%s file, or if no such ",pParameters->name_input);
             fprintf(stderr,"line exists, add one if the default PATH_ADVECT ");
             fprintf(stderr,"preprocessor constant (=%s) in ",PATH_ADVECT);
             fprintf(stderr,"loadParameters.h file is not correct.\n");
@@ -4187,7 +4406,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"(=%s) does not seem to ",pParameters->path_advect);
             fprintf(stderr,"work.\nPlease check that the path placed after ");
             fprintf(stderr,"the 'path_advect' keyword is valid in ");
-            fprintf(stderr,"%s file, or if no such ",pParameters->name_info);
+            fprintf(stderr,"%s file, or if no such ",pParameters->name_input);
             fprintf(stderr,"line exists, add one if the default PATH_ADVECT ");
             fprintf(stderr,"preprocessor constant (=%s) in ",PATH_ADVECT);
             fprintf(stderr,"loadParameters.h file is not correct.\n");
@@ -4236,7 +4455,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
                 fprintf(stderr,"(=%d) does not require ",pParameters->opt_mode);
                 fprintf(stderr,"such softwares.\nPlease delete the line(s) ");
                 fprintf(stderr,"containing the corresponding keyword(s) in ");
-                fprintf(stderr,"%s file.\n",pParameters->name_info);
+                fprintf(stderr,"%s file.\n",pParameters->name_input);
                 free(fileLocation);
                 fileLocation=NULL;
                 return 0;
@@ -4277,7 +4496,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"(pParameters->hgrad_met=");
             fprintf(stderr,"%lf) > 1.0\nPlease modify ",pParameters->hgrad_met);
             fprintf(stderr,"the values accordingly after the corresponding ");
-            fprintf(stderr,"keywords in %s file.\n",pParameters->name_info);
+            fprintf(stderr,"keywords in %s file.\n",pParameters->name_input);
             return 0;
          }
     }
@@ -4301,7 +4520,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"(=%d) does not require ",pParameters->opt_mode);
             fprintf(stderr,"such parameters.\nPlease delete the line(s) ");
             fprintf(stderr,"containing the corresponding keyword(s) in ");
-            fprintf(stderr,"%s file.\n",pParameters->name_info);
+            fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
         }
     }
@@ -4325,7 +4544,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr," > 0.0\n(pParameters->hgrad_ls=");
             fprintf(stderr,"%lf) > 1.0\nPlease modify ",pParameters->hgrad_ls);
             fprintf(stderr,"the values accordingly after the corresponding ");
-            fprintf(stderr,"keywords in %s file.\n",pParameters->name_info);
+            fprintf(stderr,"keywords in %s file.\n",pParameters->name_input);
             return 0;
          }
     }
@@ -4345,7 +4564,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"(=%d) does not require ",pParameters->opt_mode);
             fprintf(stderr,"such parameters.\nPlease delete the line(s) ");
             fprintf(stderr,"containing the corresponding keyword(s) in ");
-            fprintf(stderr,"%s file.\n",pParameters->name_info);
+            fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
         }
     }
@@ -4362,7 +4581,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"structure pointed by pParameters can only be set ");
             fprintf(stderr,"to 0, 1, or 2.\nPlease modify the value ");
             fprintf(stderr,"accordingly after the 'hmode_lag' keyword in ");
-            fprintf(stderr,"%s file.\n",pParameters->name_info);
+            fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
         }
 
@@ -4381,7 +4600,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,") > 0.0\n(pParameters->hgrad_lag=");
             fprintf(stderr,"%lf) > 1.0\nPlease modify ",pParameters->hgrad_lag);
             fprintf(stderr,"the values accordingly after the corresponding ");
-            fprintf(stderr,"keywords in %s file.\n",pParameters->name_info);
+            fprintf(stderr,"keywords in %s file.\n",pParameters->name_input);
             return 0;
          }
     }
@@ -4402,7 +4621,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"(=%d) does not require ",pParameters->opt_mode);
             fprintf(stderr,"such parameters.\nPlease delete the line(s) ");
             fprintf(stderr,"containing the corresponding keyword(s) in ");
-            fprintf(stderr,"%s file.\n",pParameters->name_info);
+            fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
         }
     }
@@ -4421,7 +4640,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"=%lf) >= 0.0\nPlease ",pParameters->residual);
             fprintf(stderr,"modify the values accordingly after the ");
             fprintf(stderr,"corresponding keywords in ");
-            fprintf(stderr,"%s file.\n",pParameters->name_info);
+            fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
          }
     }
@@ -4439,7 +4658,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"(=%d) does not require ",pParameters->opt_mode);
             fprintf(stderr,"such parameters.\nPlease delete the line(s) ");
             fprintf(stderr,"containing the corresponding keyword(s) in ");
-            fprintf(stderr,"%s file.\n",pParameters->name_info);
+            fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
         }
     }
@@ -4455,7 +4674,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"structure pointed by pParameters must be ");
             fprintf(stderr,"positive.\nPlease modify the value accordingly ");
             fprintf(stderr,"after the 'delta_t' keyword in ");
-            fprintf(stderr,"%s file.\n",pParameters->name_info);
+            fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
         }
 
@@ -4467,7 +4686,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"structure pointed by pParameters can only be set ");
             fprintf(stderr,"to 0 or 1.\nPlease modify the value accordingly ");
             fprintf(stderr,"after the 'no_cfl' keyword in ");
-            fprintf(stderr,"%s file.\n",pParameters->name_info);
+            fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
         }
     }
@@ -4485,7 +4704,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"(=%d) does not require ",pParameters->opt_mode);
             fprintf(stderr,"such parameters.\nPlease delete the line(s) ");
             fprintf(stderr,"containing the corresponding keyword(s) in ");
-            fprintf(stderr,"%s file.\n",pParameters->name_info);
+            fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
         }
     }
@@ -4498,122 +4717,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
     return 1;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// The function writingDefaultElasticFile writes a default *.elas file in the
-// case where pParameters->opt_mode=1 or 2 and if no file has been specified in
-// the *.info file (using the name_elas keyword) i.e. if pParameters->name_elas
-// is set to NULL. It uses the Lame coefficients given in the corresponding
-// LAME_* preporcessor constants (defined in loadParameters.h). It has the
-// Parameters* (defined in main.h) variable as input arguments and it returns
-// one if the default *.elas file has been successfully written (and the
-// pParameters->name_elas variable successfully updated) otherwise zero is
-// returned if an error is encountered
-////////////////////////////////////////////////////////////////////////////////
-int writingDefaultElasticFile(Parameters* pParameters)
-{
-    size_t lengthName=0;
-    FILE *elasticFile=NULL;
-
-    // Testing if the input variable pParameters is pointing to NULL
-    if (pParameters==NULL)
-    {
-        PRINT_ERROR("In writingDefaultElasticFile: the input pParameters ");
-        fprintf(stderr,"variable is pointing to the %p ",(void*)pParameters);
-        fprintf(stderr,"address.\n");
-        return 0;
-    }
-
-    // Check pParameters->name_info
-    if (!checkStringFromLength(pParameters->name_info,7,
-                                                      pParameters->name_length))
-    {
-        PRINT_ERROR("In writingDefaultElasticFile: checkStringFromLength ");
-        fprintf(stderr,"function returned zero, which is not the expected ");
-        fprintf(stderr,"value here, after having checked that the char* ");
-        fprintf(stderr,"name_info variable of the structure pointed by ");
-        fprintf(stderr,"pParameters is not a string of length (strictly) ");
-        fprintf(stderr,"less than %d (and more than ",pParameters->name_length);
-        fprintf(stderr,"5 in order to store at least something more than the ");
-        fprintf(stderr,"*.info extension).\n");
-        return 0;
-    }
-
-    // Check that we are in the situation where a default *.elas file is needed
-    if (pParameters->name_elas!=NULL)
-    {
-        PRINT_ERROR("In writingDefaultElasticFile: we cannot generate a ");
-        fprintf(stderr,"default *.elas file because one has already been ");
-        fprintf(stderr,"specified in the %s file.\n",pParameters->name_info);
-        return 0;
-    }
-
-    // calloc returns a pointer to the allocated memory, otherwise NULL
-    lengthName=pParameters->name_length;
-    pParameters->name_elas=(char*)calloc(lengthName,sizeof(char));
-    if (pParameters->name_elas==NULL)
-    {
-        PRINT_ERROR("In writingDefaultElasticFile: could not allocate memory ");
-        fprintf(stderr,"for the (char*) pParameters->name_elas variable.\n");
-        return 0;
-    }
-
-    // strlen function returns the length of the string (not including '\0')
-    lengthName=strlen(pParameters->name_info);
-    if (pParameters->name_info[lengthName-5]!='.' ||
-                                    pParameters->name_info[lengthName-4]!='i' ||
-                                    pParameters->name_info[lengthName-3]!='n' ||
-                                    pParameters->name_info[lengthName-2]!='f' ||
-                                    pParameters->name_info[lengthName-1]!='o' ||
-                                       pParameters->name_info[lengthName]!='\0')
-    {
-        PRINT_ERROR("In writingDefaultElasticFile: the name_info variable ");
-        fprintf(stderr,"(=%s) of the structure ",pParameters->name_info);
-        fprintf(stderr,"pointed by pParameters does not end with the '.info' ");
-        fprintf(stderr,"extension.\n");
-        return 0;
-    }
-
-    // strncpy function returns a pointer to the string (not used here)
-    strncpy(pParameters->name_elas,pParameters->name_info,lengthName);
-    pParameters->name_elas[lengthName-5]='.';
-    pParameters->name_elas[lengthName-4]='e';
-    pParameters->name_elas[lengthName-3]='l';
-    pParameters->name_elas[lengthName-2]='a';
-    pParameters->name_elas[lengthName-1]='s';
-    pParameters->name_elas[lengthName]='\0';
-
-    // Check if the *.elas file is opened (warning: overwrite if it exists)
-    // fopen function returns a FILE pointer on success, otherwise NULL
-    fprintf(stdout,"\nOpening %s file. ",pParameters->name_elas);
-    elasticFile=fopen(pParameters->name_elas,"w+");
-    if (elasticFile==NULL)
-    {
-        PRINT_ERROR("In writingDefaultElasticFile: we were not able to open ");
-        fprintf(stderr,"and write into the %s file.\n",pParameters->name_elas);
-        return 0;
-    }
-    fprintf(stdout,"Writing elastic parameters. ");
-
-    fprintf(elasticFile,"Dirichlet\n1\n10 Triangles f \n\nLame\n2\n");
-    fprintf(elasticFile,"2 %lf %lf \n",LAME_EXT1,LAME_EXT2);
-    fprintf(elasticFile,"3 %lf %lf \n",LAME_INT1,LAME_INT2);
-
-    // Closing the *.elas file: fclose function returns zero if the input FILE*
-    // variable is successfully closed, otherwise EOF (end-of-file) is returned
-    if (fclose(elasticFile))
-    {
-        PRINT_ERROR("In writingDefaultElasticFile: the ");
-        fprintf(stderr,"%s file has not been closed ",pParameters->name_elas);
-        fprintf(stderr,"properly.\n");
-        elasticFile=NULL;
-        return 0;
-    }
-    fprintf(stdout,"Closing file.\n");
-    elasticFile=NULL;
-
-    return 1;
-}
-
+/*
 ////////////////////////////////////////////////////////////////////////////////
 // The function writingRestartFile, depending on the opt_mode variable, writes
 // an *.restart file that contains the default and prescribed values used to
@@ -5068,15 +5172,22 @@ int loadParameters(Parameters* pParameters, char* nameInputFile)
         return 0;
     }
 
-/*
-   // Read and update parameters contained in the *.input file
-   if (!readInfoFileAndGetParameters(pParameters))
+   // Read and update the parameters contained in the *.input file
+   if (!readInputFileAndGetParameters(pParameters))
    {
-       PRINT_ERROR("In loadParameters: readInfoFileAndGetParameters function ");
-       fprintf(stderr,"returned zero instead of one.\n");
+       PRINT_ERROR("In loadParameters: readInputFileAndGetParameters ");
+       fprintf(stderr,"function returned zero instead of one.\n");
        return 0;
    }
 
+fprintf(stdout,"\nopt_mode=%d\n",pParameters->opt_mode);
+fprintf(stdout,"verbose=%d\n",pParameters->verbose);   
+fprintf(stdout,"n_cpu=%d\n",pParameters->n_cpu);
+fprintf(stdout,"rho_opt=%lf\n",pParameters->rho_opt);
+fprintf(stdout,"name_length=%d\n",pParameters->name_length);
+fprintf(stdout,"anem_result=%s\n",pParameters->name_result);
+
+/*
    // Check values of all parameters
    if (!checkValuesOfAllParameters(pParameters))
    {

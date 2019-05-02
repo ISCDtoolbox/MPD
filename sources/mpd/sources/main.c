@@ -213,6 +213,7 @@ int main(int argc, char *argv[])
         fprintf(stderr,"directory path name and try to launch again the MPD ");
         fprintf(stderr,"program.\n");
 
+        // Printing also an error message in the standard output
         fprintf(stdout,"\n%s\nERROR: in the command-line argument, ",STR_ERROR);
         fprintf(stdout,"replace the first ~ by the home ");
         fprintf(stdout,"directory.\n%s\n",STR_ERROR);
@@ -1312,6 +1313,42 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
     {
         fprintf(stdout,"Preprocessor constants are ok. Setting default ");
         fprintf(stdout,"values for parameters.\n");
+    }
+
+    return 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// The function checkInputFileName first checks if inputFileName is a string
+// of length comprised between eight and maximumLength (including the
+// terminating nul character '\0'), then examines if inputFileName ends with the
+// '.input' file extension. It has the char* inputFileName and the int
+// maximumLength (>=8) variables as input arguments and it returns zero if an
+// error is encountered, otherwise one is returned in case of success
+////////////////////////////////////////////////////////////////////////////////
+int checkInputFileName(char* inputFileName, int maximumLength)
+{
+    int lengthName=0;
+ 
+    // Check the input variables
+    if (!checkStringFromLength(inputFileName,8,maximumLength))
+    {
+        PRINT_ERROR("In checkInputFileName: checkStringFromLength function ");
+        fprintf(stderr,"returned zero, which is not the expected value.\n");
+        return 0;
+    }
+
+    // Check the *.input extension: strlen returns the length of the string
+    lengthName=strlen(inputFileName);
+    if (inputFileName[lengthName-6]!='.' || inputFileName[lengthName-5]!='i' ||
+        inputFileName[lengthName-4]!='n' || inputFileName[lengthName-3]!='p' ||
+        inputFileName[lengthName-2]!='u' || inputFileName[lengthName-1]!='t' || 
+                                                inputFileName[lengthName]!='\0')
+    {
+        PRINT_ERROR("In checkInputFileName: the input char* variable ");
+        fprintf(stderr,"inputFileName (=%s) does not end with ",inputFileName);
+        fprintf(stderr,"the '.input' extension.\n");
+        return 0;
     }
 
     return 1;

@@ -2998,9 +2998,9 @@ void testChangeValuesOfParameters(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Unit (random) tests on readInfoFileAndGetParameters of loadParameters.c
+// Unit (random) tests on readInputFileAndGetParameters of loadParameters.c
 ////////////////////////////////////////////////////////////////////////////////
-void testReadInfoFileAndGetParameters(void)
+void testReadInputFileAndGetParameters(void)
 {
     time_t startTimer=0, endTimer=0;
     int returnValue=0, expectedValue=0, counter=0, counterSuccess=0;
@@ -3745,19 +3745,19 @@ void testReadInfoFileAndGetParameters(void)
 
     // Test starts
     time(&startTimer);
-    fprintf(stdout,"\nTesting readInfoFileAndGetParameters function.\n");
+    fprintf(stdout,"\nTesting readInputFileAndGetParameters function.\n");
 
     expectedValue=0;
     PRINT_TEST_START(counter,expectedValue);
     fprintf(stdout,"pParameters=%p\n",(void*)pParameters);
-    returnValue=readInfoFileAndGetParameters(pParameters);
+    returnValue=readInputFileAndGetParameters(pParameters);
     PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
                                                                       readChar);
 
     pParameters=&parameters;
     PRINT_TEST_START(counter,expectedValue);
     fprintf(stdout,"pParameters=%p\n",(void*)pParameters);
-    returnValue=readInfoFileAndGetParameters(pParameters);
+    returnValue=readInputFileAndGetParameters(pParameters);
     PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
                                                                       readChar);
 
@@ -4126,7 +4126,7 @@ void testReadInfoFileAndGetParameters(void)
         infoFile=fopen("test.info","w+");
         if (infoFile==NULL)
         {
-            fprintf(stdout,"\nWarning in testReadInfoFileAndGetParameters ");
+            fprintf(stdout,"\nWarning in testreadInputFileAndGetParameters ");
             fprintf(stdout,"function: could not create the test.info file.\n");
             expectedValue=-1;
         }
@@ -4149,7 +4149,7 @@ void testReadInfoFileAndGetParameters(void)
             if (fclose(infoFile))
             {
                 fprintf(stdout,"\nWarning in ");
-                fprintf(stdout,"testReadInfoFileAndGetParameters function: ");
+                fprintf(stdout,"testreadInputFileAndGetParameters function: ");
                 fprintf(stderr," could not close the test.info file ");
                 fprintf(stderr,"properly.\n");
                 expectedValue=-1;
@@ -4173,7 +4173,7 @@ void testReadInfoFileAndGetParameters(void)
         }
 
         // Testing the function
-        returnValue=readInfoFileAndGetParameters(pParameters);
+        returnValue=readInputFileAndGetParameters(pParameters);
 
         // Check that the parameters have been corrected loaded
         if (returnValue)

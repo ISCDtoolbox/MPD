@@ -2674,6 +2674,37 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
                                                     double cst22, double cst33);
 
 /**
+* \fn int checkInputFileName(char* inputFileName, int maximumLength)
+* \brief It checks if inputFileName is pointing to a string with length
+*        comprised between eight and maximumLength, and also if it ends with the
+*        '.input' extension.
+*
+* \param[in] inputFileName It is expected to point to a string of length
+*                          comprised between eight and the maximumLength
+*                          variable. In addition, the string it is pointing to
+*                          must end with the '.input' file extension. Otherwise
+*                          (i.e. if inputFileName==NULL,= or if the terminating
+*                          nul character '\0' is strictly located before the
+*                          eighth position of the array or after the
+*                          maximumLength one, or if inputFileName does not end
+*                          with the '.input' extension), an error is returned by
+*                          the \ref checkInputFileName function.
+*
+* \param[in] maximumLength Maximal length allowed for the string (including the
+*                          terminating nul character '\0'). It must not be
+*                          (strictly) lower than eight, otherwise an error is
+*                          returned by the \ref checkInputFileName function.
+*
+* \return It returns zero if an error is encountered, otherwise one is returned.
+*
+* The function \ref checkInputFileName checks if inputFileName is a string of
+* correct length (>=8 and <=maximumLength) thanks to the return valeu of the
+* \ref checkStringFromLength function. Then, it checks that the end of the
+* string inputFileName corresponds to the '.input' file extension.
+*/
+int checkInputFileName(char* inputFileName, int maximumLength);
+
+/**
 * \fn int initialFileExists(char* fileLocation, int nameLength)
 * \brief It checks if a file exists at the location pointed by fileLocation,
 *        which must be a string of length (strictly) less than nameLength.

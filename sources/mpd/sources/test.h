@@ -249,11 +249,11 @@ void testDetectRepetition(void);
 void testChangeValuesOfParameters(void);
 
 /**
-* \fn void testReadInfoFileAndGetParameters(void)
+* \fn void testReadInputFileAndGetParameters(void)
 * \brief It performs unit (random) tests on the \ref
-*        readInfoFileAndGetParameters function of the loadParameters.c file.
+*        readInputFileAndGetParameters function of the loadParameters.c file.
 */
-void testReadInfoFileAndGetParameters(void);
+void testReadInputFileAndGetParameters(void);
 
 /**
 * \fn void testCheckValuesOfAllParameters(void)

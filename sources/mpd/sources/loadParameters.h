@@ -85,7 +85,7 @@
 *        allowed for storing the different file names.
 *
 * We must have (int)\ref NAME_LENGTH > 7. This condition ensures to store at
-* least a name that contains something more than the *.input extension.
+* least a name that contains something more than the *.input file extension.
 */
 #define NAME_LENGTH 101
 
@@ -1571,8 +1571,8 @@ int detectRepetition(int repetition[78], char keywordBeginning[3],
 * \brief Depending of the type of variables concerned in the structure pointed
 *        by pParameters, it saves the value stored either in readIntegerIn,
 *        readDouble, or readStringIn in the Parameters structure at the location
-*        associated with the (counter)-th keyword in the *.info file, read as
-*        the concatenation of , where
+*        associated with the (counter)-th keyword in the *.input file, read as
+*        the concatenation of keywordBeginning+keywordMiddle(+keywordEnd), where
 *        keywordBeginning has length two, keywordMiddle has lengthMiddle and
 *        keywordEnd has lengthEnd.
 *
@@ -1585,14 +1585,14 @@ int detectRepetition(int repetition[78], char keywordBeginning[3],
 *                         (counter)-th keyword, read as the concatenation of
 *                         keywordBeginning+keywordMiddle(+keywordEnd), except
 *                         for the end_data keyword. We recall that the end_data
-*                         keyword ends the reading in the *.info file; any other
-*                         information placed after will not be read and
+*                         keyword ends the reading in the *.input file; any
+*                         other information placed after will not be read and
 *                         considered as a comment. The pointer must not be NULL
 *                         and we assume that here all variables of the
 *                         Parameters structure have already been initialized to
 *                         their default values given by the processor constants
 *                         defined in the loadParameters.h file. Otherwise (i.e.
-*                         if the name_info and path_* does not have the correct
+*                         if the name_input and path_* does not have the correct
 *                         size) an error is returned by the \ref
 *                         changeValuesOfParameters function.
 *
@@ -1601,33 +1601,34 @@ int detectRepetition(int repetition[78], char keywordBeginning[3],
 *                             beginning of the (counter)-th keyword whose
 *                             associated value needs to be properly stored in
 *                             the structure pointed by pParameters. This
-*                             keyword can be the name of any variables (70
-*                             possibilities except name_info, already storing
-*                             the name of the *.info file given in the input
-*                             command line of the MPD program, and which is
-*                             replaced by the end_data keyword, ending the
-*                             reading in the *.info file; any other information
-*                             placed after will not be read and considered as a
-*                             comment) stored in the Parameters structure. The
-*                             array must contain two non-nul characters
-*                             followed by a nul one, otherwise an error is
-*                             returned by the \ref changeValuesOfParameters
-*                             function.
+*                             keyword can be the name of any variables (78
+*                             possibilities except name_input, already storing
+*                             the name of the *.input file given in the
+*                             command-line argument of the MPD program, and
+*                             which is replaced by the end_data keyword, ending
+*                             the reading in the *.input file; any other
+*                             information placed after will not be read and
+*                             considered as a comment) stored in the Parameters
+*                             structure. The array must contain two non-nul
+*                             characters followed by a nul one, otherwise an
+*                             error is returned by the \ref
+*                             changeValuesOfParameters function.
 *
 * \param[in] keywordMiddle An array containing (lengthMiddle-1) non-nul
 *                          characters followed by the terminating nul one '\0'.
 *                          They represent the second part of the (counter)-th
 *                          keyword, whose final part is stored in keywordEnd
 *                          (only if lengthEnd>1). This keyword can be the name
-*                          of any variables (70 possibilities except name_info
+*                          of any variables (78 possibilities except name_input
 *                          which is replaced by the end_data keyword, ending
-*                          the reading in the *.info file; any other information
-*                          placed after will not be read and considered as a
-*                          comment) stored in the Parameters structure. The
-*                          array must contain exactly, starting from the
-*                          beginning (lengthMiddle-1) non-nul characters
-*                          followed by a nul one, otherwise an error is returned
-*                          by the \ref changeValuesOfParameters function.
+*                          the reading in the *.input file; any other
+*                          information placed after will not be read and
+*                          considered as a comment) stored in the Parameters
+*                          structure. The array must contain exactly, starting
+*                          from the beginning (lengthMiddle-1) non-nul
+*                          characters followed by a nul one, otherwise an error
+*                          is returned by the \ref changeValuesOfParameters
+*                          function.
 *
 * \param[in] keywordEnd An array containing (lengthEnd-1) non-nul characters
 *                       followed by the terminating nul one '\0'. If
@@ -1635,14 +1636,15 @@ int detectRepetition(int repetition[78], char keywordBeginning[3],
 *                       (counter)-th keyword, whose associated value needs to
 *                       be properly stored in the structure pointed by
 *                       pParameters. This keyword can be the name of any
-*                       variables (70 possibilities except name_info which is
+*                       variables (78 possibilities except name_input which is
 *                       replaced by the end_data keyword, ending the reading in
-*                       the *.info file; any other information placed after will
-*                       not be read and considered as a comment) stored in the
-*                       Parameters structure. The array must contain exactly,
-*                       starting from the beginning (lengthEnd-1) non-nul
-*                       characters followed by a nul one, otherwise an error is
-*                       returned by the \ref changeValuesOfParameters function.
+*                       the *.input file; any other information placed after
+*                       will not be read and considered as a comment) stored in
+*                       the Parameters structure. The array must contain
+*                       exactly, starting from the beginning (lengthEnd-1)
+*                       non-nul characters followed by a nul one, otherwise an
+*                       error is returned by the \ref changeValuesOfParameters
+*                       function.
 *
 * \param[in] lengthMiddle An integer referring to the length of the
 *                         keywordMiddle variable, including the terminating nul
@@ -1660,7 +1662,7 @@ int detectRepetition(int repetition[78], char keywordBeginning[3],
 *                      keywordBeginning+keyworMiddle. The lengthEnd variable is
 *                      intended to store the return value of the \ref
 *                      getLengthAfterKeywordMiddle function. Hence, it must be
-*                      comprised between one and six, otherwise an error is
+*                      comprised between one and four, otherwise an error is
 *                      returned by the \ref changeValuesOfParameters function.
 *
 * \param[in] readStringIn A pointer that points to the string that is intended
@@ -1673,22 +1675,22 @@ int detectRepetition(int repetition[78], char keywordBeginning[3],
 *                         path_* ones). Otherwise, an error is returned by the
 *                         \ref changeValuesOfParameters function.
 *
-* \param[in] counter An integer referring to the line of the *.info file
-*                    at which the keyword is read. This integer is mainly use
-*                    help the user to locate any syntax error found while
-*                    reading the *.info file. More precisely, (counter-1) refers
-*                    to the number of keywords that have already been
+* \param[in] counter An integer referring to the line of the *.input file
+*                    at which the keyword is read. This integer is mainly
+*                    helping the user to locate any syntax error found while
+*                    reading the *.input file. More precisely, (counter-1)
+*                    refers to the number of keywords that have already been
 *                    successfully read and the counter variable to the one, *                    whose values is intended to be stored in the structure
 *                    pointed by pParameters. The integer must be comprised
-*                    between one and seventy (case where all the variables of
-*                    the Parameters structure are specified, except the
-*                    name_info one, already storing the name of the*.info file
-*                    given in the input command line of the MPD program, and
-*                    replaced by the end_data keyword, which ends the reading
-*                    in the *.info file; any other information placed after will
-*                    not be read and considered as a comment). Otherwise, an
-*                    error is returned by the \ref changeValuesOfParameters
-*                    function.
+*                    between one and seventy-eight (case where all the variables
+*                    of the Parameters structure are specified, except the
+*                    name_input one, already storing the name of the *.input
+*                    file given in the command-line argument of the MPD program,
+*                    and replaced by the end_data keyword, which ends the
+*                    reading in the *.input file; any other information placed
+*                    after will not be read and considered as a comment).
+*                    Otherwise, an error is returned by the \ref
+*                    changeValuesOfParameters function.
 *
 * \param[in] readIntegerIn An integer that is intended to be stored in the
 *                          structure pointed by pParameters. It will only be
@@ -1725,7 +1727,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
                                                              double readDouble);
 
 /**
-* \fn int readInfoFileAndGetParameters(Parameters* pParameters)
+* \fn int readInputFileAndGetParameters(Parameters* pParameters)
 * \brief It tries to read the content of an existing the *.info (input) file
 *        and it modifies accordingly the (default) values that were stored in
 *        the structure pointed by pParameters.
@@ -1735,7 +1737,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
 *                            It must not point to NULL and its name_info
 *                            variable must point to an existing *.info file
 *                            name, otherwise an error is returned by the \ref
-*                            readInfoFileAndGetParameters function.
+*                            readInputFileAndGetParameters function.
 *
 * \return It returns one if the values of the structure pointed by pParameters
 *         have been successfully updated by the ones prescribed in the *.info
@@ -1743,18 +1745,45 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
 *         structure. In any other situations (i.e. if the input variables does
 *         not have the expected content or if the (re)allocation of dynamical
 *         memory failed), an error is displayed in the standard error stream and
-*         zero is returned by the \ref readInfoFileAndGetParameters function.
+*         zero is returned by the \ref readInputFileAndGetParameters function.
 *
-* The \ref readInfoFileAndGetParameters function should be static but has been
+* The \ref readInputFileAndGetParameters function should be static but has been
 * defined as non-static in order to perform unit-test on it.
 */
-int readInfoFileAndGetParameters(Parameters* pParameters);
+int readInputFileAndGetParameters(Parameters* pParameters);
+
+/**
+* \fn int writingDefaultElasticFile(Parameters* pParameters)
+* \brief It write a default *.elas file if such a file is needed and has not
+*        been specified in the *.input file.
+*
+* \param[in] pParameters A pointer that points to the Parameters structure
+*                        (defined in main.h file) of the \ref main function.
+*                        If its opt_mode variable is set to one or two,
+*                        an *.elas file is needed by the elastic software, which
+*                        must have been previously installed. In the case where
+*                        its name_elas variable is set to NULL, the \ref
+*                        writingDefaultElasticFile function writes a default
+*                        *.elas file using the Lame coefficients given in the
+*                        corresponding \ref LAME_INT1, \ref LAME_EXT1, \ref
+*                        LAME_INT2, \ref LAME_EXT2 preprocessor constants, and
+*                        a default path name built from the name_input variable
+*                        (replacing the *.input extension by the *.elas one).
+*                        Otherwise, an error is returned by the \ref
+*                        writingDefaultElasticFile function.
+*
+* \return It returns one if the default *.elas file has been successfully
+*         created and written (and the name_elas variable of the structure
+*         pointed by pParameters successfully updated). Otherwise, zero is
+*         returned if an error is encountered in the process.
+*/
+int writingDefaultElasticFile(Parameters* pParameters);
 
 /**
 * \fn int checkValuesOfAllParameters(Parameters* pParameters)
 * \brief It examinates the content stored in the variables of the structure
 *        pointed by pParameters and checks if the values that have been loaded
-*        from the *.info file are valid in order to proceed further in the MPD
+*        from the *.input file are valid in order to proceed further in the MPD
 *        algorithm.
 *
 * \param[in] pParameters A pointer that points to the Parameters structure
@@ -1763,10 +1792,10 @@ int readInfoFileAndGetParameters(Parameters* pParameters);
 *                        valid values as described in the documentation.
 *                        Otherwise, an error is returned by the \ref
 *                        checkValuesOfAllParameters function. Let us mention
-*                        that if a default *.data and *.elas file names are
-*                        generated if necessary thanks to the name_info
-*                        variable (where the '.info' extension is replaced by
-*                        the '.data' and '.elas' one), and the name_data and
+*                        that a default *.result and *.elas file names are
+*                        generated if necessary thanks to the name_input
+*                        variable (where the '.input' extension is replaced by
+*                        the '.result' and '.elas' one), and the name_result and
 *                        and name_elas variable are updated accordingly.
 *
 * \return It returns one if the values of the structure pointed by pParameters
@@ -1779,33 +1808,6 @@ int readInfoFileAndGetParameters(Parameters* pParameters);
 * defined as non-static in order to perform unit-test on it.
 */
 int checkValuesOfAllParameters(Parameters* pParameters);
-
-/**
-* \fn int writingDefaultElasticFile(Parameters* pParameters)
-* \brief It write a default *.elas file if such a file is needed and has not
-*        been specified in the *.info (input) file.
-*
-* \param[in] pParameters A pointer that points to the Parameters structure
-*                        (defined in main.h file) of the \ref main function.
-*                        if its opt_mode variable is set to one or two,
-*                        an *.elas file is needed by the elastic software, which
-*                        must have been preivously installed. In the case where
-*                        its name_elas variable is set to NULL, the \ref
-*                        writingDefaultElasticFile function writes a default
-*                        *.elas file using the Lame coefficients given in the
-*                        corresponding \ref LAME_INT1, \ref LAME_EXT1, \ref
-*                        LAME_INT2, \ref LAME_EXT2 preprocessor constants, and
-*                        a default path name from the name_info variable
-*                        (replacing the *.info extension by the *.elas one).
-*                        Otherwise, an error is returned by the \ref
-*                        writingDefaultElasticFile function.
-*
-* \return It returns one if the default *.elas file has been successfully
-*         created and written (and the name_elas variable of the structure
-*         pointed by pParameters successfully updated). Otherwise, zero is
-*         returned if an error is encountered in the process.
-*/
-int writingDefaultElasticFile(Parameters* pParameters);
 
 /**
 * \fn int writingRestartFile(Parameters* pParameters)
