@@ -6512,7 +6512,7 @@ int computeEulerianMode(Parameters* pParameters, Mesh* pMesh,
 int computeLagrangianMode(Parameters* pParameters, Mesh* pMesh,
                                                          int iterationInTheLoop)
 {
-    int sizeMemory=0, nIter=0;
+    int sizeMemory=0, nIter=0, residual=0.;
 
     // Check that the input variables are not pointing to NULL
     if (pParameters==NULL || pMesh==NULL)
@@ -6611,7 +6611,9 @@ int computeLagrangianMode(Parameters* pParameters, Mesh* pMesh,
 
     // Generate a coarse level-set function of the intermediate mesh
     nIter=pParameters->n_iter;
+    residual=pParameters->residual;
     pParameters->n_iter=10;
+    pParameters->residual=0.;
     if (!renormalizeWithMshdistSoftware(pParameters,"dom"))
     {
         PRINT_ERROR("In computeLagrangianMode: ");
@@ -6620,6 +6622,7 @@ int computeLagrangianMode(Parameters* pParameters, Mesh* pMesh,
         return 0;
     }
     pParameters->n_iter=nIter;
+    pParameters->residual=residual;
 
     // Vizualize the coarse level-set function of the intermediate mesh
     if (pParameters->opt_mode==3)

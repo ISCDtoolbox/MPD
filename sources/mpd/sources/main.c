@@ -281,17 +281,25 @@ int main(int argc, char *argv[])
         FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
     }
 
-/*
+#ifdef _OPENMP
     // Set the number of threads for the parallelization
-    if (parameters.n_cpu<1)
+    if (parameters.n_cpu<1 || parameters.n_cpu>omp_get_max_threads())
     {
         PRINT_ERROR("In main: the number of threads ");
-        fprintf(stderr,"(=%d) for the parallelization ",parameters.n_cpu);
-        fprintf(stderr,"should be a positive integer.\n");
+        fprintf(stderr,"(=%d) set for the parallelization ",parameters.n_cpu);
+        fprintf(stderr,"should be a positive integer, not greater than the ");
+        fprintf(stderr,"total number of threads (=%d) ",omp_get_max_threads());
+        fprintf(stderr,"currently available on your computer.\n");
+
+        // Printing also a simpler error message in the standard output
+        fprintf(stdout,"\n%s\nERROR: wrong number of threads ",STR_ERROR);
+        fprintf(stdout,"given for parallel calculus.\n%s\n",STR_ERROR);
         FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
     }
     omp_set_num_threads(parameters.n_cpu);
+#endif
 
+/*
     // Load chemistry from a *.chem/ *.wfn file pointed by parameters.name_chem
     if (!loadChemistry(&parameters,&chemicalSystem))
     {
@@ -699,9 +707,9 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
     else if (i<minimumLength-1)
     {
         PRINT_ERROR("In checkStringFromLength: the input (char*) variable ");
-        fprintf(stderr,"stringToCheck is a string=%s of length ",stringToCheck);
-        fprintf(stderr,"%d which is strictly less than the minimal size ",i);
-        fprintf(stderr,"(=%d) allowed here.\n",minimumLength-1);
+        fprintf(stderr,"stringToCheck is a string (=%s) of ",stringToCheck);
+        fprintf(stderr,"length %d which is strictly less than the minimal ",i);
+        fprintf(stderr,"size (=%d) allowed here.\n",minimumLength-1);
         return 0;
     }
 
@@ -1407,10 +1415,11 @@ int initialFileExists(char* fileLocation, int nameLength)
 
 ////////////////////////////////////////////////////////////////////////////////
 // The function closeTheFile tries to properly close the FILE* variable via its
-// associated pointer pFileToClose. It has the FILE** variable as input argument
-// and it does not return any value (void output)
+// associated pointer pFileToClose and if verbose is set to a positive value,
+// then it prints a message in the standard output stream. It has the FILE**
+// variable as input argument and it does not return any value (void output)
 ////////////////////////////////////////////////////////////////////////////////
-void closeTheFile(FILE** pFileToClose)
+void closeTheFile(FILE** pFileToClose, int verbose)
 {
     if (pFileToClose!=NULL)
     {
@@ -1426,7 +1435,10 @@ void closeTheFile(FILE** pFileToClose)
             }
             else
             {
-                fprintf(stdout,"Closing file.\n");
+                if (verbose>0)
+                {
+                    fprintf(stdout,"Closing file.\n");
+                }
             }
             *pFileToClose=NULL;
         }
@@ -1435,51 +1447,68 @@ void closeTheFile(FILE** pFileToClose)
     return;
 }
 
-/*
 ////////////////////////////////////////////////////////////////////////////////
-// The function copyFileLocation tries to copy a file (using system function)
+// The function copyFileLocation tries to copy a file (using system c-function)
 // located at fileLocation (a path name of length strictly less than nameLength)
 // into the location specified at fileLocationForCopy (warning: the file at his
-// location must not already exist). It has two char* variables (fileLocation,
+// location must not already exist). If verbose is set to a positive value, then
+// it prints the content of the command line in the standard output stream;
+// otherwise, nothing is displayed. It has two char* variables (fileLocation,
 // fileLocationForCopy) and an int nameLength variable as input arguments and
 // it returns one on success, otherwise zero is returned if an error appears
 ////////////////////////////////////////////////////////////////////////////////
-int copyFileLocation(char* fileLocation, int nameLength,
+int copyFileLocation(char* fileLocation, int nameLength, int verbose,
                                                       char* fileLocationForCopy)
 {
     size_t length=0;
     char *commandLine=NULL;
+    int boolean=0;
 
-    // Check if the input fileLocation variable refers to a valid file
-    if (initialFileExists(fileLocation,nameLength)!=1)
+    // Check if the input fileLocation variable refers to a valid existing file
+    boolean=initialFileExists(fileLocation,nameLength);
+    if (abs(boolean)!=1)
     {
         PRINT_ERROR("In copyFileLocation: initialFileExists function ");
-        fprintf(stderr,"did not return one, which was the expected value ");
-        fprintf(stderr,"here, after having checked that the input (char*) ");
-        fprintf(stderr,"fileLocation variable does not point to the valid ");
-        fprintf(stderr,"path name of an existing file.\n");
+        fprintf(stderr,"returned zero instead of (+/-) one, after having ");
+        fprintf(stderr,"checked that the input (char*) fileLocation variable ");
+        fprintf(stderr,"points to the valid path name of an existing file.\n");
+        return 0;
+    }
+    else if (boolean==-1)
+    {
+        PRINT_ERROR("In copyFileLocation: the file ");
+        fprintf(stderr,"%s could not be found at the given ",fileLocation);
+        fprintf(stderr,"location.\n");
         return 0;
     }
 
     // Check that the input fileLocationForCopy variable is not pointing to NULL
     if (fileLocationForCopy==NULL)
     {
-        PRINT_ERROR("In copyFileLocation: the input (char*) ");
-        fprintf(stderr,"fileLocationForCopy variable is pointing to the ");
-        fprintf(stderr,"%p adress.\n",(void*)fileLocationForCopy);
+        PRINT_ERROR("In copyFileLocation: the (input) char* variable ");
+        fprintf(stderr,"fileLocationForCopy=%p ",(void*)fileLocationForCopy);
+        fprintf(stderr,"does not point to a valid adress.\n");
         return 0;
     }
 
     // Check the input fileLocationForCopy variable does not already refer to an
     // already-existing file (note that if the two input variables fileLocation
     // and fileLocationForCopy are identical, an error will be displayed here)
-    if (initialFileExists(fileLocationForCopy,nameLength)!=-1)
+    boolean=initialFileExists(fileLocationForCopy,nameLength);
+    if (abs(boolean)!=1)
     {
         PRINT_ERROR("In copyFileLocation: initialFileExists function ");
-        fprintf(stderr,"did not return minus one, which was the expected ");
-        fprintf(stderr,"value here, after having checked that the input ");
-        fprintf(stderr,"(char*) fileLocationForCopy variable point to the ");
-        fprintf(stderr,"name of an already existing file.\n");
+        fprintf(stderr,"returned zero instead of (+/-) one, after having ");
+        fprintf(stderr,"checked that the input (char*) fileLocationForCopy ");
+        fprintf(stderr,"variable does not point to the valid path name of an ");
+        fprintf(stderr,"existing file.\n");
+        return 0;
+    }
+    else if (boolean==1)
+    {
+        PRINT_ERROR("In copyFileLocation: an already existing file ");
+        fprintf(stderr,"%s could be found at the given ",fileLocation);
+        fprintf(stderr,"location.\n");
         return 0;
     }
 
@@ -1504,7 +1533,10 @@ int copyFileLocation(char* fileLocation, int nameLength,
     strcat(commandLine,fileLocationForCopy);
 
     // system returns is -1 on error, otherwise the return status of the command
-    fprintf(stdout,"\n%s\n",commandLine);
+    if (verbose>0)
+    {
+        fprintf(stdout,"\n%s\n",commandLine);
+    }
     if (system(commandLine))
     {
         PRINT_ERROR("In copyFileLocation: wrong return of the system ");
@@ -1521,6 +1553,7 @@ int copyFileLocation(char* fileLocation, int nameLength,
     return 1;
 }
 
+/*
 ////////////////////////////////////////////////////////////////////////////////
 // The function renameFileLocation tries to rename a file (using the system
 // function) located at fileLocation (a path name of length strictly less than

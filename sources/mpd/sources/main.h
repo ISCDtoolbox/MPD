@@ -2737,25 +2737,35 @@ int checkInputFileName(char* inputFileName, int maximumLength);
 int initialFileExists(char* fileLocation, int nameLength);
 
 /**
-* \fn void closeTheFile(FILE** pFileToClose)
+* \fn void closeTheFile(FILE** pFileToClose, int verbose)
 * \brief It tries to properly close a FILE* variable via its associated pointer
-*        pFileToClose.
+*        pFileToClose. If verbose is set to a positive value, then it prints a
+*        message in the standard output stream in case of successfull closing.
 *
 * \param[in] pFileToClose It is a pointer on the FILE* variable that is intended
-*            to be closed.
+*                         to be closed.
+*
+* \param[in] verbose An integer playing the role of a boolean. If set to a
+*                    (strictly) positive value, then it prints in the standard
+*                    output stream a message in case of successfull closing.
+*                    Otherwise, nothing is displayed in the standard output
+*                    stream during the closing of the file.
 *
 * The function \ref closeTheFile is intended to be used in case of error in any
 * other function where a file has been opened. It does not return any value
 * (void output).
 */
-void closeTheFile(FILE** pFileToClose);
+void closeTheFile(FILE** pFileToClose, int verbose);
 
 /**
-* \fn int copyFileLocation(char* fileLocation, int nameLength,
+* \fn int copyFileLocation(char* fileLocation, int nameLength, int verbose,
 *                                                     char* fileLocationForCopy)
 * \brief It tries to copy an existing file located at fileLocation (pointing to
 *        a path name of (positive) length (strictly) less than nameLength) into
-*        the location specified by the fileLocationForCopy variable.
+*        the location specified by the fileLocationForCopy variable. If the
+*        verbose variable is set to a positive value, then it prints the content
+*        of the command line in the standard output stream; otherwise, nothing
+*        is displayed.
 *
 * \param[in] fileLocation It is expected to point to the path name of an
 *                         existing file. The corresponding string must have
@@ -2766,10 +2776,17 @@ void closeTheFile(FILE** pFileToClose);
 *                         by the \ref copyFileLocation function.
 *
 * \param[in] nameLength It corresponds to the maximal length allowed for the
-*                       string pointed by fileLocation (including the
-*                       terminating nul character '\0'). It must be an integer
-*                       (strictly) greater than one. Otherwise, an error is
-*                       returned by the \ref copyFileLocation function.
+*                       strings pointed by fileLocation and fileLocationForCopy
+*                       (including the terminating nul character '\0'). It must
+*                       be an integer (strictly) greater than one. Otherwise,
+*                       an error is returned by the \ref copyFileLocation
+*                       function.
+*
+* \param[in] verbose An integer playing the role of a boolean. If set to a
+*                    (strictly) positive value, then it prints in the standard
+*                    output stream the content of the command line executed.
+*                    Otherwise, nothing is displayed in the standard output
+*                    stream.
 *
 * \param[in] fileLocationForCopy It is expected to point to the path name of a
 *                                non-already-existing file. The corresponding
@@ -2786,7 +2803,7 @@ void closeTheFile(FILE** pFileToClose);
 *         expected content), an error is displayed in the standard error stream
 *         and zero is returned by the \ref copyFileLocation function.
 */
-int copyFileLocation(char* fileLocation, int nameLength,
+int copyFileLocation(char* fileLocation, int nameLength, int verbose,
                                                      char* fileLocationForCopy);
 
 /**
