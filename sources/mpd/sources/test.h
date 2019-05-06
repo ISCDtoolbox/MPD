@@ -172,21 +172,28 @@ void testFreeChemicalMemory(void);
 void testFreeParameterMemory(void);
 
 /**
-* \fn static void testCheckStringFromLength(void)
+* \fn void testCheckStringFromLength(void)
 * \brief It performs (random) unit tests on the \ref checkStringFromLength
 *        function of the main.c file.
 */
 void testCheckStringFromLength(void);
 
 /**
-* \fn static void testCheckAllPreprocessorConstants(void)
+* \fn void testCheckAllPreprocessorConstants(void)
 * \brief It performs unit tests on the \ref checkAllPreprocessorConstants
 *        function of the main.c file.
 */
 void testCheckAllPreprocessorConstants(void);
 
 /**
-* \fn static void testInitialFileExists(void)
+* \fn void testCheckInputFileName(void)
+* \brief It performs (random) unit tests on the \ref checkInputFileName function
+*        of the main.c file.
+*/
+void testCheckInputFileName(void);
+
+/**
+* \fn void testInitialFileExists(void)
 * \brief It performs unit tests on the \ref initialFileExists function of the
 *        main.c file.
 */
@@ -207,7 +214,7 @@ void testCheckForTildeAndReplaceByHomePath(void);
 void testSetupDefaultParameters(void);
 
 /**
-* \fn static void testCloseTheFile(void)
+* \fn void testCloseTheFile(void)
 * \brief It performs unit tests on the \ref closeTheFile function of the main.c
 *        file.
 */

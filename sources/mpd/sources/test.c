@@ -51,18 +51,21 @@ void test(void)
 
 //    testCheckStringFromLength();
 //    testCheckAllPreprocessorConstants();
-//    testInitialFileExists();
+//    testCheckInputFileName();
 //    testCheckForTildeAndReplaceByHomePath();
 //    testSetupDefaultParameters();
 
+//    testInitialFileExists();
 //    testCloseTheFile();
 //    testGetLengthAfterKeywordBeginning();
 //    testGetTypeAfterKeyword();
 //    testGetLengthAfterKeywordMiddle();
 //    testDetectRepetition();
 //    testChangeValuesOfParameters();
-
 //    testReadInfoFileAndGetParameters();
+
+//    testCopyFileLocation();
+//    testWritingDefaultElasticFile();
 //    testCheckValuesOfAllParameters();
 //    testLoadParameters();
 
@@ -426,7 +429,7 @@ void testCheckStringFromLength(void)
                                     }
                                     else
                                     {
-                                        if (pStringToCheckBefore[k]!='1')
+                                        if (pStringToCheckAfter[k]!='1')
                                         {
                                             stringToCheck[l]=
                                                          pStringToCheckAfter[k];
@@ -1118,7 +1121,7 @@ void testCheckAllPreprocessorConstants(void)
                             }
                             else
                             {
-                                if (pStringToCheckBefore[j]!='1')
+                                if (pStringToCheckAfter[j]!='1')
                                 {
                                     pathTest[k]=pStringToCheckAfter[j];
                                 }
@@ -1968,7 +1971,7 @@ void testCheckAllPreprocessorConstants(void)
 
     expectedValue=1;
     PRINT_TEST_START(counter,expectedValue);
-    verbose=1;
+    verbose=2;
     returnValue=checkAllPreprocessorConstants(optMode,verbose,nCpu,rhoOpt,
                                               nameLength,lameInt1,lameInt2,
                                               lameExt1,lameExt2,bohrUnit,
@@ -2111,6 +2114,141 @@ void testCheckAllPreprocessorConstants(void)
     return;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Unit (random) tests on checkInputFileName of main.c file
+////////////////////////////////////////////////////////////////////////////////
+void testCheckInputFileName(void)
+{
+    time_t startTimer=0, endTimer=0;
+    int returnValue=0, expectedValue=0, counter=0, counterSuccess=0;
+    int counterFail=0, readChar=0;
+
+    char fileName[21]={'\0'}, *inputFileName=NULL;
+    int iTest=0, i=0, j=0, k=0, l=0, inputOrNot=0, minimumLength=8;
+    int maximumLength=0, boolean=0;
+    char fileNameBefore[6]={'a','b','1','1','d','1'};
+    char fileNameAfter[6]={'A','1','C','1','\0','\0'};
+    int *pIntMaxOrMin[2]={&minimumLength,&maximumLength};
+
+    // Test starts
+    time(&startTimer);
+    fprintf(stdout,"\nTesting checkInputFileName function.\n");
+    fileName[20]='\0';
+
+    expectedValue=0;
+    PRINT_TEST_START(counter,expectedValue);
+    fprintf(stdout,"inputFileName=%p\n",(void*)inputFileName);
+    fprintf(stdout,"maximumLength=%d\n",maximumLength);
+    returnValue=checkInputFileName(inputFileName,maximumLength);
+    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
+                                                                      readChar);
+
+    inputFileName=fileName;
+    PRINT_TEST_START(counter,expectedValue);
+    fprintf(stdout,"inputFileName=%p\n",(void*)inputFileName);
+    fprintf(stdout,"maximumLength=%d\n",maximumLength);
+    returnValue=checkInputFileName(inputFileName,maximumLength);
+    PRINT_TEST_END(counter,counterSuccess,counterFail,returnValue,expectedValue,
+                                                                      readChar);
+
+    for (maximumLength=-30; maximumLength<31; maximumLength++)
+    {
+        for (i=0; i<2; i++)
+        {
+            for (j=-30; j<31; j++)
+            {
+                for (k=0; k<6; k++)
+                {
+                    for (iTest=0; iTest<2; iTest++)
+                    {
+                        for (inputOrNot=0; inputOrNot<2; inputOrNot++)
+                        {
+                            for (l=0; l<20; l++)
+                            {
+                                fileName[l]=rand()%90+33;
+                            }
+
+                            if (iTest)
+                            {
+                                for (l=0; l<20; l++)
+                                {
+                                    if (l<*pIntMaxOrMin[i]+j)
+                                    {
+                                        if (fileNameBefore[k]!='1')
+                                        {
+                                            fileName[l]=fileNameBefore[k];
+                                        }
+                                    }
+                                    else if (l==*pIntMaxOrMin[i]+j)
+                                    {
+                                        fileName[l]='\0';
+                                    }
+                                    else
+                                    {
+                                        if (fileNameBefore[k]!='1')
+                                        {
+                                            fileName[l]=fileNameAfter[k];
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                fileName[rand()%20]='\0';
+                            }
+
+                            boolean=strlen(fileName)+1;
+                            if (inputOrNot && boolean>6)
+                            {
+                                fileName[boolean-7]='\0';
+                                strcat(fileName,".input");
+                            }
+
+                            expectedValue=1;
+                            if (maximumLength<minimumLength ||
+                                                        boolean>maximumLength ||
+                                                        boolean<minimumLength ||
+                                                     fileName[boolean-7]!='.' ||
+                                                     fileName[boolean-6]!='i' ||
+                                                     fileName[boolean-5]!='n' ||
+                                                     fileName[boolean-4]!='p' ||
+                                                     fileName[boolean-3]!='u' ||
+                                                       fileName[boolean-2]!='t')
+                            {
+                                expectedValue=0;
+                            }
+
+                            PRINT_TEST_START(counter,expectedValue);
+                            fprintf(stdout,"inputFileName=%s\n",inputFileName);
+                            fprintf(stdout,"maximumLength=%d\n",maximumLength);
+                            returnValue=checkInputFileName(inputFileName,
+                                                                 maximumLength);
+                            PRINT_TEST_END(counter,counterSuccess,counterFail,
+                                            returnValue,expectedValue,readChar);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // End of the tests
+    fprintf(stdout,"\nTotal: %d tests (%d succeeded, ",counter,counterSuccess);
+    fprintf(stdout,"%d failed) done in ",counterFail);
+    time(&endTimer);
+    if (difftime(endTimer,startTimer)<60.)
+    {
+        fprintf(stdout,"%lf seconds.\n",difftime(endTimer,startTimer));
+    }
+    else
+    {
+        fprintf(stdout,"%lf minutes.\n",difftime(endTimer,startTimer)/60.);
+    }
+    fflush(stdout);
+
+    return;
+}
+/*
 ////////////////////////////////////////////////////////////////////////////////
 // Unit tests on initialFileExists of main.c file
 ////////////////////////////////////////////////////////////////////////////////
@@ -2381,4 +2519,4 @@ void testCloseTheFile(void)
 
     return;
 }
-
+*/

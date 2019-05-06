@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
     // We set the seed for rand() function then we test the selected functions
     srand(time(NULL)); // Warning: srand(time(NULL)) must be set only one time
     test();            // It contains all the selected unit-testing functions
-#endif
+#else
 
     // Check values of all preprocessor constants (default values of Parameters)
     if (!checkAllPreprocessorConstants(OPT_MODE,VERBOSE,N_CPU,RHO_OPT,
@@ -504,6 +504,7 @@ int main(int argc, char *argv[])
         data.d2p[iStop]=d2p;
     }
 */
+#endif
 
     FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_SUCCESS);
 }

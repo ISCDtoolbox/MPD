@@ -581,7 +581,7 @@ void testCheckForTildeAndReplaceByHomePath(void)
                                     }
                                     else
                                     {
-                                        if (pStringToCheckBefore[j]!='1')
+                                        if (pStringToCheckAfter[j]!='1')
                                         {
                                             stringToCheck[l]=
                                                          pStringToCheckAfter[j];
