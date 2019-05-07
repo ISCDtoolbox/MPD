@@ -53,7 +53,7 @@ void test(void)
 //    testCheckAllPreprocessorConstants();
 //    testCheckInputFileName();
 //    testCheckForTildeAndReplaceByHomePath();
-//    testSetupDefaultParameters();
+    testSetupDefaultParameters();
 
 //    testInitialFileExists();
 //    testCloseTheFile();

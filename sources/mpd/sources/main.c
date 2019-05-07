@@ -299,7 +299,6 @@ int main(int argc, char *argv[])
     omp_set_num_threads(parameters.n_cpu);
 #endif
 
-/*
     // Load chemistry from a *.chem/ *.wfn file pointed by parameters.name_chem
     if (!loadChemistry(&parameters,&chemicalSystem))
     {
@@ -308,6 +307,8 @@ int main(int argc, char *argv[])
         FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
     }
 
+
+/*
     // Load default mesh or from the *.mesh/ *.cube file of parameters.name_mesh
     switch (loadMesh(&parameters,&mesh))
     {
@@ -1354,7 +1355,7 @@ int checkInputFileName(char* inputFileName, int maximumLength)
         inputFileName[lengthName-2]!='u' || inputFileName[lengthName-1]!='t' || 
                                                 inputFileName[lengthName]!='\0')
     {
-        PRINT_ERROR("In checkInputFileName: the input char* variable ");
+        PRINT_ERROR("In checkInputFileName: the input (char*) variable ");
         fprintf(stderr,"inputFileName (=%s) does not end with ",inputFileName);
         fprintf(stderr,"the '.input' extension.\n");
         return 0;
@@ -1486,7 +1487,7 @@ int copyFileLocation(char* fileLocation, int nameLength, int verbose,
     // Check that the input fileLocationForCopy variable is not pointing to NULL
     if (fileLocationForCopy==NULL)
     {
-        PRINT_ERROR("In copyFileLocation: the (input) char* variable ");
+        PRINT_ERROR("In copyFileLocation: the input (char*) variable ");
         fprintf(stderr,"fileLocationForCopy=%p ",(void*)fileLocationForCopy);
         fprintf(stderr,"does not point to a valid adress.\n");
         return 0;
@@ -1519,7 +1520,7 @@ int copyFileLocation(char* fileLocation, int nameLength, int verbose,
     if (commandLine==NULL)
     {
         PRINT_ERROR("In copyFileLocation: could not allocate memory for the ");
-        fprintf(stderr,"(local) char* commandLine variable.\n");
+        fprintf(stderr,"local (char*) commandLine variable.\n");
         return 0;
     }
 
@@ -1608,7 +1609,7 @@ int renameFileLocation(char* fileLocation, int nameLength,
     if (commandLine==NULL)
     {
         PRINT_ERROR("In renameFileLocation: could not allocate memory for ");
-        fprintf(stderr,"the (local) char* commandLine variable.\n");
+        fprintf(stderr,"the local (char*) commandLine variable.\n");
         return 0;
     }
 
@@ -1694,7 +1695,7 @@ int plotMeshWithMeditSoftware(Parameters* pParameters)
     if (commandLine==NULL)
     {
         PRINT_ERROR("In plotMeshWithMeditSoftware: could not allocate memory ");
-        fprintf(stderr,"for the (local) char* commandLine variable.\n");
+        fprintf(stderr,"for the local (char*) commandLine variable.\n");
         return 0;
     }
 
@@ -1804,7 +1805,7 @@ int adaptMeshWithMmg3dSoftware(Parameters* pParameters, char adaptMode[4])
     if (commandLine==NULL)
     {
         PRINT_ERROR("In adaptMeshWithMmg3dSoftware: could not allocate ");
-        fprintf(stderr,"memory for the (local) char* commandLine variable.\n");
+        fprintf(stderr,"memory for the local (char*) commandLine variable.\n");
         return 0;
     }
 
@@ -2074,7 +2075,7 @@ int renormalizeWithMshdistSoftware(Parameters* pParameters, char mode[4])
     if (commandLine==NULL)
     {
         PRINT_ERROR("In renormalizeWithMshdistSoftware: could not allocate ");
-        fprintf(stderr,"memory for the (local) char* commandLine variable.\n");
+        fprintf(stderr,"memory for the local (char*) commandLine variable.\n");
         return 0;
     }
 
@@ -2333,7 +2334,7 @@ int extendShapeGradientWithElasticSoftware(Parameters* pParameters)
     if (commandLine==NULL)
     {
         PRINT_ERROR("In extendShapeGradientWithElasticSoftware: could not ");
-        fprintf(stderr,"allocate memory for the (local) char* commandLine ");
+        fprintf(stderr,"allocate memory for the local (char*) commandLine ");
         fprintf(stderr,"variable.\n");
         return 0;
     }
@@ -2465,7 +2466,7 @@ int advectLevelSetWithAdvectSoftware(Parameters* pParameters)
     if (commandLine==NULL)
     {
         PRINT_ERROR("In advectLevelSetWithAdvectSoftware: could not ");
-        fprintf(stderr,"allocate memory for the (local) char* commandLine ");
+        fprintf(stderr,"allocate memory for the local (char*) commandLine ");
         fprintf(stderr,"variable.\n");
         return 0;
     }

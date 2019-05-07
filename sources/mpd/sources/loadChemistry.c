@@ -142,15 +142,14 @@ void freeChemicalMemory(ChemicalSystem* pChemicalSystem)
     return;
 }
 
-/*
 ////////////////////////////////////////////////////////////////////////////////
 // The function getChemicalFormat determines if the file located at fileLocation
-// exists and if its name ends by the *.chem extension or the *.wfn one, with a
-// length (strictly) lower than the nameLength variable, and more than five (to
-// be able to store at least something more than the *.chem or *.wfn extension).
-// It has the char* fileLocation and int nameLength variables as input
-// arguments, and it return zero if an error occurs, otherwise 1 (resp. -1)
-// is returned for the *.chem (resp. *.wfn) format.
+// exists and if its name ends by the *.chem extension or by the *.wfn one, with
+// a length (strictly) lower than the nameLength variable, and more than five
+// (in order to be able to store at least something more than the *.chem or the
+// *.wfn extension). It has the char* fileLocation and int nameLength variables
+// as input arguments, and it return zero if an error occurs, otherwise 1
+// (resp. -1) is returned for the *.chem (resp. *.wfn) format.
 ////////////////////////////////////////////////////////////////////////////////
 int getChemicalFormat(char* fileLocation, int nameLength)
 {
@@ -160,18 +159,27 @@ int getChemicalFormat(char* fileLocation, int nameLength)
     // Check that nameLength is (strictly) greater than six
     if (nameLength<7)
     {
-        PRINT_ERROR("In getChemicalFormat: the input nameLength ");
-        fprintf(stderr,"(=%d) variable should be an integer ",nameLength);
+        PRINT_ERROR("In getChemicalFormat: the input variable ");
+        fprintf(stderr,"nameLength (=%d) should be an integer ",nameLength);
         fprintf(stderr,"(strictly) greater than six.\n");
         return 0;
     }
 
     // Check if the file exists at fileLocation
-    if (initialFileExists(fileLocation,nameLength)!=1)
+    returnValue=initialFileExists(fileLocation,nameLength);
+    if (abs(returnValue)!=1)
     {
-        PRINT_ERROR("In getChemicalFormat: the initialFileExists function ");
-        fprintf(stderr,"did not returned one, which was the expected value ");
-        fprintf(stderr,"here.\n");
+        PRINT_ERROR("In getChemicalFormat: initialFileExists function ");
+        fprintf(stderr,"returned zero instead of (+/-) one, while attempting ");
+        fprintf(stderr,"to check if the input (char*) fileLocation variable ");
+        fprintf(stderr,"stores the name of an existing file.\n");
+        return 0;
+    }
+    else if (returnValue==-1)
+    {
+        PRINT_ERROR("In getChemicalFormat: the file ");
+        fprintf(stderr,"%s could not be found at the given ",fileLocation);
+        fprintf(stderr,"given location.\n");
         return 0;
     }
 
@@ -180,10 +188,10 @@ int getChemicalFormat(char* fileLocation, int nameLength)
     length=strlen(fileLocation);
     if (length<6)
     {
-        PRINT_ERROR("In getChemicalFormat: the input fileLocation variable ");
+        PRINT_ERROR("In getChemicalFormat: the input variable fileLocation ");
         fprintf(stderr,"(=%s) should have a length that at ",fileLocation);
         fprintf(stderr,"least equals six in order to end with something more ");
-        fprintf(stderr,"than the '.chem' or '.wfn' extension.\n");
+        fprintf(stderr,"than the '.chem' or the '.wfn' extension.\n");
         return 0;
     }
     // Remark here: if the file is entitled 'A.wfn' the mpdProgram will fail
@@ -203,15 +211,16 @@ int getChemicalFormat(char* fileLocation, int nameLength)
     }
     else
     {
-        PRINT_ERROR("In getChemicalFormat: the input fileLocation variable ");
+        PRINT_ERROR("In getChemicalFormat: the input variable fileLocation ");
         fprintf(stderr,"(=%s) does not end with the '.chem' ",fileLocation);
-        fprintf(stderr,"or '.wfn' extension.\n");
+        fprintf(stderr,"or the '.wfn' extension.\n");
         returnValue=0;
     }
 
     return returnValue;
 }
 
+/*
 ////////////////////////////////////////////////////////////////////////////////
 // The function readChemFileandAllocateChemicalSystem reads the file at
 // fileLocation (file must exist with length (strictly) lower than nameLength),
@@ -251,7 +260,7 @@ int readChemFileandAllocateChemicalSystem(char* fileLocation, int nameLength,
         PRINT_ERROR("In readChemFileandAllocateChemicalSystem: ");
         fprintf(stderr,"getChemicalFormat function did not returned one, ");
         fprintf(stderr,"which was the expected value here, after having ");
-        fprintf(stderr,"checked that the char* input variable fileLocation ");
+        fprintf(stderr,"checked that the input (char*) variable fileLocation ");
         fprintf(stderr,"does not point to the name of an existing and valid ");
         fprintf(stderr,"*.chem file.\n");
         return 0;
@@ -942,7 +951,7 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
     }
 
     // Read the expected word GAUSSIAN in the second line
-    // fgets returns NULL if it fails, otherwise the same (char*) input address
+    // fgets returns NULL if it fails, otherwise the same input (char*) address
     readStringOut=fgets(readStringIn,9,wfnFile);
     if (readStringOut==NULL)
     {
@@ -1869,7 +1878,7 @@ int writingChemicalFile(char* fileLocation, int nameLength,
     {
         PRINT_ERROR("In writingChemicalFile: checkStringFromLength function ");
         fprintf(stderr,"returned zero, which is not the expected value here, ");
-        fprintf(stderr,"after having checked that the char* fileLocation ");
+        fprintf(stderr,"after having checked that the (char*) fileLocation ");
         fprintf(stderr,"variable is not a string of length (strictly) less ");
         fprintf(stderr,"than %d (and more than 5 in order to ",nameLength);
         fprintf(stderr,"store at least something more than the *.chem ");
@@ -2037,65 +2046,46 @@ int writingChemicalFile(char* fileLocation, int nameLength,
 
     return 1;
 }
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 // The function loadChemistry extracts the chemical data from a *.chem or *.wfn
-// file (warning: reset and overwrite chemicalOut.chem file if it already
-// exists) at the location pointed by the name_chem variable of the structure
-// pointed by pParameters. It has the Parameters* and ChemicalSystem* variables
+// file, which must exist at the location given by the name_chem variable of
+// the structure pointed by pParameters. A local copy of this file is saved in
+// the *.chem format, using the *.input file name but where the '.input'
+// extension has been replaced by the '.chem' one (warning: such a file is
+// overwritten if it already exists and different from the one given by
+// pParameters->name_chem). It has the Parameters* and ChemicalSystem* variables
 // (both defined in main.h) as input arguments and it returns zero if an error
-// occurred, otherwise one is returned in case of sucess
+// occurred, otherwise one is returned in the case of success
 ////////////////////////////////////////////////////////////////////////////////
 int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
 {
-    size_t length=0;
+    size_t lengthName=0;
     char *fileLocation=NULL;
     int orbRhf=0;
 
     // Testing if pParameters or pChemicalSystem is pointing to NULL
     if (pParameters==NULL || pChemicalSystem==NULL)
     {
-        PRINT_ERROR("In loadChemistry: at least one of the input pParameters ");
-        fprintf(stderr,"%p or pChemicalSystem ",(void*)pParameters);
-        fprintf(stderr,"%p variable does not point to ",(void*)pChemicalSystem);
-        fprintf(stderr,"a valid address.\n");
+        PRINT_ERROR("In loadChemistry: at least one of the input variables ");
+        fprintf(stderr,"pParameters=%p or ",(void*)pParameters);
+        fprintf(stderr,"pChemicalSystem=%p does not ",(void*)pChemicalSystem);
+        fprintf(stderr,"point to a valid address.\n");
         return 0;
     }
 
-    // Check pParameters->name_info variable
-    if (!checkStringFromLength(pParameters->name_info,7,
-                                                      pParameters->name_length))
+    // Check the pParameters->name_length and pParameters->name_input variables
+    if (!checkInputFileName(pParameters->name_input,pParameters->name_length))
     {
-        PRINT_ERROR("In loadChemistry: checkStringFromLength function ");
-        fprintf(stderr,"returned zero, which is not the expected value here, ");
-        fprintf(stderr,"after having checked that the char* name_info ");
-        fprintf(stderr,"variable of the structure pointed by pParameters is ");
-        fprintf(stderr,"not a string of length (strictly) less than ");
-        fprintf(stderr,"%d (and strcitly more than ",pParameters->name_length);
-        fprintf(stderr,"5 in order to store at least something more than the ");
-        fprintf(stderr,"*.info extension).\n");
-        return 0;
-    }
-
-    // Check if the *.info file name ends with the ".info" extension
-    // strlen returns the length of the string, but not including the char '\0'
-    length=strlen(pParameters->name_info);
-    if (pParameters->name_info[length-5]!='.' ||
-                                        pParameters->name_info[length-4]!='i' ||
-                                        pParameters->name_info[length-3]!='n' ||
-                                        pParameters->name_info[length-2]!='f' ||
-                                        pParameters->name_info[length-1]!='o' ||
-                                           pParameters->name_info[length]!='\0')
-    {
-        PRINT_ERROR("In loadChemistry: ");
-        fprintf(stderr,"%s file name does not end ",pParameters->name_info);
-        fprintf(stderr,"with with the '.info' extension.\n");
+        PRINT_ERROR("In loadChemistry: checkInputFileName function returned ");
+        fprintf(stderr,"zero instead of one.\n");
         return 0;
     }
 
     // calloc returns a pointer to the allocated memory, otherwise NULL
-    length=pParameters->name_length;
-    fileLocation=(char*)calloc(length,sizeof(char));
+    lengthName=pParameters->name_length;
+    fileLocation=(char*)calloc(lengthName,sizeof(char));
     if (fileLocation==NULL)
     {
         PRINT_ERROR("In loadChemistry: could not allocate memory for the ");
@@ -2107,6 +2097,9 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
     // type of format (1 is *.chem, -1 is *.wfn, 0 refers to an error)
     switch (getChemicalFormat(pParameters->name_chem,pParameters->name_length))
     {
+        default:
+            break;
+/*
         case 1:
             fprintf(stdout,"\nChemistry will be loaded from ");
             fprintf(stdout,"%s file.",pParameters->name_chem);
@@ -2161,14 +2154,14 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
 
             // Set the default *.chem name in fileLocation in case of file copy
             // strncpy function returns a pointer to the string (not used here)
-            strncpy(fileLocation,pParameters->name_info,length);
-            length=strlen(fileLocation);
-            fileLocation[length-5]='.';
-            fileLocation[length-4]='c';
-            fileLocation[length-3]='h';
-            fileLocation[length-2]='e';
-            fileLocation[length-1]='m';
-            fileLocation[length]='\0';
+            strncpy(fileLocation,pParameters->name_info,lengthName);
+            lengthName=strlen(fileLocation);
+            fileLocation[lengthName-5]='.';
+            fileLocation[lengthName-4]='c';
+            fileLocation[lengthName-3]='h';
+            fileLocation[lengthName-2]='e';
+            fileLocation[lengthName-1]='m';
+            fileLocation[lengthName]='\0';
 
             // Copy the *.chem file into a default *.chem if names are different
             // strcmp returns 0 if the 2 strings are =, otherwise <0 (resp. >0)
@@ -2212,14 +2205,14 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
             fprintf(stdout,"%s file.",pParameters->name_chem);
 
             // Copy the *.wfn file into a (previously removed if exists) *.temp
-            strncpy(fileLocation,pParameters->name_info,length);
-            length=strlen(fileLocation);
-            fileLocation[length-5]='.';
-            fileLocation[length-4]='t';
-            fileLocation[length-3]='e';
-            fileLocation[length-2]='m';
-            fileLocation[length-1]='p';
-            fileLocation[length]='\0';
+            strncpy(fileLocation,pParameters->name_info,lengthName);
+            lengthName=strlen(fileLocation);
+            fileLocation[lengthName-5]='.';
+            fileLocation[lengthName-4]='t';
+            fileLocation[lengthName-3]='e';
+            fileLocation[lengthName-2]='m';
+            fileLocation[lengthName-1]='p';
+            fileLocation[lengthName]='\0';
 
             if (initialFileExists(fileLocation,pParameters->name_length)==1)
             {
@@ -2322,13 +2315,13 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
 
             // Change the *.temp extension into an *.chem one (warning: the
             // corresponding *.chem file will be next deleted if it exists)
-            length=strlen(fileLocation);
-            fileLocation[length-5]='.';
-            fileLocation[length-4]='c';
-            fileLocation[length-3]='h';
-            fileLocation[length-2]='e';
-            fileLocation[length-1]='m';
-            fileLocation[length]='\0';
+            lengthName=strlen(fileLocation);
+            fileLocation[lengthName-5]='.';
+            fileLocation[lengthName-4]='c';
+            fileLocation[lengthName-3]='h';
+            fileLocation[lengthName-2]='e';
+            fileLocation[lengthName-1]='m';
+            fileLocation[lengthName]='\0';
 
             if (initialFileExists(fileLocation,pParameters->name_length)==1)
             {
@@ -2369,12 +2362,14 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
             fileLocation=NULL;
             return 0;
             break;
+*/
     }
+
 
     // Free the memory allocated for fileLocation
     free(fileLocation);
     fileLocation=NULL;
-
+/*
     fprintf(stdout,"\nChemical system ");
     if (pParameters->orb_rhf)
     {
@@ -2400,8 +2395,8 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
         fprintf(stderr,"number of electrons (=%d).\n",pChemicalSystem->nmorb);
         return 0;
     }
+*/
 
     return 1;
 }
-*/
 

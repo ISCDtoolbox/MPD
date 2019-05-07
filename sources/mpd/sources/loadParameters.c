@@ -292,7 +292,7 @@ int checkForTildeAndReplaceByHomePath(char** pStringToCheck, int maximumLength)
         if (pathName==NULL)
         {
             PRINT_ERROR("In checkForTildeAndReplaceByHomePath: could not ");
-            fprintf(stderr,"allocate memory for the local char* pathName ");
+            fprintf(stderr,"allocate memory for the local (char*) pathName ");
             fprintf(stderr,"variable.\n");
             return 0;
         }
@@ -423,12 +423,12 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
     {
         PRINT_ERROR("In setupDefaultParameters: checkInputFileName function ");
         fprintf(stderr,"returned zero instead of one, after having checked ");
-        fprintf(stderr,"that the input char* variable called nameInputFile, ");
-        fprintf(stderr,"which was supposed to store the name of the *.input ");
-        fprintf(stderr,"file, is not a string of length strictly less than ");
-        fprintf(stderr,"%d (and strictly more than 7) that ",NAME_LENGTH);
-        fprintf(stderr,"contains a (non-empty) name ended by the '.input' ");
-        fprintf(stderr,"file extension.\n");
+        fprintf(stderr,"that the input (char*) variable called ");
+        fprintf(stderr,"nameInputFile, which was supposed to store the name ");
+        fprintf(stderr,"of the *.input file, is not a string of length ");
+        fprintf(stderr,"strictly less than %d (and strictly more ",NAME_LENGTH);
+        fprintf(stderr,"than 7) that contains a (non-empty) name ended by ");
+        fprintf(stderr,"the '.input' file extension.\n");
         return 0;
     }
 
@@ -444,7 +444,7 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
     if (pParameters->name_input==NULL)
     {
         PRINT_ERROR("In setupDefaultParameters: could not allocate memory ");
-        fprintf(stderr,"for the char* pParameters->name_input variable.\n");
+        fprintf(stderr,"for the (char*) pParameters->name_input variable.\n");
         return 0;
     }
 
@@ -531,7 +531,7 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
     if (pParameters->path_medit==NULL)
     {
         PRINT_ERROR("In setupDefaultParameters: could not allocate memory ");
-        fprintf(stderr,"for the char* pParameters->path_medit variable.\n");
+        fprintf(stderr,"for the (char*) pParameters->path_medit variable.\n");
         return 0;
     }
     strncpy(pParameters->path_medit,PATH_MEDIT,pParameters->path_length);
@@ -557,7 +557,7 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
     if (pParameters->path_mmg3d==NULL)
     {
         PRINT_ERROR("In setupDefaultParameters: could not allocate memory ");
-        fprintf(stderr,"for the char* pParameters->path_mmg3d variable.\n");
+        fprintf(stderr,"for the (char*) pParameters->path_mmg3d variable.\n");
         return 0;
     }
     strncpy(pParameters->path_mmg3d,PATH_MMG3D,pParameters->path_length);
@@ -595,7 +595,7 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
     if (pParameters->path_mshdist==NULL)
     {
         PRINT_ERROR("In setupDefaultParameters: could not allocate memory ");
-        fprintf(stderr,"for the char* pParameters->path_mshdist variable.\n");
+        fprintf(stderr,"for the (char*) pParameters->path_mshdist variable.\n");
         return 0;
     }
     strncpy(pParameters->path_mshdist,PATH_MSHDIST,pParameters->path_length);
@@ -644,7 +644,7 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
     if (pParameters->path_elastic==NULL)
     {
         PRINT_ERROR("In setupDefaultParameters: could not allocate memory ");
-        fprintf(stderr,"for the char* pParameters->path_elastic variable.\n");
+        fprintf(stderr,"for the (char*) pParameters->path_elastic variable.\n");
         return 0;
     }
     strncpy(pParameters->path_elastic,PATH_ELASTIC,pParameters->path_length);
@@ -704,7 +704,7 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
     if (pParameters->path_advect==NULL)
     {
         PRINT_ERROR("In setupDefaultParameters: could not allocate memory ");
-        fprintf(stderr,"for the char* pParameters->path_advect variable.\n");
+        fprintf(stderr,"for the (char*) pParameters->path_advect variable.\n");
         return 0;
     }
     strncpy(pParameters->path_advect,PATH_ADVECT,pParameters->path_length);
@@ -1704,7 +1704,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
         PRINT_ERROR("In changeValuesOfParameters: checkStringFromLength ");
         fprintf(stderr,"function returned zero, which is not the expected ");
         fprintf(stderr,"value here, after having successively checked that ");
-        fprintf(stderr,"one of the char* variables name_input, path_medit, ");
+        fprintf(stderr,"one of the (char*) variables name_input, path_medit, ");
         fprintf(stderr,"path_mmg3d, path_mshdist, path_elastic, or ");
         fprintf(stderr,"path_advect of the input structure pointed by ");
         fprintf(stderr,"pParameters is not a string with the correct size.\n");
@@ -1834,7 +1834,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             if (stringCopy==NULL)
             {
                 PRINT_ERROR("In changeValuesOfParameters: could not ");
-                fprintf(stderr,"reallocate memory for the char* ");
+                fprintf(stderr,"reallocate memory for the (char*) ");
                 fprintf(stderr,"pParameters->name_input variable.\n");
                 return 0;
             }
@@ -1848,7 +1848,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
                 if (stringCopy==NULL)
                 {
                     PRINT_ERROR("In changeValuesOfParameters: could not ");
-                    fprintf(stderr,"reallocate memory for the char* ");
+                    fprintf(stderr,"reallocate memory for the (char*) ");
                     fprintf(stderr,"pParameters->name_result variable.\n");
                     return 0;
                 }
@@ -1863,7 +1863,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
                 if (stringCopy==NULL)
                 {
                     PRINT_ERROR("In changeValuesOfParameters: could not ");
-                    fprintf(stderr,"reallocate memory for the char* ");
+                    fprintf(stderr,"reallocate memory for the (char*) ");
                     fprintf(stderr,"pParameters->name_chem variable.\n");
                     return 0;
                 }
@@ -1878,7 +1878,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
                 if (stringCopy==NULL)
                 {
                     PRINT_ERROR("In changeValuesOfParameters: could not ");
-                    fprintf(stderr,"reallocate memory for the char* ");
+                    fprintf(stderr,"reallocate memory for the (char*) ");
                     fprintf(stderr,"pParameters->name_mesh variable.\n");
                     return 0;
                 }
@@ -1893,7 +1893,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
                 if (stringCopy==NULL)
                 {
                     PRINT_ERROR("In changeValuesOfParameters: could not ");
-                    fprintf(stderr,"reallocate memory for the char* ");
+                    fprintf(stderr,"reallocate memory for the (char*) ");
                     fprintf(stderr,"pParameters->name_elas variable.\n");
                     return 0;
                 }
@@ -1914,7 +1914,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
         // Check if this is the first time pParameters->name_result is found
         if (pParameters->name_result!=NULL)
         {
-            PRINT_ERROR("In changeValuesOfParameters: the char* variable ");
+            PRINT_ERROR("In changeValuesOfParameters: the (char*) variable ");
             fprintf(stderr,"name_result ");
             fprintf(stderr,"(=%p) of the ",(void*)pParameters->name_result);
             fprintf(stderr,"structure pointed by pParameters has not been ");
@@ -1928,7 +1928,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             PRINT_ERROR("In changeValuesOfParameters: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
             fprintf(stderr,"expected value here, after having checked that ");
-            fprintf(stderr,"the input char* variable readStringIn, ");
+            fprintf(stderr,"the input (char*) variable readStringIn, ");
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
             fprintf(stderr,"sucessfully read as name_result, is not a string ");
             fprintf(stderr,"of length (strictly) less than ");
@@ -1946,7 +1946,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
         if (pParameters->name_result==NULL)
         {
             PRINT_ERROR("In changeValuesOfParameters: could not allocate ");
-            fprintf(stderr,"memory for the char* pParameters->name_result ");
+            fprintf(stderr,"memory for the (char*) pParameters->name_result ");
             fprintf(stderr,"variable.\n");
             return 0;
         }
@@ -1957,7 +1957,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
         // Check if this is the first time pParameters->name_chem is found
         if (pParameters->name_chem!=NULL)
         {
-            PRINT_ERROR("In changeValuesOfParameters: the name_chem char* ");
+            PRINT_ERROR("In changeValuesOfParameters: the name_chem (char*) ");
             fprintf(stderr,"variable (=%p) of ",(void*)pParameters->name_chem);
             fprintf(stderr,"the structure pointed by pParameters has not ");
             fprintf(stderr,"been correctly initialized to the NULL pointer.\n");
@@ -1970,7 +1970,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             PRINT_ERROR("In changeValuesOfParameters: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
             fprintf(stderr,"expected value here, after having checked that ");
-            fprintf(stderr,"the input char* variable readStringIn, ");
+            fprintf(stderr,"the input (char*) variable readStringIn, ");
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
             fprintf(stderr,"sucessfully read as name_chem, is not a string ");
             fprintf(stderr,"of length (strictly) less than ");
@@ -1997,7 +1997,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
         // Check if this is the first time pParameters->name_mesh is found
         if (pParameters->name_mesh!=NULL)
         {
-            PRINT_ERROR("In changeValuesOfParameters: the name_mesh char* ");
+            PRINT_ERROR("In changeValuesOfParameters: the name_mesh (char*) ");
             fprintf(stderr,"variable (=%p) of ",(void*)pParameters->name_mesh);
             fprintf(stderr,"the structure pointed by pParameters has not ");
             fprintf(stderr,"been correctly initialized to the NULL pointer.\n");
@@ -2010,7 +2010,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             PRINT_ERROR("In changeValuesOfParameters: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
             fprintf(stderr,"expected value here, after having checked that ");
-            fprintf(stderr,"the input char* variable readStringIn, ");
+            fprintf(stderr,"the input (char*) variable readStringIn, ");
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
             fprintf(stderr,"sucessfully read as name_mesh, is not a string ");
             fprintf(stderr,"of length (strictly) less than ");
@@ -2026,7 +2026,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
         if (pParameters->name_mesh==NULL)
         {
             PRINT_ERROR("In changeValuesOfParameters: could not allocate ");
-            fprintf(stderr,"memory for the char* pParameters->name_mesh ");
+            fprintf(stderr,"memory for the (char*) pParameters->name_mesh ");
             fprintf(stderr,"variable.\n");
             return 0;
         }
@@ -2037,7 +2037,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
         // Check if this is the first time pParameters->name_elas is found
         if (pParameters->name_elas!=NULL)
         {
-            PRINT_ERROR("In changeValuesOfParameters: the name_elas char* ");
+            PRINT_ERROR("In changeValuesOfParameters: the name_elas (char*) ");
             fprintf(stderr,"variable (=%p) of ",(void*)pParameters->name_elas);
             fprintf(stderr,"the structure pointed by pParameters has not ");
             fprintf(stderr,"been correctly initialized to the NULL pointer.\n");
@@ -2050,7 +2050,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             PRINT_ERROR("In changeValuesOfParameters: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
             fprintf(stderr,"expected value here, after having checked that ");
-            fprintf(stderr,"the input char* variable readStringIn, ");
+            fprintf(stderr,"the input (char*) variable readStringIn, ");
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
             fprintf(stderr,"sucessfully read as name_elas, is not a string ");
             fprintf(stderr,"of length (strictly) less than ");
@@ -2066,7 +2066,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
         if (pParameters->name_elas==NULL)
         {
             PRINT_ERROR("In changeValuesOfParameters: could not allocate ");
-            fprintf(stderr,"memory for the char* pParameters->name_elas ");
+            fprintf(stderr,"memory for the (char*) pParameters->name_elas ");
             fprintf(stderr,"variable.\n");
             return 0;
         }
@@ -2278,7 +2278,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             if (stringCopy==NULL)
             {
                 PRINT_ERROR("In changeValuesOfParameters: could not ");
-                fprintf(stderr,"reallocate memory for the char* ");
+                fprintf(stderr,"reallocate memory for the (char*) ");
                 fprintf(stderr,"pParameters->path_medit variable.\n");
                 return 0;
             }
@@ -2290,7 +2290,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             if (stringCopy==NULL)
             {
                 PRINT_ERROR("In changeValuesOfParameters: could not ");
-                fprintf(stderr,"reallocate memory for the char* ");
+                fprintf(stderr,"reallocate memory for the (char*) ");
                 fprintf(stderr,"pParameters->path_mmg3d variable.\n");
                 return 0;
             }
@@ -2302,7 +2302,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             if (stringCopy==NULL)
             {
                 PRINT_ERROR("In changeValuesOfParameters: could not ");
-                fprintf(stderr,"reallocate memory for the char* ");
+                fprintf(stderr,"reallocate memory for the (char*) ");
                 fprintf(stderr,"pParameters->path_mshdist variable.\n");
                 return 0;
             }
@@ -2314,7 +2314,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             if (stringCopy==NULL)
             {
                 PRINT_ERROR("In changeValuesOfParameters: could not ");
-                fprintf(stderr,"reallocate memory for the char* ");
+                fprintf(stderr,"reallocate memory for the (char*) ");
                 fprintf(stderr,"pParameters->path_elastic variable.\n");
                 return 0;
             }
@@ -2326,7 +2326,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             if (stringCopy==NULL)
             {
                 PRINT_ERROR("In changeValuesOfParameters: could not ");
-                fprintf(stderr,"reallocate memory for the char* ");
+                fprintf(stderr,"reallocate memory for the (char*) ");
                 fprintf(stderr,"pParameters->path_advect variable.\n");
                 return 0;
             }
@@ -2345,7 +2345,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             PRINT_ERROR("In changeValuesOfParameters: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
             fprintf(stderr,"expected value here, after having checked that ");
-            fprintf(stderr,"the input char* variable readStringIn, ");
+            fprintf(stderr,"the input (char*) variable readStringIn, ");
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
             fprintf(stderr,"sucessfully read as path_medit, is not a string ");
             fprintf(stderr,"of length (strictly) less than ");
@@ -2366,7 +2366,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             PRINT_ERROR("In changeValuesOfParameters: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
             fprintf(stderr,"expected value here, after having checked that ");
-            fprintf(stderr,"the input char* variable readStringIn, ");
+            fprintf(stderr,"the input (char*) variable readStringIn, ");
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
             fprintf(stderr,"sucessfully read as path_mmg3d, is not a string ");
             fprintf(stderr,"of length (strictly) less than ");
@@ -2387,7 +2387,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             PRINT_ERROR("In changeValuesOfParameters: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
             fprintf(stderr,"expected value here, after having checked that ");
-            fprintf(stderr,"the input char* variable readStringIn, ");
+            fprintf(stderr,"the input (char*) variable readStringIn, ");
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
             fprintf(stderr,"sucessfully read as path_mshdist, is not a ");
             fprintf(stderr,"string of length (strictly) less than ");
@@ -2408,7 +2408,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             PRINT_ERROR("In changeValuesOfParameters: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
             fprintf(stderr,"expected value here, after having checked that ");
-            fprintf(stderr,"the input char* variable readStringIn, ");
+            fprintf(stderr,"the input (char*) variable readStringIn, ");
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
             fprintf(stderr,"sucessfully read as path_elastic, is not a ");
             fprintf(stderr,"string of length (strictly) less than ");
@@ -2429,7 +2429,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             PRINT_ERROR("In changeValuesOfParameters: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
             fprintf(stderr,"expected value here, after having checked that ");
-            fprintf(stderr,"the input char* variable readStringIn, ");
+            fprintf(stderr,"the input (char*) variable readStringIn, ");
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
             fprintf(stderr,"sucessfully read as path_advect, is not a ");
             fprintf(stderr,"string of length (strictly) less than ");
@@ -2626,7 +2626,7 @@ int readInputFileAndGetParameters(Parameters* pParameters)
     if (readStringIn==NULL)
     {
         PRINT_ERROR("In readInputFileAndGetParameters: could not allocate ");
-        fprintf(stderr,"memory for the (local) char* variable readStringIn.\n");
+        fprintf(stderr,"memory for the local (char*) variable readStringIn.\n");
         return 0;
     }
 
@@ -2968,7 +2968,7 @@ int readInputFileAndGetParameters(Parameters* pParameters)
                     {
                         PRINT_ERROR("In readInputFileAndGetParameters: could ");
                         fprintf(stderr,"not reallocate memory for the ");
-                        fprintf(stderr,"(local) char* readStringIn ");
+                        fprintf(stderr,"local (char*) readStringIn ");
                         fprintf(stderr,"variable.\n");
                         closeTheFile(&infoFile,1);
                         free(readStringIn);
@@ -4030,7 +4030,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             lengthName=strlen(pParameters->name_elas);
             if (lengthName<6)
             {
-                PRINT_ERROR("In checkValuesOfAllParameters: the char* ");
+                PRINT_ERROR("In checkValuesOfAllParameters: the (char*) ");
                 fprintf(stderr,"name_elas variable of the structure pointed ");
                 fprintf(stderr,"by pParameters points to the ");
                 fprintf(stderr,"%s file name, which ",pParameters->name_elas);
@@ -4053,7 +4053,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
                                     pParameters->name_elas[lengthName-1]!='s' ||
                                        pParameters->name_elas[lengthName]!='\0')
             {
-                PRINT_ERROR("In checkValuesOfAllParameters: the char* ");
+                PRINT_ERROR("In checkValuesOfAllParameters: the (char*) ");
                 fprintf(stderr,"name_elas variable of the structure pointed ");
                 fprintf(stderr,"by pParameters points to the ");
                 fprintf(stderr,"%s file name, which ",pParameters->name_elas);
@@ -4072,7 +4072,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             if (fileLocation==NULL)
             {
                 PRINT_ERROR("In checkValuesOfAllParameters: could not ");
-                fprintf(stderr,"allocate memory for the local char* ");
+                fprintf(stderr,"allocate memory for the local (char*) ");
                 fprintf(stderr,"fileLocation variable.\n");
                 return 0;
             }
@@ -5247,7 +5247,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         if (fileLocation==NULL)
         {
             PRINT_ERROR("In checkValuesOfAllParameters: could not allocate ");
-            fprintf(stderr,"memory for the local char* fileLocation ");
+            fprintf(stderr,"memory for the local (char*) fileLocation ");
             fprintf(stderr,"variable.\n");
             return 0;
         }
@@ -5404,7 +5404,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         if (fileLocation==NULL)
         {
             PRINT_ERROR("In checkValuesOfAllParameters: could not allocate ");
-            fprintf(stderr,"memory for the local char* fileLocation ");
+            fprintf(stderr,"memory for the local (char*) fileLocation ");
             fprintf(stderr,"variable.\n");
             return 0;
         }
@@ -5650,7 +5650,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         if (fileLocation==NULL)
         {
             PRINT_ERROR("In checkValuesOfAllParameters: could not allocate ");
-            fprintf(stderr,"memory for the local char* fileLocation ");
+            fprintf(stderr,"memory for the local (char*) fileLocation ");
             fprintf(stderr,"variable.\n");
             return 0;
         }
@@ -6237,9 +6237,9 @@ int writingRestartFile(Parameters* pParameters)
     if (fileName==NULL)
     {
         PRINT_ERROR("In writingRestartFile: could not allocate memory for ");
-        fprintf(stderr,"the local char* fileName variable, that was intended ");
-        fprintf(stderr,"to temporarily store the name of the *.restart ");
-        fprintf(stderr,"file.\n");
+        fprintf(stderr,"the local (char*) fileName variable, that was ");
+        fprintf(stderr,"intended to temporarily store the name of the ");
+        fprintf(stderr,"*.restart file.\n");
         return 0;
     }
 
@@ -6296,7 +6296,7 @@ int writingRestartFile(Parameters* pParameters)
     {
         PRINT_ERROR("In writingRestartFile: checkStringFromLength function ");
         fprintf(stderr,"returned zero, which is not the expected value ");
-        fprintf(stderr,"here, after having checked that the char* ");
+        fprintf(stderr,"here, after having checked that the (char*) ");
         fprintf(stderr,"name_result variable of the structure pointed by ");
         fprintf(stderr,"pParameters is not a string of length (strictly) ");
         fprintf(stderr,"less than %d (and more ",pParameters->name_length);
@@ -6316,7 +6316,7 @@ int writingRestartFile(Parameters* pParameters)
     {
         PRINT_ERROR("In writingRestartFile: checkStringFromLength function ");
         fprintf(stderr,"returned zero, which is not the expected value here, ");
-        fprintf(stderr,"after having checked that the char* name_chem ");
+        fprintf(stderr,"after having checked that the (char*) name_chem ");
         fprintf(stderr,"variable of the structure pointed by pParameters is ");
         fprintf(stderr,"not a string of length (strictly) less than ");
         fprintf(stderr,"%d (and more than 5 in ",pParameters->name_length);
@@ -6336,7 +6336,7 @@ int writingRestartFile(Parameters* pParameters)
     {
         PRINT_ERROR("In writingRestartFile: checkStringFromLength function ");
         fprintf(stderr,"returned zero, which is not the expected value ");
-        fprintf(stderr,"here, after having checked that the char* ");
+        fprintf(stderr,"here, after having checked that the (char*) ");
         fprintf(stderr,"name_mesh variable of the structure pointed by ");
         fprintf(stderr,"pParameters is not a string of length (strictly) ");
         fprintf(stderr,"less than %d (and more ",pParameters->name_length);
@@ -6359,7 +6359,7 @@ int writingRestartFile(Parameters* pParameters)
             PRINT_ERROR("In writingRestartFile: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
             fprintf(stderr,"expected value here, after having checked ");
-            fprintf(stderr,"that the char* name_elas variable of the ");
+            fprintf(stderr,"that the (char*) name_elas variable of the ");
             fprintf(stderr,"structure pointed by pParameters is not a ");
             fprintf(stderr,"string of length (strictly) less than ");
             fprintf(stderr,"%d (and more than 5 ",pParameters->name_length);
@@ -6445,7 +6445,7 @@ int writingRestartFile(Parameters* pParameters)
             PRINT_ERROR("In writingRestartFile: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
             fprintf(stderr,"expected value here, after having checked that ");
-            fprintf(stderr,"the char* path_medit variable of the structure ");
+            fprintf(stderr,"the (char*) path_medit variable of the structure ");
             fprintf(stderr,"pointed by pParameters is not a string of length ");
             fprintf(stderr,"(strictly) less than %d ",pParameters->path_length);
             fprintf(stderr,"(and more than 1 in order to store at least ");
@@ -6469,7 +6469,7 @@ int writingRestartFile(Parameters* pParameters)
             PRINT_ERROR("In writingRestartFile: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
             fprintf(stderr,"expected value here, after having checked that ");
-            fprintf(stderr,"the char* path_mmg3d variable of the structure ");
+            fprintf(stderr,"the (char*) path_mmg3d variable of the structure ");
             fprintf(stderr,"pointed by pParameters is not a string of length ");
             fprintf(stderr,"(strictly) less than %d ",pParameters->path_length);
             fprintf(stderr,"(and more than 1 in order to store at least ");
@@ -6490,7 +6490,7 @@ int writingRestartFile(Parameters* pParameters)
             PRINT_ERROR("In writingRestartFile: checkStringFromLength ");
             fprintf(stderr,"function returned zero, which is not the ");
             fprintf(stderr,"expected value here, after having checked ");
-            fprintf(stderr,"that the char* path_mshdist variable of the ");
+            fprintf(stderr,"that the (char*) path_mshdist variable of the ");
             fprintf(stderr,"structure pointed by pParameters is not a ");
             fprintf(stderr,"string of length (strictly) less than ");
             fprintf(stderr,"%d (and more than 1 ",pParameters->path_length);
@@ -6513,9 +6513,9 @@ int writingRestartFile(Parameters* pParameters)
                 PRINT_ERROR("In writingRestartFile: checkStringFromLength ");
                 fprintf(stderr,"function returned zero, which is not the ");
                 fprintf(stderr,"expected value here, after having checked ");
-                fprintf(stderr,"that the char* path_elastic variable of the ");
-                fprintf(stderr,"structure pointed by pParameters is not a ");
-                fprintf(stderr,"string of length (strictly) less than ");
+                fprintf(stderr,"that the (char*) path_elastic variable of ");
+                fprintf(stderr,"the structure pointed by pParameters is not ");
+                fprintf(stderr,"a string of length (strictly) less than ");
                 fprintf(stderr,"%d (and more than 1 ",pParameters->path_length);
                 fprintf(stderr,"in order to store at least something more ");
                 fprintf(stderr,"than the terminating nul character).\n");
@@ -6534,7 +6534,7 @@ int writingRestartFile(Parameters* pParameters)
                 PRINT_ERROR("In writingRestartFile: checkStringFromLength ");
                 fprintf(stderr,"function returned zero, which is not the ");
                 fprintf(stderr,"expected value here, after having checked ");
-                fprintf(stderr,"that the char* path_advect variable of the ");
+                fprintf(stderr,"that the (char*) path_advect variable of the ");
                 fprintf(stderr,"structure pointed by pParameters is not a ");
                 fprintf(stderr,"string of length (strictly) less than ");
                 fprintf(stderr,"%d (and more than 1 ",pParameters->path_length);
