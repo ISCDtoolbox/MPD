@@ -220,17 +220,21 @@ int getChemicalFormat(char* fileLocation, int nameLength)
     return returnValue;
 }
 
+/*
 ////////////////////////////////////////////////////////////////////////////////
 // The function readChemFileandAllocateChemicalSystem reads the file at
 // fileLocation (file must exist with length (strictly) lower than nameLength),
 // checks *.chem syntax, allocates memory, and fills the values in the variables
-// of the structure pointed by pChemicalSystem. It has the char* fileLocation,
-// the int nameLength and the ChemicalSystem* variable (defined in main.h) as
+// of the structure pointed by pChemicalSystem
+
+//. It has the char* fileLocation,
+// two integers (nameLength and verbose) and the ChemicalSystem* variable (defined in main.h) as
 // input arguments. It returns zero if an error is encountered, otherwise one
 // (respectively minus one) if the chemical data are successfully loaded and
 // correspond to an restricted (resp. unrestricted) Hartree-Fock chemical system
 ////////////////////////////////////////////////////////////////////////////////
 int readChemFileandAllocateChemicalSystem(char* fileLocation, int nameLength,
+                                          int verbose,
                                                 ChemicalSystem* pChemicalSystem)
 {
     size_t length=0;
@@ -752,7 +756,7 @@ int readChemFileandAllocateChemicalSystem(char* fileLocation, int nameLength,
     return returnValue;
 }
 
-/*
+
 ////////////////////////////////////////////////////////////////////////////////
 // The function readAndConvertWfnFile reads a *.temp file (which is intended
 // to be the copy of a *.wfn file) at fileLocation (such a file must have been
@@ -2097,6 +2101,9 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
     // type of format (1 is *.chem, -1 is *.wfn, 0 refers to an error)
     switch (getChemicalFormat(pParameters->name_chem,pParameters->name_length))
     {
+default:
+break;
+/*
         case 1:
             fprintf(stdout,"\nChemistry will be loaded from ");
             fprintf(stdout,"%s file.",pParameters->name_chem);
