@@ -1704,10 +1704,11 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
         PRINT_ERROR("In changeValuesOfParameters: checkStringFromLength ");
         fprintf(stderr,"function returned zero, which is not the expected ");
         fprintf(stderr,"value here, after having successively checked that ");
-        fprintf(stderr,"one of the (char*) variables name_input, path_medit, ");
-        fprintf(stderr,"path_mmg3d, path_mshdist, path_elastic, or ");
-        fprintf(stderr,"path_advect of the input structure pointed by ");
-        fprintf(stderr,"pParameters is not a string with the correct size.\n");
+        fprintf(stderr,"at least one of the (char*) variables name_input, ");
+        fprintf(stderr,"path_medit, path_mmg3d, path_mshdist, path_elastic, ");
+        fprintf(stderr,"or path_advect of the structure pointed by the input ");
+        fprintf(stderr,"pParameters variable is not a string with the ");
+        fprintf(stderr,"correct length.\n");
         return 0;
     }
 
@@ -2347,11 +2348,8 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             fprintf(stderr,"expected value here, after having checked that ");
             fprintf(stderr,"the input (char*) variable readStringIn, ");
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
-            fprintf(stderr,"sucessfully read as path_medit, is not a string ");
-            fprintf(stderr,"of length (strictly) less than ");
-            fprintf(stderr,"%d (and more than 1 in ",pParameters->path_length);
-            fprintf(stderr,"order to store something more than the ");
-            fprintf(stderr,"terminating nul character).\n");
+            fprintf(stderr,"sucessfully read as path_medit, is not a ");
+            fprintf(stderr,"string with the correct length.\n");
             return 0;
         }
         size=pParameters->path_length;
@@ -2368,11 +2366,8 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             fprintf(stderr,"expected value here, after having checked that ");
             fprintf(stderr,"the input (char*) variable readStringIn, ");
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
-            fprintf(stderr,"sucessfully read as path_mmg3d, is not a string ");
-            fprintf(stderr,"of length (strictly) less than ");
-            fprintf(stderr,"%d (and more than 1 in ",pParameters->path_length);
-            fprintf(stderr,"order to store something more than the ");
-            fprintf(stderr,"terminating nul character).\n");
+            fprintf(stderr,"sucessfully read as path_mmg3d, is not a ");
+            fprintf(stderr,"string with the correct length.\n");
             return 0;
         }
         size=pParameters->path_length;
@@ -2390,10 +2385,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             fprintf(stderr,"the input (char*) variable readStringIn, ");
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
             fprintf(stderr,"sucessfully read as path_mshdist, is not a ");
-            fprintf(stderr,"string of length (strictly) less than ");
-            fprintf(stderr,"%d (and more than 1 in ",pParameters->path_length);
-            fprintf(stderr,"order to store something more than the ");
-            fprintf(stderr,"terminating nul character).\n");
+            fprintf(stderr,"string with the correct length.\n");
             return 0;
         }
         size=pParameters->path_length;
@@ -2411,10 +2403,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             fprintf(stderr,"the input (char*) variable readStringIn, ");
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
             fprintf(stderr,"sucessfully read as path_elastic, is not a ");
-            fprintf(stderr,"string of length (strictly) less than ");
-            fprintf(stderr,"%d (and more than 1 in ",pParameters->path_length);
-            fprintf(stderr,"order to store something more than the ");
-            fprintf(stderr,"terminating nul character).\n");
+            fprintf(stderr,"string with the correct length.\n");
             return 0;
         }
         size=pParameters->path_length;
@@ -2432,10 +2421,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
             fprintf(stderr,"the input (char*) variable readStringIn, ");
             fprintf(stderr,"corresponding to the %d-th keyword ",counter);
             fprintf(stderr,"sucessfully read as path_advect, is not a ");
-            fprintf(stderr,"string of length (strictly) less than ");
-            fprintf(stderr,"%d (and more than 1 in ",pParameters->path_length);
-            fprintf(stderr,"order to store something more than the ");
-            fprintf(stderr,"terminating nul character).\n");
+            fprintf(stderr,"string with the correct length.\n");
             return 0;
         }
         size=pParameters->path_length;
@@ -2637,7 +2623,7 @@ int readInputFileAndGetParameters(Parameters* pParameters)
     if (infoFile==NULL)
     {
         PRINT_ERROR("In readInputFileAndGetParameters: we were not able to ");
-        fprintf(stderr,"read into the %s file.\n",pParameters->name_input);
+        fprintf(stderr,"open properly the %s file.\n",pParameters->name_input);
 
         // free function does not return value (void output)
         free(readStringIn);
@@ -6446,11 +6432,8 @@ int writingRestartFile(Parameters* pParameters)
             fprintf(stderr,"function returned zero, which is not the ");
             fprintf(stderr,"expected value here, after having checked that ");
             fprintf(stderr,"the (char*) path_medit variable of the structure ");
-            fprintf(stderr,"pointed by pParameters is not a string of length ");
-            fprintf(stderr,"(strictly) less than %d ",pParameters->path_length);
-            fprintf(stderr,"(and more than 1 in order to store at least ");
-            fprintf(stderr,"something more than the terminating nul ");
-            fprintf(stderr,"character).\n");
+            fprintf(stderr,"pointed by pParameters is not a string with the ");
+            fprintf(stderr,"correct length.\n");
             fprintf(restartFile,"end_data\n");
             closeTheFile(&restartFile,pParameters->verbose);
             free(fileName);
@@ -6470,11 +6453,8 @@ int writingRestartFile(Parameters* pParameters)
             fprintf(stderr,"function returned zero, which is not the ");
             fprintf(stderr,"expected value here, after having checked that ");
             fprintf(stderr,"the (char*) path_mmg3d variable of the structure ");
-            fprintf(stderr,"pointed by pParameters is not a string of length ");
-            fprintf(stderr,"(strictly) less than %d ",pParameters->path_length);
-            fprintf(stderr,"(and more than 1 in order to store at least ");
-            fprintf(stderr,"something more than the terminating nul \n");
-            fprintf(stderr,"character).");
+            fprintf(stderr,"pointed by pParameters is not a string with the ");
+            fprintf(stderr,"correct length.\n");
             fprintf(restartFile,"end_data\n");
             closeTheFile(&restartFile,pParameters->verbose);
             free(fileName);
@@ -6491,11 +6471,8 @@ int writingRestartFile(Parameters* pParameters)
             fprintf(stderr,"function returned zero, which is not the ");
             fprintf(stderr,"expected value here, after having checked ");
             fprintf(stderr,"that the (char*) path_mshdist variable of the ");
-            fprintf(stderr,"structure pointed by pParameters is not a ");
-            fprintf(stderr,"string of length (strictly) less than ");
-            fprintf(stderr,"%d (and more than 1 ",pParameters->path_length);
-            fprintf(stderr,"in order to store at least something more ");
-            fprintf(stderr,"than the terminating nul character).\n");
+            fprintf(stderr,"structure pointed by pParameters is not a string ");
+            fprintf(stderr,"with the correct length.\n");
             fprintf(restartFile,"end_data\n");
             closeTheFile(&restartFile,pParameters->verbose);
             free(fileName);
@@ -6515,10 +6492,7 @@ int writingRestartFile(Parameters* pParameters)
                 fprintf(stderr,"expected value here, after having checked ");
                 fprintf(stderr,"that the (char*) path_elastic variable of ");
                 fprintf(stderr,"the structure pointed by pParameters is not ");
-                fprintf(stderr,"a string of length (strictly) less than ");
-                fprintf(stderr,"%d (and more than 1 ",pParameters->path_length);
-                fprintf(stderr,"in order to store at least something more ");
-                fprintf(stderr,"than the terminating nul character).\n");
+                fprintf(stderr,"a string with the correct length.\n");
                 fprintf(restartFile,"end_data\n");
                 closeTheFile(&restartFile,pParameters->verbose);
                 free(fileName);
@@ -6535,11 +6509,8 @@ int writingRestartFile(Parameters* pParameters)
                 fprintf(stderr,"function returned zero, which is not the ");
                 fprintf(stderr,"expected value here, after having checked ");
                 fprintf(stderr,"that the (char*) path_advect variable of the ");
-                fprintf(stderr,"structure pointed by pParameters is not a ");
-                fprintf(stderr,"string of length (strictly) less than ");
-                fprintf(stderr,"%d (and more than 1 ",pParameters->path_length);
-                fprintf(stderr,"in order to store at least something more ");
-                fprintf(stderr,"than the terminating nul character).\n");
+                fprintf(stderr,"the structure pointed by pParameters is not ");
+                fprintf(stderr,"a string with the correct length.\n");
                 fprintf(restartFile,"end_data\n");
                 closeTheFile(&restartFile,pParameters->verbose);
                 free(fileName);

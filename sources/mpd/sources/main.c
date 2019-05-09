@@ -668,7 +668,7 @@ char* endTimerAtError(void)
 int checkStringFromLength(char* stringToCheck, int minimumLength,
                                                               int maximumLength)
 {
-    int i=0;
+    int i=0, j=0;
 
     // Check if stringToCheck is pointing to NULL
     if (stringToCheck==NULL)
@@ -682,9 +682,9 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
     // Check if the bounds are correct
     if (minimumLength<1 || maximumLength<minimumLength)
     {
-        PRINT_ERROR("In checkStringFromLength: the (input) variable ");
+        PRINT_ERROR("In checkStringFromLength: the input variable ");
         fprintf(stderr,"minimumLength (=%d) should be a ",minimumLength);
-        fprintf(stderr,"positive integer less or equal to the other (input) ");
+        fprintf(stderr,"positive integer less or equal to the other input ");
         fprintf(stderr,"variable maximumLength (=%d).\n",maximumLength);
         return 0;
     }
@@ -699,17 +699,22 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
     {
         PRINT_ERROR("In checkStringFromLength: the input (char*) variable ");
         fprintf(stderr,"stringToCheck=%p is supposed ",(void*)stringToCheck);
-        fprintf(stderr,"to store a name as a string. It seems that ");
+        fprintf(stderr,"to point to a valid string. It seems that ");
         fprintf(stderr,"stringToCheck is not a string (no terminating NUL ");
-        fprintf(stderr,"character found) or has a length greater or equal to ");
-        fprintf(stderr,"maximumLength (=%d).\n",maximumLength);
+        fprintf(stderr,"character found among the characters ");
+        for (j=0; j<maximumLength; j++)
+        {
+            fprintf(stderr,"%c",stringToCheck[j]);
+        }
+        fprintf(stderr,") or has a length greater or equal to maximumLength ");
+        fprintf(stderr,"(=%d).\n",maximumLength);
         return 0;
     }
     else if (i<minimumLength-1)
     {
         PRINT_ERROR("In checkStringFromLength: the input (char*) variable ");
         fprintf(stderr,"stringToCheck is a string (=%s) of ",stringToCheck);
-        fprintf(stderr,"length %d which is strictly less than the minimal ",i);
+        fprintf(stderr,"length %d, which is strictly less than the minimal ",i);
         fprintf(stderr,"size (=%d) allowed here.\n",minimumLength-1);
         return 0;
     }
@@ -1105,13 +1110,11 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
         PRINT_ERROR("In checkAllPreprocessorConstants: checkStringFromLength ");
         fprintf(stderr,"function returned zero, which is not the expected ");
         fprintf(stderr,"value here, after having successively checked that ");
-        fprintf(stderr,"one of the preprocessor constants PATH_MEDIT, ");
-        fprintf(stderr,"PATH_MMG3D, PATH_MSHDIST, PATH_ELASTIC, or ");
-        fprintf(stderr,"PATH_ADVECT is not a string of length strictly less ");
-        fprintf(stderr,"than PATH_LENGTH (=%d), which must be ",pathLength);
-        fprintf(stderr,"also an integer (strictly) greater than one.\n");
-        fprintf(stderr,"Please modify the preprocessor constants accordingly ");
-        fprintf(stderr,"in loadParameters.h file.\n");
+        fprintf(stderr,"at least one of the preprocessor constants ");
+        fprintf(stderr,"PATH_MEDIT, PATH_MMG3D, PATH_MSHDIST, PATH_ELASTIC, ");
+        fprintf(stderr,"or PATH_ADVECT is not a string with the correct ");
+        fprintf(stderr,"length.\n Please modify the preprocessor constants ");
+        fprintf(stderr,"accordingly in loadParameters.h file.\n");
         return 0;
     }
 
@@ -1339,11 +1342,12 @@ int checkInputFileName(char* inputFileName, int maximumLength)
 {
     int lengthName=0;
  
-    // Check the input variables
+    // Check the inputFileName and maximumLength variables
     if (!checkStringFromLength(inputFileName,8,maximumLength))
     {
         PRINT_ERROR("In checkInputFileName: checkStringFromLength function ");
-        fprintf(stderr,"returned zero, which is not the expected value.\n");
+        fprintf(stderr,"returned zero, which is not the expected value ");
+        fprintf(stderr,"here.\n");
         return 0;
     }
 
@@ -1384,11 +1388,8 @@ int initialFileExists(char* fileLocation, int nameLength)
     if (!checkStringFromLength(fileLocation,2,nameLength))
     {
         PRINT_ERROR("In initialFileExists: checkStringFromLength function ");
-        fprintf(stderr,"returned zero, which is not the expected value here, ");
-        fprintf(stderr,"after having checked that the input (char*) variable ");
-        fprintf(stderr,"fileLocation, which was supposed to store the ");
-        fprintf(stderr,"non-(empty) name of a file, is not a string of ");
-        fprintf(stderr,"length (strictly) less than %d.\n",nameLength);
+        fprintf(stderr,"returned zero, which is not the expected value ");
+        fprintf(stderr,"here.\n");
         return 0;
     }
 
