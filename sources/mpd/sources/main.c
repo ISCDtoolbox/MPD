@@ -210,8 +210,8 @@ int main(int argc, char *argv[])
     {
         PRINT_ERROR("In main: please replace the first '~' character of the ");
         fprintf(stderr,"command-line argument (=%s) by the full home ",argv[1]);
-        fprintf(stderr,"directory path name and try to launch again the MPD ");
-        fprintf(stderr,"program.\n");
+        fprintf(stderr,"directory path name (=%s) and try to ",getenv("HOME"));
+        fprintf(stderr,"launch again the MPD program.\n");
 
         // Printing also an error message in the standard output
         fprintf(stdout,"\n%s\nERROR: in the command-line argument, ",STR_ERROR);
@@ -267,7 +267,7 @@ int main(int argc, char *argv[])
         FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
     }
 
-    // Load parameters from a *.input file pointed by argv[1]
+    // Load parameters from a *.input file (pointed by argv[1])
     if (!loadParameters(&parameters,argv[1]))
     {
         PRINT_ERROR("In main: loadParameters function returned zero instead ");
@@ -306,7 +306,6 @@ int main(int argc, char *argv[])
         fprintf(stderr,"of one.\n");
         FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
     }
-
 
 /*
     // Load default mesh or from the *.mesh/ *.cube file of parameters.name_mesh
@@ -1387,9 +1386,9 @@ int initialFileExists(char* fileLocation, int nameLength)
         PRINT_ERROR("In initialFileExists: checkStringFromLength function ");
         fprintf(stderr,"returned zero, which is not the expected value here, ");
         fprintf(stderr,"after having checked that the input (char*) variable ");
-        fprintf(stderr,"fileLocation, which was supposed to store the name ");
-        fprintf(stderr,"of a file, is not a string of length (strictly) less ");
-        fprintf(stderr,"than %d.\n",nameLength);
+        fprintf(stderr,"fileLocation, which was supposed to store the ");
+        fprintf(stderr,"non-(empty) name of a file, is not a string of ");
+        fprintf(stderr,"length (strictly) less than %d.\n",nameLength);
         return 0;
     }
 

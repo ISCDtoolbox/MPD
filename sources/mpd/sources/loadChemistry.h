@@ -303,10 +303,10 @@ int writingChemicalFile(char* fileLocation, int nameLength,
 /**
 * \fn int loadChemistry(Parameters* pParameters,
 *                                               ChemicalSystem* pChemicalSystem)
-* \brief It loads the values given in a *.chem or *.wfn (chemical) file pointed
-*        by the name_chem variable of the structure pointed by pParameters, and
-*        store them in the variables of the structure pointed by
-*        pChemicalSystem.
+* \brief It loads the values given in a existing *.chem or *.wfn (chemical)
+*        file given by the name_chem variable of the structure pointed by
+*        pParameters, and store them in the variables of the structure pointed
+*        by pChemicalSystem.
 *
 * \param[in] pParameters A pointer that points to the Parameters structure
 *                        (defined in main.h file) of the \ref main function. Its
