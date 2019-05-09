@@ -394,17 +394,16 @@ int main(int argc, char *argv[])
             optMode=parameters.opt_mode;
             parameters.opt_mode=2;
             deltaT=parameters.delta_t;
-            if (data.pnu[i-1]<1.e-5)
+            if (DEF_ABS(data.d1p[i-1])<1.e-5)
             {
-                parameters.delta_t=100000.;
+                parameters.delta_t=100000.*DEF_ABS(data.pnu[i-1]);
             }
             else
             {
-                parameters.delta_t=1./data.pnu[i-1];
+                parameters.delta_t=
+                                  DEF_ABS(data.pnu[i-1])/DEF_ABS(data.d1p[i-1]);
             }
         }
-
-
         if (i%3==0 && data.d0p[i-1] < 5.e-2 && (parameters.opt_mode==1 || 
                                 (parameters.opt_mode==2 && parameters.nu_spin)))
         {
