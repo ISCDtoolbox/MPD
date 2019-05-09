@@ -405,7 +405,7 @@ int main(int argc, char *argv[])
         }
 
 
-        if (i%3==0 && data.d0p[i-1] < 1.e-3 && (parameters.opt_mode==1 || 
+        if (i%3==0 && data.d0p[i-1] < 5.e-2 && (parameters.opt_mode==1 || 
                                 (parameters.opt_mode==2 && parameters.nu_spin)))
         {
             jPlus=0;
