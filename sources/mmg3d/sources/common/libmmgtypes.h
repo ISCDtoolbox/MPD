@@ -215,9 +215,9 @@ typedef struct {
   double   c[3]; /*!< Coordinates of point */
   double   n[3]; /*!< Normal or Tangent for mmgs and Tangent (if needed) for mmg3d */
 
-///////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
   double   value; /* value associated to a point */
-///////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
   int      ref; /*!< Reference of point */
   int      xp; /*!< Surface point number */
@@ -447,18 +447,21 @@ typedef MMG5_Mat * MMG5_pMat;
  */
 typedef struct {
   MMG5_pPar     par;
-  double        dhd,hmin,hmax,hsiz,hgrad,hausd,min[3],max[3],delta,ls;
+  double        dhd,hmin,hmax,hsiz,hgrad,hgradreq,hausd;
+  double        min[3],max[3],delta,ls;
   int           mem,npar,npari;
   int           opnbdy;
   int           renum;
   int           PROctree;
   int           nmat;
+  int           rmc;
   char          nreg;
   char          imprim,ddebug,badkal,iso,fem,lag;
   char          parTyp; /*!< Contains binary flags to say which kind of local
                           param are setted: if \f$tag = 1+2+4\f$ then the point
                           is \a MG_Vert, MG_Tria and MG_Tetra */
-  unsigned char optim, optimLES, noinsert, noswap, nomove, nosurf, inputMet;
+  unsigned char optim, optimLES, noinsert, noswap, nomove, nosurf;
+  unsigned char inputMet; /*!< 1 if we don't have a metric when we enter in mmg3d1, 0 otherwise */
   MMG5_pMat     mat;
 } MMG5_Info;
 

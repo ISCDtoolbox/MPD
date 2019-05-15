@@ -55,7 +55,6 @@ add_library(mmg SHARED sources/common/anisomovpt.c
                        sources/mmg3d/librnbg_3d.c
                        sources/mmg3d/mmg3d1.c
                        sources/mmg3d/mmg3d1_delone.c
-                       sources/mmg3d/optlap_3d.c
                        sources/mmg3d/mmg3d1_pattern.c
                        sources/mmg3d/mmg3d2.c
                        sources/mmg3d/mmg3d3.c

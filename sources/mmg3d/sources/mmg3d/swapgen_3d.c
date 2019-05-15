@@ -256,7 +256,6 @@ int MMG5_swpgen(MMG5_pMesh mesh,MMG5_pSol met,int nconf,int ilist,int *list,
   double value=0.0;
 ////////////////////////////////////////////////////////////////////////////////
 
-
   iel = list[0] / 6;
   ia  = list[0] % 6;
 
@@ -266,14 +265,14 @@ int MMG5_swpgen(MMG5_pMesh mesh,MMG5_pSol met,int nconf,int ilist,int *list,
   p0 = &mesh->point[na];
   p1 = &mesh->point[nb];
 
-////////////////////////////////////////////////////////////////////////////////
-  value = 0.5 * (p0->value + p1->value);
-////////////////////////////////////////////////////////////////////////////////
-
   /* Temporarily create midpoint at swapped edge */
   m[0] = 0.5*(p0->c[0] + p1->c[0]);
   m[1] = 0.5*(p0->c[1] + p1->c[1]);
   m[2] = 0.5*(p0->c[2] + p1->c[2]);
+
+////////////////////////////////////////////////////////////////////////////////
+  value = 0.5 * (p0->value + p1->value);
+////////////////////////////////////////////////////////////////////////////////
 
   np  = MMG3D_newPt(mesh,m,0);
   if(!np){

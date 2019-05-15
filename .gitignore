@@ -26,6 +26,7 @@ sources/medit/sources/compil.date
 
 sources/mmg3d/build
 sources/mmg3d/include
+sources/mmg3d/sources/common/mmgcommon.h
 
 sources/mpd/build
 sources/mpd/include

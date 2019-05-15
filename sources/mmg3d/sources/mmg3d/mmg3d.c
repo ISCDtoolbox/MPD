@@ -36,146 +36,220 @@
 
 mytime         MMG5_ctim[TIMEMAX];
 
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 // Add a function here to read the metric file in the ls option
 static int readMetricSolFile(MMG5_pMesh mesh)
 {
   int fscanfValues=0, readingInt=0, i=0, numberOfVertices=mesh->np; 
-  // Zero (default value) corresponds here to an error otherwise
-  // (cumulated return of fscanf) ok
   double readingDouble=0.;	
   char readingChar='\n';
-  FILE *fichier=NULL;
+  FILE *pFile=NULL;
 
-  // Initializing the metric
+  // Initializing the metric to hmax
   for(i=0; i<=mesh->npmax; i++)
   {
     mesh->point[i].value=mesh->info.hmax;
   }
 
-  // We check if we can open the file metric.sol
-  // (only in reading mode, file must have been created before) 
-  fichier=fopen("metric.sol","r");
-  if (fichier==NULL)
+  // Open metric.sol (file must have been created before in reading mode) 
+  fprintf(stdout,"\nOpening metric.sol file. ");
+  pFile=fopen("metric.sol","r");
+  if (pFile==NULL)
   {
-    printf("Warning: could not open metric.sol file.\n");
+    fprintf(stderr,"\nWarning: we could not open the metric.sol file ");
+    fprintf(stderr,"properly.\n");
     return 0;
   }
-  printf("Opening metric.sol file.\n");
+  fprintf(stdout,"\nReading metric solution. ");
 	
-  // We scan the first line of the file metric.sol and we check if the
-  // format is correct (1 simple precision/ 2 double precision)
-  fscanfValues+=fscanf(fichier,"MeshVersionFormatted %d\n\n",&readingInt);
-  if (readingInt!=2 && fscanfValues==1)
+  // Check the double format (1 simple precision/ 2 double precision)
+  fscanfValues+=fscanf(pFile," MeshVersionFormatted %d ",&readingInt);
+  if (fscanfValues!=1)
   {
-    printf("Error: the precision is %d instead of two (double precision).\n",readingInt);
-    if (fclose(fichier))
+    fprintf(stderr,"\nError: wrong return of the fscanf function while ");
+    fprintf(stderr,"attempting to read the precision.\n"); 
+    if (fclose(pFile))
     {
-      printf("Warning: in addition, could not close the metric.sol file.\n");
+      fprintf(stderr,"\nWarning: in addition, we could not close the file ");
+      fprintf(stderr,"properly.\n");
     }
-    fichier=NULL;
+    pFile=NULL;
+    return 0;
+  }
+  if (readingInt!=2)
+  {
+    fprintf(stderr,"\nError: the precision is %d instead of two ",readingInt);
+    fprintf(stderr,"(double precision).\n");
+    if (fclose(pFile))
+    {
+      fprintf(stderr,"\nWarning: in addition, we could not close the file ");
+      fprintf(stderr,"properly.\n");
+    }
+    pFile=NULL;
     return 0;
   }
 	
-  // We check that the dimension is correct	
-  fscanfValues+=fscanf(fichier,"Dimension %d\n\n",&readingInt);
-  if (readingInt!=3 && fscanfValues==2)
+  // Check the dimension three
+  fscanfValues+=fscanf(pFile,"Dimension %d ",&readingInt);
+  if (fscanfValues!=2)
   {
-    printf("Error: the dimension is %d instead of three\n",readingInt);
-    if (fclose(fichier))
+    fprintf(stderr,"\nError: wrong return of the fscanf function while ");
+    fprintf(stderr,"attempting to read the dimension.\n"); 
+    if (fclose(pFile))
     {
-      printf("Warning: in addition, could not close the metric.sol file.\n");
+      fprintf(stderr,"\nWarning: in addition, we could not close the file ");
+      fprintf(stderr,"properly.\n");
     }
-    fichier=NULL;
+    pFile=NULL;
+    return 0;
+  }
+  if (readingInt!=3)
+  {
+    fprintf(stderr,"\nError: the dimension is %d instead of ",readingInt);
+    fprintf(stderr,"three.\n");
+    if (fclose(pFile))
+    {
+      fprintf(stderr,"\nWarning: in addition, we could not close the file ");
+      fprintf(stderr,"properly.\n");
+    }
+    pFile=NULL;
     return 0;
   }
 	
-  // We check that the entered number of Vertices corresponds to the file one
-  fscanfValues+=fscanf(fichier,"SolAtVertices\n%d\n",&readingInt);		 
-  if  (readingInt!=numberOfVertices&&fscanfValues==3)
+  // We check the number of vertices
+  fscanfValues+=fscanf(pFile,"SolAtVertices %d ",&readingInt);	
+  if (fscanfValues!=3)
   {
-    printf("Error: %d vertices in the input mesh for mmg3d5 while %d are written in metric.sol\n",numberOfVertices,readingInt);
-    if (fclose(fichier))
+    fprintf(stderr,"\nError: wrong return of the fscanf function while ");
+    fprintf(stderr,"attempting to read the number of vertices.\n"); 
+    if (fclose(pFile))
     {
-      printf("Warning: in addition, could not close the metric.sol file.\n");
+      fprintf(stderr,"\nWarning: in addition, we could not close the file ");
+      fprintf(stderr,"properly.\n");
     }
-    fichier=NULL;
+    pFile=NULL;
+    return 0;
+  }	 
+  if (readingInt!=numberOfVertices)
+  {
+    fprintf(stderr,"\nError: %d vertices in the input mesh ",numberOfVertices);
+    fprintf(stderr,"for mmg3d while %d solutions are written in ",readingInt);
+    fprintf(stderr,"the metric.sol file.\n");
+    if (fclose(pFile))
+    {
+      fprintf(stderr,"\nWarning: in addition, we could not close the file ");
+      fprintf(stderr,"properly.\n");
+    }
+    pFile=NULL;
     return 0;
   }
 
-  // We check the number of solutions
-  fscanfValues+=fscanf(fichier,"%d ",&readingInt);
-  if (readingInt!=1 && fscanfValues==4)
+  // Check the number of solutions
+  fscanfValues+=fscanf(pFile,"%d ",&readingInt);
+  if (fscanfValues!=4)
   {
-    printf("Error: there is more than one solution in metric.sol file.\n");
-    if (fclose(fichier))
+    fprintf(stderr,"\nError: wrong return of the fscanf function while ");
+    fprintf(stderr,"attempting to read the number of solutions.\n"); 
+    if (fclose(pFile))
     {
-      printf("Warning: in addition, could not close the metric.sol file.\n");
+      fprintf(stderr,"\nWarning: in addition, we could not close the file ");
+      fprintf(stderr,"properly.\n");
     }
-    fichier=NULL;
+    pFile=NULL;
+    return 0;
+  }
+  if (readingInt!=1)
+  {
+    fprintf(stderr,"\nError: expecting one solution instead of ");
+    fprintf(stderr,"%d.\n",readingInt);
+    if (fclose(pFile))
+    {
+      fprintf(stderr,"\nWarning: in addition, we could not close the file ");
+      fprintf(stderr,"properly.\n");
+    }
+    pFile=NULL;
     return 0;
   }
 
-  // We check if the solution is of scalar type
-  fscanfValues+=fscanf(fichier,"%d \n\n",&readingInt);
-  if (readingInt!=1 && fscanfValues==5)
+  // Check the scalar type
+  fscanfValues+=fscanf(pFile,"%d ",&readingInt);
+  if (fscanfValues!=5)
   {
-    printf("Error: the solution is not of scalar type in metric.sol file.\n");
-    if (fclose(fichier))
+    fprintf(stderr,"\nError: wrong return of the fscanf function while ");
+    fprintf(stderr,"attempting to read the type of solution.\n"); 
+    if (fclose(pFile))
     {
-      printf("Warning: in addition, could not close the metric.sol file.\n");
+      fprintf(stderr,"\nWarning: in addition, we could not close the file ");
+      fprintf(stderr,"properly.\n");
     }
-    fichier=NULL;
+    pFile=NULL;
+    return 0;
+  }
+  if (readingInt!=1)
+  {
+    fprintf(stderr,"\nError: expecting one (scalar) instead of ");
+    fprintf(stderr,"%d for the type of solution.\n",readingInt);
+    if (fclose(pFile))
+    {
+      fprintf(stderr,"\nWarning: in addition, we could not close the file ");
+      fprintf(stderr,"properly.\n");
+    }
+    pFile=NULL;
     return 0;
   }
 	
-  // We read the file and get the values from metric.sol
-  for (i=1;i<=numberOfVertices;i++)
+  // Read values from metric.sol file
+  for (i=1; i<=numberOfVertices; i++)
   {
-    fscanfValues+=fscanf(fichier,"%le ",&readingDouble);
+    fscanfValues+=fscanf(pFile,"%lf ",&readingDouble);
     mesh->point[i].value=readingDouble;				
   }
 
-  // We check if the data have been sucessfully loaded via fscanfValues
-  if (fscanfValues != numberOfVertices+5)
+  // Check if all data have been loaded
+  if (fscanfValues!=numberOfVertices+5)
   {
-    printf("Error: metric.sol is not correctly written according to the .sol format.\n");
-    if (fclose(fichier))
+    fprintf(stderr,"\nError: wrong return of the fscanf function while ");
+    fprintf(stderr,"attempting to read the values. Only %d ",fscanfValues-5);
+    fprintf(stderr,"values successfully read instead of ");
+    fprintf(stderr,"%d.\n",numberOfVertices); 
+    if (fclose(pFile))
     {
-      printf("Warning: in addition, could not close the metric.sol file.\n");
+      fprintf(stderr,"\nWarning: in addition, we could not close the file ");
+      fprintf(stderr,"properly.\n");
     }
-    fichier=NULL;
+    pFile=NULL;
     return 0;
   }
 
-  // We check if the file contains the right number of vertices
-  readingChar=fgetc(fichier);
+  // Check the End keyword
+  readingChar=fgetc(pFile);
   if (readingChar!='E')
   {
-    printf("Error: 'End' keyword expected but it does not seem so.\n");
-    if (fclose(fichier))
+    fprintf(stderr,"\nError: expecting the 'End' keyword but it does not ");
+    fprintf(stderr,"seem so.\n");
+    if (fclose(pFile))
     {
-      printf("Warning: in addition, could not close the metric.sol file.\n");
+      fprintf(stderr,"\nWarning: in addition, we could not close the file ");
+      fprintf(stderr,"properly.\n");
     }
-    fichier=NULL;	
+    pFile=NULL;
     return 0;			
   }
-  printf("Data successfully loaded from metric.sol file.\n");
 						
   // Closing the metric.sol file
-  if (fclose(fichier))
+  if (fclose(pFile))
   {
-    printf("Warning: could not close the metric.sol file.\n");
-    fichier=NULL;
-    return 0;
+    fprintf(stderr,"\nWarning: we could not close the file properly.\n");
   }
-  fichier=NULL;
-  printf("Closing metric.sol file.\n");	
+  pFile=NULL;
+  fprintf(stdout,"Closing file.\n");	
+
+  fprintf(stdout,"Data successfully loaded from metric.sol file.\n");
 
   return 1;
 }
 // End of modification, others modification in this file in main function
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Print elapsed time at end of process.
@@ -393,7 +467,7 @@ int MMG3D_defaultOption(MMG5_pMesh mesh,MMG5_pSol met) {
       if ( !MMG5_unscaleMesh(mesh,met) ) _LIBMMG5_RETURN(mesh,met,MMG5_STRONGFAILURE);
       _LIBMMG5_RETURN(mesh,met,MMG5_LOWFAILURE);
     }
-    MMG3D_solTruncatureForOptim(mesh,met);
+    MMG5_solTruncatureForOptim(mesh,met);
   }
 
   if ( mesh->info.hsiz > 0. ) {
@@ -481,7 +555,7 @@ int main(int argc,char *argv[]) {
   msh = 0;
   ier = MMG3D_loadMesh(mesh,mesh->namein);
 
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 // Modification for incorporating metric
   if (ier==1)
   {
@@ -489,11 +563,12 @@ int main(int argc,char *argv[]) {
     {
       if (readMetricSolFile(mesh))
       {
-        printf("The metric from metric.sol file will be taken into account in remeshing.\n");
+        fprintf(stdout,"The metric from metric.sol file will be taken into ");
+        fprintf(stdout,"account in the remeshing process.\n");
       }
       else
       {
-        printf("Warning: metric in metric.sol file ignored.\n");
+        fprintf(stdout,"Warning: metric from metric.sol file is ignored.\n");
       }
     }	
   }
