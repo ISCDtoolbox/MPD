@@ -7,6 +7,8 @@ September 2018
 
 The MPD program aims to compute the shape of a domain that maximizes the probability to find exactly a certain number of electrons inside it, given a chemical electronic structure.
 
+Website of the MPD research project: http://pelikano.free.fr/mpd
+
 In order to compile the mpdProgram, it is recommended to have previously installed:
 * gcc (version 5.4.0)
 * make (version 4.1)
@@ -153,27 +155,25 @@ Write
 
 for prescribing (for example) 4 threads during the execution of the mpdProgram.
 
-If no internal domain is precribed inside the mesh (or if no mesh is precribed), the ls_type keyword allows to define an initial cube (ls_type 0) or sphere (ls_type 1) defined by its center
+If no internal domain is prescribed inside the mesh (or if no mesh is precribed), the ls_type keyword allows to define an initial cube (ls_type 0) or sphere (ls_type 1) defined by its center
 (ls_x, ls_y, and ls_z keywords) and size/radius (ls_r keyword).
 
 Finally, in order to launch the mpdProgram, the line command syntax is the following:
 
-	./*/mpdProgram *.info
+	/*/mpdProgram *.info
 
 where the * symbol must be change depending on your where is located your mpdProgram and what is the name of your *.info file.
 
 The documentation of the mpd code can be generated with doxygen and the Doxyfile in the source/mpd/documentation/ directory. Otherwise, an html version can be found online at
 
-http://pelikano.free.fr/mpd/
+http://pelikano.free.fr/mpd/siteInternet/html/index.html
 
-Some informations are required (remove all underscore symbols '_' below):
-
-m_p_d_U_s_e_r 
-
-m_p_d_2_0_1_8_*_0_7_j_d_a_l_p_h_i_n 
+Some informations are required (follow the instructions given). 
 
 Finally, we recall that a quickstart guide is available at 
 
 https://github.com/ISCDtoolbox/MPD/blob/master/mpdProgram_quickstart_guide.pdf
+
+
 
 
