@@ -9,13 +9,13 @@ The MPD program aims to compute the shape of a domain that maximizes the probabi
 
 Website of the MPD research project: http://pelikano.free.fr/mpd
 
-In order to compile the mpdProgram, it is recommended to have previously installed:
+In order to compile the mpdProgram, you must have previously installed:
 * gcc (version 5.4.0)
 * make (version 4.1)
 * cmake (version 3.5.1)
-* doxygen (version 1.8.11) (optional: it is only necessary if one wants to generate the code documentation)
+* doxygen (version 1.8.11) (optional: it is only necessary if one aims to generate the code documentation also available at http://pelikano.free.fr/mpd/siteInternet/html/index.html )
 
-In order to download the source files of the mpd program, you have two options: either you can download the data compression file at
+In order to download the source files of the MPD program, you have two options: either you can download the data compression file at
 
 https://github.com/ISCDtoolbox/MPD/archive/master.zip
 
