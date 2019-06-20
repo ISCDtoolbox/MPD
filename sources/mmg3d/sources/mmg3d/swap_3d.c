@@ -460,10 +460,6 @@ int MMG5_swpbdy(MMG5_pMesh mesh,MMG5_pSol met,int *list,int ret,int it1,
   p0 = &mesh->point[np];
   p1 = &mesh->point[nq];
 
-////////////////////////////////////////////////////////////////////////////////
-  value = 0.5 * (p0->value + p1->value);
-////////////////////////////////////////////////////////////////////////////////
-
   /* search for na = the point on quadrangle surfacic configuration on which collapse
      validity has been checked in MMG5_chkswpbdy */
   iel1 = it1 / 4;
@@ -485,6 +481,11 @@ int MMG5_swpbdy(MMG5_pMesh mesh,MMG5_pSol met,int *list,int ret,int it1,
   c[0] = 0.5*( p0->c[0] + p1->c[0]);
   c[1] = 0.5*( p0->c[1] + p1->c[1]);
   c[2] = 0.5*( p0->c[2] + p1->c[2]);
+
+////////////////////////////////////////////////////////////////////////////////
+  value = 0.5 * (p0->value + p1->value);
+////////////////////////////////////////////////////////////////////////////////
+
   nm = MMG3D_newPt(mesh,c,MG_BDY);
   if ( !nm ) {
     MMG3D_POINT_REALLOC(mesh,met,nm,mesh->gap,

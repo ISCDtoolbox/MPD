@@ -4,8 +4,8 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 project(mmg LANGUAGES C)
 set(CMAKE_BUILD_TYPE "Release")
-set(CMAKE_RELEASE_VERSION "5.3.12")
-set(CMAKE_RELEASE_DATE "Oct. 2, 2018" )
+set(CMAKE_RELEASE_VERSION "5.4.1")
+set(CMAKE_RELEASE_DATE "Mar. 20, 2019" )
 set(DEF_POSIX "#define POSIX")
 set(DEF_GNU "#define GNU")
 
@@ -55,7 +55,6 @@ add_library(mmg SHARED sources/common/anisomovpt.c
                        sources/mmg3d/librnbg_3d.c
                        sources/mmg3d/mmg3d1.c
                        sources/mmg3d/mmg3d1_delone.c
-                       sources/mmg3d/optlap_3d.c
                        sources/mmg3d/mmg3d1_pattern.c
                        sources/mmg3d/mmg3d2.c
                        sources/mmg3d/mmg3d3.c

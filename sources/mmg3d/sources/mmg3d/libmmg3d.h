@@ -50,7 +50,9 @@ extern "C" {
 #endif
 
 //#include "mmg/mmg3d/libmmgtypes.h"
+////////////////////////////////////////////////////////////////////////////////
 #include "libmmgtypes.h"
+////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Maximum array size when storing adjacent points (or ball) of a vertex.
@@ -91,6 +93,7 @@ enum MMG3D_Param {
   MMG3D_DPARAM_hsiz,              /*!< [val], Constant mesh size */
   MMG3D_DPARAM_hausd,             /*!< [val], Control global Hausdorff distance (on all the boundary surfaces of the mesh) */
   MMG3D_DPARAM_hgrad,             /*!< [val], Control gradation */
+  MMG3D_DPARAM_hgradreq,          /*!< [val], Control gradation on required entites (advanced usage) */
   MMG3D_DPARAM_ls,                /*!< [val], Value of level-set */
   MMG3D_PARAM_size,               /*!< [n], Number of parameters */
 };
@@ -2237,7 +2240,8 @@ enum MMG3D_Param {
  * \param met pointer toward the sol structure
  * \return 1 if success
  *
- * Compute constant size map according to mesh->info.hsiz
+ * Compute constant size map according to mesh->info.hsiz, mesh->info.hmin and
+ * mesh->info.hmax. Update this 3 value if not compatible.
  *
  * \remark Fortran interface:
  * >   SUBROUTINE MMG3D_SET_CONSTANTSIZE(mesh,met,retval)\n
