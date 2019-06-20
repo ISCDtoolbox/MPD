@@ -168,11 +168,11 @@ Finally, in order to launch the mpdProgram, the line command syntax is the follo
 
 where the * symbol must be change depending on your where is located your mpdProgram and what is the name of your *.info file.
 
-We also mention that the mpdProgram can generate *.cube (respectively *.obj) files for vizualizing the boundary of the domain in the hexahedral (resp. tetrahedral mode). These files can be generated together wit the *.mesh files if the line
+We also mention that the mpdProgram can generate *.cube (respectively *.obj) files for vizualizing the boundary of the domain in the hexahedral (resp. tetrahedral) mode. These files can be generated together with the *.mesh files if the line
 
 	save_type 2
 
-appears in the *.info file. These format can be read thanks to Jmol software (available at http://jmol.sourceforge.net/ ) or also Paraview (https://www.paraview.org/ ). We quickly describe how to use Jmol since it allows to vizualize the boundary mesh and the molecules together. An online documentation is available at https://chemapps.stolaf.edu/jmol/docs/
+appears in the *.info file. These format can be read thanks to the Jmol software (available at http://jmol.sourceforge.net/ ) or also Paraview (https://www.paraview.org/ ). They allow to vizualize the boundary mesh and the molecules together. We quickly describe how to use Jmol. An online documentation for the Console commands are available at https://chemapps.stolaf.edu/jmol/docs/
 
 Once installed, in order to launch the Jmol software (warning: java must have been previously installed), type in a command prompt (we assume the user is located in the Jmol directory)
 
@@ -208,7 +208,7 @@ Type 'zoom out' to zoom out or 'zoom 45' to zoom at 45%.
 
 Type 'spacefill off' to remove the atom but keep the interaction between them. 
 
-Finally, in order to save multiple *.jpg photo from a molecule (after having adjusted the view thanks to the previous commands), one can type in the Console (here we take the example of *.obj file)
+Finally, in order to save multiple *.jpg photo from a molecule (after having adjusted the view thanks to the previous commands), one can type in the Console (here we take the example of *.obj files)
 
 	for (var i=0; i<=9; i=i+1)
  	  var objName="pathOfTheFile/nameOfTheFileWithoutExtension."+(i)+".obj"
