@@ -168,6 +168,62 @@ Finally, in order to launch the mpdProgram, the line command syntax is the follo
 
 where the * symbol must be change depending on your where is located your mpdProgram and what is the name of your *.info file.
 
+We also mention that the mpdProgram can generate *.cube (respectively *.obj) files for vizualizing the boundary of the domain in the hexahedral (resp. tetrahedral mode). These files can be generated together wit the *.mesh files if the line
+
+	save_type 2
+
+appears in the *.info file. These format can be read thanks to Jmol software (available at http://jmol.sourceforge.net/ ) or also Paraview (https://www.paraview.org/ ). We quickly describe how to use Jmol since it allows to vizualize the boundary mesh and the molecules together. An online documentation is available at https://chemapps.stolaf.edu/jmol/docs/
+
+Once installed, in order to launch the Jmol software (warning: java must have been previously installed), type in a command prompt (we assume the user is located in the Jmol directory)
+
+	java -jar ./Jmol.jar
+
+If it is not the first time you use Jmol, you can also type
+
+	./jmol.sh
+
+The software can also work in ssh with the -X or -Y mode activated (whereas the medit software can fail in ssh with graphical mode actived if one of the two communicating computers has an nvidia cards and the other not). 
+
+Then, click on the upper left pannel named File and open the Console by clicking on it.
+
+Whatever optimization mode you used, the MPD program always produce an *.cube file. This file can be used to display the molecule on Jmol by typing in the Console the following command
+
+	load "pathOfTheFile.cube"
+
+In order to plot a specific domain (more precisely its boundary), you can type in the Console
+
+	isosurface "PathOfTheFile.cube" mesh translucent
+
+or
+
+	isosurface "PathOfTheFile.obj" mesh translucent
+
+depending if you have an *.cube file (hexahedral mesh) or an *.obj one (tetrahedral mesh). The mesh option display the surfacic mesh, where the translucent one makes it a bit transparent. Many option can be done with the mouse and the graphical interface but they can also be done directly with commands in the Console. We detail a few of them.
+
+Type 'rotate x 45' to rotate around the x axis of 45 degrees (idem for y and z).
+
+Similarly, type translate x -10 to translate from the left.
+
+Type 'zoom out' to zoom out or 'zoom 45' to zoom at 45%.
+
+Type 'spacefill off' to remove the atom but keep the interaction between them. 
+
+Finally, in order to save multiple *.jpg photo from a molecule (after having adjusted the view thanks to the previous commands), one can type in the Console (here we take the example of *.obj file)
+
+	for (var i=0; i<=9; i=i+1)
+ 	  var objName="pathOfTheFile/nameOfTheFileWithoutExtension."+(i)+".obj"
+	  isosurface @objName mesh translucent
+	  var jpgName="pathOfTheFile/nameOfTheFileWithoutExtension.0"+(i)+".jpg"
+ 	  write IMAGE 800 600 JPG @jpgName
+	end for
+
+	for (var i=10; i<=31; i=i+1)
+	  var objName="pathOfTheFile/nameOfTheFileWithoutExtension."+(i)+".obj"
+	  isosurface @objName mesh translucent
+	  var jpgName="pathOfTheFile/nameOfTheFileWithoutExtension."+(i)+".jpg"
+	  write IMAGE 800 600 JPG @jpgName
+	end for
+
 The documentation of the mpd code can be generated with doxygen and the Doxyfile in the source/mpd/documentation/ directory. Otherwise, an html version can be found online at
 
 http://pelikano.free.fr/mpd/siteInternet/html/index.html
@@ -177,7 +233,5 @@ Some informations are required (follow the instructions given).
 Finally, we recall that a quickstart guide is available at 
 
 https://github.com/ISCDtoolbox/MPD/blob/master/mpdProgram_quickstart_guide.pdf
-
-
 
 
