@@ -5,6 +5,10 @@ Version 2.0
 
 September 2018
 
+ISCD-Sorbonne Universités
+
+Jeremy DALPHIN
+
 The MPD program aims to compute the shape of a domain that maximizes the probability to find exactly a certain number of electrons inside it, given a chemical electronic structure.
 
 Website of the MPD research project: http://pelikano.free.fr/mpd
