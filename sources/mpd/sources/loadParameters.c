@@ -5367,9 +5367,9 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             {
                 if (pParameters->verbose>0)
                 {
-                    fprintf(stdout,"In checkValuesOfAllParameters: a path ");
-                    fprintf(stdout,"name for the medit software has been ");
-                    fprintf(stdout,"loaded in the structure pointed by ");
+                    fprintf(stdout,"\nWarning in checkValuesOfAllParameters: ");
+                    fprintf(stdout,"a path name for the medit software has ");
+                    fprintf(stdout,"been loaded in the structure pointed by ");
                     fprintf(stdout,"pParameters although the current ");
                     fprintf(stdout,"vizualization mode ");
                     fprintf(stdout,"(save_print=%d) ",pParameters->save_print);
@@ -5582,9 +5582,9 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             {
                 if (pParameters->verbose>0)
                 {
-                    fprintf(stdout,"In checkValuesOfAllParameters: a path ");
-                    fprintf(stdout,"name for the mmg3d software has been ");
-                    fprintf(stdout,"loaded in the structure pointed by ");
+                    fprintf(stdout,"\nWarning in checkValuesOfAllParameters: ");
+                    fprintf(stdout,"a path name for the mmg3d software has ");
+                    fprintf(stdout,"been loaded in the structure pointed by ");
                     fprintf(stdout,"pParameters although the current ");
                     fprintf(stdout,"optimization mode ");
                     fprintf(stdout,"(=%d) does not ",pParameters->opt_mode);
@@ -5613,9 +5613,9 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             {
                 if (pParameters->verbose>0)
                 {
-                    fprintf(stdout,"In checkValuesOfAllParameters: a path ");
-                    fprintf(stdout,"name for the mshdist software has been ");
-                    fprintf(stdout,"loaded in the structure pointed by ");
+                    fprintf(stdout,"\nWarning in checkValuesOfAllParameters: ");
+                    fprintf(stdout,"a path name for the mshdist software has ");
+                    fprintf(stdout,"been loaded in the structure pointed by ");
                     fprintf(stdout,"pParameters although the current ");
                     fprintf(stdout,"optimization mode ");
                     fprintf(stdout,"(=%d) does not ",pParameters->opt_mode);
@@ -5829,9 +5829,9 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             {
                 if (pParameters->verbose>0)
                 {
-                    fprintf(stdout,"In checkValuesOfAllParameters: a path ");
-                    fprintf(stdout,"name for the elastic software has been ");
-                    fprintf(stdout,"loaded in the structure pointed by ");
+                    fprintf(stdout,"\nWarning in checkValuesOfAllParameters: ");
+                    fprintf(stdout,"a path name for the elastic software has ");
+                    fprintf(stdout,"been loaded in the structure pointed by ");
                     fprintf(stdout,"pParameters although the current ");
                     fprintf(stdout,"optimization mode ");
                     fprintf(stdout,"(=%d) does not ",pParameters->opt_mode);
@@ -5860,9 +5860,9 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             {
                 if (pParameters->verbose>0)
                 {
-                    fprintf(stdout,"In checkValuesOfAllParameters: a path ");
-                    fprintf(stdout,"name for the advect software has been ");
-                    fprintf(stdout,"loaded in the structure pointed by ");
+                    fprintf(stdout,"\nWarning in checkValuesOfAllParameters: ");
+                    fprintf(stdout,"a path name for the advect software has ");
+                    fprintf(stdout,"been loaded in the structure pointed by ");
                     fprintf(stdout,"pParameters although the current ");
                     fprintf(stdout,"optimization mode ");
                     fprintf(stdout,"(=%d) does not ",pParameters->opt_mode);
