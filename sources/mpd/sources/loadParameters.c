@@ -5,7 +5,7 @@
 *        specified) in the MPD algorithm.
 * \author Jeremy DALPHIN
 * \version 3.0
-* \date May 1st, 2019
+* \date August 1st, 2019
 *
 * The main function of this file is called \ref loadParameters and many other
 * functions should be static but have been defined as non-static for performing
@@ -21,7 +21,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 void initializeParameterStructure(Parameters* pParameters)
 {
-    // 78 parameters
+    // 81 parameters
     if (pParameters!=NULL)
     {
         pParameters->opt_mode=0;
@@ -66,7 +66,9 @@ void initializeParameterStructure(Parameters* pParameters)
         pParameters->ls_x=0.;
         pParameters->ls_y=0.;
         pParameters->ls_z=0.;
-        pParameters->ls_r=0.;
+        pParameters->ls_rx=0.;
+        pParameters->ls_ry=0.;
+        pParameters->ls_rz=0.;
 
         pParameters->met_err=0.;
         pParameters->met_min=0.;
@@ -115,6 +117,7 @@ void initializeParameterStructure(Parameters* pParameters)
         pParameters->hausd_lag=0.;
         pParameters->hgrad_lag=0.;
 
+        pParameters->memory=0;
         pParameters->n_iter=0;
         pParameters->residual=0.;
         pParameters->delta_t=0.;
@@ -259,7 +262,7 @@ int checkForTildeAndReplaceByHomePath(char** pStringToCheck, int maximumLength)
         // fgetc returns the char read as an unsigned char cast to an int or EOF
         lengthPath=0;
         readChar=fgetc(fileName);
-        while (readChar!='\n' && readChar!=EOF) 
+        while (readChar!='\n' && readChar!=EOF)
         {
             lengthPath++;
             readChar=fgetc(fileName);
@@ -382,7 +385,7 @@ int checkForTildeAndReplaceByHomePath(char** pStringToCheck, int maximumLength)
             strncpy(*pStringToCheck,pathName,lengthTotal);
         }
         else
-        {       
+        {
             strncpy(*pStringToCheck,pathName,maximumLength);
         }
         lengthString=lengthTotal;
@@ -504,7 +507,9 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
     pParameters->ls_x=LS_X;
     pParameters->ls_y=LS_Y;
     pParameters->ls_z=LS_Z;
-    pParameters->ls_r=LS_R;
+    pParameters->ls_rx=LS_RX;
+    pParameters->ls_ry=LS_RY;
+    pParameters->ls_rz=LS_RZ;
 
     pParameters->met_err=MET_ERR;
     pParameters->met_min=MET_MIN;
@@ -587,7 +592,7 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
         pParameters->path_medit=pathName;
 
         // Update with the new length
-        pParameters->path_length=lengthName;        
+        pParameters->path_length=lengthName;
     }
 
     pParameters->path_mshdist=(char*)calloc(pParameters->path_length,
@@ -791,6 +796,7 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
     pParameters->hausd_lag=HAUSD_LAG;
     pParameters->hgrad_lag=HGRAD_LAG;
 
+    pParameters->memory=MEMORY;
     pParameters->n_iter=N_ITER;
     pParameters->residual=RESIDUAL;
     pParameters->delta_t=DELTA_T;
@@ -811,12 +817,12 @@ int getLengthAfterKeywordBeginning(char keywordBeginning[3], int counter)
 {
     int returnValue=0;
 
-    // Check that counter is between 1 and 78 (total number of keywords)
-    if (counter<1 || counter>78)
+    // Check that counter is between 1 and 81 (total number of keywords)
+    if (counter<1 || counter>81)
     {
         PRINT_ERROR("In getLengthAfterKeywordBeginning: the input variable ");
         fprintf(stderr,"counter, corresponding to the %d-th keyword ",counter);
-        fprintf(stderr,"read, should be an integer between 1 and 78 (the ");
+        fprintf(stderr,"read, should be an integer between 1 and 81 (the ");
         fprintf(stderr,"total number of different possible keywords).\n");
         return 0;
     }
@@ -850,13 +856,13 @@ int getLengthAfterKeywordBeginning(char keywordBeginning[3], int counter)
     {
        returnValue=4;
     }
-    else if (!strcmp(keywordBeginning,"no"))
+    else if (!strcmp(keywordBeginning,"no") || !strcmp(keywordBeginning,"me"))
     {
        returnValue=5;
     }
     else if (!strcmp(keywordBeginning,"ve") || !strcmp(keywordBeginning,"rh") ||
              !strcmp(keywordBeginning,"or") || !strcmp(keywordBeginning,"de") ||
-               !strcmp(keywordBeginning,"me") || !strcmp(keywordBeginning,"hm"))
+                                                 !strcmp(keywordBeginning,"hm"))
     {
        returnValue=6;
     }
@@ -909,12 +915,12 @@ int getTypeAfterKeyword(char keywordMiddle[11], int lengthMiddle, int counter)
 {
     int returnValue=0, boolean1=0, boolean2=0, boolean3=0;
 
-    // Check that counter is between 1 and 78 (total number of keywords)
-    if (counter<1 || counter>78)
+    // Check that counter is between 1 and 81 (total number of keywords)
+    if (counter<1 || counter>81)
     {
         PRINT_ERROR("In getTypeAfterKeyword: the input variable counter, ");
         fprintf(stderr,"corresponding to the %d-th keyword read, ",counter);
-        fprintf(stderr,"should be an integer between 1 and 78 (the total ");
+        fprintf(stderr,"should be an integer between 1 and 81 (the total ");
         fprintf(stderr,"number of different possible keywords).\n");
         return 0;
     }
@@ -969,6 +975,7 @@ int getTypeAfterKeyword(char keywordMiddle[11], int lengthMiddle, int counter)
     boolean1=(boolean1 || !strcmp(keywordMiddle,"ve_wher"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"th_lengt"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"ode_l"));
+    boolean1=(boolean1 || !strcmp(keywordMiddle,"mory"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"i"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"_cfl"));
 
@@ -984,9 +991,9 @@ int getTypeAfterKeyword(char keywordMiddle[11], int lengthMiddle, int counter)
     boolean2=(boolean2 || !strcmp(keywordMiddle,"_y"));
     boolean2=(boolean2 || !strcmp(keywordMiddle,"_z"));
     boolean2=(boolean2 || !strcmp(keywordMiddle,"_r"));
-    boolean2=(boolean2 || !strcmp(keywordMiddle,"t_err"));
-    boolean2=(boolean2 || !strcmp(keywordMiddle,"t_min"));
-    boolean2=(boolean2 || !strcmp(keywordMiddle,"t_max"));
+    boolean2=(boolean2 || !strcmp(keywordMiddle,"t_er"));
+    boolean2=(boolean2 || !strcmp(keywordMiddle,"t_mi"));
+    boolean2=(boolean2 || !strcmp(keywordMiddle,"t_ma"));
     boolean2=(boolean2 || !strcmp(keywordMiddle,"er_tol"));
     boolean2=(boolean2 || !strcmp(keywordMiddle,"in_is"));
     boolean2=(boolean2 || !strcmp(keywordMiddle,"ax_is"));
@@ -1060,12 +1067,12 @@ int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
 {
     int returnValue=0, boolean1=0, boolean2=0, boolean3=0, boolean4=0;
 
-    // Check that counter is between 1 and 78 (total number of keywords)
-    if (counter<1 || counter>78)
+    // Check that counter is between 1 and 81 (total number of keywords)
+    if (counter<1 || counter>81)
     {
         PRINT_ERROR("In getLengthAfterKeywordMiddle: the input variable ");
         fprintf(stderr,"counter, corresponding to the %d-th keyword ",counter);
-        fprintf(stderr,"read, should be an integer between 1 and 78 (the ");
+        fprintf(stderr,"read, should be an integer between 1 and 81 (the ");
         fprintf(stderr,"total number of different possible keywords).\n");
         return 0;
     }
@@ -1121,10 +1128,6 @@ int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
     boolean1=(boolean1 || !strcmp(keywordMiddle,"_x"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"_y"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"_z"));
-    boolean1=(boolean1 || !strcmp(keywordMiddle,"_r"));
-    boolean1=(boolean1 || !strcmp(keywordMiddle,"t_err"));
-    boolean1=(boolean1 || !strcmp(keywordMiddle,"t_max"));
-    boolean1=(boolean1 || !strcmp(keywordMiddle,"t_min"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"ick_matrix"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"prox_mode"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"er_ini"));
@@ -1138,11 +1141,16 @@ int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
     boolean1=(boolean1 || !strcmp(keywordMiddle,"ax_ls"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"usd_ls"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"rad_ls"));
+    boolean1=(boolean1 || !strcmp(keywordMiddle,"mory"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"sidual"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"lta_t"));
     boolean1=(boolean1 || !strcmp(keywordMiddle,"_cfl"));
 
-    boolean2=(!strcmp(keywordMiddle,"ve_prin"));
+    boolean2=(!strcmp(keywordMiddle,"_r"));
+    boolean2=(boolean2 || !strcmp(keywordMiddle,"t_er"));
+    boolean2=(boolean2 || !strcmp(keywordMiddle,"t_ma"));
+    boolean2=(boolean2 || !strcmp(keywordMiddle,"t_mi"));
+    boolean2=(boolean2 || !strcmp(keywordMiddle,"ve_prin"));
     boolean2=(boolean2 || !strcmp(keywordMiddle,"ve_wher"));
     boolean2=(boolean2 || !strcmp(keywordMiddle,"th_lengt"));
     boolean2=(boolean2 || !strcmp(keywordMiddle,"th_advec"));
@@ -1207,21 +1215,21 @@ int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
 // location corresponding to the (counter)-th keyword in *.input file read as
 // the concatenation of the strings keywordBeginning+keywordMiddle(+keywordEnd)
 // where keywordMiddle has size lengthMiddle and keywordEnd has size lengthEnd
-// It has the int[78] repetition, three char[] variables (keywordBeginning[3],
+// It has the int[81] repetition, three char[] variables (keywordBeginning[3],
 // keywordMiddle[11], and keywordEnd[4]), and three int variables (lengthMiddle,
 // lengthEnd, and counter) as input arguments and it returns one on success,
 // otherwise zero is returned if an error occurred
 ////////////////////////////////////////////////////////////////////////////////
-int detectRepetition(int repetition[78], char keywordBeginning[3],
+int detectRepetition(int repetition[81], char keywordBeginning[3],
                      char keywordMiddle[11], char keywordEnd[4],
                                    int lengthMiddle, int lengthEnd, int counter)
 {
-    // Check that counter is between 1 and 78 (total number of keywords)
-    if (counter<1 || counter>78)
+    // Check that counter is between 1 and 81 (total number of keywords)
+    if (counter<1 || counter>81)
     {
         PRINT_ERROR("In detectRepetition: the input variable counter ");
         fprintf(stderr,"corresponding to the %d-th keyword read, ",counter);
-        fprintf(stderr,"should be an integer between 1 and and 78 (the total ");
+        fprintf(stderr,"should be an integer between 1 and and 81 (the total ");
         fprintf(stderr,"number of different possible keywords).\n");
         return 0;
     }
@@ -1286,7 +1294,7 @@ int detectRepetition(int repetition[78], char keywordBeginning[3],
         }
     }
 
-    // Distinguishing the 78 different cases and excluding non-valid keywords
+    // Distinguishing the 81 different cases and excluding non-valid keywords
     // strcmp returns 0 if the two strings are equal, otherwise <0 (resp. >0)
     // if the 1st string argument is shorter (resp. longer) than the 2nd one
     if (!strcmp(keywordBeginning,"op") && !strcmp(keywordMiddle,"t_mode"))
@@ -1439,204 +1447,223 @@ int detectRepetition(int repetition[78], char keywordBeginning[3],
     {
         repetition[34]++;
     }
-    else if (!strcmp(keywordBeginning,"ls") && !strcmp(keywordMiddle,"_r"))
+    else if (!strcmp(keywordBeginning,"ls") && !strcmp(keywordMiddle,"_r")
+                                                     && !strcmp(keywordEnd,"x"))
     {
         repetition[35]++;
     }
-    else if (!strcmp(keywordBeginning,"me") && !strcmp(keywordMiddle,"t_err"))
+    else if (!strcmp(keywordBeginning,"ls") && !strcmp(keywordMiddle,"_r")
+                                                     && !strcmp(keywordEnd,"y"))
     {
         repetition[36]++;
     }
-    else if (!strcmp(keywordBeginning,"me") && !strcmp(keywordMiddle,"t_min"))
+    else if (!strcmp(keywordBeginning,"ls") && !strcmp(keywordMiddle,"_r")
+                                                     && !strcmp(keywordEnd,"z"))
     {
         repetition[37]++;
     }
-    else if (!strcmp(keywordBeginning,"me") && !strcmp(keywordMiddle,"t_max"))
+
+    else if (!strcmp(keywordBeginning,"me") && !strcmp(keywordMiddle,"t_er")
+                                                     && !strcmp(keywordEnd,"r"))
     {
         repetition[38]++;
+    }
+    else if (!strcmp(keywordBeginning,"me") && !strcmp(keywordMiddle,"t_mi")
+                                                     && !strcmp(keywordEnd,"n"))
+    {
+        repetition[39]++;
+    }
+    else if (!strcmp(keywordBeginning,"me") && !strcmp(keywordMiddle,"t_ma")
+                                                     && !strcmp(keywordEnd,"x"))
+    {
+        repetition[40]++;
     }
     else if (!strcmp(keywordBeginning,"tr") &&
                                             !strcmp(keywordMiddle,"ick_matrix"))
     {
-        repetition[39]++;
+        repetition[41]++;
     }
     else if (!strcmp(keywordBeginning,"ap") &&
                                              !strcmp(keywordMiddle,"prox_mode"))
     {
-        repetition[40]++;
+        repetition[42]++;
     }
     else if (!strcmp(keywordBeginning,"it") && !strcmp(keywordMiddle,"er_ini"))
     {
-        repetition[41]++;
-    }
-    else if (!strcmp(keywordBeginning,"it") && !strcmp(keywordMiddle,"er_max"))
-    {
-        repetition[42]++;
-    }
-    else if (!strcmp(keywordBeginning,"it") && !strcmp(keywordMiddle,"er_tol")
-                                                   && !strcmp(keywordEnd,"d0p"))
-    {
         repetition[43]++;
     }
-    else if (!strcmp(keywordBeginning,"it") && !strcmp(keywordMiddle,"er_tol")
-                                                   && !strcmp(keywordEnd,"d1p"))
+    else if (!strcmp(keywordBeginning,"it") && !strcmp(keywordMiddle,"er_max"))
     {
         repetition[44]++;
     }
     else if (!strcmp(keywordBeginning,"it") && !strcmp(keywordMiddle,"er_tol")
-                                                   && !strcmp(keywordEnd,"d2p"))
+                                                   && !strcmp(keywordEnd,"d0p"))
     {
         repetition[45]++;
     }
-    else if (!strcmp(keywordBeginning,"sa") && !strcmp(keywordMiddle,"ve_type"))
+    else if (!strcmp(keywordBeginning,"it") && !strcmp(keywordMiddle,"er_tol")
+                                                   && !strcmp(keywordEnd,"d1p"))
     {
         repetition[46]++;
     }
-    else if (!strcmp(keywordBeginning,"sa") && !strcmp(keywordMiddle,"ve_mesh"))
+    else if (!strcmp(keywordBeginning,"it") && !strcmp(keywordMiddle,"er_tol")
+                                                   && !strcmp(keywordEnd,"d2p"))
     {
         repetition[47]++;
     }
-    else if (!strcmp(keywordBeginning,"sa") && !strcmp(keywordMiddle,"ve_data"))
+    else if (!strcmp(keywordBeginning,"sa") && !strcmp(keywordMiddle,"ve_type"))
     {
         repetition[48]++;
+    }
+    else if (!strcmp(keywordBeginning,"sa") && !strcmp(keywordMiddle,"ve_mesh"))
+    {
+        repetition[49]++;
+    }
+    else if (!strcmp(keywordBeginning,"sa") && !strcmp(keywordMiddle,"ve_data"))
+    {
+        repetition[50]++;
     }
     else if (!strcmp(keywordBeginning,"sa") && !strcmp(keywordMiddle,"ve_prin")
                                                      && !strcmp(keywordEnd,"t"))
     {
-        repetition[49]++;
+        repetition[51]++;
     }
     else if (!strcmp(keywordBeginning,"sa") && !strcmp(keywordMiddle,"ve_wher")
                                                      && !strcmp(keywordEnd,"e"))
     {
-        repetition[50]++;
+        repetition[52]++;
     }
     else if (!strcmp(keywordBeginning,"pa") && !strcmp(keywordMiddle,"th_lengt")
                                                      && !strcmp(keywordEnd,"h"))
     {
-        repetition[51]++;
+        repetition[53]++;
     }
     else if (!strcmp(keywordBeginning,"pa") &&
                                               !strcmp(keywordMiddle,"th_medit"))
     {
-        repetition[52]++;
+        repetition[54]++;
     }
     else if (!strcmp(keywordBeginning,"pa") &&
                                               !strcmp(keywordMiddle,"th_mmg3d"))
     {
-        repetition[53]++;
+        repetition[55]++;
     }
     else if (!strcmp(keywordBeginning,"pa") && !strcmp(keywordMiddle,"th_mshdi")
                                                     && !strcmp(keywordEnd,"st"))
     {
-        repetition[54]++;
+        repetition[56]++;
     }
     else if (!strcmp(keywordBeginning,"pa") && !strcmp(keywordMiddle,"th_elast")
                                                     && !strcmp(keywordEnd,"ic"))
     {
-        repetition[55]++;
+        repetition[57]++;
     }
     else if (!strcmp(keywordBeginning,"pa") && !strcmp(keywordMiddle,"th_advec")
                                                      && !strcmp(keywordEnd,"t"))
     {
-        repetition[56]++;
+        repetition[58]++;
     }
     else if (!strcmp(keywordBeginning,"hm") && !strcmp(keywordMiddle,"in_is") &&
                                                         !strcmp(keywordEnd,"o"))
     {
-        repetition[57]++;
+        repetition[59]++;
     }
     else if (!strcmp(keywordBeginning,"hm") && !strcmp(keywordMiddle,"ax_is") &&
                                                         !strcmp(keywordEnd,"o"))
     {
-        repetition[58]++;
+        repetition[60]++;
     }
     else if (!strcmp(keywordBeginning,"hm") && !strcmp(keywordMiddle,"in_me") &&
                                                         !strcmp(keywordEnd,"t"))
     {
-        repetition[59]++;
+        repetition[61]++;
     }
     else if (!strcmp(keywordBeginning,"hm") && !strcmp(keywordMiddle,"ax_me") &&
                                                         !strcmp(keywordEnd,"t"))
     {
-        repetition[60]++;
+        repetition[62]++;
     }
     else if (!strcmp(keywordBeginning,"hm") && !strcmp(keywordMiddle,"in_ls"))
     {
-        repetition[61]++;
+        repetition[63]++;
     }
     else if (!strcmp(keywordBeginning,"hm") && !strcmp(keywordMiddle,"ax_ls"))
     {
-        repetition[62]++;
+        repetition[64]++;
     }
     else if (!strcmp(keywordBeginning,"hm") && !strcmp(keywordMiddle,"ode_l") &&
                                                        !strcmp(keywordEnd,"ag"))
     {
-        repetition[63]++;
+        repetition[65]++;
     }
     else if (!strcmp(keywordBeginning,"hm") && !strcmp(keywordMiddle,"in_la") &&
                                                         !strcmp(keywordEnd,"g"))
     {
-        repetition[64]++;
+        repetition[66]++;
     }
     else if (!strcmp(keywordBeginning,"hm") && !strcmp(keywordMiddle,"ax_la") &&
                                                         !strcmp(keywordEnd,"g"))
     {
-        repetition[65]++;
+        repetition[67]++;
     }
     else if (!strcmp(keywordBeginning,"ha") && !strcmp(keywordMiddle,"usd_is")
                                                      && !strcmp(keywordEnd,"o"))
     {
-        repetition[66]++;
+        repetition[68]++;
     }
     else if (!strcmp(keywordBeginning,"ha") && !strcmp(keywordMiddle,"usd_me")
                                                      && !strcmp(keywordEnd,"t"))
     {
-        repetition[67]++;
+        repetition[69]++;
     }
     else if (!strcmp(keywordBeginning,"ha") && !strcmp(keywordMiddle,"usd_ls"))
     {
-        repetition[68]++;
+        repetition[70]++;
     }
     else if (!strcmp(keywordBeginning,"ha") && !strcmp(keywordMiddle,"usd_la")
                                                      && !strcmp(keywordEnd,"g"))
     {
-        repetition[69]++;
+        repetition[71]++;
     }
     else if (!strcmp(keywordBeginning,"hg") && !strcmp(keywordMiddle,"rad_is")
                                                      && !strcmp(keywordEnd,"o"))
     {
-        repetition[70]++;
+        repetition[72]++;
     }
     else if (!strcmp(keywordBeginning,"hg") && !strcmp(keywordMiddle,"rad_me")
                                                      && !strcmp(keywordEnd,"t"))
     {
-        repetition[71]++;
+        repetition[73]++;
     }
     else if (!strcmp(keywordBeginning,"hg") && !strcmp(keywordMiddle,"rad_ls"))
     {
-        repetition[72]++;
+        repetition[74]++;
     }
     else if (!strcmp(keywordBeginning,"hg") && !strcmp(keywordMiddle,"rad_la")
                                                      && !strcmp(keywordEnd,"g"))
     {
-        repetition[73]++;
+        repetition[75]++;
+    }
+    else if (!strcmp(keywordBeginning,"me") && !strcmp(keywordMiddle,"mory"))
+    {
+        repetition[76]++;
     }
     else if (!strcmp(keywordBeginning,"n_") && !strcmp(keywordMiddle,"i") &&
                                                       !strcmp(keywordEnd,"ter"))
     {
-        repetition[74]++;
+        repetition[77]++;
     }
     else if (!strcmp(keywordBeginning,"re") && !strcmp(keywordMiddle,"sidual"))
     {
-        repetition[75]++;
+        repetition[78]++;
     }
     else if (!strcmp(keywordBeginning,"de") && !strcmp(keywordMiddle,"lta_t"))
     {
-        repetition[76]++;
+        repetition[79]++;
     }
     else if (!strcmp(keywordBeginning,"no") && !strcmp(keywordMiddle,"_cfl"))
     {
-        repetition[77]++;
+        repetition[80]++;
     }
     else
     {
@@ -1712,12 +1739,12 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
         return 0;
     }
 
-    // Check that counter is between 1 and 78 (total number of keywords)
-    if (counter<1 || counter>78)
+    // Check that counter is between 1 and 81 (total number of keywords)
+    if (counter<1 || counter>81)
     {
         PRINT_ERROR("In changeValuesOfParameters: the input variable counter ");
         fprintf(stderr,"corresponding to the %d-th keyword read, ",counter);
-        fprintf(stderr,"should be an integer between 1 and and 78 (the total ");
+        fprintf(stderr,"should be an integer between 1 and and 81 (the total ");
         fprintf(stderr,"number of different possible keywords).\n");
         return 0;
     }
@@ -1786,7 +1813,7 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
         }
     }
 
-    // Change the values of pParameters depending on the 78 different cases
+    // Change the values of pParameters depending on the 81 different cases
     // strcmp returns 0 if the two strings are equal, otherwise <0 (resp. >0)
     // if the 1st string argument is shorter (resp. longer) than the 2nd one
     if (!strcmp(keywordBeginning,"op") && !strcmp(keywordMiddle,"t_mode"))
@@ -2180,19 +2207,33 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
     {
         pParameters->ls_z=readDouble;
     }
-    else if (!strcmp(keywordBeginning,"ls") && !strcmp(keywordMiddle,"_r"))
+    else if (!strcmp(keywordBeginning,"ls") && !strcmp(keywordMiddle,"_r") &&
+                                                        !strcmp(keywordEnd,"x"))
     {
-        pParameters->ls_r=readDouble;
+        pParameters->ls_rx=readDouble;
     }
-    else if (!strcmp(keywordBeginning,"me") && !strcmp(keywordMiddle,"t_err"))
+    else if (!strcmp(keywordBeginning,"ls") && !strcmp(keywordMiddle,"_r") &&
+                                                        !strcmp(keywordEnd,"y"))
+    {
+        pParameters->ls_ry=readDouble;
+    }
+    else if (!strcmp(keywordBeginning,"ls") && !strcmp(keywordMiddle,"_r") &&
+                                                        !strcmp(keywordEnd,"z"))
+    {
+        pParameters->ls_rz=readDouble;
+    }
+    else if (!strcmp(keywordBeginning,"me") && !strcmp(keywordMiddle,"t_er") &&
+                                                        !strcmp(keywordEnd,"r"))
     {
         pParameters->met_err=readDouble;
     }
-    else if (!strcmp(keywordBeginning,"me") && !strcmp(keywordMiddle,"t_min"))
+    else if (!strcmp(keywordBeginning,"me") && !strcmp(keywordMiddle,"t_mi") &&
+                                                        !strcmp(keywordEnd,"n"))
     {
         pParameters->met_min=readDouble;
     }
-    else if (!strcmp(keywordBeginning,"me") && !strcmp(keywordMiddle,"t_max"))
+    else if (!strcmp(keywordBeginning,"me") && !strcmp(keywordMiddle,"t_ma") &&
+                                                        !strcmp(keywordEnd,"x"))
     {
         pParameters->met_max=readDouble;
     }
@@ -2508,6 +2549,10 @@ int changeValuesOfParameters(Parameters* pParameters, char keywordBeginning[3],
     {
         pParameters->hgrad_lag=readDouble;
     }
+    else if (!strcmp(keywordBeginning,"me") && !strcmp(keywordMiddle,"mory"))
+    {
+        pParameters->memory=readIntegerIn;
+    }
     else if (!strcmp(keywordBeginning,"n_") && !strcmp(keywordMiddle,"i") &&
                                                       !strcmp(keywordEnd,"ter"))
     {
@@ -2555,7 +2600,7 @@ int readInputFileAndGetParameters(Parameters* pParameters)
     char keywordEnd[4]={'\0'}, *readStringOut=NULL, *readStringIn=NULL;
     size_t lengthString=0;
     int lengthMiddle=0, lengthEnd=0, readIntegerIn=0, readIntegerOut=0;
-    int readChar=0, keywordType=0, repetition[78]={0}, i=0;
+    int readChar=0, keywordType=0, repetition[81]={0}, i=0;
     int counter=0, boolean=0;
     double readDouble=.0;
     FILE *infoFile=NULL;
@@ -2647,7 +2692,7 @@ int readInputFileAndGetParameters(Parameters* pParameters)
     }
 
     counter=0;
-    while (counter<78)
+    while (counter<81)
     {
         counter++;
 
@@ -2866,7 +2911,7 @@ int readInputFileAndGetParameters(Parameters* pParameters)
             readStringIn=NULL;
             return 0;
         }
-        for (i=0; i<78; i++)
+        for (i=0; i<81; i++)
         {
             if (repetition[i]>1)
             {
@@ -2892,7 +2937,7 @@ int readInputFileAndGetParameters(Parameters* pParameters)
         switch (keywordType)
         {
             case -1:
-                counter=78;
+                counter=81;
                 break;
 
             case 1:
@@ -3472,7 +3517,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
                 }
                 pParameters->name_elas=fileLocation;
             }
-            
+
             // Update with the new length
             pParameters->name_length=boolean;
         }
@@ -3490,7 +3535,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             pParameters->name_result[iMax-1]='\0';
         }
 
-        // Check pParameters->name_result is a string of length greater than 7 
+        // Check pParameters->name_result is a string of length greater than 7
         lengthName=strlen(pParameters->name_result);
         if (lengthName<8)
         {
@@ -3542,10 +3587,10 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stdout,"name (where the '.input' extension will be ");
             fprintf(stdout,"replaced by the '.result' one).\n\n");
         }
-        
+
         if (pParameters->name_length==8)
         {
-            // In this (rare) case, we must add 1 char. for non-nul name_* var. 
+            // In this (rare) case, we must add 1 char. for non-nul name_* var.
             lengthName=pParameters->name_length+1;
 
             // realloc returns a pointer to the allocated memory, otherwise NULL
@@ -3722,7 +3767,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         pParameters->name_length=boolean;
     }
 
-    // Check if pParameters->name_chem begins with './' 
+    // Check if pParameters->name_chem begins with './'
     if (pParameters->name_chem[0]=='.' && pParameters->name_chem[1]=='/')
     {
         iMax=pParameters->name_length;
@@ -3734,7 +3779,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         pParameters->name_chem[iMax-1]='\0';
     }
 
-    // Check if pParameters->name_chem is a string of length greater than 5 
+    // Check if pParameters->name_chem is a string of length greater than 5
     lengthName=strlen(pParameters->name_chem);
     if (lengthName<6)
     {
@@ -3853,7 +3898,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             pParameters->name_mesh[iMax-1]='\0';
         }
 
-        // Check pParameters->name_mesh is a string of length greater than 5 
+        // Check pParameters->name_mesh is a string of length greater than 5
         lengthName=strlen(pParameters->name_mesh);
         if (lengthName<6)
         {
@@ -3880,15 +3925,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stdout,"file name will thus be generated thanks to the ");
             fprintf(stdout,"%s file name (where the ",pParameters->name_input);
             fprintf(stdout,"'.input' extension will be replaced by the ");
-            fprintf(stdout,"'.mesh' one). The initial domain contained ");
-            if (pParameters->ls_type)
-            {
-                fprintf(stdout,"into this mesh file will be a sphere.\n\n");
-            }
-            else
-            {
-                fprintf(stdout,"into this mesh file will be a cube.\n\n");
-            }
+            fprintf(stdout,"'.mesh' one).");
         }
     }
 
@@ -4384,38 +4421,48 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stdout,"\nWarning in checkValuesOfAllParameters ");
         fprintf(stdout,"function: the center (%lf,",pParameters->ls_x);
         fprintf(stdout,"%lf,%lf) of ",pParameters->ls_y,pParameters->ls_z);
-        if (pParameters->ls_type)
-        {
-            fprintf(stdout,"the initial sphere is not located inside the ");
-        }
-        else
-        {
-            fprintf(stdout,"the initial cube is not located inside the ");
-        }
+        fprintf(stdout,"the initial domain is not located inside the ");
         fprintf(stdout,"computational domain ");
         fprintf(stdout,"[%lf,%lf]x",pParameters->x_min,pParameters->x_max);
         fprintf(stdout,"[%lf,%lf]x",pParameters->y_min,pParameters->y_max);
         fprintf(stdout,"[%lf,%lf].\n\n",pParameters->z_min,pParameters->z_max);
     }
 
-    boolean=(pParameters->ls_r>0.);
+    boolean=(pParameters->ls_rx>0. && pParameters->ls_ry>0.);
+    boolean=(boolean && pParameters->ls_rz>0.);
     if (!boolean)
     {
-        PRINT_ERROR("In checkValuesOfAllParameters: the ls_r variable ");
-        fprintf(stderr,"(=%lf) of the structure pointed by ",pParameters->ls_r);
-        fprintf(stderr,"pParameters, and corresponding to the ");
-        if (pParameters->ls_type)
-        {
-             fprintf(stderr,"radius of the initial sphere, ");
-        }
-        else
-        {
-             fprintf(stderr,"length of the initial cube, ");
-        }
-        fprintf(stderr,"must be positive.\nPlease modify the value ");
-        fprintf(stderr,"accordingly after the 'ls_r' keyword in ");
+        PRINT_ERROR("In checkValuesOfAllParameters: the variables ls_rx ");
+        fprintf(stderr,"(=%lf), ls_ry ",pParameters->ls_rx);
+        fprintf(stderr,"(=%lf) and ls_rz ",pParameters->ls_ry);
+        fprintf(stderr,"(=%lf) of the structure pointed ",pParameters->ls_rz);
+        fprintf(stderr,"by pParameters must be positive.\nPlease modify ");
+        fprintf(stderr,"the values accordingly after the 'ls_rx', 'ls_ry' ");
+        fprintf(stderr,"and 'ls_rz' keywords in ");
         fprintf(stderr,"%s file.\n",pParameters->name_input);
         return 0;
+    }
+
+    if (pParameters->ls_type)
+    {
+        boolean=(pParameters->ls_rx==pParameters->ls_ry);
+        boolean=(boolean || pParameters->ls_rx==pParameters->ls_rz);
+        boolean=(boolean || pParameters->ls_ry==pParameters->ls_rz);
+        if (!boolean)
+        {
+            PRINT_ERROR("In checkValuesOfAllParameters: in the case where ");
+            fprintf(stderr,"the initial domain is a sphere/cigar ");
+            fprintf(stderr,"(pParameters->ls_type=%d), ",pParameters->ls_type);
+            fprintf(stderr,"at least two values must be equal among the ");
+            fprintf(stderr,"variables ls_rx (=%lf), ls_ry ",pParameters->ls_rx);
+            fprintf(stderr,"(=%lf) and ls_rz ",pParameters->ls_ry);
+            fprintf(stderr,"(=%lf) of the structure ",pParameters->ls_rz);
+            fprintf(stderr,"pointed by pParameters.\nPlease modify the ");
+            fprintf(stderr,"values accordingly after the 'ls_rx', 'ls_ry' ");
+            fprintf(stderr,"and 'ls_rz' keywords in ");
+            fprintf(stderr,"%s file.\n",pParameters->name_input);
+            return 0;
+        }
     }
 
     // Check the variables related to the metric computation
@@ -5841,6 +5888,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         boolean=(boolean && pParameters->hmax_met>pParameters->hmin_met);
         boolean=(boolean && pParameters->hausd_met>0.);
         boolean=(boolean && pParameters->hgrad_met>1.);
+        boolean=(boolean && pParameters->memory>=0);
         if (!boolean)
         {
             PRINT_ERROR("In checkValuesOfAllParameters: expecting\n(");
@@ -5857,9 +5905,11 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"pParameters->hmin_met\n(pParameters->hausd_met=");
             fprintf(stderr,"%lf) > 0.0\n",pParameters->hausd_met);
             fprintf(stderr,"(pParameters->hgrad_met=");
-            fprintf(stderr,"%lf) > 1.0\nPlease modify ",pParameters->hgrad_met);
-            fprintf(stderr,"the values accordingly after the corresponding ");
-            fprintf(stderr,"keywords in %s file.\n",pParameters->name_input);
+            fprintf(stderr,"%lf) > 1.0\n",pParameters->hgrad_met);
+            fprintf(stderr,"(pParameters->memory=%d) ",pParameters->memory);
+            fprintf(stderr,">= 0\nPlease modify the values accordingly after ");
+            fprintf(stderr,"the corresponding keywords in ");
+            fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
          }
     }
@@ -5873,6 +5923,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         boolean=(boolean && pParameters->hmax_met==HMAX_MET);
         boolean=(boolean && pParameters->hausd_met==HAUSD_MET);
         boolean=(boolean && pParameters->hgrad_met==HGRAD_MET);
+        boolean=(boolean && pParameters->memory==MEMORY);
         if (!boolean)
         {
             if (pParameters->verbose>0)
@@ -5886,18 +5937,20 @@ int checkValuesOfAllParameters(Parameters* pParameters)
                 fprintf(stdout,"(=%lf), hmin_met ",pParameters->hgrad_iso);
                 fprintf(stdout,"(=%lf), hmax_met ",pParameters->hmin_met);
                 fprintf(stdout,"(=%lf), hausd_met ",pParameters->hmax_met);
-                fprintf(stdout,"(=%lf), and hgrad_met ",pParameters->hgrad_met);
-                fprintf(stdout,"(=%lf) of the ",pParameters->hgrad_met);
-                fprintf(stdout,"structure pointed by pParameters has been ");
-                fprintf(stdout,"changed from its default value ");
+                fprintf(stdout,"(=%lf), hgrad_met ",pParameters->hgrad_met);
+                fprintf(stdout,"(=%lf), and memory ",pParameters->hgrad_met);
+                fprintf(stdout,"(=%d) of the structure ",pParameters->memory);
+                fprintf(stdout,"pointed by pParameters has been changed from ");
+                fprintf(stdout,"its default value ");
                 fprintf(stdout,"(HMIN_ISO=%lf, ",HMIN_ISO);
                 fprintf(stdout,"HMAX_ISO=%lf, ",HMAX_ISO);
                 fprintf(stdout,"HAUSD_ISO=%lf, ",HAUSD_ISO);
                 fprintf(stdout,"HGRAD_ISO=%lf, ",HGRAD_ISO);
                 fprintf(stdout,"(HMIN_MET=%lf, ",HMIN_MET);
                 fprintf(stdout,"HMAX_MET=%lf, ",HMAX_MET);
-                fprintf(stdout,"HAUSD_MET=%lf, and ",HAUSD_MET);
-                fprintf(stdout,"HGRAD_MET=%lf) in the ",HGRAD_MET);
+                fprintf(stdout,"HAUSD_MET=%lf, ",HAUSD_MET);
+                fprintf(stdout,"HGRAD_MET=%lf, and ",HGRAD_MET);
+                fprintf(stdout,"MEMORY=%d) in the ",MEMORY);
                 fprintf(stdout,"%s file, althought ",pParameters->name_input);
                 fprintf(stdout,"the current the current optimization mode ");
                 fprintf(stdout,"(=%d) does not require ",pParameters->opt_mode);
@@ -5909,8 +5962,9 @@ int checkValuesOfAllParameters(Parameters* pParameters)
                 fprintf(stdout,"pParameters->hgrad_iso, ");
                 fprintf(stdout,"pParameters->hmin_met, ");
                 fprintf(stdout,"pParameters->hmax_met, ");
-                fprintf(stdout,"pParameters->hausd_met, and ");
-                fprintf(stdout,"pParameters->hgrad_met variables are thus ");
+                fprintf(stdout,"pParameters->hausd_met, ");
+                fprintf(stdout,"pParameters->hgrad_met and ");
+                fprintf(stderr,"pParameters->memory variables are thus ");
                 fprintf(stdout,"restored to their default values.\n\n");
             }
             pParameters->hmin_iso=HMIN_ISO;
@@ -5922,6 +5976,8 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             pParameters->hmax_met=HMAX_MET;
             pParameters->hausd_met=HAUSD_MET;
             pParameters->hgrad_met=HGRAD_MET;
+
+            pParameters->memory=MEMORY;
         }
     }
 
@@ -6264,6 +6320,7 @@ int writingRestartFile(Parameters* pParameters)
     }
 
     // Write general parameters
+    fprintf(restartFile,"\n## General parameters\n\n");
     fprintf(restartFile,"opt_mode %d \n",pParameters->opt_mode);
     fprintf(restartFile,"verbose %d \n",pParameters->verbose);
 #ifdef _OPENMP
@@ -6274,7 +6331,8 @@ int writingRestartFile(Parameters* pParameters)
         fprintf(restartFile,"rho_opt %.8le \n",pParameters->rho_opt);
     }
 
-    fprintf(restartFile,"name_length %d \n\n",pParameters->name_length);
+    fprintf(restartFile,"\n## File name parameters\n\n");
+    fprintf(restartFile,"name_length %d \n",pParameters->name_length);
 
     // Check and write the pParameters->name_result variable
     if (!checkStringFromLength(pParameters->name_result,9,
@@ -6361,7 +6419,8 @@ int writingRestartFile(Parameters* pParameters)
     }
 
     // Write chemical parameters
-    fprintf(restartFile,"\nnu_electrons %d \n",pParameters->nu_electrons);
+    fprintf(restartFile,"\n## Chemical parameters\n\n");
+    fprintf(restartFile,"nu_electrons %d \n",pParameters->nu_electrons);
     fprintf(restartFile,"bohr_unit %d \n",pParameters->bohr_unit);
     fprintf(restartFile,"select_orb %.8le \n",pParameters->select_orb);
     fprintf(restartFile,"orb_ortho %d \n",pParameters->orb_ortho);
@@ -6370,6 +6429,7 @@ int writingRestartFile(Parameters* pParameters)
     fprintf(restartFile,"orb_rhf %d \n\n",pParameters->orb_rhf);
 
     // Write the variables related to the computational box
+    fprintf(restartFile,"## Computational box parameters\n\n");
     fprintf(restartFile,"select_box %.8le \n",pParameters->select_box);
     fprintf(restartFile,"x_min %.8le \n",pParameters->x_min);
     fprintf(restartFile,"y_min %.8le \n",pParameters->y_min);
@@ -6387,27 +6447,34 @@ int writingRestartFile(Parameters* pParameters)
     fprintf(restartFile,"delta_y %.8le \n",pParameters->delta_y);
     fprintf(restartFile,"delta_z %.8le \n\n",pParameters->delta_z);
 
+    fprintf(restartFile,"## Initial domain parameters\n\n");
     fprintf(restartFile,"ls_ini %d \n",pParameters->ls_ini);
     fprintf(restartFile,"ls_type %d \n",pParameters->ls_type);
     fprintf(restartFile,"ls_x %.8le \n",pParameters->ls_x);
     fprintf(restartFile,"ls_y %.8le \n",pParameters->ls_y);
-    fprintf(restartFile,"ls_z %.8le \n",pParameters->ls_z);
-    fprintf(restartFile,"ls_r %.8le \n\n",pParameters->ls_r);
+    fprintf(restartFile,"ls_z %.8le \n\n",pParameters->ls_z);
+
+    fprintf(restartFile,"ls_rx %.8le \n",pParameters->ls_rx);
+    fprintf(restartFile,"ls_ry %.8le \n",pParameters->ls_ry);
+    fprintf(restartFile,"ls_rz %.8le \n\n",pParameters->ls_rz);
 
     // Write variables related to the metric or matrix computation
     if (pParameters->opt_mode>0)
     {
+        fprintf(restartFile,"## Metric computation parameters\n\n");
         fprintf(restartFile,"met_err %.8le \n",pParameters->met_err);
         fprintf(restartFile,"met_min %.8le \n",pParameters->met_min);
         fprintf(restartFile,"met_max %.8le \n\n",pParameters->met_max);
     }
     else
     {
+        fprintf(restartFile,"## Matrix computation parameters\n\n");
         fprintf(restartFile,"trick_matrix %d \n",pParameters->trick_matrix);
         fprintf(restartFile,"approx_mode %d \n\n",pParameters->approx_mode);
     }
 
     // Write variables related to the stop criteria
+    fprintf(restartFile,"## Stopping criteria parameters\n\n");
     fprintf(restartFile,"iter_ini %d \n",pParameters->iter_ini);
     fprintf(restartFile,"iter_max %d \n",pParameters->iter_max);
     fprintf(restartFile,"iter_told0p %.8le \n",pParameters->iter_told0p);
@@ -6415,11 +6482,14 @@ int writingRestartFile(Parameters* pParameters)
     fprintf(restartFile,"iter_told2p %.8le \n\n",pParameters->iter_told2p);
 
     // Write variables related to the saving of data
+    fprintf(restartFile,"## Saving data parameters\n\n");
     fprintf(restartFile,"save_type %d \n",pParameters->save_type);
     fprintf(restartFile,"save_mesh %d \n",pParameters->save_mesh);
     fprintf(restartFile,"save_data %d \n",pParameters->save_data);
     fprintf(restartFile,"save_print %d \n",pParameters->save_print);
     fprintf(restartFile,"save_where %d \n\n",pParameters->save_where);
+
+    fprintf(restartFile,"## Path name parameters\n\n");
     fprintf(restartFile,"path_length %d \n",pParameters->path_length);
 
     if (pParameters->save_print)
@@ -6520,8 +6590,11 @@ int writingRestartFile(Parameters* pParameters)
             fprintf(restartFile,"path_advect %s \n",pParameters->path_advect);
         }
 
+        fprintf(restartFile,"\n## Mmg3d software parameters\n\n");
+        fprintf(restartFile,"memory %d \n",pParameters->memory);
+
         // Write the *_iso and *_met variables related to the mmg3d parameters
-        fprintf(restartFile,"\nhmin_iso %.8le \n",pParameters->hmin_iso);
+        fprintf(restartFile,"hmin_iso %.8le \n",pParameters->hmin_iso);
         fprintf(restartFile,"hmax_iso %.8le \n",pParameters->hmax_iso);
         fprintf(restartFile,"hausd_iso %.8le \n",pParameters->hausd_iso);
         fprintf(restartFile,"hgrad_iso %.8le \n\n",pParameters->hgrad_iso);
@@ -6553,6 +6626,7 @@ int writingRestartFile(Parameters* pParameters)
         if (pParameters->opt_mode!=3)
         {
             // Check the variables related to the mshdist parameters
+            fprintf(restartFile,"## Mshdist software parameters\n\n");
             fprintf(restartFile,"n_iter %d \n",pParameters->n_iter);
             fprintf(restartFile,"residual %.8le \n",pParameters->residual);
         }
@@ -6560,6 +6634,7 @@ int writingRestartFile(Parameters* pParameters)
         if (pParameters->opt_mode==1 || pParameters->opt_mode==2)
         {
             // Check the variables related to the advect parameters
+            fprintf(restartFile,"\n## Advect software parameters\n\n");
             fprintf(restartFile,"delta_t %.8le \n",pParameters->delta_t);
             fprintf(restartFile,"no_cfl %d \n",pParameters->no_cfl);
         }
@@ -6599,11 +6674,11 @@ int writingRestartFile(Parameters* pParameters)
 // (chemical) file, preceded by the 'name_chem' keyword, the (positive) number
 // of electrons to look for, preceded by the 'nu_electrons' keyword, and
 // optionally the *.mesh/ *.cube (mesh) file to start with, preceded by the
-// 'name_mesh' keyword (if not specify a cube or a sphere is built depending on
-// the ls_type variable of the structure Parameters). Such file must also end
-// with the 'end_data' keyword. The function loadParameters has the Parameters*
-// variable (defined in main.h) and a char* variable as input arguments and it
-// returns one on success, otherwise zero is returned if an error is encountered
+// 'name_mesh' keyword (if not specify a cube/cuboid or a sphere/cigar is built
+// depending on the ls_type variable of the structure Parameters). Such file
+// must also end with the 'end_data' keyword. The function loadParameters has
+// the Parameters* variable (defined in main.h) and a char* variable as input
+// arguments and it returns one on success, otherwise zero is returned on error
 ////////////////////////////////////////////////////////////////////////////////
 int loadParameters(Parameters* pParameters, char* nameInputFile)
 {

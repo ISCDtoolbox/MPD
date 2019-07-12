@@ -3,7 +3,7 @@
 * \brief Main and shared functions of the MPD program.
 * \author Jeremy DALPHIN
 * \version 3.0
-* \date May 1st, 2019
+* \date August 1st, 2019
 *
 * This file contains the \ref main function of the MPD program and also all the
 * functions that are shared by all the files related to the MPD program.
@@ -61,7 +61,7 @@ time_t globalInitialTimer=0;
 * \def STR_RELEASE
 * \brief Used to specify the current date of release of the MPD program.
 */
-#define STR_RELEASE "May 1st, 2019"
+#define STR_RELEASE "August 1st, 2019"
 
 /**
 * \def STR_VERSION
@@ -234,27 +234,28 @@ int main(int argc, char *argv[])
                                        BOHR_RADIUS,SELECT_ORB,ORB_ORTHO,
                                        SELECT_BOX,X_MIN,Y_MIN,Z_MIN,X_MAX,Y_MAX,
                                        Z_MAX,N_X,N_Y,N_Z,DELTA_X,DELTA_Y,
-                                       DELTA_Z,LS_TYPE,LS_X,LS_Y,LS_Z,LS_R,
-                                       MET_CST,MET_ERR,MET_MIN,MET_MAX,
-                                       TRICK_MATRIX,APPROX_MODE,ITER_INI,
-                                       ITER_MAX,ITER_TOLD0P,ITER_TOLD1P,
-                                       ITER_TOLD2P,SAVE_TYPE,SAVE_MESH,
-                                       SAVE_DATA,SAVE_PRINT,SAVE_WHERE,
-                                       PATH_LENGTH,PATH_MEDIT,PATH_MMG3D,
-                                       PATH_MSHDIST,PATH_ELASTIC,PATH_ADVECT,
-                                       HMIN_ISO,HMAX_ISO,HAUSD_ISO,HGRAD_ISO,
-                                       HMIN_MET,HMAX_MET,HAUSD_MET,HGRAD_MET,
-                                       HMIN_LS,HMAX_LS,HAUSD_LS,HGRAD_LS,
-                                       HMODE_LAG,HMIN_LAG,HMAX_LAG,HAUSD_LAG,
-                                       HGRAD_LAG,N_ITER,RESIDUAL,DELTA_T,NO_CFL,
-                                       ORB_S,ORB_PX,ORB_PY,ORB_PZ,ORB_DXX,
-                                       ORB_DYY,ORB_DZZ,ORB_DXY,ORB_DXZ,ORB_DYZ,
-                                       ORB_FXXX,ORB_FYYY,ORB_FZZZ,ORB_FXXY,
-                                       ORB_FXXZ,ORB_FYYZ,ORB_FXYY,ORB_FXZZ,
-                                       ORB_FYZZ,ORB_FXYZ,CST_A,CST_B,CST_C,
-                                       CST_a,CST_b,CST_c,CST_aa,CST_bb,CST_cc,
-                                       CST_ONE,CST_TWO,CST_THREE,CST_1,CST_2,
-                                                           CST_3,CST_22,CST_33))
+                                       DELTA_Z,LS_TYPE,LS_X,LS_Y,LS_Z,LS_RX,
+                                       LS_RY,LS_RZ,MET_CST,MET_ERR,MET_MIN,
+                                       MET_MAX,TRICK_MATRIX,APPROX_MODE,
+                                       ITER_INI,ITER_MAX,ITER_TOLD0P,
+                                       ITER_TOLD1P,ITER_TOLD2P,SAVE_TYPE,
+                                       SAVE_MESH,SAVE_DATA,SAVE_PRINT,
+                                       SAVE_WHERE,PATH_LENGTH,PATH_MEDIT,
+                                       PATH_MMG3D,PATH_MSHDIST,PATH_ELASTIC,
+                                       PATH_ADVECT,HMIN_ISO,HMAX_ISO,HAUSD_ISO,
+                                       HGRAD_ISO,HMIN_MET,HMAX_MET,HAUSD_MET,
+                                       HGRAD_MET,HMIN_LS,HMAX_LS,HAUSD_LS,
+                                       HGRAD_LS,HMODE_LAG,HMIN_LAG,HMAX_LAG,
+                                       HAUSD_LAG,HGRAD_LAG,MEMORY,N_ITER,
+                                       RESIDUAL,DELTA_T,NO_CFL,ORB_S,ORB_PX,
+                                       ORB_PY,ORB_PZ,ORB_DXX,ORB_DYY,ORB_DZZ,
+                                       ORB_DXY,ORB_DXZ,ORB_DYZ,ORB_FXXX,
+                                       ORB_FYYY,ORB_FZZZ,ORB_FXXY,ORB_FXXZ,
+                                       ORB_FYYZ,ORB_FXYY,ORB_FXZZ,ORB_FYZZ,
+                                       ORB_FXYZ,CST_A,CST_B,CST_C,CST_a,CST_b,
+                                       CST_c,CST_aa,CST_bb,CST_cc,CST_ONE,
+                                       CST_TWO,CST_THREE,CST_1,CST_2,CST_3,
+                                                                 CST_22,CST_33))
     {
         PRINT_ERROR("In main: checkAllPreprocessorConstants function ");
         fprintf(stderr,"returned zero instead of one.\n");
@@ -299,6 +300,7 @@ int main(int argc, char *argv[])
     omp_set_num_threads(parameters.n_cpu);
 #endif
 
+/*
     // Load chemistry from a *.chem/ *.wfn file pointed by parameters.name_chem
     if (!loadChemistry(&parameters,&chemicalSystem))
     {
@@ -307,7 +309,6 @@ int main(int argc, char *argv[])
         FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
     }
 
-/*
     // Load default mesh or from the *.mesh/ *.cube file of parameters.name_mesh
     switch (loadMesh(&parameters,&mesh))
     {
@@ -553,6 +554,7 @@ void commentAnormalEnd(int typeOfSignal)
 #else
     // This distinction is made to unit-test properly commentAnormaEnd function
     // WARNING: please check wisely before removing or modifying this condition
+    // because it may not be possible to kill the program with Ctrl+C command
     if (typeOfSignal==SIGINT)
     {
         exit(EXIT_FAILURE);
@@ -741,23 +743,24 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
                                   double zMax, int nX, int nY, int nZ,
                                   double deltaX, double deltaY, double deltaZ,
                                   int lsType, double lsX, double lsY,
-                                  double lsZ, double lsR, double metCst,
-                                  double metErr, double metMin, double metMax,
-                                  int trickMatrix, int approxMode, int iterIni,
-                                  int iterMax, double iterTolD0P,
-                                  double iterTolD1P, double iterTolD2P,
-                                  int saveType, int saveMesh, int saveData,
-                                  int savePrint, int saveWhere, int pathLength,
-                                  char* pathMedit, char* pathMmg3d,
-                                  char* pathMshdist, char* pathElastic,
-                                  char* pathAdvect, double hminIso,
-                                  double hmaxIso, double hausdIso,
-                                  double hgradIso, double hminMet,
-                                  double hmaxMet, double hausdMet,
-                                  double hgradMet, double hminLs, double hmaxLs,
-                                  double hausdLs, double hgradLs, int hmodeLag,
-                                  double hminLag, double hmaxLag,
-                                  double hausdLag, double hgradLag, int nIter,
+                                  double lsZ, double lsRx, double lsRy,
+                                  double lsRz, double metCst, double metErr,
+                                  double metMin, double metMax, int trickMatrix,
+                                  int approxMode, int iterIni, int iterMax,
+                                  double iterTolD0P, double iterTolD1P,
+                                  double iterTolD2P, int saveType, int saveMesh,
+                                  int saveData, int savePrint, int saveWhere,
+                                  int pathLength, char* pathMedit,
+                                  char* pathMmg3d, char* pathMshdist,
+                                  char* pathElastic, char* pathAdvect,
+                                  double hminIso, double hmaxIso,
+                                  double hausdIso, double hgradIso,
+                                  double hminMet, double hmaxMet,
+                                  double hausdMet, double hgradMet,
+                                  double hminLs, double hmaxLs, double hausdLs,
+                                  double hgradLs, int hmodeLag, double hminLag,
+                                  double hmaxLag, double hausdLag,
+                                  double hgradLag, int memory, int nIter,
                                   double residual, double deltaT, int noCfl,
                                   int orb1, int orb2, int orb3, int orb4,
                                   int orb5, int orb6, int orb7, int orb8,
@@ -976,35 +979,38 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
     {
         fprintf(stdout,"\nWarning in checkAllPreprocessorConstants function: ");
         fprintf(stdout,"the center (%lf,%lf,%lf) of the initial ",lsX,lsY,lsZ);
-        if (lsType)
-        {
-            fprintf(stdout,"sphere (defined in loadParameters.h file) is not ");
-        }
-        else
-        {
-            fprintf(stdout,"cube (defined in loadParameters.h file) is not ");
-        }
-        fprintf(stdout,"located inside the default computational domain ");
-        fprintf(stdout,"[%lf,%lf]x[%lf,%lf]x",xMin,xMax,yMin,yMax);
-        fprintf(stdout,"[%lf,%lf].\n",zMin,zMax);
+        fprintf(stdout,"domain is not located inside the default ");
+        fprintf(stdout,"computational box [%lf,%lf]x",xMin,xMax);
+        fprintf(stdout,"[%lf,%lf]x[%lf,%lf].\n",yMin,yMax,zMin,zMax);
     }
 
-    boolean=(lsR>0.);
+    boolean=(lsRx>0. && lsRy>0. && lsRz>0.);
     if (!boolean)
     {
-        PRINT_ERROR("In checkAllPreprocessorConstants: the ");
-        if (lsType)
-        {
-             fprintf(stderr,"radius LS_R=%lf of the initial sphere must ",lsR);
-             fprintf(stderr,"be positive.\nPlease modify the preprocessor ");
-        }
-        else
-        {
-             fprintf(stderr,"length LS_R=%lf of the initial cube must ",lsR);
-             fprintf(stderr,"be positive.\nPlease modify the preprocessor ");
-        }
-        fprintf(stderr,"constant accordingly in loadParameters.h file.\n");
+        PRINT_ERROR("In checkAllPreprocessorConstants: the default ");
+        fprintf(stderr,"half-length/radius values LS_RX=%lf,  ",lsRx);
+        fprintf(stderr,"LS_RY=%lf,and LS_RZ=%lf parametrizing the ",lsRy,lsRz);
+        fprintf(stderr,"initial domain must be positive.\nPlease modify the ");
+        fprintf(stderr,"preprocessor constants accordingly in ");
+        fprintf(stderr,"loadParameters.h file.\n");
         return 0;
+    }
+
+    if (lsType)
+    {
+        boolean=(lsRx==lsRy || lsRx==lsRz || lsRy==lsRz);
+        if (!boolean)
+        {
+            PRINT_ERROR("In checkAllPreprocessorConstants: at least two ");
+            fprintf(stderr,"values of the default half-length/radius ");
+            fprintf(stderr,"parameters LS_RX=%lf, LS_RY=%lf, and ",lsRx,lsRy);
+            fprintf(stderr,"LS_RZ=%lf must be equal in the case where ",lsRz);
+            fprintf(stderr,"the default initial domain (LS_TYPE=%d) ",lsType);
+            fprintf(stderr,"is a cigar/sphere.\nPlease modify the ");
+            fprintf(stderr,"preprocessor constants accordingly in ");
+            fprintf(stderr,"loadParameters.h file.\n");
+            return 0;
+        }
     }
 
     // Check the preprocessor constants related to the metric computation
@@ -1181,11 +1187,12 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
         return 0;
     }
 
-    // Check preprocessor constants related to parameters used in mshdist/advect
-    boolean=(nIter>=0 && residual>=0. && deltaT>0.);
+    // Check preprocessor constants related to options of mmg3d/mshdist/advect
+    boolean=(memory>=0 && nIter>=0 && residual>=0. && deltaT>0.);
     if (!boolean)
     {
         PRINT_ERROR("In checkAllPreprocessorConstants: expecting\n");
+        fprintf(stderr,"(MEMORY=%d) >= 0\n",memory);
         fprintf(stderr,"(N_ITER=%d) >= 0\n",nIter);
         fprintf(stderr,"(RESIDUAL=%lf) >= 0.0\n",residual);
         fprintf(stderr,"(DELTA_T=%lf) > 0.0\n",deltaT);
@@ -1341,7 +1348,7 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
 int checkInputFileName(char* inputFileName, int maximumLength)
 {
     int lengthName=0;
- 
+
     // Check the inputFileName and maximumLength variables
     if (!checkStringFromLength(inputFileName,8,maximumLength))
     {
@@ -1355,7 +1362,7 @@ int checkInputFileName(char* inputFileName, int maximumLength)
     lengthName=strlen(inputFileName);
     if (inputFileName[lengthName-6]!='.' || inputFileName[lengthName-5]!='i' ||
         inputFileName[lengthName-4]!='n' || inputFileName[lengthName-3]!='p' ||
-        inputFileName[lengthName-2]!='u' || inputFileName[lengthName-1]!='t' || 
+        inputFileName[lengthName-2]!='u' || inputFileName[lengthName-1]!='t' ||
                                                 inputFileName[lengthName]!='\0')
     {
         PRINT_ERROR("In checkInputFileName: the input (char*) variable ");

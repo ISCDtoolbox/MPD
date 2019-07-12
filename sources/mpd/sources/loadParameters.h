@@ -7,7 +7,7 @@
 *        the MPD algorithm.
 * \author Jeremy DALPHIN
 * \version 3.0
-* \date May 1st, 2019
+* \date August 1st, 2019
 *
 * This file contains the description of all the preprocessor constants and
 * non-static function prototypes that are used to initially load the parameters
@@ -395,11 +395,18 @@
 * \def LS_TYPE
 * \brief Used to set the default value for the ls_type variable of the
 *        Parameters structure, which thus rules the default shape of the initial
-*        internal domain (cube or sphere).
+*        internal domain (cuboid or sphere/cigar).
 *
-* If set to 0, then the initial domain is a cube of center (\ref LS_X, \ref
-* LS_Y, \ref LS_Z) and size \ref LS_R. Otherwise, it must be set to 1 and the
-* initial domain is a sphere (same center and radius \ref LS_R).
+* If set to 0, then the initial domain is a cuboid of center (\ref LS_X, \ref
+* LS_Y, \ref LS_Z) and half-length \ref LS_RX in the first-coordinate direction,
+* \ref LS_RY in the second-coordinate direction, and \ref LS_RZ in the
+* third-coordinate direction. Otherwise, it must be set to 1 and the initial
+* domain is a sphere or a cigar (same center) depending if the three parameters
+* \ref LS_RX, \ref LS_RY, and \ref LS_RZ are equal (to the radius of the
+* corresponding sphere), or if only two of them are equal (to the radius
+* of the cylinder, the remaining value defining the axis direction and the
+* half-length of the cylinder on which two half-spheres are glued to form the
+* cigar).
 */
 #define LS_TYPE 0
 
@@ -407,7 +414,7 @@
 * \def LS_X
 * \brief Used to set the default value for the ls_x variable of the Parameters
 *        structure, which thus rules the default first coordinate of the
-*        cube/sphere center related to the initial domain: (double) \ref LS_X.
+*        cuboid/cigar center related to the initial domain: (double) \ref LS_X.
 */
 #define LS_X 0.0
 
@@ -415,7 +422,7 @@
 * \def LS_Y
 * \brief Used to set the default value for the ls_y variable of the Parameters
 *        structure, which thus rules the default second coordinate of the
-*        cube/sphere center related to the initial domain: (double) \ref LS_Y.
+*        cuboid/cigar center related to the initial domain: (double) \ref LS_Y.
 */
 #define LS_Y 0.0
 
@@ -423,19 +430,45 @@
 * \def LS_Z
 * \brief Used to set the default value for the ls_z variable of the Parameters
 *        structure, which thus rules the default third coordinate of the
-*        cube/sphere center related to the initial domain: (double) \ref LS_Z.
+*        cuboid/cigar center related to the initial domain: (double) \ref LS_Z.
 */
 #define LS_Z 0.0
 
 /**
-* \def LS_R
-* \brief Used to set the default value for the ls_r variable of the Parameters
-*        structure, which thus rules the default length/radius of the
-*        cube/sphere associated with the initial domain.
-
-* We must have (double)\ref LS_R > 0.0.
+* \def LS_RX
+* \brief Used to set the default value for the ls_rx variable of the Parameters
+*        structure, which thus rules the default half-length/radius of the
+*        initial domain (cuboid/cigar) in the first-coordinate direction.
+*
+* We must have (double)\ref LS_RX > 0.0. In the case where \ref LS_TYPE is set
+* to 1, at least two values between \ref LS_RX, \ref LS_RY and \ref LS_RZ must
+* be equal.
 */
-#define LS_R 1.0
+#define LS_RX 1.0
+
+/**
+* \def LS_RY
+* \brief Used to set the default value for the ls_ry variable of the Parameters
+*        structure, which thus rules the default half-length/radius of the
+*        initial domain (cuboid/cigar) in the second-coordinate direction.
+*
+* We must have (double)\ref LS_RY > 0.0. In the case where \ref LS_TYPE is set
+* to 1, at least two values between \ref LS_RX, \ref LS_RY and \ref LS_RZ must
+* be equal.
+*/
+#define LS_RY 1.0
+
+/**
+* \def LS_RZ
+* \brief Used to set the default value for the ls_rz variable of the Parameters
+*        structure, which thus rules the default half-length/radius of the
+*        initial domain (cuboid/cigar) in the third-coordinate direction.
+*
+* We must have (double)\ref LS_RZ > 0.0. In the case where \ref LS_TYPE is set
+* to 1, at least two values between \ref LS_RX, \ref LS_RY and \ref LS_RZ must
+* be equal.
+*/
+#define LS_RZ 1.0
 
 
 // Related to the default metric computation (can be used only if
@@ -999,10 +1032,24 @@
 #define HGRAD_LAG 2.0
 
 
-// Related to the default additional parameters for the command line of mshdist
-// and advect softwares in the MPD algorithm (can be used only if opt_mode=1/2/4
-// in the structure Parameters). Warning: mshdist and advect softwares must have
-// been previously installed
+// Related to the default additional parameters for the command line of mmg3d,
+// mshdist, and advect softwares in the MPD algorithm (can be used only if
+// opt_mode=1/2/3/4 in the structure Parameters). Warning: mmg3d, mshdist, and
+// advect softwares must have been previously installed
+/**
+* \def MEMORY
+* \brief Used to set the default value for the memory variable of the Parameters
+*        structure, which thus rules the default maximal memory size (in Mbytes)
+*        allowed by the mmg3d software, which is sometimes needed when using
+*        mmg3d on a server for instance.
+*
+* We must have (int)\ref MEMORY >= 0 (zero means that the -m option is not
+* considered in mmg3d). Although this condition is checked, it will only be
+* used if opt_mode=1/2/3/4 in the Parameters structure. We also recall that the
+* mmg3d software must have been previously installed.
+*/
+#define MEMORY 0
+
 /**
 * \def N_ITER
 * \brief Used to set the default value for the n_iter variable of the Parameters
@@ -1114,7 +1161,7 @@ void freeParameterMemory(Parameters* pParameters);
 *                               if the terminating nul character '\0' is
 *                               strictly located before the second position of
 *                               the array or after the maximumLength one), an
-*                               error is returned by the \ref 
+*                               error is returned by the \ref
 *                               checkForTildeAndReplaceByHomePath function.
 *                               Moreover, if the string pointed by
 *                               pStringToCheck begins with '~/', then the home
@@ -1191,7 +1238,7 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile);
 *                             terminating nul one '\0'. They represents the
 *                             beginning of the (counter)-th keyword whose end
 *                             needs to be read properly. This keyword can be the
-*                             name of any variables (78 possibilities except
+*                             name of any variables (81 possibilities except
 *                             name_input which is replaced by the end_data
 *                             keyword, ending the reading in the *.input
 *                             file; any other information placed after will not
@@ -1224,43 +1271,43 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile);
 *         character is needed to distinguish (n_)c(pu), (n_)x, (n_)y, (n_)z,
 *         and (n_)i(ter) keywords in the Parameters structure). Three is
 *         returned if keywordBeginning stores 'ls' (two characters are needed
-*         to distinguish (ls)_i(ni), (ls)_t(ype), (ls)_x, (ls)_y, (ls)_z, and
-*         (ls)_r keywords in the Parameters structure). Four is returned if
-*         keywordBeginning stores 'x_', 'y_', or 'z_' (three characters are
-*         needed to distinguish (x_)min, (x_)max, (y_)min, (y_)max, (z_)min,
-*         and (z_)max keywords in the Parameters structure). Five is returned
-*         if keywordBeginning stores 'no' (four characters are needed to read
-*         (no)_cfl keyword in the Parameters structure). Six is returned if
-*         keywordBeginning stores 've', 'rh', 'or', 'de', 'me', or 'hm' (five
-*         characters are needed to distinguish (ve)rbose, (rh)o_orb, (or)b_rhf
-*         (or)b_ort(ho), (de)lta_x, (de)lta_y, (de)lta_z, (de)lta_t, (me)t_err,
-*         (me)t_min, (me)t_max, (hm)in_is(o), (hm)ax_is(o), (hm)in_me(t),
-*         (hm)ax_me(t), (hm)in_ls, (hm)ax_ls, (hm)ode_l(ag), (hm)in_la(g), and
-*         (hm)ax_la(g) keywords in the Parameters structure). Seven is returned
-*         if keywordBeginning stores 'op', 'en', 'it', 'ha', 'hg', or 're' (six
-*         characters are needed to distinguish (op)t_mode, (it)er_ini,
-*         (it)er_max, (it)er_tol(d0p), (it)er_tol(d1p), (it)er_tol(d2p),
-*         (ha)usd_is(o), (ha)usd_me(t), (ha)usd_ls, (ha)usd_la(g),
-*         (hg)rad_is(o), (hg)rad_me(t), (hg)rad_ls, (hg)rad_la(g), and
-*         (re)sidual keywords in the Parameters structure, but also the
-*         (en)d_data keyword). Eight is returned if keywordBeginning stores
-*         'na', 'bo', 'mu', or 'sa' (seven characters are needed to distinguish
-*         (na)me_leng(th), (na)me_result, (na)me_chem, (na)me_mesh, (na)me_elas,
-*         (bo)hr_unit, (mu)ltidet, (sa)ve_type, (sa)ve_mesh, (sa)ve_data,
-*         (sa)ve_prin(t), and (sa)ve_wher(e) keywords in the Parameters
-*         structure). Nine is returned if keywordBeginning stores 'se' or 'pa'
-*         (eight characters are needed to distinguish (se)lect_orb,
-*         (se)lect_box, (pa)th_lengt(h), (pa)th_medit, (pa)th_mmg3d,
-*         (pa)th_mshdi(st), (pa)th_elast(ic), and (pa)th_advec(t) keywords in
-*         the Parameters structure). Ten is returned if keywordBeginning stores
-*         'ap' (nine characters are needed to read (ap)prox_mode keyword in the
-*         Parameters structure). Finally, eleven is returned if
-*         keywordBeginning stores 'nu', 'ne', or 'tr' (ten characters are needed
-*         to read (nu)_elecrons, (ne)_electrons, and (tr)ick_matrix keyword in
-*         the Parameters structure). In any other situations (i.e. if the input
-*         variables does not have the expected content), an error is displayed
-*         in the standard error stream and zero is returned by the \ref
-*         getLengthAfterKeywordBeginning function.
+*         to distinguish (ls)_i(ni), (ls)_t(ype), (ls)_x, (ls)_y, (ls)_z,
+*         (ls)_r(x), (ls)_r(y), and (ls)_r(z) keywords in the Parameters
+*         structure). Four is returned if keywordBeginning stores 'x_', 'y_',
+*          or 'z_' (three characters are needed to distinguish (x_)min, (x_)max,
+*         (y_)min, (y_)max, (z_)min, and (z_)max keywords in the Parameters
+*         structure). Five is returned if keywordBeginning stores 'no' or 'me'
+*         (four characters are needed to read (no)_cfl, (me)mory, (me)t_er(r),
+*         (me)t_mi(n), and (me)t_ma(x) keywords in the Parameters structure).
+*         Six is returned if keywordBeginning stores 've', 'rh', 'or', 'de', or
+*         'hm' (five characters are needed to distinguish (ve)rbose, (rh)o_orb,
+*         (or)b_rhf, (or)b_ort(ho), (de)lta_x, (de)lta_y, (de)lta_z, (de)lta_t,
+*         (hm)in_is(o), (hm)ax_is(o), (hm)in_me(t), (hm)ax_me(t), (hm)in_ls,
+*         (hm)ax_ls, (hm)ode_l(ag), (hm)in_la(g), and (hm)ax_la(g) keywords in
+*         the Parameters structure). Seven is returned if keywordBeginning
+*         stores 'op', 'en', 'it', 'ha', 'hg', or 're' (six characters are
+*         needed to distinguish (op)t_mode, (it)er_ini, (it)er_max,
+*         (it)er_tol(d0p), (it)er_tol(d1p), (it)er_tol(d2p), (ha)usd_is(o),
+*         (ha)usd_me(t), (ha)usd_ls, (ha)usd_la(g), (hg)rad_is(o),
+*         (hg)rad_me(t), (hg)rad_ls, (hg)rad_la(g), and (re)sidual keywords in
+*         the Parameters structure, but also the (en)d_data keyword). Eight is
+*         returned if keywordBeginning stores 'na', 'bo', 'mu', or 'sa' (seven
+*         characters are needed to distinguish (na)me_leng(th), (na)me_result,
+*         (na)me_chem, (na)me_mesh, (na)me_elas, (bo)hr_unit, (mu)ltidet,
+*         (sa)ve_type, (sa)ve_mesh, (sa)ve_data, (sa)ve_prin(t), and
+*         (sa)ve_wher(e) keywords in the Parameters structure). Nine is returned
+*         if keywordBeginning stores 'se' or 'pa' (eight characters are needed
+*         to distinguish (se)lect_orb, (se)lect_box, (pa)th_lengt(h),
+*         (pa)th_medit, (pa)th_mmg3d, (pa)th_mshdi(st), (pa)th_elast(ic), and
+*         (pa)th_advec(t) keywords in the Parameters structure). Ten is returned
+*         if keywordBeginning stores 'ap' (nine characters are needed to read
+*         (ap)prox_mode keyword in the Parameters structure). Finally, eleven
+*         is returned if keywordBeginning stores 'nu', 'ne', or 'tr' (ten
+*         characters are needed to read (nu)_elecrons, (ne)_electrons, and
+*         (tr)ick_matrix keywords in the Parameters structure). In any other
+*         situations (i.e. if the input variables does not have the expected
+*         content), an error is displayed in the standard error stream and zero
+*         is returned by the \ref getLengthAfterKeywordBeginning function.
 *
 * The \ref getLengthAfterKeywordBeginning function should be static but has been
 * defined as non-static in order to perform unit-test on it.
@@ -1281,7 +1328,7 @@ int getLengthAfterKeywordBeginning(char keywordBeginning[3], int counter);
 *                          needs to be specified in order to be read after
 *                          properly and securely the by fscanf standard
 *                          c-function. This keyword can be the name of any
-*                          variables (78 possibilities except name_input which
+*                          variables (81 possibilities except name_input which
 *                          is replaced by the end_data keyword, ending the
 *                          reading in the *.input file; any other information
 *                          placed after will not be read and considered as a
@@ -1328,23 +1375,24 @@ int getLengthAfterKeywordBeginning(char keywordBeginning[3], int counter);
 *         (n_)x, (n_)y, (n_)z, (ls)_i(ni), (ls)_t(ype), (tr)ick_matrix,
 *         (ap)prox_mode, (it)er_ini, (it)er_max, (sa)ve_type, (sa)ve_mesh,
 *         (sa)ve_data, (sa)ve_prin(t), (sa)ve_wher(e), (pa)th_lengt(h),
-*         (hm)ode_l(ag), (n_)i(ter) or (no)_cfl to refer to the corresponding
-*         integer variables (28) of the Parameters structure. Two is returned if
-*         keywordMiddle stores either (rh)o_orb, (se)lect_orb, (se)lect_box,
-*         (x_)min, (x_)max, (y_)min, (y_)max, (z_)min, (z_)max, (de)lta_x,
-*         (de)lta_y, (de)lta_z, (ls)_x, (ls)_y, (ls)_z, (ls)_r, (me)t_err,
-*         (me)t_min, (me)t_max, (it)er_tol(d0p), (it)er_tol(d1p),
-*         (it)er_tol(d2p), (hm)in_is(o), (hm)ax_is(o), (hm)in_me(t),
-*         (hm)ax_me(t), (hm)in_ls, (hm)ax_ls, (hm)in_la(g), (hm)ax_la(g),
-*         (ha)usd_is(o), (ha)usd_me(t), (ha)usd_ls, (ha)usd_la(g),
-*         (hg)rad_is(o), (hg)rad_me(t), (hg)rad_ls, (hg)rad_la(g), (de)lta_t, or
-*         (re)sidual to refer to the corresponding double variables (40) of the
-*         Parameters structure. Three is returned if keywordMiddle stores either
-*         (na)me_resu(lt), (na)me_chem, (na)me_mesh, (na)me_elas, (pa)th_medit,
-*         (pa)th_mmg3d, (pa)th_mshdi(st), (pa)th_elast(ic), or (pa)th_advec(t)
-*         to refer to the corresponding string (char*) variables (9) of the
-*         Parameters structure, (except the name_input one, already storing the
-*         name of the *.input file). In any other situations (i.e. if the input
+*         (hm)ode_l(ag), (me)mory, (n_)i(ter) or (no)_cfl to refer to the
+*         corresponding integer variables (29) of the Parameters structure. Two
+*         is returned if keywordMiddle stores either (rh)o_orb, (se)lect_orb,
+*         (se)lect_box, (x_)min, (x_)max, (y_)min, (y_)max, (z_)min, (z_)max,
+*         (de)lta_x, (de)lta_y, (de)lta_z, (ls)_x, (ls)_y, (ls)_z, (ls)_r(x),
+*         (ls)-r(y), (ls)_r(z), (me)t_er(r), (me)t_mi(n), (me)t_ma(x),
+*         (it)er_tol(d0p), (it)er_tol(d1p), (it)er_tol(d2p), (hm)in_is(o),
+*         (hm)ax_is(o), (hm)in_me(t), (hm)ax_me(t), (hm)in_ls, (hm)ax_ls,
+*         (hm)in_la(g), (hm)ax_la(g), (ha)usd_is(o), (ha)usd_me(t), (ha)usd_ls,
+*         (ha)usd_la(g), (hg)rad_is(o), (hg)rad_me(t), (hg)rad_ls,
+*         (hg)rad_la(g), (de)lta_t, or (re)sidual to refer to the corresponding
+*         double variables (42) of the Parameters structure. Three is returned
+*         if keywordMiddle stores either (na)me_resu(lt), (na)me_chem,
+*         (na)me_mesh, (na)me_elas, (pa)th_medit, (pa)th_mmg3d,
+*         (pa)th_mshdi(st), (pa)th_elast(ic), or (pa)th_advec(t) to refer to
+*         the corresponding string (char*) variables (9) of the Parameters
+*         structure, (except the name_input one, already storing the name of
+*         the *.input file). In any other situations (i.e. if the input
 *         variables does not have the expected content), an error is displayed
 *         in the standard error stream and zero is returned by the \ref
 *         getTypeAfterKeyword function.
@@ -1367,7 +1415,7 @@ int getTypeAfterKeyword(char keywordMiddle[11], int lengthMiddle, int counter);
 *                          They represent the second part of the (counter)-th
 *                          keyword, whose third and final part needs to be read
 *                          properly. This keyword can be the name of any
-*                          variables (78 possibilities except name_input which
+*                          variables (81 possibilities except name_input which
 *                          is replaced by the end_data keyword, ending the
 *                          reading in the *.input file; any other information
 *                          placed after will not be read and considered as a
@@ -1411,15 +1459,15 @@ int getTypeAfterKeyword(char keywordMiddle[11], int lengthMiddle, int counter);
 *         (se)lect_orb, (ne)_electrons, (mu)lti_det, (or)b_rhf, (se)lect_box,
 *         (x_)min, (x_)max, (y_)min, (y_)max, (z_)min, (z_)max, (n_)x, (n_)y,
 *         (n_)z, (de)lta_x, (de)lta_y, (de)lta_z, (ls)_x, (ls)_y, (ls)_z,
-*         (ls)_r, (me)t_err, (me)t_min, (me)t_max, (tr)ick_matrix,
-*         (ap)prox_mode, (it)er_ini, (it)er_max, (sa)ve_type, (sa)ve_mesh,
-*         (sa)ve_data, (pa)th_medit, (pa)th_mmg3d, (hm)_in_ls, (hm)ax_ls,
-*         (ha)usd_ls, (hg)rad_ls, (re)sidual, (de)lta_t, or (no)_cfl, which
-*         means that nothing needs to e read after in order to complete the
-*         reading of the (counter)-th keyword. It means we know if it
-*         corresponds to the 'end_data' keyword or to which variables of the
-*         Parameters structure it is referring to. Two is returned if
-*         keywordMiddle stores either (sa)ve_prin(t), (sa)ve_wher(e),
+*         (tr)ick_matrix, (ap)prox_mode, (it)er_ini, (it)er_max, (sa)ve_type,
+*         (sa)ve_mesh, (sa)ve_data, (pa)th_medit, (pa)th_mmg3d, (hm)_in_ls,
+*         (hm)ax_ls, (ha)usd_ls, (hg)rad_ls, (me)mory, (re)sidual, (de)lta_t,
+*         or (no)_cfl, which means that nothing needs to be read after in order
+*         to complete the reading of the (counter)-th keyword. It means we know
+*         if it corresponds to the 'end_data' keyword or to which variables of
+*         the Parameters structure it is referring to. Two is returned if
+*         keywordMiddle stores either (ls)_r(x), (ls)_r(y), (ls)_r(z),
+*         (me)t_er(r), (me)t_mi(n), (me)t_ma(x), (sa)ve_prin(t), (sa)ve_wher(e),
 *         (pa)th_lengt(h), (pa)th_advec(t), (hm)in_is(o), (hm)ax_is(o),
 *         (hm)in_me(t), (hm)ax_me(t), (hm)in_la(g), (hm)ax_la(g), (ha)usd_is(o),
 *         (ha)usd_me(t), (ha)usd_la(g), (hg)rad_is(o), (hg)rad_me(t),
@@ -1444,7 +1492,7 @@ int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
                                                                    int counter);
 
 /**
-* \fn int detectRepetition(int repetition[78], char keywordBeginning[3],
+* \fn int detectRepetition(int repetition[81], char keywordBeginning[3],
 *                          char keywordMiddle[11], char keywordEnd[4],
 *                                  int lengthMiddle, int lengthEnd, int counter)
 * \brief It adds one in the array repetition at the location corresponding to
@@ -1471,7 +1519,7 @@ int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
 *                             beginning of the (counter)-th keyword whose
 *                             potential repetition in the upper part of the
 *                             *.input file is intended to be detected. This
-*                             keyword can be the name of any variables (78
+*                             keyword can be the name of any variables (81
 *                             possibilities except name_input which is replaced
 *                             by the end_data keyword, ending the reading in
 *                             the *.input file; any other information placed
@@ -1486,7 +1534,7 @@ int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
 *                          They represent the second part of the (counter)-th
 *                          keyword, whose final part is stored in keywordEnd
 *                          (only if lengthEnd>1). This keyword can be the name
-*                          of any variables (78 possibilities except name_input
+*                          of any variables (81 possibilities except name_input
 *                          which is replaced by the end_data keyword, ending
 *                          the reading in the *.input file; any other
 *                          information placed after will not be read and
@@ -1501,7 +1549,7 @@ int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
 *                       lengthEnd>1, they represent the third part of the
 *                       (counter)-th keyword, whose occurence is intented to be
 *                       incremented by one in the array repetition. This
-*                       keyword can be the name of any variables (78
+*                       keyword can be the name of any variables (81
 *                       possibilities except name_input which is replaced by the
 *                       end_data keyword, ending the reading in the *.input
 *                       file; any other information placed after will not be
@@ -1557,7 +1605,7 @@ int getLengthAfterKeywordMiddle(char keywordMiddle[11], int lengthMiddle,
 * The \ref detectRepetition function should be static but has been defined as
 * non-static in order to perform unit-test on it.
 */
-int detectRepetition(int repetition[78], char keywordBeginning[3],
+int detectRepetition(int repetition[81], char keywordBeginning[3],
                      char keywordMiddle[11], char keywordEnd[4],
                                   int lengthMiddle, int lengthEnd, int counter);
 
@@ -1601,7 +1649,7 @@ int detectRepetition(int repetition[78], char keywordBeginning[3],
 *                             beginning of the (counter)-th keyword whose
 *                             associated value needs to be properly stored in
 *                             the structure pointed by pParameters. This
-*                             keyword can be the name of any variables (78
+*                             keyword can be the name of any variables (81
 *                             possibilities except name_input, already storing
 *                             the name of the *.input file given in the
 *                             command-line argument of the MPD program, and
@@ -1619,7 +1667,7 @@ int detectRepetition(int repetition[78], char keywordBeginning[3],
 *                          They represent the second part of the (counter)-th
 *                          keyword, whose final part is stored in keywordEnd
 *                          (only if lengthEnd>1). This keyword can be the name
-*                          of any variables (78 possibilities except name_input
+*                          of any variables (81 possibilities except name_input
 *                          which is replaced by the end_data keyword, ending
 *                          the reading in the *.input file; any other
 *                          information placed after will not be read and
@@ -1636,7 +1684,7 @@ int detectRepetition(int repetition[78], char keywordBeginning[3],
 *                       (counter)-th keyword, whose associated value needs to
 *                       be properly stored in the structure pointed by
 *                       pParameters. This keyword can be the name of any
-*                       variables (78 possibilities except name_input which is
+*                       variables (81 possibilities except name_input which is
 *                       replaced by the end_data keyword, ending the reading in
 *                       the *.input file; any other information placed after
 *                       will not be read and considered as a comment) stored in
@@ -1855,8 +1903,8 @@ int writingRestartFile(Parameters* pParameters);
 * configuration) the *.wfn/ *.chem (chemical) file, preceded by the 'name_chem'
 * keyword, the (positive) number of electrons to look for, preceded by the
 * 'nu_electrons' keyword, and optionally the *.mesh/ *.cube (mesh) file to
-* start with, preceded by the 'name_mesh' keyword (if not specify a cube or a
-* sphere is built depending on the ls_type variable of the Parameters
+* start with, preceded by the 'name_mesh' keyword (if not specify a cuboid or a
+* cigar/sphere is built depending on the ls_type variable of the Parameters
 * structure). Such file must also end with the 'end_data' keyword.
 */
 int loadParameters(Parameters* pParameters, char* nameInputFile);

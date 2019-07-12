@@ -6,7 +6,7 @@
 * \brief Shared macros, structures, and prototypes of the MPD program.
 * \author Jeremy DALPHIN
 * \version 3.0
-* \date May 1st, 2019
+* \date August 1st, 2019
 *
 * This file contains the description of all the different macro functions,
 * preprocessor constants, structures, and non-static function prototypes that
@@ -58,7 +58,7 @@
 * It prints in the standard error stream the date, time, line, and file in which
 * the error occurred. An additional stringToPrint message is also displayed,
 * usually starting by the name of function in which the problem was found
-* (__FUNCTION__ is not standard so it is not used in this program).
+* (__FUNCTION__ is not a standard macro so it is not used in this program).
 */
 #define PRINT_ERROR(stringToPrint)                                             \
 do {                                                                           \
@@ -332,11 +332,11 @@ do {                                                                           \
 // #define ORB_HXXXXX 56
 
 ////////////////////////////////////////////////////////////////////////////////
-// Definition of the structure storing the 78 parameters used in the algorithm
+// Definition of the structure storing the 81 parameters used in the algorithm
 ////////////////////////////////////////////////////////////////////////////////
 /**
 * \struct Parameters main.h
-* \brief It can store all the different 78 parameters used in the MPD algorithm.
+* \brief It can store all the different 81 parameters used in the MPD algorithm.
 */
 typedef struct {
     int opt_mode;            /*!< This parameter rules the type of optimization
@@ -599,23 +599,48 @@ typedef struct {
                              *    constructed. */
 
     int ls_type;             /*!< If set to zero, then the initial domain is a
-                             *    cube of center (\ref ls_x, \ref ls_y, \ref
-                             *    ls_z) and size \ref ls_r; otherwise, it must
-                             *    be set to one and the initial domain is a
-                             *    sphere (same center and radius \ref ls_r). */
+                             *    cuboid of center (\ref ls_x, \ref ls_y, \ref
+                             *    ls_z) and half-size \ref ls_rx in the
+                             *    first-coordinate direction, \ref ls_ry in the
+                             *    second-coordinate direction, and \ref ls_rz in
+                             *    the third-coordinate direction; otherwise, it
+                             *    must be set to one and the initial domain is
+                             *    either a sphere or a cigar (same center)
+                             *    depending if the three parameters \ref ls_rx,
+                             *    \ref ls_ry, and \ref ls_rz are equal (to the
+                             *    radius of the corresponding sphere), or if
+                             *    only two of them are equal (to the radius
+                             *    of the cylinder, the remaining value defining
+                             *    the axis direction and the half-length of the
+                             *    cylinder on which two half-spheres are
+                             *    glued to form the cigar). */
 
     double ls_x;             /*!< First coordinate of the center of the initial
-                             *    cube/sphere. */
+                             *    domain. */
 
     double ls_y;             /*!< Second coordinate of the center of the initial
-                             *    cube/sphere. */
+                             *    domain. */
 
     double ls_z;             /*!< Third coordinate of the center of the initial
-                             *    cube/sphere. */
+                             *    domain. */
 
-    double ls_r;             /*!< Length/Radius of the initial cube/sphere:
-                             *    it must be positive. */
+    double ls_rx;            /*!< Half-length/Radius of the initial domain in
+                             *    the first-coordinate direction: it must be
+                             *    positive and if ls_type is set to one, then at
+                             *    least two values must be equal between \ref
+                             *    ls_rx, \ref ls_ry and \ref ls_rz. */
 
+    double ls_ry;            /*!< Half-length/Radius of the initial domain in
+                             *    the second-coordinate direction: it must be
+                             *    positive and if ls_type is set to one, then at
+                             *    least two values must be equal between \ref
+                             *    ls_rx, \ref ls_ry and \ref ls_rz. */
+
+    double ls_rz;            /*!< Half-length/Radius of the initial domain in
+                             *    the third-coordinate direction: it must be
+                             *    positive and if ls_type is set to one, then at
+                             *    least two values must be equal between \ref
+                             *    ls_rx, \ref ls_ry and \ref ls_rz. */
 
     // Only used if opt_mode=1/2/3/4: parameters ruling the metric computation
     double met_err;          /*!< Only used if \ref opt_mode=one/two/three/four:
@@ -800,7 +825,6 @@ typedef struct {
                              *    always correspond to the \ref path_length
                              *    value. */
 
-
     // Only used if opt_mode=1/2/3/4: parameters used in mmg3d to build the
     // default isotropic metric (warning: mmg3d software must have been
     // previously installed)
@@ -970,9 +994,19 @@ typedef struct {
                              *    one. */
 
 
-    // Only used if opt_mode=1/2/4: additional parameters needed for the command
-    // line of mshdist and advect softwares in the MPD algorithm (warning:
-    // mshdist and advect softwares must have been previously installed)
+    // Only used if opt_mode=1/2/3/4: additional parameters needed for the
+    // command lines of mmg3d, mshdist and advect softwares in the MPD algorithm
+    // (warning: mmg3d, mshdist, and advect softwares must have been previously
+    // installed)
+    int memory;              /*!< Only used if \ref opt_mode=one/two/three/four:
+                             *    in mmg3d command line (software must have been
+                             *    previously installed), it represents the
+                             *    maximal memory size (in Mbytes) allowed by
+                             *    the mmg3d software, which is sometimes needed
+                             *    when using mmg3d on a server for instance: it
+                             *    must not be negative (zero means the -m option
+                             *    is not considered in mmg3d). */
+
     int n_iter;              /*!< Only used if \ref opt_mode=one/two/four: in
                              *    mshdist command line (software must have been
                              *    previously installed), it represents the
@@ -1134,7 +1168,7 @@ typedef struct {
 
     int rhf;                 /*!< If set to one, then it means that the current
                              *    OverlapMatrix structure admits a restricted
-                             *    Hartree-Fock-like simplification  (and in
+                             *    Hartree-Fock-like simplification (and in
                              *    particular, \ref nmat must be an even
                              *    number in this case); otherwise, it must be
                              *    set to zero. */
@@ -1193,7 +1227,7 @@ typedef struct {
 * \brief It can store all the chemical informations of the electronic system
 *        needed for the MPD algorithm (number of nucleus, primitives and
 *        molecular orbitals; description of nuclei, molecular orbitals, and
-*       determinants constituting the wave function).
+*        determinants constituting the wave function).
 */
 typedef struct {
     int nnucl;               /*!< Number of nuclei in the chemical system: it
@@ -1720,6 +1754,15 @@ typedef struct {
                              *    non-negative and not (strictly) greater than
                              *    the \ref nver value. */
 
+    int* pcor;               /*!< Pointer used to dynamically define the array
+                             *    storing the corners (as referred to their
+                             *    position in \ref pver) inside the mesh (only
+                             *    used if opt_mode=one/two/three/four in
+                             *    Parameters structure); if it is not pointing
+                             *    to NULL, the size of the array it is pointing
+                             *    to should always correspond to the \ref ncor
+                             *    value. */
+
     int nnorm;               /*!< Number of normal vectors defined at some
                              *    (boundary) vertices of the mesh (only used if
                              *    opt_mode=one/two/three/four in Parameters
@@ -2030,7 +2073,8 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
 *                                       int nY, int nZ, double deltaX,
 *                                       double deltaY, double deltaZ,
 *                                       int lsType, double lsX, double lsY,
-*                                       double lsZ, double lsR, double metCst,
+*                                       double lsZ, double lsRx, double lsRy,
+*                                       double lsRz, double metCst,
 *                                       double metErr, double metMin,
 *                                       double metMax, int trickMatrix,
 *                                       int approxMode, int iterIni,
@@ -2050,7 +2094,7 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
 *                                       double hgradLs, int hmodeLag,
 *                                       double hminLag, double hmaxLag,
 *                                       double hausdLag, double hgradLag,
-*                                       int nIter, double residual,
+*                                       int memory, int nIter, double residual,
 *                                       double deltaT, int noCfl, int orb1,
 *                                       int orb2, int orb3, int orb4, int orb5,
 *                                       int orb6, int orb7, int orb8, int orb9,
@@ -2234,9 +2278,17 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
 *                (lsX, lsY, lsZ) is not located inside the computational box
 *                defined by the cube [xMin,xMax]x[yMin,yMax]x[zMin,zMax].
 *
-* \param[in] lsR It must be a positive double value (see \ref LS_R description
-*                for further details). Otherwise, an error is returned by \ref
-*                checkAllPreprocessorConstants function.
+* \param[in] lsRx It must be a positive double value (see \ref LS_RX description
+*                 for further details). Otherwise, an error is returned by \ref
+*                 checkAllPreprocessorConstants function.
+*
+* \param[in] lsRy It must be a positive double value (see \ref LS_RY description
+*                 for further details). Otherwise, an error is returned by \ref
+*                 checkAllPreprocessorConstants function.
+*
+* \param[in] lsRz It must be a positive double value (see \ref LS_RZ description
+*                 for further details). Otherwise, an error is returned by \ref
+*                 checkAllPreprocessorConstants function.
 *
 * \param[in] metCst It must be exactly equal to 0.28125 (see \ref MET_CST
 *                   description for further details). Otherwise, an error is
@@ -2445,6 +2497,10 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
 *                     Otherwise, an error is returned by \ref
 *                     checkAllPreprocessorConstants function.
 *
+* \param[in] memory It must be a non-negative integer (see \ref MEMORY
+*                   description for further details). Otherwise, an error is
+*                   returned by \ref checkAllPreprocessorConstants function.
+
 * \param[in] nIter It must be a non-negative integer (see \ref N_ITER
 *                  description for further details). Otherwise, an error is
 *                  returned by \ref checkAllPreprocessorConstants function.
@@ -2620,7 +2676,7 @@ int checkStringFromLength(char* stringToCheck, int minimumLength,
 * need to test the values of the preprocessor constants, we could have defined
 * the \ref checkAllPreprocessorConstants function without any input argument.
 * However, in order to perform unit-tests on this function, we were forced to
-* include all the preprocessor constants as input arguments. This allwos us to
+* include all the preprocessor constants as input arguments. This allows us to
 * make their values vary during the different unitary tests.
 */
 // * \param[in] invPhi It must be exactly equal to 0.618033988749894848 (see
@@ -2643,23 +2699,24 @@ int checkAllPreprocessorConstants(int optMode, int verbose, int nCpu,
                                   double zMax, int nX, int nY, int nZ,
                                   double deltaX, double deltaY, double deltaZ,
                                   int lsType, double lsX, double lsY,
-                                  double lsZ, double lsR, double metCst,
-                                  double metErr, double metMin, double metMax,
-                                  int trickMatrix, int approxMode, int iterIni,
-                                  int iterMax, double iterTolD0P,
-                                  double iterTolD1P, double iterTolD2P,
-                                  int saveType, int saveMesh, int saveData,
-                                  int savePrint, int saveWhere, int pathLength,
-                                  char* pathMedit, char* pathMmg3d,
-                                  char* pathMshdist, char* pathElastic,
-                                  char* pathAdvect, double hminIso,
-                                  double hmaxIso, double hausdIso,
-                                  double hgradIso, double hminMet,
-                                  double hmaxMet, double hausdMet,
-                                  double hgradMet, double hminLs, double hmaxLs,
-                                  double hausdLs, double hgradLs, int hmodeLag,
-                                  double hminLag, double hmaxLag,
-                                  double hausdLag, double hgradLag, int nIter,
+                                  double lsZ, double lsRx, double lsRy,
+                                  double lsRz, double metCst, double metErr,
+                                  double metMin, double metMax, int trickMatrix,
+                                  int approxMode, int iterIni, int iterMax,
+                                  double iterTolD0P, double iterTolD1P,
+                                  double iterTolD2P, int saveType, int saveMesh,
+                                  int saveData, int savePrint, int saveWhere,
+                                  int pathLength, char* pathMedit,
+                                  char* pathMmg3d, char* pathMshdist,
+                                  char* pathElastic, char* pathAdvect,
+                                  double hminIso, double hmaxIso,
+                                  double hausdIso, double hgradIso,
+                                  double hminMet, double hmaxMet,
+                                  double hausdMet, double hgradMet,
+                                  double hminLs, double hmaxLs, double hausdLs,
+                                  double hgradLs, int hmodeLag, double hminLag,
+                                  double hmaxLag, double hausdLag,
+                                  double hgradLag, int memory, int nIter,
                                   double residual, double deltaT, int noCfl,
                                   int orb1, int orb2, int orb3, int orb4,
                                   int orb5, int orb6, int orb7, int orb8,

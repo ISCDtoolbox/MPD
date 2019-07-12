@@ -27,6 +27,7 @@ void initializeMeshStructure(Mesh* pMesh)
         pMesh->pver=NULL;
 
         pMesh->ncor=0;
+        pMesh->pcor=NULL;
 
         pMesh->nnorm=0;
         pMesh->pnorm=NULL;
@@ -74,6 +75,9 @@ void freeMeshMemory(Mesh* pMesh)
     {
         free(pMesh->pver); // free function does not return any value
         pMesh->pver=NULL;
+
+        free(pMesh->pcor);
+        pMesh->pcor=NULL;
 
         free(pMesh->pnorm);
         pMesh->pnorm=NULL;
