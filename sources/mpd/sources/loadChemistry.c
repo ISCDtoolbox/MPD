@@ -4,7 +4,7 @@
 *        informations from a *.wfn/ *.chem file in the MPD algorithm.
 * \author Jeremy DALPHIN
 * \version 3.0
-* \date May 1st, 2019
+* \date August 1st, 2019
 *
 * The main function of this file is called \ref loadChemistry and many other
 * functions should be static but have been define as non-static for performing
@@ -186,15 +186,28 @@ int getChemicalFormat(char* fileLocation, int nameLength)
     // Check that its size can at least contain the *.chem or *.wfn extension
     // strlen returns the length of the string, but not including the char '\0'
     length=strlen(fileLocation);
-    if (length<6)
+    if (length==5)
+    {
+        if (fileLocation[length-4]!='.' || fileLocation[length-3]!='w' ||
+                   fileLocation[length-2]!='f' || fileLocation[length-1]!='n' ||
+                                                     fileLocation[length]!='\0')
+        {
+            PRINT_ERROR("In getChemicalFormat: the input variable ");
+            fprintf(stderr,"fileLocation (=%s) does not end ",fileLocation);
+            fprintf(stderr,"with the '.wfn' extension and should have a ");
+            fprintf(stderr,"length that at least equals six in order to end ");
+            fprintf(stderr,"with something more than the '.chem' extension.\n");
+            return 0;
+        }
+    }
+    else if (length<5)
     {
         PRINT_ERROR("In getChemicalFormat: the input variable fileLocation ");
         fprintf(stderr,"(=%s) should have a length that at ",fileLocation);
-        fprintf(stderr,"least equals six in order to end with something more ");
-        fprintf(stderr,"than the '.chem' or the '.wfn' extension.\n");
+        fprintf(stderr,"least equals five in order to end with something ");
+        fprintf(stderr,"more than the '.chem' or the '.wfn' extension.\n");
         return 0;
     }
-    // Remark here: if the file is entitled 'A.wfn' the mpdProgram will fail
 
     // Distinguish the *.chem from *.wfn format
     if (fileLocation[length-4]=='.' && fileLocation[length-3]=='w' &&
@@ -235,8 +248,8 @@ int readChemFileandAllocateChemicalSystem(char* fileLocation, int nameLength,
 {
     size_t length=0;
     char readStringIn[33]={'\0'}, *readStringOut=NULL;
-    int readIntegerIn=0, readIntegerOut=0, i=0, iMax=0, j=0, jMax=0;
-    int returnValue=0;
+    int readIntegerIn=0, readIntegerOut=0, i=0, iMax=0, j=0, jMax=0, k=0;
+    int kMax=0, returnValue=0;
     double readDouble=0.;
     MolecularOrbital *pMolecularOrbital=NULL, *pMolecularOrbital2=NULL;
     Determinant *pDeterminant=NULL;
@@ -419,7 +432,7 @@ int readChemFileandAllocateChemicalSystem(char* fileLocation, int nameLength,
         return 0;
     }
 
-    // Read the number of primitives and store it in pChemicalSystem->ngauss
+    // Read the number of primitives and store it in pChemicalSystem->nprim
     readStringOut=fgets(readStringIn,11,chemicalFile);
     readIntegerOut=fscanf(chemicalFile," %d ",&readIntegerIn);
     if (readStringOut==NULL || readIntegerOut!=1)
@@ -719,11 +732,14 @@ int readChemFileandAllocateChemicalSystem(char* fileLocation, int nameLength,
         return 0;
     }
 
-    if (strcmp(readStringIn,"TotalNumberOfElectrons") || readIntegerIn<1)
+    if (strcmp(readStringIn,"TotalNumberOfElectrons") || readIntegerIn<1 ||
+                                           readIntegerIn>pChemicalSystem->nmorb)
     {
         PRINT_ERROR("In readChemFileandAllocateChemicalSystem: expecting ");
         fprintf(stderr,"TotalNumberOfElectrons Ne instead of %s ",readStringIn);
-        fprintf(stderr,"%d (positive value).\n",readIntegerIn);
+        fprintf(stderr,"%d (positive value not greater than ",readIntegerIn);
+        fprintf(stderr,"the total number %d of ",pChemicalSystem->nmorb);
+        fprintf(stderr,"molecular orbitals).\n");
         closeTheFile(&chemicalFile,1);
         return 0;
     }
@@ -948,47 +964,131 @@ int readChemFileandAllocateChemicalSystem(char* fileLocation, int nameLength,
         }
     }
 
+    // Define the rhf variable for each Determinant structure
+    if (pChemicalSystem->ndet==1)
+    {
+        if (pChemicalSystem->ne!=pChemicalSystem->nmorb)
+        {
+            PRINT_ERROR("In readChemFileandAllocateChemicalSystem: the wave ");
+            fprintf(stderr,"function loaded from %s file seems ",fileLocation);
+            fprintf(stderr,"to be built from a single Slater determinant, ");
+            fprintf(stderr,"and in this case the total number of molecular ");
+            fprintf(stderr,"orbitals (=%d) should be ",pChemicalSystem->nmorb);
+            fprintf(stderr,"equal to the total number of electrons ");
+            fprintf(stderr,"(=%d), which is not the ",pChemicalSystem->ne);
+            fprintf(stderr,"case.\n");
+            return 0;
+        }
+        pChemicalSystem->pdet[0].rhf=returnValue;
+    }
+    else
+    {
+        iMax=pChemicalSystem->ndet;
+        jMax=pChemicalSystem->ne/2;
+        kMax=pChemicalSystem->nprim;
+        if (2*jMax==pChemicalSystem->ne)
+        {
+            for (i=0; i<iMax; i++)
+            {
+                pDeterminant=&pChemicalSystem->pdet[i];
+                for (j=0; j<jMax; j++)
+                {
+                    pMolecularOrbital=
+                              &pChemicalSystem->pmorb[pDeterminant->vmorb[j]-1];
+                    pMolecularOrbital2=
+                         &pChemicalSystem->pmorb[pDeterminant->vmorb[j+jMax]-1];
+                    for (k=0; k<kMax; k++)
+                    {
+                        if (pMolecularOrbital->coeff[k]!=
+                                                   pMolecularOrbital2->coeff[k])
+                        {
+                            break;
+                        }
+                        else if (pMolecularOrbital->exp[k]!=
+                                                     pMolecularOrbital2->exp[k])
+                        {
+                            break;
+                        }
+                        else if (pMolecularOrbital->nucl[k]!=
+                                                    pMolecularOrbital2->nucl[k])
+                        {
+                            break;
+                        }
+                        else if (pMolecularOrbital->type[k]!=
+                                                    pMolecularOrbital2->type[k])
+                        {
+                            break;
+                        }
+                    }
+                    if (k<kMax)
+                    {
+                        break;
+                    }
+                }
+                if (k==kMax && j==jMax)
+                {
+                    pDeterminant->rhf=1;
+                }
+            }
+        }
+    }
+
     return returnValue;
 }
 
-/*
 ////////////////////////////////////////////////////////////////////////////////
 // The function readAndConvertWfnFile reads a *.temp file (which is intended
 // to be the copy of a *.wfn file) at fileLocation (such a file must have been
-// previously created), except the first line, and converts all charToRemove
-// encountered into charToPutInstead. It has a char* variable (fileLocation)
-// and two char variables (charToRemove, charToPutInstead) as input arguments
-// and it returns zero if an error occurred, otherwise one in case of success
+// previously created and of length strictly less than nameLength), except the
+// first line, and converts all charToRemove encountered into charToPutInstead.
+// If verbose is set to a positive value, then it prints some informations in
+// the standard output stream; otherwise, nothing is displayed. It has a char*
+// variable (fileLocation), two char variables (charToRemove, charToPutInstead),
+// and two int variables (verbose, nameLength) as input arguments. It returns
+// zero if an error occurred, otherwise one is returned in case of success
 ////////////////////////////////////////////////////////////////////////////////
 int readAndConvertWfnFile(char* fileLocation, char charToRemove,
-                                          char charToPutInstead, int nameLength)
+                             char charToPutInstead, int verbose, int nameLength)
 {
-    int readChar=0;
+    int readChar=0, boolean=0;
     FILE *wfnFile=NULL;
 
     // Check if the file have been previously created
-    if (initialFileExists(fileLocation,nameLength)!=1)
+    boolean=initialFileExists(fileLocation,nameLength);
+    if (abs(boolean)!=1)
     {
         PRINT_ERROR("In readAndConvertWfnFile: initialFileExists function ");
-        fprintf(stderr,"did not return one, which was the expected value ");
-        fprintf(stderr,"here, after having checked that the (char*) ");
-        fprintf(stderr,"fileLocation variable is not storing the name of an ");
-        fprintf(stderr,"existing and valid wfn-format file.\n");
+        fprintf(stderr,"returned zero instead of (+/-) one, while attempting ");
+        fprintf(stderr,"to check if the input (char*) fileLocation variable ");
+        fprintf(stderr,"stores the name of an existing file.\n");
+        return 0;
+    }
+    else if (boolean!=1)
+    {
+        PRINT_ERROR("In readAndConvertWfnFile: the file ");
+        fprintf(stderr,"%s could not be found at the given ",fileLocation);
+        fprintf(stderr,"given location.\n");
         return 0;
     }
 
     // Check if the file is well opened (file must have been previously created)
     // fopen returns a FILE pointer on success, otherwise NULL is returned
-    fprintf(stdout,"Opening %s file. ",fileLocation);
+    if (verbose>0)
+    {
+        fprintf(stdout,"Opening %s file. ",fileLocation);
+    }
     wfnFile=fopen(fileLocation,"r+");
     if (wfnFile==NULL)
     {
         PRINT_ERROR("In readAndConvertWfnFile: we were not able to open and ");
-        fprintf(stderr,"write into the %s file.\n",fileLocation);
+        fprintf(stderr,"write properly into the %s file.\n",fileLocation);
         return 0;
     }
-    fprintf(stdout,"Converting data (any '%c' ",charToRemove);
-    fprintf(stdout,"into '%c'). ",charToPutInstead);
+    if (verbose>0)
+    {
+        fprintf(stdout,"Converting data (any '%c' into ",charToRemove);
+        fprintf(stdout,"'%c'). ",charToPutInstead);
+    }
 
     // Skip the first line: fgetc function returns the character read as an
     // unsigned char cast to an int or EOF on the end of file or error (because
@@ -999,9 +1099,9 @@ int readAndConvertWfnFile(char* fileLocation, char charToRemove,
     if (readChar==EOF)
     {
         PRINT_ERROR("In readAndConvertWfnFile: problem encountered with the ");
-        fprintf(stderr,"fgetc function or end-of-file reached without any ");
+        fprintf(stderr,"fgetc c-function or end-of-file reached without any ");
         fprintf(stderr,"data written in the %s file.\n",fileLocation);
-        closeTheFile(&wfnFile);
+        closeTheFile(&wfnFile,verbose);
         return 0;
     }
 
@@ -1015,18 +1115,18 @@ int readAndConvertWfnFile(char* fileLocation, char charToRemove,
             // fseek returns zero on success, otherwise a non-zero value
             if (fseek(wfnFile,-1,SEEK_CUR))
             {
-                PRINT_ERROR("In readAndConvertWfnFile: wrong return of the ");
-                fprintf(stderr,"fseek function in the %s file.\n",fileLocation);
-                closeTheFile(&wfnFile);
+                PRINT_ERROR("In readAndConvertWfnFile: wrong return of fseek ");
+                fprintf(stderr,"c-function in the %s file.\n",fileLocation);
+                closeTheFile(&wfnFile,verbose);
                 return 0;
             }
 
             // fputc returns the same character on success, otherwise EOF value
             if (fputc(charToPutInstead,wfnFile)==EOF)
             {
-                PRINT_ERROR("In readAndConvertWfnFile: wrong return of the ");
-                fprintf(stderr,"fputc function in the %s file.\n",fileLocation);
-                closeTheFile(&wfnFile);
+                PRINT_ERROR("In readAndConvertWfnFile: wrong return of fputc ");
+                fprintf(stderr,"c-function in the %s file.\n",fileLocation);
+                closeTheFile(&wfnFile,verbose);
                 return 0;
             }
         }
@@ -1042,7 +1142,10 @@ int readAndConvertWfnFile(char* fileLocation, char charToRemove,
         return 0;
     }
     wfnFile=NULL;
-    fprintf(stdout,"Closing file.");
+    if (verbose>0)
+    {
+        fprintf(stdout,"Closing file.");
+    }
 
     return 1;
 }
@@ -1051,13 +1154,17 @@ int readAndConvertWfnFile(char* fileLocation, char charToRemove,
 // The function readWfnFileAndAllocateChemicalSystem reads the file at
 // fileLocation (file must exist with length (strictly) lower than nameLength),
 // checks *.wfn syntax, allocates memory, and fills the values in the variables
-// of the structure pointed by pChemicalSystem. It has the char* fileLocation
-// and ChemicalSystem* variable (defined in main.h) as input arguments and it
-// returns zero if an error is encountered, one (respectively minus one) if the
-// chemical data are successfully loaded and correspond to an restricted (resp.
-// unrestricted) Hartree-Fock chemical structure
+// of the structure pointed by pChemicalSystem. If verbose is set to a positive
+// value, then it prints some informations in the standard output stream;
+// otherwise, nothing is displayed. It has the char* variables fileLocation,
+// two int variables (nameLength and verbose), and the ChemicalSystem* variable
+// (defined in main.h) as input arguments. It returns zero if an error is
+// encountered, one (respectively minus one) if the chemical data are
+// successfully loaded and correspond to an restricted (resp. unrestricted)
+// Hartree-Fock chemical structure
 ////////////////////////////////////////////////////////////////////////////////
 int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
+                                            int verbose,
                                                 ChemicalSystem* pChemicalSystem)
 {
     size_t length=0;
@@ -1072,8 +1179,8 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
     if (pChemicalSystem==NULL)
     {
         PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: the input ");
-        fprintf(stderr,"pChemicalSystem variable is pointing to the ");
-        fprintf(stderr,"%p adress.\n",(void*)pChemicalSystem);
+        fprintf(stderr,"variable pChemicalSystem=%p ",(void*)pChemicalSystem);
+        fprintf(stderr,"does not point to a valid adress.\n");
         return 0;
     }
 
@@ -1090,15 +1197,25 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
     }
 
     // Check that fileLocation points to a valid existing file
-    if (initialFileExists(fileLocation,nameLength)!=1)
+    returnValue=initialFileExists(fileLocation,nameLength);
+    if (abs(returnValue)!=1)
     {
-        PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: the ");
-        fprintf(stderr,"initialFileExists function did not returned one, ");
-        fprintf(stderr,"which was the expected value here.\n");
+        PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: ");
+        fprintf(stderr,"initialFileExists function returned zero instead of ");
+        fprintf(stderr,"(+/-) one, while attempting to check if the input ");
+        fprintf(stderr,"(char*) fileLocation variable stores the name of an ");
+        fprintf(stderr,"existing file.\n");
+        return 0;
+    }
+    else if (returnValue!=1)
+    {
+        PRINT_ERROR("In readWfnFileandAllocateChemicalSystem: the file ");
+        fprintf(stderr,"%s could not be found at the given ",fileLocation);
+        fprintf(stderr,"given location.\n");
         return 0;
     }
 
-    // Check that its size can at least contain the *.chem or *.wfn extension
+    // Check that its size can at least contain the *.temp extension
     // strlen returns the length of the string, but not including the char '\0'
     length=strlen(fileLocation);
     if (length<6)
@@ -1120,10 +1237,13 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
         fprintf(stderr,"end with the '.temp' extension.\n");
         return 0;
     }
-
+/*
     // Check if the *.temp file is well opened: fopen function returns a FILE
     // pointer on success, otherwise NULL is returned
-    fprintf(stdout,"\nOpening %s file. ",fileLocation);
+    if (verbose>0)
+    {
+        fprintf(stdout,"\nOpening the %s file. ",fileLocation);
+    }
     wfnFile=fopen(fileLocation,"r");
     if (wfnFile==NULL)
     {
@@ -1131,7 +1251,10 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
         fprintf(stderr,"able to open properly the %s file.\n",fileLocation);
         return 0;
     }
-    fprintf(stdout,"Reading and saving chemical data. ");
+    if (verbose>0)
+    {
+        fprintf(stdout,"Reading and saving chemical data. ");
+    }
 
     // Skip the first line of the (copy *.temp of the) *.wfn file: fgetc returns
     // the character read as an unsigned char cast to an int or EOF on the end
@@ -1951,7 +2074,10 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
         wfnFile=NULL;
         return 0;
     }
-    fprintf(stdout,"Closing file.\n");
+    if (verbose>0)
+    {
+        fprintf(stdout,"Closing file.\n");
+    }
     wfnFile=NULL;
 
     // Check the number of molecular orbitals that have a spin number equal to
@@ -2046,6 +2172,7 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
     return returnValue;
 }
 
+/*
 ////////////////////////////////////////////////////////////////////////////////
 // The function writingChemicalFile writes the chemical data stored in the
 // structure pointed by pChemicalSystem, according the the *.chem format, into
@@ -2262,7 +2389,7 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
 {
     size_t lengthName=0;
     char *fileLocation=NULL;
-    int orbRhf=0;
+    int orbRhf=0, boolean=0;
 
     // Testing if pParameters or pChemicalSystem is pointing to NULL
     if (pParameters==NULL || pChemicalSystem==NULL)
@@ -2328,6 +2455,7 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
             }
             else
             {
+                // Nothing to do because it has already been initialized to zero
                 if (pParameters->orb_rhf)
                 {
                     PRINT_ERROR("In loadChemistry: apparently, the orb_rhf ");
@@ -2353,6 +2481,7 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
 
             // Set the default *.chem name in fileLocation in case of file copy
             // strncpy function returns a pointer to the string (not used here)
+            // strlen returns the string length, not including the char '\0'
             strncpy(fileLocation,pParameters->name_input,lengthName);
             lengthName=strlen(fileLocation);
             fileLocation[lengthName-5]='.';
@@ -2367,7 +2496,21 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
             // if the 1st string arg is shorter (resp. longer) than the 2nd one
             if (strcmp(pParameters->name_chem,fileLocation))
             {
-                if (initialFileExists(fileLocation,pParameters->name_length)==1)
+                boolean=
+                       initialFileExists(fileLocation,pParameters->name_length);
+                if (abs(boolean)!=1)
+                {
+                    PRINT_ERROR("In loadChemistry: initialFileExists ");
+                    fprintf(stderr,"function returned zero instead of ");
+                    fprintf(stderr,"(+/-) one, after having checked that the ");
+                    fprintf(stderr,"input (char*) fileLocation variable does ");
+                    fprintf(stderr,"not point to the valid path name of an ");
+                    fprintf(stderr,"existing file.\n");
+                    free(fileLocation);
+                    fileLocation=NULL;
+                    return 0;
+                }
+                else if (boolean==1)
                 {
                     // remove returns 0 on success, otherwise -1 (errno is set)
                     if (remove(fileLocation))
@@ -2381,10 +2524,11 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
                         return 0;
                     }
                 }
+
                 // Warning here: an error is returned if the *.chem file
                 // prescribed by name_chem and the default one built from the
                 // *.info file name (saved in fileLocation) have different names
-                // but point to the same file like './'+'*.chem' and '*.chem'
+                // but point to the same file like 'absPath/*.chem' and '*.chem'
                 if (!copyFileLocation(pParameters->name_chem,
                                       pParameters->name_length,
                                              pParameters->verbose,fileLocation))
@@ -2400,7 +2544,6 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
             }
             break;
 
-/*
         case -1:
             fprintf(stdout,"\nChemistry will be loaded from ");
             fprintf(stdout,"%s file.",pParameters->name_chem);
@@ -2415,7 +2558,19 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
             fileLocation[lengthName-1]='p';
             fileLocation[lengthName]='\0';
 
-            if (initialFileExists(fileLocation,pParameters->name_length)==1)
+            boolean=initialFileExists(fileLocation,pParameters->name_length);
+            if (abs(boolean)!=1)
+            {
+                PRINT_ERROR("In loadChemistry: initialFileExists function ");
+                fprintf(stderr,"returned zero instead of (+/-) one, after ");
+                fprintf(stderr,"having checked that the input (char*) ");
+                fprintf(stderr,"fileLocation variable does not point to the ");
+                fprintf(stderr,"valid path name of an existing file.\n");
+                free(fileLocation);
+                fileLocation=NULL;
+                return 0;
+            }
+            else if (boolean==1)
             {
                 if (remove(fileLocation))
                 {
@@ -2447,6 +2602,7 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
             // Converting the Fortran scientific notation (1.0D+01) into the C
             // format (1.0e+01) in the *.temp file (the copy of the *.wfn file)
             if (!readAndConvertWfnFile(fileLocation,'D','e',
+                                       pParameters->verbose,
                                                       pParameters->name_length))
             {
                 PRINT_ERROR("In loadChemistry: readAndConvertWfnFile ");
@@ -2459,6 +2615,7 @@ int loadChemistry(Parameters* pParameters, ChemicalSystem *pChemicalSystem)
             // Reading the (copy *.temp of the) *.wfn file
             orbRhf=readWfnFileAndAllocateChemicalSystem(fileLocation,
                                                        pParameters->name_length,
+                                                       pParameters->verbose,
                                                                pChemicalSystem);
             // Check the pParameters->orb_rhf variable
             if (abs(orbRhf)!=1)

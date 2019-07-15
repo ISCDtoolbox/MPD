@@ -7,7 +7,7 @@
 *        in the MPD algorithm.
 * \author Jeremy DALPHIN
 * \version 3.0
-* \date May 1st, 2019
+* \date August 1st, 2019
 *
 * This file contains the description of all the non-static function prototypes
 * that are used to initially load the chemical data from a *.wfn/ *.chem file in
@@ -135,14 +135,27 @@ int getChemicalFormat(char* fileLocation, int nameLength);
 int readChemFileandAllocateChemicalSystem(char* fileLocation, int nameLength,
                                                ChemicalSystem* pChemicalSystem);
 
+
+// The function readAndConvertWfnFile reads a *.temp file (which is intended
+// to be the copy of a *.wfn file) at fileLocation (such a file must have been
+// previously created and of length strictly less than nameLength), except the
+// first line, and converts all charToRemove encountered into charToPutInstead.
+// If verbose is set to a positive value, then it prints some informations in
+// the standard output stream; otherwise, nothing is displayed. It has a char*
+// variable (fileLocation), two char variables (charToRemove, charToPutInstead),
+// and two int variables (verbose, nameLength) as input arguments. It returns
+// zero if an error occurred, otherwise one is returned in case of success
+
 /**
 * \fn int readAndConvertWfnFile(char* fileLocation, char charToRemove,
-*                                         char charToPutInstead, int nameLength)
+*                            char charToPutInstead, int verbose, int nameLength)
 * \brief It tries to read an existing file specified at fileLocation (a path
 *        name of (positive) length (strictly) less than nameLength). Such a file
 *        is expected to have the *.wfn format and then, except for the first
-*        line (commnet line in the *.wfn file), all charToRemove encountered is
-*        replaced by charToPutInstead.
+*        line (comment line in the *.wfn file), all charToRemove encountered is
+*        replaced by charToPutInstead. If verbose is set to a positive value,
+*        then it prints some informations in the standard output stream;
+*        otherwise, nothing is displayed.
 *
 * \param[in] fileLocation A pointer that points to a string that is intended to
 *                         store the path name of an existing chemical file
@@ -154,24 +167,30 @@ int readChemFileandAllocateChemicalSystem(char* fileLocation, int nameLength,
 *                         '\0'). Otherwise, an error is returned by the \ref
 *                         readAndConvertWfnFile function.
 *
-* \param[in] nameLength A positive integer representing the maximal length
-*                       allowed for the name pointed by the fileLocation
-*                       variable (including the terminating nul character '\0').
-*                       It must be (strictly) greater than one, otherwise an
-*                       error is returned by the \ref readAndConvertWfnFile
-*                       function.
-*
 * \param[in] charToRemove Except for the first line, which corresponds to a
 *                         comment line in the *.wfn format, it represents the
 *                         character that is going to be tracked throughout the
 *                         file pointed by the fileLocation variable, and that
-*                         is intended to be replace by the charToPutInstead
+*                         is intended to be replaced by the charToPutInstead
 *                         character.
 *
 * \param[in] charToPutInstead It corresponds to the character that is going to
 *                             replace each charToRemove encountered in the file
 *                             specified at fileLocation, except for the first
 *                             line, which is a comment line in the *.wfn format.
+*
+* \param[in] verbose An integer playing the role of a boolean. If set to a
+*                    (strictly) positive value, then it prints in the standard
+*                    output stream some informations about what is executed.
+*                    Otherwise, nothing is displayed in the standard output
+*                    stream.
+*
+* \param[in] nameLength A positive integer representing the maximal length
+*                       allowed for the name pointed by the fileLocation
+*                       variable (including the terminating nul character '\0').
+*                       It must be (strictly) greater than one, otherwise an
+*                       error is returned by the \ref readAndConvertWfnFile
+*                       function.
 *
 * \return It returns one if every charToRemove has been successfully replaced by
 *         charToPutInstead in the file located at fileLocation. Otherwise, an
@@ -195,17 +214,19 @@ int readChemFileandAllocateChemicalSystem(char* fileLocation, int nameLength,
 * unit-test on it.
 */
 int readAndConvertWfnFile(char* fileLocation, char charToRemove,
-                                         char charToPutInstead, int nameLength);
+                            char charToPutInstead, int verbose, int nameLength);
 
 /**
 * \fn int readWfnFileAndAllocateChemicalSystem(char* fileLocation,
-*                                              int nameLength,
+*                                              int nameLength, int verbose,
 *                                               ChemicalSystem* pChemicalSystem)
-* \brief It reads the .wfn-format file located at fileLocation, a name of
+* \brief It reads the wfn-format file located at fileLocation, a name of
 *        (positive) length (strictly) less than nameLength, then checks the
 *        *.wfn syntax, dynamically allocates the required memory,
 *        and fills the structure pointed by pChemicalSystem with the values
-*        contained in the .wfn-format file.
+*        contained in the wfn-format file. If verbose is set to a positive
+*        value, then it prints some informations in the standard output stream;
+*        otherwise, nothing is displayed.
 *
 * \param[in] fileLocation A pointer that points to a string that is intended to
 *                         store the path name of an existing *.temp (chemical)
@@ -225,6 +246,12 @@ int readAndConvertWfnFile(char* fileLocation, char charToRemove,
 *                       It must be (strictly) greater than six, otherwise an
 *                       error is returned by the \ref
 *                       readWfnFileAndAllocateChemicalSystem function.
+*
+* \param[in] verbose An integer playing the role of a boolean. If set to a
+*                    (strictly) positive value, then it prints in the standard
+*                    output stream some informations about what is executed.
+*                    Otherwise, nothing is displayed in the standard output
+*                    stream.
 *
 * \param[out] pChemicalSystem A pointer that points to the ChemicalSystem
 *                             structure (defined in main.h file) of the \ref
@@ -249,6 +276,7 @@ int readAndConvertWfnFile(char* fileLocation, char charToRemove,
 * has been defined as non-static in order to perform unit-test on it.
 */
 int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
+                                            int verbose,
                                                ChemicalSystem* pChemicalSystem);
 
 /**
