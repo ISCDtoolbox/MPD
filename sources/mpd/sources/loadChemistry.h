@@ -280,12 +280,14 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
                                                ChemicalSystem* pChemicalSystem);
 
 /**
-* \fn int writingChemicalFile(char* fileLocation, int nameLength,
+* \fn int writingChemicalFile(char* fileLocation, int nameLength, int verbose,
 *                                               ChemicalSystem* pChemicalSystem)
 * \brief Following the *.chem format, it writes all the data contained in the
 *        structure pointed by pChemicalSystem in a file located at fileLocation,
 *        which is a path name of (positive) length (strictly) less than
-*        nameLength.
+*        nameLength. If verbose is set to a positive value, then it prints some
+*        informations in the standard output stream; otherwise, nothing is
+*        displayed.
 *
 * \param[in] fileLocation A pointer that points to a string that is intended to
 *                         store the path name of the *.chem file that is
@@ -308,6 +310,12 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
 *                       error is returned by the \ref writingChemicalFile
 *                       function.
 *
+* \param[in] verbose An integer playing the role of a boolean. If set to a
+*                    (strictly) positive value, then it prints in the standard
+*                    output stream some informations about what is executed.
+*                    Otherwise, nothing is displayed in the standard output
+*                    stream.
+*
 * \param[in] pChemicalSystem A pointer that points to the ChemicalSystem
 *                             structure (defined in main.h file) of the \ref
 *                             main function, and whose content is intended to be
@@ -325,7 +333,7 @@ int readWfnFileAndAllocateChemicalSystem(char* fileLocation, int nameLength,
 * The \ref writingChemicalFile function should be static but has been defined
 * as non-static in order to perform unit-test on it.
 */
-int writingChemicalFile(char* fileLocation, int nameLength,
+int writingChemicalFile(char* fileLocation, int nameLength, int verbose,
                                                ChemicalSystem* pChemicalSystem);
 
 /**

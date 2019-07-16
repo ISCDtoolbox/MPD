@@ -1,0 +1,12 @@
+opt_mode 1
+verbose 0
+
+##name_chem /home/iscdadmin/Documents/mpd/mpd_internet/MPD/inputFiles/hf-tz.wfn
+name_chem /home/iscdadmin/Documents/mpd/mpd_internet/MPD/inputFiles/HHeH-Tri-UHF-def2tzvppd.wfn
+##name_chem zztest.chem
+
+##name_chem zztest.output.chem
+
+nu_electrons 2
+
+end_data

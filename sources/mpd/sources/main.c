@@ -300,15 +300,21 @@ int main(int argc, char *argv[])
     omp_set_num_threads(parameters.n_cpu);
 #endif
 
-/*
     // Load chemistry from a *.chem/ *.wfn file pointed by parameters.name_chem
     if (!loadChemistry(&parameters,&chemicalSystem))
     {
         PRINT_ERROR("In main: loadChemistry function returned zero instead ");
         fprintf(stderr,"of one.\n");
+
+        // Printing also a simpler error message in the standard output
+        fprintf(stdout,"\n%s\nERROR: cannot load properly the ",STR_ERROR);
+        fprintf(stdout,"wave function related to the chemical system.\n");
+        fprintf(stdout,"%s\n",STR_ERROR);
+
         FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
     }
 
+/*
     // Load default mesh or from the *.mesh/ *.cube file of parameters.name_mesh
     switch (loadMesh(&parameters,&mesh))
     {
@@ -1412,8 +1418,8 @@ int initialFileExists(char* fileLocation, int nameLength)
     // closed, otherwise EOF (end-of-file) is returned
     if (fclose(nameFile))
     {
-        PRINT_ERROR("In initialFileExists: could not close ");
-        fprintf(stderr,"%s file properly.\n",fileLocation);
+        PRINT_ERROR("In initialFileExists: the ");
+        fprintf(stderr,"%s file has not been closed properly.\n",fileLocation);
         nameFile=NULL;
         return 0;
     }
@@ -1548,8 +1554,8 @@ int copyFileLocation(char* fileLocation, int nameLength, int verbose,
     }
     if (system(commandLine))
     {
-        PRINT_ERROR("In copyFileLocation: wrong return of the system ");
-        fprintf(stderr,"(standard) c-function.\n");
+        PRINT_ERROR("In copyFileLocation: wrong return of the standard ");
+        fprintf(stderr,"system c-function.\n");
         free(commandLine);
         commandLine=NULL;
         return 0;
@@ -1562,29 +1568,38 @@ int copyFileLocation(char* fileLocation, int nameLength, int verbose,
     return 1;
 }
 
-/*
 ////////////////////////////////////////////////////////////////////////////////
-// The function renameFileLocation tries to rename a file (using the system
-// function) located at fileLocation (a path name of length strictly less than
-// nameLength) into the name specified at newFileLocation (warning: the file at
-// his location must not already exist). It has two char* variables
-// (fileLocation, newFileLocation) and an int nameLength variable as input
-// arguments and it returns one on success, otherwise zero if an error occurs
+// The function renameFileLocation tries to rename a file (using the standard
+// system c-function) located at fileLocation (a path name of positive length
+// strictly less than nameLength) into the name specified at newFileLocation
+// (warning: the file at his location must not already exist). If verbose is
+// set to a positive value, then it prints the content of the command line in
+// the standard output stream; otherwise, nothing is displayed. It has two
+// char* variables (fileLocation, newFileLocation) and two int variables
+// (nameLength,verbose) as input arguments. It returns 1 on success, otherwise 0
 ////////////////////////////////////////////////////////////////////////////////
-int renameFileLocation(char* fileLocation, int nameLength,
+int renameFileLocation(char* fileLocation, int nameLength, int verbose,
                                                           char* newFileLocation)
 {
     size_t length=0;
     char *commandLine=NULL;
+    int boolean=0;
 
     // Check if the input fileLocation variable refers to a valid file
-    if (initialFileExists(fileLocation,nameLength)!=1)
+    boolean=initialFileExists(fileLocation,nameLength);
+    if (abs(boolean)!=1)
     {
-        PRINT_ERROR("In renameFileLocation: initialFileExists function ");
-        fprintf(stderr,"did not return one, which was the expected value ");
-        fprintf(stderr,"here, after having checked that the input (char*) ");
-        fprintf(stderr,"fileLocation variable does not point to the valid ");
-        fprintf(stderr,"path name of an existing file.\n");
+        PRINT_ERROR("In renameFileLocationn: initialFileExists function ");
+        fprintf(stderr,"returned zero instead of (+/-) one, after having ");
+        fprintf(stderr,"checked that the input (char*) fileLocation variable ");
+        fprintf(stderr,"points to the valid path name of an existing file.\n");
+        return 0;
+    }
+    else if (boolean==-1)
+    {
+        PRINT_ERROR("In renameFileLocation: the file ");
+        fprintf(stderr,"%s could not be found at the given ",fileLocation);
+        fprintf(stderr,"location.\n");
         return 0;
     }
 
@@ -1592,21 +1607,29 @@ int renameFileLocation(char* fileLocation, int nameLength,
     if (newFileLocation==NULL)
     {
         PRINT_ERROR("In renameFileLocation: the input (char*) ");
-        fprintf(stderr,"newFileLocation variable is pointing to the ");
-        fprintf(stderr,"%p adress.\n",(void*)newFileLocation);
+        fprintf(stderr,"variable newFileLocation=%p ",(void*)newFileLocation);
+        fprintf(stderr,"does not point to a valid adress.\n");
         return 0;
     }
 
     // Check the input newFileLocation variable does not already refer to an
     // already-existing file (note that if the two input variables fileLocation
     // and newFileLocation are identical, an error will be displayed here)
-    if (initialFileExists(newFileLocation,nameLength)!=-1)
+    boolean=initialFileExists(newFileLocation,nameLength);
+    if (abs(boolean)!=1)
     {
         PRINT_ERROR("In renameFileLocation: initialFileExists function ");
-        fprintf(stderr,"did not return minus one, which was the expected ");
-        fprintf(stderr,"value here, after having checked that the input ");
-        fprintf(stderr,"(char*) newFileLocation variable point to the name ");
-        fprintf(stderr,"of an already existing file.\n");
+        fprintf(stderr,"returned zero instead of (+/-) one, after having ");
+        fprintf(stderr,"checked that the input (char*) fileLocationForCopy ");
+        fprintf(stderr,"variable does not point to the valid path name of an ");
+        fprintf(stderr,"existing file.\n");
+        return 0;
+    }
+    else if (boolean==1)
+    {
+        PRINT_ERROR("In renameFileLocation: an already existing file ");
+        fprintf(stderr,"%s could be found at the given ",fileLocation);
+        fprintf(stderr,"location.\n");
         return 0;
     }
 
@@ -1632,14 +1655,14 @@ int renameFileLocation(char* fileLocation, int nameLength,
 
     // system returns is -1 on error, otherwise the return status of the command
     // commandLine is only printed at start when moving *.temp file into *.chem
-   if (commandLine[length-4]=='t')
+    if (verbose>0)
     {
         fprintf(stdout,"\n%s\n",commandLine);
     }
     if (system(commandLine))
     {
-        PRINT_ERROR("In renameFileLocation: wrong return of the system ");
-        fprintf(stderr,"(standard) c-function.\n");
+        PRINT_ERROR("In renameFileLocation: wrong return of the standard ");
+        fprintf(stderr,"system c-function.\n");
         free(commandLine);
         commandLine=NULL;
         return 0;
@@ -1652,6 +1675,7 @@ int renameFileLocation(char* fileLocation, int nameLength,
     return 1;
 }
 
+/*
 ////////////////////////////////////////////////////////////////////////////////
 // The function plotMeshWithMeditSoftware tries to execute (thanks to the
 // standard system c-function) the external medit software, which must have
@@ -1995,7 +2019,7 @@ int adaptMeshWithMmg3dSoftware(Parameters* pParameters, char adaptMode[4])
     if (system(commandLine))
     {
         PRINT_ERROR("In adaptMeshWithMmg3dSoftware: wrong return of the ");
-        fprintf(stderr,"system (standard) c-function.\n");
+        fprintf(stderr,"standard system c-function.\n");
         free(commandLine);
         commandLine=NULL;
         return 0;
@@ -2225,7 +2249,7 @@ int renormalizeWithMshdistSoftware(Parameters* pParameters, char mode[4])
     if (system(commandLine))
     {
         PRINT_ERROR("In renormalizeWithMshdistSoftware: wrong return of the ");
-        fprintf(stderr,"system (standard) c-function.\n");
+        fprintf(stderr,"standard system c-function.\n");
         free(commandLine);
         commandLine=NULL;
         return 0;
@@ -2300,7 +2324,7 @@ int extendShapeGradientWithElasticSoftware(Parameters* pParameters)
     length=strlen(pParameters->name_elas);
     if (length<6)
     {
-        PRINT_ERROR("In extendShapeGradientWithElasticSoftware: ");
+        PRINT_ERROR("In extendShapeGradientWithElasticSoftware: the ");
         fprintf(stderr,"%s file name should at least ",pParameters->name_elas);
         fprintf(stderr,"contain six characters instead of %ld (in ",length-1);
         fprintf(stderr,"order to end with something more than the *.elas ");
@@ -2392,7 +2416,7 @@ int extendShapeGradientWithElasticSoftware(Parameters* pParameters)
     if (system(commandLine))
     {
         PRINT_ERROR("In extendShapeGradientWithElasticSoftware: wrong ");
-        fprintf(stderr,"return of the system (standard) c-function.\n");
+        fprintf(stderr,"return of the standard system c-function.\n");
         free(commandLine);
         commandLine=NULL;
         return 0;
@@ -2553,7 +2577,7 @@ int advectLevelSetWithAdvectSoftware(Parameters* pParameters)
     if (system(commandLine))
     {
         PRINT_ERROR("In advectLevelSetWithAdvectSoftware: wrong return of ");
-        fprintf(stderr,"the system (standard) c-function.\n");
+        fprintf(stderr,"the standard system c-function.\n");
         free(commandLine);
         commandLine=NULL;
         return 0;

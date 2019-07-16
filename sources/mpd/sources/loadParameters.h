@@ -1326,7 +1326,7 @@ int getLengthAfterKeywordBeginning(char keywordBeginning[3], int counter);
 *                          They represent the second part of the (counter)-th
 *                          keyword, whose related value (integer/double/string)
 *                          needs to be specified in order to be read after
-*                          properly and securely the by fscanf standard
+*                          properly and securely by the standard fscanf
 *                          c-function. This keyword can be the name of any
 *                          variables (81 possibilities except name_input which
 *                          is replaced by the end_data keyword, ending the

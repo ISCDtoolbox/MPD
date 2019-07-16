@@ -468,7 +468,7 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
     if (pParameters->verbose>0)
     {
         fprintf(stdout,"\nPrescribed values for parameters will be loaded ");
-        fprintf(stdout,"from %s file.",pParameters->name_input);
+        fprintf(stdout,"from the %s file.",pParameters->name_input);
     }
 
     pParameters->name_result=NULL;
@@ -482,7 +482,7 @@ int setupDefaultParameters(Parameters* pParameters, char* nameInputFile)
     pParameters->orb_ortho=ORB_ORTHO;
 
     pParameters->ne_electrons=0;
-    pParameters->multi_det=1;
+    pParameters->multi_det=0;
     pParameters->orb_rhf=0;
 
     pParameters->select_box=SELECT_BOX;
@@ -2681,8 +2681,8 @@ int readInputFileAndGetParameters(Parameters* pParameters)
     if (readIntegerOut)
     {
         PRINT_ERROR("In readInputFileAndGetParameters: wrong return ");
-        fprintf(stderr,"(=%d) of the fscanf function ",readIntegerOut);
-        fprintf(stderr,"(EOF=%d) while attempting to read the ",EOF);
+        fprintf(stderr,"(=%d) of the standard fscanf ",readIntegerOut);
+        fprintf(stderr,"c-function (EOF=%d) while attempting to read the ",EOF);
         fprintf(stderr,"first white space characters (in case there was ");
         fprintf(stderr,"some) of the %s file.\n",pParameters->name_input);
         closeTheFile(&infoFile,1);
@@ -2702,9 +2702,9 @@ int readInputFileAndGetParameters(Parameters* pParameters)
         if (readStringOut==NULL)
         {
             PRINT_ERROR("In readInputFileAndGetParameters: wrong return ");
-            fprintf(stderr,"=%p of the fgets function ",(void*)readStringOut);
-            fprintf(stderr,"in the attempt of reading the first two letters ");
-            fprintf(stderr,"of the %d-th keyword.\n",counter);
+            fprintf(stderr,"=%p of the standard fgets ",(void*)readStringOut);
+            fprintf(stderr,"c-function in the attempt of reading the first ");
+            fprintf(stderr,"two letters of the %d-th keyword.\n",counter);
             closeTheFile(&infoFile,1);
             free(readStringIn);
             readStringIn=NULL;
@@ -2720,10 +2720,11 @@ int readInputFileAndGetParameters(Parameters* pParameters)
             if (fseek(infoFile,-3,SEEK_CUR))
             {
                 PRINT_ERROR("In readInputFileAndGetParameters: wrong return ");
-                fprintf(stderr,"of the fseek function in the attempt of ");
-                fprintf(stderr,"reading the beginning of what may be");
-                fprintf(stderr,"'end_data' for the %d-th keyword ",counter);
-                fprintf(stderr,"(we only have read *%s*).\n",keywordBeginning);
+                fprintf(stderr,"of the standard fseek c-function in the ");
+                fprintf(stderr,"attempt of reading the beginning of what ");
+                fprintf(stderr,"may be 'end_data' for the %d-th ",counter);
+                fprintf(stderr,"keyword (we only have read ");
+                fprintf(stderr,"*%s*).\n",keywordBeginning);
                 closeTheFile(&infoFile,1);
                 free(readStringIn);
                 readStringIn=NULL;
@@ -2742,8 +2743,8 @@ int readInputFileAndGetParameters(Parameters* pParameters)
                 fprintf(stderr,"%d-th keyword do not correspond to ",counter);
                 fprintf(stderr,"the beginning of any known keyword of the ");
                 fprintf(stderr,"structure Parameters (or wrong return of the ");
-                fprintf(stderr,"fgetc function in the attempt of reading the ");
-                fprintf(stderr,"'end_data' keyword).\n");
+                fprintf(stderr,"standard fgetc c-function in the attempt of ");
+                fprintf(stderr,"reading the 'end_data' keyword).\n");
                 closeTheFile(&infoFile,1);
                 free(readStringIn);
                 readStringIn=NULL;
@@ -2752,9 +2753,9 @@ int readInputFileAndGetParameters(Parameters* pParameters)
             if (fseek(infoFile,-6,SEEK_CUR))
             {
                 PRINT_ERROR("In readInputFileAndGetParameters: wrong return ");
-                fprintf(stderr,"of the fseek function in the attempt of ");
-                fprintf(stderr,"reading 'end_data' for the %d-th ",counter);
-                fprintf(stderr,"keyword.\n");
+                fprintf(stderr,"of the standard fseek c-function in the ");
+                fprintf(stderr,"attempt of reading 'end_data' for the ");
+                fprintf(stderr,"%d-th keyword.\n",counter);
                 closeTheFile(&infoFile,1);
                 free(readStringIn);
                 readStringIn=NULL;
@@ -2810,9 +2811,10 @@ int readInputFileAndGetParameters(Parameters* pParameters)
             if (readStringOut==NULL)
             {
                 PRINT_ERROR("In readInputFileAndGetParameters: wrong return ");
-                fprintf(stderr,"=%p of the fgets ",(void*)readStringOut);
-                fprintf(stderr,"function in the attempt of reading the first ");
-                fprintf(stderr,"two letters of the %d-th keyword.\n",counter);
+                fprintf(stderr,"=%p of the standard ",(void*)readStringOut);
+                fprintf(stderr,"fgets c-function in the attempt of reading ");
+                fprintf(stderr,"the first two letters of the %d-th ",counter);
+                fprintf(stderr,"keyword.\n");
                 closeTheFile(&infoFile,1);
                 free(readStringIn);
                 readStringIn=NULL;
@@ -2840,9 +2842,9 @@ int readInputFileAndGetParameters(Parameters* pParameters)
         if (readStringOut==NULL)
         {
             PRINT_ERROR("In readInputFileAndGetParameters: wrong return ");
-            fprintf(stderr,"=%p of fgets function in ",(void*)readStringOut);
-            fprintf(stderr,"the attempt of reading the next part ");
-            fprintf(stderr,"%s* of the %d-th ",keywordBeginning,counter);
+            fprintf(stderr,"=%p of the standard fgets ",(void*)readStringOut);
+            fprintf(stderr,"c-function in the attempt of reading the next ");
+            fprintf(stderr,"part %s* of the %d-th ",keywordBeginning,counter);
             fprintf(stderr,"keyword.\n");
             closeTheFile(&infoFile,1);
             free(readStringIn);
@@ -2889,10 +2891,11 @@ int readInputFileAndGetParameters(Parameters* pParameters)
             if (readStringOut==NULL)
             {
                 PRINT_ERROR("In readInputFileAndGetParameters: wrong return ");
-                fprintf(stderr,"=%p of the fgets ",(void*)readStringOut);
-                fprintf(stderr,"function in the attempt of reading the final ");
-                fprintf(stderr,"part %s%s* ",keywordBeginning,keywordMiddle);
-                fprintf(stderr,"of the %d-th keyword.\n",counter);
+                fprintf(stderr,"=%p of the standard ",(void*)readStringOut);
+                fprintf(stderr,"fgets c-function in the attempt of reading ");
+                fprintf(stderr,"the final part ");
+                fprintf(stderr,"%s%s* of the ",keywordBeginning,keywordMiddle);
+                fprintf(stderr,"%d-th keyword.\n",counter);
                 closeTheFile(&infoFile,1);
                 free(readStringIn);
                 readStringIn=NULL;
@@ -2946,9 +2949,9 @@ int readInputFileAndGetParameters(Parameters* pParameters)
                 {
                     PRINT_ERROR("In readInputFileAndGetParameters: wrong ");
                     fprintf(stderr,"return (=%d) of the ",readIntegerOut);
-                    fprintf(stderr,"fscanf function in the attempt of ");
-                    fprintf(stderr,"reading the value associated with the ");
-                    fprintf(stderr,"%d-th keyword ",counter);
+                    fprintf(stderr,"standard fscanf c-function in the ");
+                    fprintf(stderr,"attempt of reading the value associated ");
+                    fprintf(stderr,"with the %d-th keyword ",counter);
                     fprintf(stderr,"(=%s%s",keywordBeginning,keywordMiddle);
                     if (lengthEnd>1)
                     {
@@ -2968,9 +2971,9 @@ int readInputFileAndGetParameters(Parameters* pParameters)
                 {
                     PRINT_ERROR("In readInputFileAndGetParameters: wrong ");
                     fprintf(stderr,"return (=%d) of the ",readIntegerOut);
-                    fprintf(stderr,"fscanf function in the attempt of ");
-                    fprintf(stderr,"reading the value associated with the ");
-                    fprintf(stderr,"%d-th keyword ",counter);
+                    fprintf(stderr,"standard fscanf c-function in the ");
+                    fprintf(stderr,"attempt of reading the value associated ");
+                    fprintf(stderr,"with the %d-th keyword ",counter);
                     fprintf(stderr,"(=%s%s",keywordBeginning,keywordMiddle);
                     if (lengthEnd>1)
                     {
@@ -3015,8 +3018,8 @@ int readInputFileAndGetParameters(Parameters* pParameters)
                 {
                     PRINT_ERROR("In readInputFileAndGetParameters: wrong ");
                     fprintf(stderr,"return (=%d) of the ",readIntegerOut);
-                    fprintf(stderr,"fscanf function (EOF=%d) while ",EOF);
-                    fprintf(stderr,"attempting to read the white space ");
+                    fprintf(stderr,"standard fscanf c-function (EOF=%d) ",EOF);
+                    fprintf(stderr,"while attempting to read the white space ");
                     fprintf(stderr,"characters (in case there was some) ");
                     fprintf(stderr,"after the %d-th keyword ",counter);
                     fprintf(stderr,"(=%s%s",keywordBeginning,keywordMiddle);
@@ -3040,9 +3043,9 @@ int readInputFileAndGetParameters(Parameters* pParameters)
                         fprintf(stderr,"end-of-file (EOF=%d) reached ",EOF);
                         fprintf(stderr,"without the end_data keyword ");
                         fprintf(stderr,"encountered or wrong return ");
-                        fprintf(stderr,"(=%d) of the fgetc function ",readChar);
-                        fprintf(stderr,"in the attempt of reading the ");
-                        fprintf(stderr,"%d-th letter of the string ",i+1);
+                        fprintf(stderr,"(=%d) of the standard fgetc ",readChar);
+                        fprintf(stderr,"c-function in the attempt of reading ");
+                        fprintf(stderr,"the %d-th letter of the string ",i+1);
                         fprintf(stderr,"associated with the %d-th ",counter);
                         fprintf(stderr,"keyword (=%s",keywordBeginning);
                         fprintf(stderr,"%s",keywordMiddle);
@@ -3089,8 +3092,8 @@ int readInputFileAndGetParameters(Parameters* pParameters)
                 {
                     PRINT_ERROR("In readInputFileAndGetParameters: wrong ");
                     fprintf(stderr,"return (=%d) of the ",readIntegerOut);
-                    fprintf(stderr,"fscanf function (EOF=%d) while ",EOF);
-                    fprintf(stderr,"attempting to read the white space ");
+                    fprintf(stderr,"standard fscanf c-function (EOF=%d) ",EOF);
+                    fprintf(stderr,"while attempting to read the white space ");
                     fprintf(stderr,"characters (in case there was some) ");
                     fprintf(stderr,"after the string (=%s) ",readStringIn);
                     fprintf(stderr,"associated with the %d-th ",counter);
@@ -3319,7 +3322,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"(=%d) of the structure pointed ",pParameters->verbose);
         fprintf(stderr,"by pParameters can only be set to 0, 1 or 2.\nPlease ");
         fprintf(stderr,"modify the value accordingly after the 'verbose' ");
-        fprintf(stderr,"keyword in %s file.\n",pParameters->name_input);
+        fprintf(stderr,"keyword in the %s file.\n",pParameters->name_input);
         return 0;
     }
     if (pParameters->verbose>1)
@@ -3350,7 +3353,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"(=%d) of the structure pointed by ",pParameters->n_cpu);
         fprintf(stderr,"pParameters must be a positive integer.\nPlease ");
         fprintf(stderr,"modify the value accordingly after the 'n_cpu' ");
-        fprintf(stderr,"keyword in %s file.\n",pParameters->name_input);
+        fprintf(stderr,"keyword in the %s file.\n",pParameters->name_input);
         return 0;
     }
 
@@ -3363,7 +3366,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"number of threads (=%d) ",omp_get_max_threads());
         fprintf(stderr,"currently available on your computer.\nPlease ");
         fprintf(stderr,"modify the value accordingly after the 'n_cpu' ");
-        fprintf(stderr,"keyword in %s file.\n",pParameters->name_input);
+        fprintf(stderr,"keyword in the %s file.\n",pParameters->name_input);
         return 0;
     }
 #else
@@ -3803,7 +3806,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"(=%d) of the structure pointed ",pParameters->ls_type);
         fprintf(stderr,"by pParameters can only be set to 0 or 1.\nPlease ");
         fprintf(stderr,"modify the value accordingly after the 'ls_type' ");
-        fprintf(stderr,"keyword in %s file.\n",pParameters->name_input);
+        fprintf(stderr,"keyword in the %s file.\n",pParameters->name_input);
         return 0;
     }
 
@@ -3925,7 +3928,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stdout,"file name will thus be generated thanks to the ");
             fprintf(stdout,"%s file name (where the ",pParameters->name_input);
             fprintf(stdout,"'.input' extension will be replaced by the ");
-            fprintf(stdout,"'.mesh' one).");
+            fprintf(stdout,"'.mesh' one).\n\n");
         }
     }
 
@@ -4237,7 +4240,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         PRINT_ERROR("In checkValuesOfAllParameters: the variable ");
         fprintf(stderr,"pParameters->bohr_unit (=%d) ",pParameters->bohr_unit);
         fprintf(stderr,"can only be set to 0 or 1.\nPlease modify the value ");
-        fprintf(stderr,"accordingly after the 'bohr_unit' keyword in ");
+        fprintf(stderr,"accordingly after the 'bohr_unit' keyword in the ");
         fprintf(stderr,"%s file.\n",pParameters->name_input);
         return 0;
     }
@@ -4249,7 +4252,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         PRINT_ERROR("In checkValuesOfAllParameters: expecting\n0.0 <= (");
         fprintf(stderr,"pParameters->select_orb=%lf) ",pParameters->select_orb);
         fprintf(stderr,"< 0.01\nPlease modify the value accordingly after ");
-        fprintf(stderr,"the 'select_orb' keyword in ");
+        fprintf(stderr,"the 'select_orb' keyword in the ");
         fprintf(stderr,"%s file.\n",pParameters->name_input);
         return 0;
     }
@@ -4261,7 +4264,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         PRINT_ERROR("In checkValuesOfAllParameters: the variable ");
         fprintf(stderr,"pParameters->orb_ortho (=%d) ",pParameters->orb_ortho);
         fprintf(stderr,"can only be set to 0 or 1.\nPlease modify the value ");
-        fprintf(stderr,"accordingly after the 'orb_ortho' keyword in ");
+        fprintf(stderr,"accordingly after the 'orb_ortho' keyword in the ");
         fprintf(stderr,"%s file.\n",pParameters->name_input);
         return 0;
     }
@@ -4320,11 +4323,11 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"(=%d) of the structure pointed ",pParameters->orb_rhf);
         fprintf(stderr,"by pParameters can only be set to 0 or 1.\nPlease ");
         fprintf(stderr,"modify the value accordingly after the 'orb_rhf' ");
-        fprintf(stderr,"keyword in %s file, or we ",pParameters->name_input);
-        fprintf(stderr,"file.\nWe recommend to simply remove the ");
-        fprintf(stderr,"corresponding keyword line to let the MPD program ");
-        fprintf(stderr,"set this variable automatically during the reading ");
-        fprintf(stderr,"of the (*.chem/ *.wfn) chemical file.\n");
+        fprintf(stderr,"keyword in the %s file.\nWe ",pParameters->name_input);
+        fprintf(stderr,"recommend to simply remove the corresponding keyword ");
+        fprintf(stderr,"line to let the MPD program set this variable ");
+        fprintf(stderr,"automatically during the reading of the ");
+        fprintf(stderr,"(*.chem/ *.wfn) chemical file.\n");
         return 0;
     }
 
@@ -4388,7 +4391,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"== %.18lf\n",dy);
         fprintf(stderr,"(pParameters->delta_z=%.18lf) ",pParameters->delta_z);
         fprintf(stderr,"== %.18lf\nPlease modify the values accordingly ",dz);
-        fprintf(stderr,"after the corresponding keywords in ");
+        fprintf(stderr,"after the corresponding keywords in the ");
         fprintf(stderr,"%s file.\n",pParameters->name_input);
         return 0;
     }
@@ -4402,7 +4405,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"(=%d) of the structure pointed ",pParameters->ls_ini);
         fprintf(stderr,"by pParameters can only be set to 0, 1 or 2.\nPlease ");
         fprintf(stderr,"modify the value accordingly after the 'ls_ini' ");
-        fprintf(stderr,"keyword in %s file.\nWe ",pParameters->name_input);
+        fprintf(stderr,"keyword in the %s file.\nWe ",pParameters->name_input);
         fprintf(stderr,"recommend to simply remove the corresponding keyword ");
         fprintf(stderr,"line to let the MPD program set this variable ");
         fprintf(stderr,"automatically during the setting up of the mesh.\n");
@@ -4438,7 +4441,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"(=%lf) of the structure pointed ",pParameters->ls_rz);
         fprintf(stderr,"by pParameters must be positive.\nPlease modify ");
         fprintf(stderr,"the values accordingly after the 'ls_rx', 'ls_ry' ");
-        fprintf(stderr,"and 'ls_rz' keywords in ");
+        fprintf(stderr,"and 'ls_rz' keywords in the ");
         fprintf(stderr,"%s file.\n",pParameters->name_input);
         return 0;
     }
@@ -4459,7 +4462,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"(=%lf) of the structure ",pParameters->ls_rz);
             fprintf(stderr,"pointed by pParameters.\nPlease modify the ");
             fprintf(stderr,"values accordingly after the 'ls_rx', 'ls_ry' ");
-            fprintf(stderr,"and 'ls_rz' keywords in ");
+            fprintf(stderr,"and 'ls_rz' keywords in the ");
             fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
         }
@@ -4480,7 +4483,8 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"(pParameters->met_max=%lf) ",pParameters->met_max);
             fprintf(stderr," > pParameters->met_min\nPlease modify the ");
             fprintf(stderr,"values accordingly after the corresponding ");
-            fprintf(stderr,"keywords in %s file.\n",pParameters->name_input);
+            fprintf(stderr,"keywords in the ");
+            fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
         }
     }
@@ -4527,7 +4531,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"variable (=%d) of the ",pParameters->trick_matrix);
             fprintf(stderr,"structure pointed by pParameters can only be set ");
             fprintf(stderr,"to 0 or 1.\nPlease modify the value accordingly ");
-            fprintf(stderr,"after the 'trick_matrix' keyword in ");
+            fprintf(stderr,"after the 'trick_matrix' keyword in the ");
             fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
         }
@@ -4566,7 +4570,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"variable (=%d) of the ",pParameters->approx_mode);
             fprintf(stderr,"structure pointed by pParameters can only be set ");
             fprintf(stderr,"to 0 or 1.\nPlease modify the value accordingly ");
-            fprintf(stderr,"after the 'approx_mode' keyword in ");
+            fprintf(stderr,"after the 'approx_mode' keyword in the ");
             fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
         }
@@ -4613,7 +4617,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"(pParameters->iter_told2p");
         fprintf(stderr,"=%lf) >= 0.0\nPlease modify ",pParameters->iter_told2p);
         fprintf(stderr,"the values accordingly after the corresponding ");
-        fprintf(stderr,"keywords in %s file.\n",pParameters->name_input);
+        fprintf(stderr,"keywords in the %s file.\n",pParameters->name_input);
         return 0;
     }
 
@@ -4641,7 +4645,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"(=%d) variables of the ",pParameters->save_print);
         fprintf(stderr,"structure pointed by pParameters must be ");
         fprintf(stderr,"non-negative integers.\nPlease modify the values ");
-        fprintf(stderr,"accordingly after the corresponding keywords in ");
+        fprintf(stderr,"accordingly after the corresponding keywords in the ");
         fprintf(stderr,"%s file.\n",pParameters->name_input);
         return 0;
     }
@@ -4653,7 +4657,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
         fprintf(stderr,"(=%d) of the structure ",pParameters->save_where);
         fprintf(stderr,"pointed by pParameters can only be set to 1, 2, 3, ");
         fprintf(stderr,"4, 5, 6, or 7.\nPlease modify the value accordingly ");
-        fprintf(stderr,"after the 'save_type' keyword in ");
+        fprintf(stderr,"after the 'save_type' keyword in the ");
         fprintf(stderr,"%s file.\n",pParameters->name_input);
         return 0;
     }
@@ -5302,8 +5306,8 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"for medit software (=%s) ",pParameters->path_medit);
             fprintf(stderr,"does not seem to work.\nPlease check that the ");
             fprintf(stderr,"path placed after the 'path_medit' keyword is ");
-            fprintf(stderr,"valid in %s file, or if ",pParameters->name_input);
-            fprintf(stderr,"no such line exists, add one if the default ");
+            fprintf(stderr,"valid in the %s file, or ",pParameters->name_input);
+            fprintf(stderr,"if no such line exists, add one if the default ");
             fprintf(stderr,"PATH_MEDIT preprocessor constant ");
             fprintf(stderr,"(=%s) in loadParameters.h file is not ",PATH_MEDIT);
             fprintf(stderr,"correct.\n");
@@ -5326,8 +5330,8 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"for medit software (=%s) ",pParameters->path_medit);
             fprintf(stderr,"does not seem to work.\nPlease check that the ");
             fprintf(stderr,"path placed after the 'path_medit' keyword is ");
-            fprintf(stderr,"valid in %s file, or if ",pParameters->name_input);
-            fprintf(stderr,"no such line exists, add one if the default ");
+            fprintf(stderr,"valid in the %s file, or ",pParameters->name_input);
+            fprintf(stderr,"if no such line exists, add one if the default ");
             fprintf(stderr,"PATH_MEDIT preprocessor constant ");
             fprintf(stderr,"(=%s) in loadParameters.h file is not ",PATH_MEDIT);
             fprintf(stderr,"correct.\n");
@@ -5458,8 +5462,8 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"for mmg3d software (=%s) ",pParameters->path_mmg3d);
             fprintf(stderr,"does not seem to work.\nPlease check that the ");
             fprintf(stderr,"path placed after the 'path_mmg3d' keyword is ");
-            fprintf(stderr,"valid in %s file, or if ",pParameters->name_input);
-            fprintf(stderr,"no such line exists, add one if the default ");
+            fprintf(stderr,"valid in the %s file, or ",pParameters->name_input);
+            fprintf(stderr,"if no such line exists, add one if the default ");
             fprintf(stderr,"PATH_MMG3D preprocessor constant ");
             fprintf(stderr,"(=%s) in loadParameters.h file is not ",PATH_MMG3D);
             fprintf(stderr,"correct.\n");
@@ -5481,8 +5485,8 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"for mmg3d software (=%s) ",pParameters->path_mmg3d);
             fprintf(stderr,"does not seem to work.\nPlease check that the ");
             fprintf(stderr,"path placed after the 'path_mmg3d' keyword is ");
-            fprintf(stderr,"valid in %s file, or if ",pParameters->name_input);
-            fprintf(stderr,"no such line exists, add one if the default ");
+            fprintf(stderr,"valid in the %s file, or ",pParameters->name_input);
+            fprintf(stderr,"if no such line exists, add one if the default ");
             fprintf(stderr,"PATH_MMG3D preprocessor constant ");
             fprintf(stderr,"(=%s) in loadParameters.h file is not ",PATH_MMG3D);
             fprintf(stderr,"correct.\n");
@@ -5507,7 +5511,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"for the mshdist software ");
             fprintf(stderr,"(=%s) does not seem to ",pParameters->path_mshdist);
             fprintf(stderr,"work.\nPlease check that the path placed after ");
-            fprintf(stderr,"the 'path_mshdist' keyword is valid in ");
+            fprintf(stderr,"the 'path_mshdist' keyword is valid in the ");
             fprintf(stderr,"%s file, or if no such ",pParameters->name_input);
             fprintf(stderr,"line exists, add one if the default PATH_MSHDIST ");
             fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MSHDIST);
@@ -5531,7 +5535,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"for the mshdist software ");
             fprintf(stderr,"(=%s) does not seem to ",pParameters->path_mshdist);
             fprintf(stderr,"work.\nPlease check that the path placed after ");
-            fprintf(stderr,"the 'path_mshdist' keyword is valid in ");
+            fprintf(stderr,"the 'path_mshdist' keyword is valid in the ");
             fprintf(stderr,"%s file, or if no such ",pParameters->name_input);
             fprintf(stderr,"line exists, add one if the default PATH_MSHDIST ");
             fprintf(stderr,"preprocessor constant (=%s) in ",PATH_MSHDIST);
@@ -5704,7 +5708,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"for the elastic software ");
             fprintf(stderr,"(=%s) does not seem to ",pParameters->path_elastic);
             fprintf(stderr,"work.\nPlease check that the path placed after ");
-            fprintf(stderr,"the 'path_elastic' keyword is valid in ");
+            fprintf(stderr,"the 'path_elastic' keyword is valid in the ");
             fprintf(stderr,"%s file, or if no such ",pParameters->name_input);
             fprintf(stderr,"line exists, add one if the default PATH_ELASTIC ");
             fprintf(stderr,"preprocessor constant (=%s) in ",PATH_ELASTIC);
@@ -5728,7 +5732,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"for the elastic software ");
             fprintf(stderr,"(=%s) does not seem to ",pParameters->path_elastic);
             fprintf(stderr,"work.\nPlease check that the path placed after ");
-            fprintf(stderr,"the 'path_elastic' keyword is valid in ");
+            fprintf(stderr,"the 'path_elastic' keyword is valid in the ");
             fprintf(stderr,"%s file, or if no such ",pParameters->name_input);
             fprintf(stderr,"line exists, add one if the default PATH_ELASTIC ");
             fprintf(stderr,"preprocessor constant (=%s) in ",PATH_ELASTIC);
@@ -5754,7 +5758,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"for the advect software ");
             fprintf(stderr,"(=%s) does not seem to ",pParameters->path_advect);
             fprintf(stderr,"work.\nPlease check that the path placed after ");
-            fprintf(stderr,"the 'path_advect' keyword is valid in ");
+            fprintf(stderr,"the 'path_advect' keyword is valid in the ");
             fprintf(stderr,"%s file, or if no such ",pParameters->name_input);
             fprintf(stderr,"line exists, add one if the default PATH_ADVECT ");
             fprintf(stderr,"preprocessor constant (=%s) in ",PATH_ADVECT);
@@ -5778,7 +5782,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"for the advect software ");
             fprintf(stderr,"(=%s) does not seem to ",pParameters->path_advect);
             fprintf(stderr,"work.\nPlease check that the path placed after ");
-            fprintf(stderr,"the 'path_advect' keyword is valid in ");
+            fprintf(stderr,"the 'path_advect' keyword is valid in the ");
             fprintf(stderr,"%s file, or if no such ",pParameters->name_input);
             fprintf(stderr,"line exists, add one if the default PATH_ADVECT ");
             fprintf(stderr,"preprocessor constant (=%s) in ",PATH_ADVECT);
@@ -5908,7 +5912,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"%lf) > 1.0\n",pParameters->hgrad_met);
             fprintf(stderr,"(pParameters->memory=%d) ",pParameters->memory);
             fprintf(stderr,">= 0\nPlease modify the values accordingly after ");
-            fprintf(stderr,"the corresponding keywords in ");
+            fprintf(stderr,"the corresponding keywords in the ");
             fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
          }
@@ -6000,7 +6004,8 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr," > 0.0\n(pParameters->hgrad_ls=");
             fprintf(stderr,"%lf) > 1.0\nPlease modify ",pParameters->hgrad_ls);
             fprintf(stderr,"the values accordingly after the corresponding ");
-            fprintf(stderr,"keywords in %s file.\n",pParameters->name_input);
+            fprintf(stderr,"keywords in the ");
+            fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
          }
     }
@@ -6056,7 +6061,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"variable (=%d) of the ",pParameters->hmode_lag);
             fprintf(stderr,"structure pointed by pParameters can only be set ");
             fprintf(stderr,"to 0, 1, or 2.\nPlease modify the value ");
-            fprintf(stderr,"accordingly after the 'hmode_lag' keyword in ");
+            fprintf(stderr,"accordingly after the 'hmode_lag' keyword in the ");
             fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
         }
@@ -6076,7 +6081,8 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,") > 0.0\n(pParameters->hgrad_lag=");
             fprintf(stderr,"%lf) > 1.0\nPlease modify ",pParameters->hgrad_lag);
             fprintf(stderr,"the values accordingly after the corresponding ");
-            fprintf(stderr,"keywords in %s file.\n",pParameters->name_input);
+            fprintf(stderr,"keywords in the ");
+            fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
          }
     }
@@ -6140,7 +6146,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"\n(pParameters->residual");
             fprintf(stderr,"=%lf) >= 0.0\nPlease ",pParameters->residual);
             fprintf(stderr,"modify the values accordingly after the ");
-            fprintf(stderr,"corresponding keywords in ");
+            fprintf(stderr,"corresponding keywords in the ");
             fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
          }
@@ -6185,7 +6191,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"(=%lf) variable of the ",pParameters->delta_t);
             fprintf(stderr,"structure pointed by pParameters must be ");
             fprintf(stderr,"positive.\nPlease modify the value accordingly ");
-            fprintf(stderr,"after the 'delta_t' keyword in ");
+            fprintf(stderr,"after the 'delta_t' keyword in the ");
             fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
         }
@@ -6197,7 +6203,7 @@ int checkValuesOfAllParameters(Parameters* pParameters)
             fprintf(stderr,"(=%d) variable of the ",pParameters->no_cfl);
             fprintf(stderr,"structure pointed by pParameters can only be set ");
             fprintf(stderr,"to 0 or 1.\nPlease modify the value accordingly ");
-            fprintf(stderr,"after the 'no_cfl' keyword in ");
+            fprintf(stderr,"after the 'no_cfl' keyword in the ");
             fprintf(stderr,"%s file.\n",pParameters->name_input);
             return 0;
         }

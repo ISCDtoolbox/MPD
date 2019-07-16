@@ -2864,11 +2864,14 @@ int copyFileLocation(char* fileLocation, int nameLength, int verbose,
                                                      char* fileLocationForCopy);
 
 /**
-* \fn int renameFileLocation(char* fileLocation, int nameLength,
+* \fn int renameFileLocation(char* fileLocation, int nameLength, int verbose,
 *                                                         char* newFileLocation)
 * \brief It tries to rename an existing file located at fileLocation (pointing
 *        to a path name of (positive) length (strictly) less than nameLength)
-*        into the name specified by the newFileLocation variable.
+*        into the name specified by the newFileLocation variable. If the
+*        verbose variable is set to a positive value, then it prints the content
+*        of the command line in the standard output stream; otherwise, nothing
+*        is displayed.
 *
 * \param[in] fileLocation It is expected to point to the path name of an
 *                         existing file. The corresponding string must have
@@ -2883,6 +2886,12 @@ int copyFileLocation(char* fileLocation, int nameLength, int verbose,
 *                       terminating nul character '\0'). It must be an integer
 *                       (strictly) greater than one. Otherwise, an error is
 *                       returned by the \ref renameFileLocation function.
+*
+* \param[in] verbose An integer playing the role of a boolean. If set to a
+*                    (strictly) positive value, then it prints in the standard
+*                    output stream the content of the command line executed.
+*                    Otherwise, nothing is displayed in the standard output
+*                    stream.
 *
 * \param[in] newFileLocation It is expected to point to the path name of a
 *                            non-already-existing file. The corresponding
@@ -2899,7 +2908,7 @@ int copyFileLocation(char* fileLocation, int nameLength, int verbose,
 *         expected content), an error is displayed in the standard error stream
 *         and zero is returned by the \ref renameFileLocation function.
 */
-int renameFileLocation(char* fileLocation, int nameLength,
+int renameFileLocation(char* fileLocation, int nameLength, int verbose,
                                                          char* newFileLocation);
 
 /**
