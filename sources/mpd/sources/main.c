@@ -314,7 +314,7 @@ int main(int argc, char *argv[])
         FREE_AND_RETURN(&parameters,&chemicalSystem,&data,&mesh,EXIT_FAILURE);
     }
 
-/*
+
     // Load default mesh or from the *.mesh/ *.cube file of parameters.name_mesh
     switch (loadMesh(&parameters,&mesh))
     {
@@ -366,6 +366,7 @@ int main(int argc, char *argv[])
             break;
     }
 
+/*
     // Prepare the mesh for the optimization loop (initialize the level-set
     // function and perform some mesh adaptations if necessary)
     time(&startLocalTimer);

@@ -113,17 +113,20 @@ void freeMeshMemory(Mesh* pMesh)
     return;
 }
 
-/*
 ////////////////////////////////////////////////////////////////////////////////
 // The function initializeCubeDiscretization loads some default parameters in
 // the structure pointed by pParameters in order to initialize the meshing of
 // the cube associated with a default initial computational box. Depending on
 // pParameters->opt_mode (<=0/>0), it computes the number of vertices, elements
 // (hexahedra/tetrahdra), and boundary ones (quadrilaterals/triangles) and store
-// the corresponding values in the structure pointed by pMesh. It has the
-// parameters* and Mesh* variables (both defined in main.h) as input arguments
-// and it returns one (respectively minus one), if the suggested discretization
-// is manually approved (resp. disapproved) by the user, otherwise zero (error)
+// the corresponding values in the structure pointed by pMesh. In addition, if
+// pParameters->save_print is set to a positive value, then a manual
+// confirmation is asked to the user. It has the Parameters* and Mesh* variables
+// (both defined in main.h) as input arguments and if pParameters->save_print is
+// set to zero (bash mode is off), it returns one on success, otherwise zero if
+// an error is encountered. In the case where pParameters->save_print>0, it
+// returns one (respectively minus one), if the suggested discretization is
+// manually approved (resp. disapproved) by the user, otherwise zero (error)
 ////////////////////////////////////////////////////////////////////////////////
 int initializeCubeDiscretization(Parameters* pParameters, Mesh* pMesh)
 {
@@ -145,7 +148,7 @@ int initializeCubeDiscretization(Parameters* pParameters, Mesh* pMesh)
     nZ=pParameters->n_z;
     if (nX<3 || nY<3 || nZ<3)
     {
-        PRINT_ERROR("In loadMesh: expecting that the n_x ");
+        PRINT_ERROR("In loadMesh: expecting that the (int) n_x ");
         fprintf(stderr,"(=%d), n_y (=%d), and n_z (=%d) variables ",nX,nY,nZ);
         fprintf(stderr,"of the structure pointed by pParameters must remain ");
         fprintf(stderr,"(strictly) greater than two (in order to have at ");
@@ -177,7 +180,7 @@ int initializeCubeDiscretization(Parameters* pParameters, Mesh* pMesh)
     sizeMemory=sizeof(Mesh)+nVer*sizeof(Point);
     if (pParameters->opt_mode>0)
     {
-        sizeMemory+=(nNorm+nTan)*sizeof(Vector)+nEdg*sizeof(Edge);
+        sizeMemory+=8*sizeof(int)+(nNorm+nTan)*sizeof(Vector)+nEdg*sizeof(Edge);
         sizeMemory+=nTri*sizeof(Triangle)+nTet*sizeof(Tetrahedron);
     }
     else
@@ -186,15 +189,15 @@ int initializeCubeDiscretization(Parameters* pParameters, Mesh* pMesh)
     }
 
     // Recall the discretization that is going to be performed
-    if (pParameters->verbose)
+    if (pParameters->verbose>1)
     {
         fprintf(stdout,"\nThe default initial computational box will be the ");
         fprintf(stdout,"cube\n[%lf,%lf]",pParameters->x_min,pParameters->x_max);
         fprintf(stdout,"x[%lf,%lf]x[",pParameters->y_min,pParameters->y_max);
         fprintf(stdout,"%lf,%lf]\nwith ",pParameters->z_min,pParameters->z_max);
         fprintf(stdout,"(%lf)x(%lf)",pParameters->delta_x,pParameters->delta_y);
-        fprintf(stdout,"x(%lf) and (%d)x(%d)x",pParameters->delta_z,nX,nY);
-        fprintf(stdout,"(%d) points.\n",nZ);
+        fprintf(stdout,"x(%lf) space discretization ",pParameters->delta_z);
+        fprintf(stdout,"steps and (%d)x(%d)x(%d) points.\n",nX,nY,nZ);
     }
 
     fprintf(stdout,"\nThe (default) initial mesh we want to generate will ");
@@ -308,6 +311,7 @@ int initializeCubeDiscretization(Parameters* pParameters, Mesh* pMesh)
     return returnValue;
 }
 
+/*
 ////////////////////////////////////////////////////////////////////////////////
 // The function allocateInitialMeshMemory dynamically allocates memory for the
 // structure pointed by pMesh thanks to the values already loaded in the
@@ -5597,6 +5601,7 @@ int readCubeFileAndAllocateMesh(Parameters* pParameters, Mesh* pMesh)
 
     return 1;
 }
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 // The function loadMesh looks at the pParameters->name_mesh variable. If it is
@@ -5620,10 +5625,10 @@ int loadMesh(Parameters* pParameters, Mesh* pMesh)
     // Check if the input pParameters or pMesh variable is pointing to NULL
     if (pParameters==NULL || pMesh==NULL)
     {
-        PRINT_ERROR("In loadMesh: at least one of the input pParameters ");
-        fprintf(stderr,"%p or pParameters ",(void*)pParameters);
-        fprintf(stderr,"%p variable does not have a ",(void*)pMesh);
-        fprintf(stderr,"valid address.\n");
+        PRINT_ERROR("In loadMesh: at least one of the input variables ");
+        fprintf(stderr,"pParameters=%p or ",(void*)pParameters);
+        fprintf(stderr,"pMesh=%p does not point to a valid ",(void*)pMesh);
+        fprintf(stderr,"adress.\n");
         return 0;
     }
 
@@ -6027,6 +6032,7 @@ int loadMesh(Parameters* pParameters, Mesh* pMesh)
     return 1;
 }
 
+/*
 ////////////////////////////////////////////////////////////////////////////////
 // The function writingCubeFile combines the data stored in the structures
 // pointed by pParameters, pChemicalSystem, and pMesh in order to save the mesh

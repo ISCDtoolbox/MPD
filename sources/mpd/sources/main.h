@@ -592,11 +592,11 @@ typedef struct {
                              *    that the given mesh has no internal domain and
                              *    in this case, a (default) initial domain is
                              *    built according to the \ref ls_type, \ref
-                             *    ls_x, \ref ls_y, \ref ls_z, and \ref ls_r
-                             *    variables; otherwise, it must be set to zero
-                             *    and it considers that a default computational
-                             *    box (as well as the initial domain) has to be
-                             *    constructed. */
+                             *    ls_x, \ref ls_y, \ref ls_z, \ref ls_rx, \ref
+                             *    ls_ry, and \ref ls_rz variables; otherwise,
+                             *    it must be set to zero and it considers that
+                             *    a default computational box (as well as the
+                             *    initial domain) has to be constructed. */
 
     int ls_type;             /*!< If set to zero, then the initial domain is a
                              *    cuboid of center (\ref ls_x, \ref ls_y, \ref

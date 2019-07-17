@@ -51,11 +51,15 @@ void freeMeshMemory(Mesh* pMesh);
 
 /**
 * \fn int initializeCubeDiscretization(Parameters* pParameters, Mesh* pMesh)
-* \brief It suggests for approval to the user the mesh discretization of a
-*        default initial computational box that will be stored in the structure
-*        pointed by pMesh and according to the parameters prescribed in the
-*        structure pointed by pParameters. It also evaluates the memory that
-*        will be needed for storing such a discretization.
+* \brief If the save_print variable of the structure pointed by pParameters is
+*        set to a positive value, it suggests for approval to the user the mesh
+*        discretization of a default initial computational box that will be
+*        stored in the structure pointed by pMesh and according to the
+*        parameters prescribed in the structure pointed by pParameters.
+*        Otherwise, pParameters->save_print equals zero (prompt mode is off),
+*        and the discretization is automatically performed. In both cases, it
+*        also evaluates the memory that will be needed for storing such a
+*        discretization.
 *
 * \param[in] pParameters A pointer that points to the Parameters structure
 *                        (defined in main.h file) of the \ref main function.
@@ -63,32 +67,37 @@ void freeMeshMemory(Mesh* pMesh);
 *                        n_y and n_z variables are used to estimate the number
 *                        of vertices, elements (hexahedra/tetrahdra), and
 *                        boundary ones (quadrilaterals/triangles) that are
-*                        intended to be stored in the structure pointed by pMesh
-*                        in the case the user approve such a discretization
-*                        of the cube associated with the initial default
-*                        computational box. In addition, if the opt_mode
-*                        variable structure pointed by pMesh is positive, some
-*                        geometrical quantities are also computed, namely the
-*                        number of corners, edges, normal and tangents vectors
-*                        related to some boundary elements. The n_x, n_y and
-*                        n_z variables of the structure pointed by pParameters
-*                        must be (strictly) greater than two in order to have
-*                        at least one normal/tangent vectors on the cube faces
-*                        associated with the initial default computational box.
-*                        Otherwise, an error is returned by the \ref
-*                        initializeCubeDiscretization function.
+*                        intended to be stored in the structure pointed by
+*                        pMesh. If the save_print variable of the structure
+*                        pointed by pParameters is positive, a manual
+*                        confirmation (y/n) is asked to the user for approving
+*                        such a discretization of the cube associated with the
+*                        initial default computational box. In addition, if the
+*                        opt_mode variable structure pointed by pMesh is
+*                        positive, some geometrical quantities are also
+*                        computed, namely the number of corners, edges, normal
+*                        and tangents vectors related to some boundary elements.
+*                        The n_x, n_y and n_z variables of the structure pointed
+*                        by pParameters must be (strictly) greater than two in
+*                        order to have at least one normal/tangent vectors on
+*                        the cube faces associated with the initial default
+*                        computational box. Otherwise, an error is returned by
+*                        the \ref initializeCubeDiscretization function.
 *
 * \param[out] pMesh A pointer that points to the Mesh structure (defined in
 *                   main.h file) of the \ref main function, that is intended to
 *                   be filled with some default parameters related to the mesh
 *                   discretization of an initial default comptutational box.
 *
-* \return It returns one if the user approves the suggested discretization and
-*         if the computed parameters are succesffully loaded in the structure
-*         pointed by pMesh. It returns minus one if the user refuses to
-*         discretize the cube and the mpd program will be next be left.
-*         Otherwise, zero is returned if any error is encountered during the
-*         process.
+* \return If pParameters->save_print is positive, it returns one if the user
+*         approves the suggested discretization and if the computed parameters
+*         are succesffully loaded in the structure pointed by pMesh. It returns
+*         minus one if the user refuses to discretize the cube and the MPD
+*         program will be next be left. If pParameters->save_print equals zero,
+*         no manual confirmation is asked because prompt mode is off. Then, it
+*         returns one if the computed parameters are successfully loaded in the
+*         structure pointed by pMesh. In both case, zero is returned if any
+*         error is encountered during the process.
 *
 * The \ref initializeCubeDiscretization function should be static but has been
 * defined as non-static in order to perform unit-test on it.
