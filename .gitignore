@@ -38,3 +38,7 @@ sources/mshdistance/sources/compil.date
 
 outputFiles
 
+sources/mpdToolbox/AdaptTools/build
+sources/mpdToolbox/AdaptTools/bin
+sources/mpdToolbox/AdaptTools/include
+
