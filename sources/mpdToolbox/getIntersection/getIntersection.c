@@ -754,10 +754,11 @@ int readTrianglesInMeshFile(char nameFile[NAME_SIZE_MAX], Mesh* pMesh)
     }
 
     // Check the number of triangles and its associated pointer
-    if (pMesh->ntri<1)
+    if (pMesh->ntri<1 || pMesh->nver<1)
     {
-        PRINT_ERROR("In readTrianglesInMeshFile: the pMesh->ntri variable ");
-        fprintf(stderr,"(=%d) should be a positive integer.\n",pMesh->ntri);
+        PRINT_ERROR("In readTrianglesInMeshFile: the variables pMesh->ntri ");
+        fprintf(stderr,"(=%d) and pMesh->nver (=%d) ",pMesh->ntri,pMesh->nver);
+        fprintf(stderr,"should be positive integers.\n");
         return 0;
     }
 
@@ -913,6 +914,17 @@ int readTrianglesInMeshFile(char nameFile[NAME_SIZE_MAX], Mesh* pMesh)
             closeTheFile(&meshFile);
             return 0;
         }
+
+        if (readIntegerIn<1 || readIntegerIn>pMesh->nver)
+        {
+            PRINT_ERROR("In readTrianglesInMeshFile: the first vertex ");
+            fprintf(stderr,"reference (=%d) of the %d-th ",readIntegerIn,i+1);
+            fprintf(stderr,"triangle should be a positive integer not ");
+            fprintf(stderr,"strictly greater than the total number of mesh ");
+            fprintf(stderr,"vertices (=%d).\n",pMesh->nver);
+            closeTheFile(&meshFile);
+            return 0;
+        }
         pMesh->ptri[i].p1=readIntegerIn;
 
         // Reading the second vertex reference
@@ -926,6 +938,17 @@ int readTrianglesInMeshFile(char nameFile[NAME_SIZE_MAX], Mesh* pMesh)
             closeTheFile(&meshFile);
             return 0;
         }
+
+        if (readIntegerIn<1 || readIntegerIn>pMesh->nver)
+        {
+            PRINT_ERROR("In readTrianglesInMeshFile: the second vertex ");
+            fprintf(stderr,"reference (=%d) of the %d-th ",readIntegerIn,i+1);
+            fprintf(stderr,"triangle should be a positive integer not ");
+            fprintf(stderr,"strictly greater than the total number of mesh ");
+            fprintf(stderr,"vertices (=%d).\n",pMesh->nver);
+            closeTheFile(&meshFile);
+            return 0;
+        }
         pMesh->ptri[i].p2=readIntegerIn;
 
         // Reading the third vertex reference
@@ -936,6 +959,17 @@ int readTrianglesInMeshFile(char nameFile[NAME_SIZE_MAX], Mesh* pMesh)
             fprintf(stderr,"(=%d) of the fscanf c-function in ",readIntegerOut);
             fprintf(stderr,"the attempt of reading the third vertex ");
             fprintf(stderr,"reference of the %d-th triangle.\n",i+1);
+            closeTheFile(&meshFile);
+            return 0;
+        }
+
+        if (readIntegerIn<1 || readIntegerIn>pMesh->nver)
+        {
+            PRINT_ERROR("In readTrianglesInMeshFile: the third vertex ");
+            fprintf(stderr,"reference (=%d) of the %d-th ",readIntegerIn,i+1);
+            fprintf(stderr,"triangle should be a positive integer not ");
+            fprintf(stderr,"strictly greater than the total number of mesh ");
+            fprintf(stderr,"vertices (=%d).\n",pMesh->nver);
             closeTheFile(&meshFile);
             return 0;
         }
@@ -1161,10 +1195,11 @@ int readTetrahedraInMeshFile(char nameFile[NAME_SIZE_MAX], Mesh* pMesh)
     }
 
     // Check the number of tetrathedra and its associated pointer
-    if (pMesh->ntet<1)
+    if (pMesh->ntet<1 || pMesh->nver<1)
     {
-        PRINT_ERROR("In readTetrathedraInMeshFile: the pMesh->ntet variable ");
-        fprintf(stderr,"(=%d) should be a positive integer.\n",pMesh->ntet);
+        PRINT_ERROR("In readTetrathedraInMeshFile: the variables pMesh->ntet ");
+        fprintf(stderr,"(=%d) and pMesh->nver (=%d) ",pMesh->ntet,pMesh->nver);
+        fprintf(stderr,"should be positive integers.\n");
         return 0;
     }
 
@@ -1320,6 +1355,17 @@ int readTetrahedraInMeshFile(char nameFile[NAME_SIZE_MAX], Mesh* pMesh)
             closeTheFile(&meshFile);
             return 0;
         }
+
+        if (readIntegerIn<1 || readIntegerIn>pMesh->nver)
+        {
+            PRINT_ERROR("In readTetrathedraInMeshFile: the first vertex ");
+            fprintf(stderr,"reference (=%d) of the %d-th ",readIntegerIn,i+1);
+            fprintf(stderr,"tetrahedron should be a positive integer not ");
+            fprintf(stderr,"strictly greater than the total number of mesh ");
+            fprintf(stderr,"vertices (=%d).\n",pMesh->nver);
+            closeTheFile(&meshFile);
+            return 0;
+        }
         pMesh->ptet[i].p1=readIntegerIn;
 
         // Reading the second vertex reference
@@ -1330,6 +1376,17 @@ int readTetrahedraInMeshFile(char nameFile[NAME_SIZE_MAX], Mesh* pMesh)
             fprintf(stderr,"(=%d) of the fscanf c-function in ",readIntegerOut);
             fprintf(stderr,"the attempt of reading the second vertex ");
             fprintf(stderr,"reference of the %d-th tetrahedron.\n",i+1);
+            closeTheFile(&meshFile);
+            return 0;
+        }
+
+        if (readIntegerIn<1 || readIntegerIn>pMesh->nver)
+        {
+            PRINT_ERROR("In readTetrathedraInMeshFile: the second vertex ");
+            fprintf(stderr,"reference (=%d) of the %d-th ",readIntegerIn,i+1);
+            fprintf(stderr,"tetrahedron should be a positive integer not ");
+            fprintf(stderr,"strictly greater than the total number of mesh ");
+            fprintf(stderr,"vertices (=%d).\n",pMesh->nver);
             closeTheFile(&meshFile);
             return 0;
         }
@@ -1346,6 +1403,17 @@ int readTetrahedraInMeshFile(char nameFile[NAME_SIZE_MAX], Mesh* pMesh)
             closeTheFile(&meshFile);
             return 0;
         }
+
+        if (readIntegerIn<1 || readIntegerIn>pMesh->nver)
+        {
+            PRINT_ERROR("In readTetrathedraInMeshFile: the third vertex ");
+            fprintf(stderr,"reference (=%d) of the %d-th ",readIntegerIn,i+1);
+            fprintf(stderr,"tetrahedron should be a positive integer not ");
+            fprintf(stderr,"strictly greater than the total number of mesh ");
+            fprintf(stderr,"vertices (=%d).\n",pMesh->nver);
+            closeTheFile(&meshFile);
+            return 0;
+        }
         pMesh->ptet[i].p3=readIntegerIn;
 
         // Reading the fourth vertex reference
@@ -1356,6 +1424,17 @@ int readTetrahedraInMeshFile(char nameFile[NAME_SIZE_MAX], Mesh* pMesh)
             fprintf(stderr,"(=%d) of the fscanf c-function in ",readIntegerOut);
             fprintf(stderr,"the attempt of reading the fourth vertex ");
             fprintf(stderr,"reference of the %d-th tetrahedron.\n",i+1);
+            closeTheFile(&meshFile);
+            return 0;
+        }
+
+        if (readIntegerIn<1 || readIntegerIn>pMesh->nver)
+        {
+            PRINT_ERROR("In readTetrathedraInMeshFile: the fourth vertex ");
+            fprintf(stderr,"reference (=%d) of the %d-th ",readIntegerIn,i+1);
+            fprintf(stderr,"tetrahedron should be a positive integer not ");
+            fprintf(stderr,"strictly greater than the total number of mesh ");
+            fprintf(stderr,"vertices (=%d).\n",pMesh->nver);
             closeTheFile(&meshFile);
             return 0;
         }
@@ -1652,7 +1731,7 @@ int writingLsSolFile(char nameFile[NAME_SIZE_MAX], Mesh* pMesh)
     fprintf(stdout,"Writing data. ");
 
     // Write the values saved at the mesh vertices
-    fprintf(solFile,"\nMeshVersionFormatted 2\n\nDimension 3\n\n");
+    fprintf(solFile,"MeshVersionFormatted 2\n\nDimension 3\n\n");
     fprintf(solFile,"SolAtVertices\n%d\n1 1\n\n",pMesh->nver);
     for (i=0; i<pMesh->nver; i++)
     {

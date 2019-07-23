@@ -57,17 +57,17 @@ gcc getIntersection.c -o getIntersection
 
 and executed (on the provided example) by typing in a command prompt
 
-./getIntersection example.mesh exampleIntersection.sol
+./getIntersection example.ini.mesh example.out.sol
 
 ////////////////////////////////////////////////////////////////////////////////
 
-An example is provided with the program. The file example.mesh contains the
+An example is provided with the program. The file example.ini.mesh contains the
 tetrahedral 3D mesh of a computational box, a subpart of it meshing a domain.
 The computational box has been obtained by maximizing the probability of
 exactly finding 10 electrons inside it for the water molecule H2O. The
  theoretical solution of such optimization problem is the whole space with
 probability one, but numerically, up to 0.995, the solution obtained is the
-mesh given by the example.mesh file.
+mesh given by the example.ini.mesh file.
 
 Inside this computational box, there is a certain sub-domain corresponding to
 the domain locally maximizing the probability of finding exactly two electrons
@@ -85,17 +85,19 @@ Of course, due to the symmetry of the water molecule H2O, there is another
 domain solution of the optimization problem than the one given in the *.mesh
 file. It corresponds to the other valence interaction and symmetric with respect
 to the plane (z=0). The level-set function of this other domain has been
-computed at the mesh vertices and is saved in the example.sol file.
+computed at the mesh vertices and is saved in the example.ini.sol file.
 
-The example.sol can be also displayed with medit by simply typing 'm' after the
-loading of the example.mesh file.
+The example.ini.sol can be also displayed with medit by simply typing 'm' after
+the loading of the example.ini.mesh file.
 
 A screenshot of the result can be found in example.jpg file.
 
-The program getIntersect can load data from both example.mesh and example.sol
-and compute the intersection of these two domains in an output *.sol file.
+The program getIntersect can load data from both example.ini.mesh and
+example.ini.sol and compute the intersection of these two domains in an
+example.out.sol file.
 
 ////////////////////////////////////////////////////////////////////////////////
+
 Strategy to follow if one aims to computes the intersection (or reunion or
 symmetric difference) of two domains given as two *.mesh files.
 

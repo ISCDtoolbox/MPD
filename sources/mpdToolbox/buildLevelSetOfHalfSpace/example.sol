@@ -1,4 +1,3 @@
-
 MeshVersionFormatted 2
 
 Dimension 3

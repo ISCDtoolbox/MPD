@@ -897,7 +897,6 @@ int writingObjFile(char nameFile[NAME_SIZE_MAX], int nVer, double* px,
     fprintf(stdout,"Writing data. ");
 
     // Writing the point coordinates
-    fprintf(objFile,"\n");
     for (i=0; i<nVer; i++)
     {
         fprintf(objFile,"v %.8le %.8le %.8le \n",px[i],py[i],pz[i]);
@@ -907,6 +906,36 @@ int writingObjFile(char nameFile[NAME_SIZE_MAX], int nVer, double* px,
     // Writing triangle references
     for (i=0; i<nTri; i++)
     {
+        if (ip1[i]<1 || ip1[i]>nVer)
+        {
+            PRINT_ERROR("In writingObjFile: the first vertex reference ");
+            fprintf(stderr,"(=%d) of the %d-th triangle should a ",ip1[i],i+1);
+            fprintf(stderr,"positive integer not strictly greater than the ");
+            fprintf(stderr,"total number of mesh vertices ");
+            fprintf(stderr,"(=%d).\n",nVer);
+            closeTheFile(&objFile);
+            return 0;
+        }
+        if (ip2[i]<1 || ip2[i]>nVer)
+        {
+            PRINT_ERROR("In writingObjFile: the second vertex reference ");
+            fprintf(stderr,"(=%d) of the %d-th triangle should a ",ip2[i],i+1);
+            fprintf(stderr,"positive integer not strictly greater than the ");
+            fprintf(stderr,"total number of mesh vertices ");
+            fprintf(stderr,"(=%d).\n",nVer);
+            closeTheFile(&objFile);
+            return 0;
+        }
+        if (ip3[i]<1 || ip3[i]>nVer)
+        {
+            PRINT_ERROR("In writingObjFile: the third vertex reference ");
+            fprintf(stderr,"(=%d) of the %d-th triangle should a ",ip3[i],i+1);
+            fprintf(stderr,"positive integer not strictly greater than the ");
+            fprintf(stderr,"total number of mesh vertices ");
+            fprintf(stderr,"(=%d).\n",nVer);
+            closeTheFile(&objFile);
+            return 0;
+        }
         fprintf(objFile,"f %d %d %d \n",ip1[i],ip2[i],ip3[i]);
     }
     fprintf(objFile,"\n");

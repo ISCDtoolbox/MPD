@@ -38,7 +38,16 @@ sources/mshdistance/sources/compil.date
 
 outputFiles
 
-sources/mpdToolbox/AdaptTools/build
-sources/mpdToolbox/AdaptTools/bin
-sources/mpdToolbox/AdaptTools/include
+sources/mpdToolbox/adaptTools/bin
+sources/mpdToolbox/adaptTools/build
+sources/mpdToolbox/adaptTools/include
+sources/mpdToolbox/adaptTools/sources/commonFiles/compil.date
+
+sources/mpdToolbox/buildLevelSetOfHalfSpace/buildLevelSetOfHalfSpace
+sources/mpdToolbox/doubleSphere/doubleSphere
+sources/mpdToolbox/getIntersection/getIntersection
+sources/mpdToolbox/meshToObj/meshToObj
+sources/mpdToolbox/objMerge/objMerge
+sources/mpdToolbox/resizeObjFile/resizeObjFile
+sources/mpdToolbox/shapeExtractor/shapeExtractor
 

@@ -511,7 +511,7 @@ int writingLsSolFile(char nameFile[NAME_SIZE_MAX], int nVer, double* pLs)
     fprintf(stdout,"Writing data. ");
 
     // Save the coordinates stored in px
-    fprintf(solFile,"\nMeshVersionFormatted 2\n\nDimension 3\n\n");
+    fprintf(solFile,"MeshVersionFormatted 2\n\nDimension 3\n\n");
     fprintf(solFile,"SolAtVertices\n%d\n1 1\n\n",nVer);
     for (i=0; i<nVer; i++)
     {

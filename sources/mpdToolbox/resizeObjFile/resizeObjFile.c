@@ -176,7 +176,9 @@ int countNumberOfVerticesInObjFile(char nameFile[NAME_SIZE_MAX])
     if (readChar==EOF)
     {
         PRINT_ERROR("In countNumberOfVerticesInObjFile: wrong end-of-file ");
-        fprintf(stderr,"return (=%d) of the fgetc c-function.\n",readChar);
+        fprintf(stderr,"return (=%d) of the fgetc c-function ",readChar);
+        fprintf(stderr,"while attempting to read the coordinates of the ");
+        fprintf(stderr,"first vertex.\n");
         closeTheFile(&objFile);
         return 0;
     }
@@ -190,7 +192,9 @@ int countNumberOfVerticesInObjFile(char nameFile[NAME_SIZE_MAX])
         if (readIntegerOut!=1)
         {
             PRINT_ERROR("In countNumberOfVerticesInObjFile: wrong return ");
-            fprintf(stderr,"(=%d) of the fscanf c-function.\n",readIntegerOut);
+            fprintf(stderr,"(=%d) of the fscanf c-function ",readIntegerOut);
+            fprintf(stderr,"while attempting to read the first coordinate ");
+            fprintf(stderr,"of the %d-th vertex.\n",counter+1);
             closeTheFile(&objFile);
             return 0;
         }
@@ -200,7 +204,9 @@ int countNumberOfVerticesInObjFile(char nameFile[NAME_SIZE_MAX])
         if (readIntegerOut!=1)
         {
             PRINT_ERROR("In countNumberOfVerticesInObjFile: wrong return ");
-            fprintf(stderr,"(=%d) of the fscanf c-function.\n",readIntegerOut);
+            fprintf(stderr,"(=%d) of the fscanf c-function ",readIntegerOut);
+            fprintf(stderr,"while attempting to read the second coordinate ");
+            fprintf(stderr,"of the %d-th vertex.\n",counter+1);
             closeTheFile(&objFile);
             return 0;
         }
@@ -210,7 +216,9 @@ int countNumberOfVerticesInObjFile(char nameFile[NAME_SIZE_MAX])
         if (readIntegerOut!=1)
         {
             PRINT_ERROR("In countNumberOfVerticesInObjFile: wrong return ");
-            fprintf(stderr,"(=%d) of the fscanf c-function.\n",readIntegerOut);
+            fprintf(stderr,"(=%d) of the fscanf c-function ",readIntegerOut);
+            fprintf(stderr,"while attempting to read the third coordinate ");
+            fprintf(stderr,"of the %d-th vertex.\n",counter+1);
             closeTheFile(&objFile);
             return 0;
         }
@@ -224,7 +232,8 @@ int countNumberOfVerticesInObjFile(char nameFile[NAME_SIZE_MAX])
         {
             PRINT_ERROR("In countNumberOfVerticesInObjFile: wrong ");
             fprintf(stderr,"end-of-file return (=%d) of the fgetc ",readChar);
-            fprintf(stderr,"c-function.\n");
+            fprintf(stderr,"c-function while attempting to read the ");
+            fprintf(stderr,"coordinates of the %d-th vertex.\n",counter);
             closeTheFile(&objFile);
             return 0;
         }
@@ -306,7 +315,9 @@ int readVerticesInObjFile(char nameFile[NAME_SIZE_MAX], int nVer, double* px,
     if (readChar==EOF)
     {
         PRINT_ERROR("In readVerticesInObjFile: wrong end-of-file return ");
-        fprintf(stderr,"(=%d) of the fgetc c-function.\n",readChar);
+        fprintf(stderr,"(=%d) of the fgetc c-function while ",readChar);
+        fprintf(stderr,"attempting to read the coordinates of the ");
+        fprintf(stderr,"first vertex.\n");
         closeTheFile(&objFile);
         return 0;
     }
@@ -320,7 +331,9 @@ int readVerticesInObjFile(char nameFile[NAME_SIZE_MAX], int nVer, double* px,
         if (readIntegerOut!=1)
         {
             PRINT_ERROR("In readVerticesInObjFile: wrong return ");
-            fprintf(stderr,"(=%d) of the fscanf c-function.\n",readIntegerOut);
+            fprintf(stderr,"(=%d) of the fscanf c-function ",readIntegerOut);
+            fprintf(stderr,"while attempting to read the first coordinate ");
+            fprintf(stderr,"of the %d-th vertex.\n",counter+1);
             closeTheFile(&objFile);
             return 0;
         }
@@ -331,7 +344,9 @@ int readVerticesInObjFile(char nameFile[NAME_SIZE_MAX], int nVer, double* px,
         if (readIntegerOut!=1)
         {
             PRINT_ERROR("In readVerticesInObjFile: wrong return ");
-            fprintf(stderr,"(=%d) of the fscanf c-function.\n",readIntegerOut);
+            fprintf(stderr,"(=%d) of the fscanf c-function ",readIntegerOut);
+            fprintf(stderr,"while attempting to read the second coordinate ");
+            fprintf(stderr,"of the %d-th vertex.\n",counter+1);
             closeTheFile(&objFile);
             return 0;
         }
@@ -342,7 +357,9 @@ int readVerticesInObjFile(char nameFile[NAME_SIZE_MAX], int nVer, double* px,
         if (readIntegerOut!=1)
         {
             PRINT_ERROR("In readVerticesInObjFile: wrong return ");
-            fprintf(stderr,"(=%d) of the fscanf c-function.\n",readIntegerOut);
+            fprintf(stderr,"(=%d) of the fscanf c-function ",readIntegerOut);
+            fprintf(stderr,"while attempting to read the third coordinate ");
+            fprintf(stderr,"of the %d-th vertex.\n",counter+1);
             closeTheFile(&objFile);
             return 0;
         }
@@ -356,7 +373,9 @@ int readVerticesInObjFile(char nameFile[NAME_SIZE_MAX], int nVer, double* px,
         if (readChar==EOF)
         {
             PRINT_ERROR("In readVerticesInObjFile: wrong end-of-file return ");
-            fprintf(stderr,"(=%d) of the fgetc c-function.\n",readChar);
+            fprintf(stderr,"(=%d) of the fgetc c-function while ",readChar);
+            fprintf(stderr,"attempting to read the coordinates of the ");
+            fprintf(stderr,"%d-th vertex.\n",counter);
             closeTheFile(&objFile);
             return 0;
         }
@@ -427,12 +446,25 @@ int countNumberOfTrianglesInObjFile(char nameFile[NAME_SIZE_MAX])
     counter=0;
     do
     {
+        // Check the character read
+        if (readChar==EOF)
+        {
+            PRINT_ERROR("In countNumberOfTrianglesInObjFile: wrong return ");
+            fprintf(stderr,"(=%d) of the fgetc c-function while ",readChar);
+            fprintf(stderr,"attempting to read the vertex references of the ");
+            fprintf(stderr,"%d-th triangle.\n",counter+1);
+            closeTheFile(&objFile);
+            return 0;
+        }
+
         // Read the first point reference
         readIntegerOut=fscanf(objFile," %d ",&readIntegerIn);
         if (readIntegerOut!=1)
         {
             PRINT_ERROR("In countNumberOfTrianglesInObjFile: wrong return ");
-            fprintf(stderr,"(=%d) of the fscanf c-function.\n",readIntegerOut);
+            fprintf(stderr,"(=%d) of the fscanf c-function ",readIntegerOut);
+            fprintf(stderr,"while attempting to read the first vertex ");
+            fprintf(stderr,"reference of the %d-th triangle.\n",counter+1);
             closeTheFile(&objFile);
             return 0;
         }
@@ -442,7 +474,9 @@ int countNumberOfTrianglesInObjFile(char nameFile[NAME_SIZE_MAX])
         if (readIntegerOut!=1)
         {
             PRINT_ERROR("In countNumberOfTrianglesInObjFile: wrong return ");
-            fprintf(stderr,"(=%d) of the fscanf c-function.\n",readIntegerOut);
+            fprintf(stderr,"(=%d) of the fscanf c-function ",readIntegerOut);
+            fprintf(stderr,"while attempting to read the second vertex ");
+            fprintf(stderr,"reference of the %d-th triangle.\n",counter+1);
             closeTheFile(&objFile);
             return 0;
         }
@@ -452,7 +486,9 @@ int countNumberOfTrianglesInObjFile(char nameFile[NAME_SIZE_MAX])
         if (readIntegerOut!=1)
         {
             PRINT_ERROR("In countNumberOfTrianglesInObjFile: wrong return ");
-            fprintf(stderr,"(=%d) of the fscanf c-function.\n",readIntegerOut);
+            fprintf(stderr,"(=%d) of the fscanf c-function ",readIntegerOut);
+            fprintf(stderr,"while attempting to read the third vertex ");
+            fprintf(stderr,"reference of the %d-th triangle.\n",counter+1);
             closeTheFile(&objFile);
             return 0;
         }
@@ -540,12 +576,25 @@ int readTrianglesInObjFile(char nameFile[NAME_SIZE_MAX], int nTri, int* ip1,
     counter=0;
     do
     {
+        // Check the character read
+        if (readChar==EOF)
+        {
+            PRINT_ERROR("In readTrianglesInObjFile: wrong return ");
+            fprintf(stderr,"(=%d) of the fgetc c-function while ",readChar);
+            fprintf(stderr,"attempting to read the vertex references of the ");
+            fprintf(stderr,"%d-th triangle.\n",counter+1);
+            closeTheFile(&objFile);
+            return 0;
+        }
+
         // Read the first point reference
         readIntegerOut=fscanf(objFile," %d ",&readIntegerIn);
         if (readIntegerOut!=1)
         {
             PRINT_ERROR("In readTrianglesInObjFile: wrong return ");
-            fprintf(stderr,"(=%d) of the fscanf c-function.\n",readIntegerOut);
+            fprintf(stderr,"(=%d) of the fscanf c-function ",readIntegerOut);
+            fprintf(stderr,"while attempting to read the first vertex ");
+            fprintf(stderr,"reference of the %d-th triangle.\n",counter+1);
             closeTheFile(&objFile);
             return 0;
         }
@@ -556,7 +605,9 @@ int readTrianglesInObjFile(char nameFile[NAME_SIZE_MAX], int nTri, int* ip1,
         if (readIntegerOut!=1)
         {
             PRINT_ERROR("In readTrianglesInObjFile: wrong return ");
-            fprintf(stderr,"(=%d) of the fscanf c-function.\n",readIntegerOut);
+            fprintf(stderr,"(=%d) of the fscanf c-function ",readIntegerOut);
+            fprintf(stderr,"while attempting to read the second vertex ");
+            fprintf(stderr,"reference of the %d-th triangle.\n",counter+1);
             closeTheFile(&objFile);
             return 0;
         }
@@ -567,7 +618,9 @@ int readTrianglesInObjFile(char nameFile[NAME_SIZE_MAX], int nTri, int* ip1,
         if (readIntegerOut!=1)
         {
             PRINT_ERROR("In readTrianglesInObjFile: wrong return ");
-            fprintf(stderr,"(=%d) of the fscanf c-function.\n",readIntegerOut);
+            fprintf(stderr,"(=%d) of the fscanf c-function ",readIntegerOut);
+            fprintf(stderr,"while attempting to read the third vertex ");
+            fprintf(stderr,"reference of the %d-th triangle.\n",counter+1);
             closeTheFile(&objFile);
             return 0;
         }
@@ -646,7 +699,6 @@ int writingResizedObjFile(char nameFile[NAME_SIZE_MAX], int nVer, double* px,
     fprintf(stdout,"Writing resized data. ");
 
     // Writing the point coordinates
-    fprintf(objFile,"\n");
     for (i=0; i<nVer; i++)
     {
         fprintf(objFile,"v %.8le %.8le %.8le \n",px[i],py[i],pz[i]);
@@ -656,6 +708,36 @@ int writingResizedObjFile(char nameFile[NAME_SIZE_MAX], int nVer, double* px,
     // Writing triangle references
     for (i=0; i<nTri; i++)
     {
+        if (ip1[i]<1 || ip1[i]>nVer)
+        {
+            PRINT_ERROR("In writingResizedObjFile: the first vertex ");
+            fprintf(stderr,"reference (=%d) of the %d-th triangle ",ip1[i],i+1);
+            fprintf(stderr,"should a positive integer not strictly greater ");
+            fprintf(stderr,"than the total number of mesh vertices ");
+            fprintf(stderr,"(=%d).\n",nVer);
+            closeTheFile(&objFile);
+            return 0;
+        }
+        if (ip2[i]<1 || ip2[i]>nVer)
+        {
+            PRINT_ERROR("In writingResizedObjFile: the second vertex ");
+            fprintf(stderr,"reference (=%d) of the %d-th triangle ",ip2[i],i+1);
+            fprintf(stderr,"should a positive integer not strictly greater ");
+            fprintf(stderr,"than the total number of mesh vertices ");
+            fprintf(stderr,"(=%d).\n",nVer);
+            closeTheFile(&objFile);
+            return 0;
+        }
+        if (ip3[i]<1 || ip3[i]>nVer)
+        {
+            PRINT_ERROR("In writingResizedObjFile: the third vertex ");
+            fprintf(stderr,"reference (=%d) of the %d-th triangle ",ip3[i],i+1);
+            fprintf(stderr,"should a positive integer not strictly greater ");
+            fprintf(stderr,"than the total number of mesh vertices ");
+            fprintf(stderr,"(=%d).\n",nVer);
+            closeTheFile(&objFile);
+            return 0;
+        }
         fprintf(objFile,"f %d %d %d \n",ip1[i],ip2[i],ip3[i]);
     }
     fprintf(objFile,"\n");
