@@ -2047,7 +2047,7 @@ int readLsSolFile(char nameFile[NAME_SIZE_MAX], Mesh* pMesh)
     nameSolFile[length-2]='l';
     nameSolFile[length-1]='\0';
 
-    readIntegerOut=initialFileExists(nameFile);
+    readIntegerOut=initialFileExists(nameSolFile);
     if (abs(readIntegerOut)!=1)
     {
         PRINT_ERROR("In readLsSolFile: initialFileExists function returned ");
