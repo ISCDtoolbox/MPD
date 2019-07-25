@@ -44,24 +44,57 @@ sources/mpdToolbox/adaptTools/include
 sources/mpdToolbox/adaptTools/sources/commonFiles/compil.date
 
 sources/mpdToolbox/buildBoundedDomain/buildBoundedDomain
+sources/mpdToolbox/buildBoundedDomain/example.obj
+
 sources/mpdToolbox/buildLevelSetOfHalfSpace/buildLevelSetOfHalfSpace
+sources/mpdToolbox/buildLevelSetOfHalfSpace/example.sol
+
 sources/mpdToolbox/cubeToMesh/cubeToMesh
+sources/mpdToolbox/cubeToMesh/example.mesh
+
 sources/mpdToolbox/doubleSphere/doubleSphere
+sources/mpdToolbox/doubleSphere/example.sol
+sources/mpdToolbox/doubleSphere/exampleAdapted.mesh
+sources/mpdToolbox/doubleSphere/exampleAdapted.sol
+
 sources/mpdToolbox/getIntersection/getIntersection
+sources/mpdToolbox/getIntersection/example.out.sol
+sources/mpdToolbox/getIntersection/valence2.sol
+sources/mpdToolbox/getIntersection/valence1.sol
+sources/mpdToolbox/getIntersection/valence12.sol
+sources/mpdToolbox/getIntersection/valence12.mesh
 
 sources/mpdToolbox/hexaToTetra/hexaToTetra
 sources/mpdToolbox/hexaToTetra/example.out.mesh
 
 sources/mpdToolbox/labelInverter/labelInverter
+sources/mpdToolbox/labelInverter/example.out.mesh
+
 sources/mpdToolbox/meshToCube/meshToCube
+sources/mpdToolbox/meshToCube/example.cube
+sources/mpdToolbox/meshToCube/tetraToHexa.out.sol
+sources/mpdToolbox/meshToCube/tetraToHexa.ini.mesh
+sources/mpdToolbox/meshToCube/tetraToHexa.temp.mesh
+sources/mpdToolbox/meshToCube/tetraToHexa.temp.sol
+sources/mpdToolbox/meshToCube/tetraToHexa.ini.sol
+sources/mpdToolbox/meshToCube/tetraToHexa.out.cube
+
 sources/mpdToolbox/meshToObj/meshToObj
+sources/mpdToolbox/meshToObj/example.obj
+
 sources/mpdToolbox/objMerge/objMerge
+sources/mpdToolbox/objMerge/example.out.obj
 
 sources/mpdToolbox/refineCubeMesh/refineCubeMesh
-sources/mpdToolbox/hexaToTetra/example.out.mesh
+sources/mpdToolbox/refineCubeMesh/example.out.mesh
 
 sources/mpdToolbox/resizeObjFile/resizeObjFile
+sources/mpdToolbox/resizeObjFile/example.out.obj
+
 sources/mpdToolbox/shapeExtractor/shapeExtractor
+sources/mpdToolbox/shapeExtractor/example.out.mesh
+
 sources/mpdToolbox/vectorFieldNormAtVertices/vectorFieldNormAtVertices
+sources/mpdToolbox/vectorFieldNormAtVertices/example.out.sol
 
 

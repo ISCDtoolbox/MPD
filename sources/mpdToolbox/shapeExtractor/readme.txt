@@ -31,7 +31,8 @@ tetrahedra and triangles of the internal domain.
 
 In addition, if the preprocessor constants INCLUDE_NORMALS is set to 1 (default
 value), then the normal vectors associated with the internal domain are also
-extracted. Otherwise, INCLUDE_NORMALS must be set to zero (default value) and no other elements of the input mesh structure will appear in the output
+extracted. Otherwise, INCLUDE_NORMALS must be set to zero (default value) and no
+other elements of the input mesh structure will appear in the output
 extracted mesh.
 
 Warning: if INCLUDE_NORMALS is set to 1, then it assumes that the normal vectors

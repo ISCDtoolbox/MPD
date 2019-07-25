@@ -42,7 +42,8 @@ Remark: we use the convention of mmg3d software (a version is provided with the
 
 If the program is compiled with the preprocessor constant BOHR_OR_NOT set to 1
 (default situation), then the program saves the mesh vertices in the output
-*.obj file multiplying all the point coordinates by the BOHR_RADIUS (0.5291772109217) preprocessor constant.
+*.obj file multiplying all the point coordinates by the BOHR_RADIUS
+(0.5291772109217) preprocessor constant.
 
 Otherwise, BOHR_OR_NOT must be set to 0 and nothing is particularly done.
 
@@ -75,7 +76,8 @@ di-nitrogen molecule N2. The theoretical solution of such optimization problem
 is the whole space with probability one, but numerically, up to 0.995, the
 solution obtained is the computational box of example.mesh file.
 
-Then, inside this computational box, as a subpart of the mesh (tetrahedra labelled 3 and triangles labelled 10), there is a domain maximizing the
+Then, inside this computational box, as a subpart of the mesh (tetrahedra
+labelled 3 and triangles labelled 10), there is a domain maximizing the
 probability of exactly finding 6 electrons inside and 8 electrons outside for
 the di-nitrogen molecule N2.
 
