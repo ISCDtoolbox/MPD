@@ -801,6 +801,10 @@ int main(int argc, char* argv[])
         PRINT_ERROR("In main: we could not allocate memory for the local ");
         fprintf(stderr,"(int*) variables nVer=%p and/or ",(void*)nVer);
         fprintf(stderr,"nTri=%p.\n",(void*)nTri);
+        free(nVer);
+        free(nTri);
+        nVer=NULL;
+        nTri=NULL;
         return 0;
     }
 
@@ -839,8 +843,14 @@ int main(int argc, char* argv[])
         fprintf(stderr,"and/or pz=%p.\n",(void*)pz);
         free(nVer);
         free(nTri);
+        free(px);
+        free(py);
+        free(pz);
         nVer=NULL;
         nTri=NULL;
+        px=NULL;
+        py=NULL;
+        pz=NULL;
         return EXIT_FAILURE;
     }
 
@@ -859,11 +869,17 @@ int main(int argc, char* argv[])
         free(px);
         free(py);
         free(pz);
+        free(ip1);
+        free(ip2);
+        free(ip3);
         nVer=NULL;
         nTri=NULL;
         px=NULL;
         py=NULL;
         pz=NULL;
+        ip1=NULL;
+        ip2=NULL;
+        ip3=NULL;
         return EXIT_FAILURE;
     }
 

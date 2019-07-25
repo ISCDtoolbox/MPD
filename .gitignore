@@ -43,11 +43,25 @@ sources/mpdToolbox/adaptTools/build
 sources/mpdToolbox/adaptTools/include
 sources/mpdToolbox/adaptTools/sources/commonFiles/compil.date
 
+sources/mpdToolbox/buildBoundedDomain/buildBoundedDomain
 sources/mpdToolbox/buildLevelSetOfHalfSpace/buildLevelSetOfHalfSpace
+sources/mpdToolbox/cubeToMesh/cubeToMesh
 sources/mpdToolbox/doubleSphere/doubleSphere
 sources/mpdToolbox/getIntersection/getIntersection
+
+sources/mpdToolbox/hexaToTetra/hexaToTetra
+sources/mpdToolbox/hexaToTetra/example.out.mesh
+
+sources/mpdToolbox/labelInverter/labelInverter
+sources/mpdToolbox/meshToCube/meshToCube
 sources/mpdToolbox/meshToObj/meshToObj
 sources/mpdToolbox/objMerge/objMerge
+
+sources/mpdToolbox/refineCubeMesh/refineCubeMesh
+sources/mpdToolbox/hexaToTetra/example.out.mesh
+
 sources/mpdToolbox/resizeObjFile/resizeObjFile
 sources/mpdToolbox/shapeExtractor/shapeExtractor
+sources/mpdToolbox/vectorFieldNormAtVertices/vectorFieldNormAtVertices
+
 

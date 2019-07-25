@@ -123,7 +123,7 @@ Step 2: project the valence2.sol values on the vertices of valence1.mesh file.
         This can be done with the help of the mshint software
         https://github.com/ISCDtoolbox/AdaptTools/tree/olderVersionThatWorks).
         A version of mshint is also provided with the mpdToolbox
-        (MPD/sources/mpdToolbox/mshint)
+        (MPD/sources/mpdToolbox/adaptTools/bin/mshint)
 
 ./mshint valence2.mesh valence1.mesh
 

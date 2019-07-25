@@ -609,6 +609,18 @@ int main(int argc, char* argv[])
         fprintf(stderr,"(double*) variables px=%p py=%p, ",(void*)px,(void*)py);
         fprintf(stderr,"pz=%p, pLs1=%p, ",(void*)pz,(void*)pLs1);
         fprintf(stderr,"pLs2=%p, and/or pLs=%p.\n",(void*)pLs2,(void*)pLs);
+        free(px);
+        free(py);
+        free(pz);
+        free(pLs1);
+        free(pLs2);
+        free(pLs);
+        px=NULL;
+        py=NULL;
+        pz=NULL;
+        pLs1=NULL;
+        pLs2=NULL;
+        pLs=NULL;
         return EXIT_FAILURE;
     }
 

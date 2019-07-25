@@ -1027,6 +1027,12 @@ int main(int argc, char* argv[])
         PRINT_ERROR("In main: we could not allocate memory for the local ");
         fprintf(stderr,"(double*) variables px=%p py=%p ",(void*)px,(void*)py);
         fprintf(stderr,"and/or pz=%p.\n",(void*)pz);
+        free(px);
+        free(py);
+        free(pz);
+        px=NULL;
+        py=NULL;
+        pz=NULL;
         return EXIT_FAILURE;
     }
 
@@ -1041,9 +1047,15 @@ int main(int argc, char* argv[])
         free(px);
         free(py);
         free(pz);
+        free(ip1);
+        free(ip2);
+        free(ip3);
         px=NULL;
         py=NULL;
         pz=NULL;
+        ip1=NULL;
+        ip2=NULL;
+        ip3=NULL;
         return EXIT_FAILURE;
     }
 
