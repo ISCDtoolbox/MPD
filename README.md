@@ -13,6 +13,11 @@ The MPD program aims to compute the shape of a domain that maximizes the probabi
 
 Website of the MPD research project: http://pelikano.free.fr/mpd
 
+Also, an mpdToolbox directory is available in MPD/sources/mpdToolbox (and in MPD/bin/mpdToolbox after installation) with little programs that can handle
+tetrehedral mesh operation (intersection, ...), conversion (obj/cube/mesh), and
+other features. We refer to the readme.txt file in MPD/sources/mpdToolbox and
+to the ones in each program source directory for further details.
+
 In order to compile the mpdProgram, you must have previously installed:
 * gcc (version 5.4.0)
 * make (version 4.1)
